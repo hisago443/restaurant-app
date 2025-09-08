@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -98,7 +98,7 @@ export default function StaffManagement() {
     }
   }
 
-  const handleAddEmployee = (employee: Omit<Employee, 'color'>) => {
+  const handleAddEmployee = (employee: Omit<Employee, 'color' | 'id'> & { id: string }) => {
     const newEmployee: Employee = {
       ...employee,
       color: colors[employees.length % colors.length]
@@ -147,6 +147,7 @@ export default function StaffManagement() {
                     <TableHead>Role</TableHead>
                     <TableHead>Salary (₹)</TableHead>
                     <TableHead>Advance (₹)</TableHead>
+                    <TableHead>Remaining Salary (₹)</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -155,6 +156,8 @@ export default function StaffManagement() {
                     const totalAdvance = advances
                       .filter(a => a.employeeId === employee.id)
                       .reduce((sum, a) => sum + a.amount, 0);
+
+                    const remainingSalary = employee.salary - totalAdvance;
 
                     return (
                       <TableRow key={employee.id}>
@@ -168,6 +171,7 @@ export default function StaffManagement() {
                         <TableCell>{employee.role}</TableCell>
                         <TableCell>{employee.salary.toLocaleString()}</TableCell>
                         <TableCell>{totalAdvance.toLocaleString()}</TableCell>
+                        <TableCell>{remainingSalary.toLocaleString()}</TableCell>
                         <TableCell className="text-right">
                           <Button variant="ghost" size="icon" onClick={() => openEditDialog(employee)}>
                             <Edit className="h-4 w-4" />
@@ -279,7 +283,7 @@ export default function StaffManagement() {
             if (editingEmployee) {
                 handleEditEmployee({ ...editingEmployee, ...employeeData });
             } else {
-                handleAddEmployee(employeeData as Employee);
+                handleAddEmployee(employeeData as Omit<Employee, 'color'> & {id: string});
             }
         }}
       />
@@ -287,8 +291,8 @@ export default function StaffManagement() {
   );
 }
 
-function EmployeeDialog({ open, onOpenChange, employee, onSave }: { open: boolean; onOpenChange: (open: boolean) => void; employee: Employee | null; onSave: (data: Omit<Employee, 'color'>) => void;}) {
-    const [id, setId] = useState(employee?.id || '');
+function EmployeeDialog({ open, onOpenChange, employee, onSave }: { open: boolean; onOpenChange: (open: boolean) => void; employee: Employee | null; onSave: (data: Omit<Employee, 'color'> & {id: string}) => void;}) {
+    const [id, setId] = useState(employee?.id || `E${String(Date.now()).slice(-4)}`);
     const [name, setName] = useState(employee?.name || '');
     const [role, setRole] = useState(employee?.role || '');
     const [salary, setSalary] = useState(employee?.salary.toString() || '');
@@ -345,7 +349,5 @@ function EmployeeDialog({ open, onOpenChange, employee, onSave }: { open: boolea
               </form>
             </DialogContent>
         </Dialog>
-    )
+    );
 }
-
-    
