@@ -173,9 +173,9 @@ export default function StaffManagement() {
                           </div>
                         </TableCell>
                         <TableCell>{employee.role}</TableCell>
-                        <TableCell className="bg-slate-100 dark:bg-slate-800">{employee.salary.toLocaleString()}</TableCell>
-                        <TableCell className="bg-slate-300 dark:bg-slate-600">{totalAdvance.toLocaleString()}</TableCell>
-                        <TableCell className="bg-slate-200 dark:bg-slate-700">{remainingSalary.toLocaleString()}</TableCell>
+                        <TableCell className="bg-blue-100 dark:bg-blue-900/30">{employee.salary.toLocaleString()}</TableCell>
+                        <TableCell className="bg-blue-300 dark:bg-blue-700/40">{totalAdvance.toLocaleString()}</TableCell>
+                        <TableCell className="bg-blue-200 dark:bg-blue-800/40">{remainingSalary.toLocaleString()}</TableCell>
                         <TableCell className="text-right">
                           <Button variant="ghost" size="icon" onClick={() => openEditDialog(employee)}>
                             <Edit className="h-4 w-4" />
