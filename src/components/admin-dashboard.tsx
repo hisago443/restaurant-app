@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from 'react';
-import { BarChart, Book, Download, DollarSign, TrendingUp, Settings, Package, User, ShoppingCart } from 'lucide-react';
+import { BarChart, Book, Download, TrendingUp, Settings, Package, User, ShoppingCart } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -48,7 +48,7 @@ export default function AdminDashboard() {
         <Card className="bg-green-100 dark:bg-green-900/30 border-green-200 dark:border-green-800 shadow-lg hover:shadow-xl transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-green-800 dark:text-green-200">Total Revenue</CardTitle>
-            <DollarSign className="h-4 w-4 text-green-600" />
+            <span className="text-green-600 font-bold">Rs.</span>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-900 dark:text-green-100">Rs.4,29,189.00</div>
