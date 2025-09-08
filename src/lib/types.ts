@@ -25,3 +25,20 @@ export interface Order {
   tableId: number;
   status: 'Pending' | 'In Preparation' | 'Completed';
 }
+
+export interface Employee {
+  id: string;
+  name: string;
+  role: string;
+  salary: number;
+}
+
+export interface Attendance {
+  date: Date;
+  status: 'Present' | 'Absent' | 'Leave';
+}
+
+export interface Advance {
+  date: Date;
+  amount: number;
+}

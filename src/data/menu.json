@@ -47,5 +47,37 @@
       { "name": "Orange", "price": 149 },
       { "name": "Watermelon", "price": 149 }
     ]
+  },
+  {
+    "category": "Smoothies",
+    "items": [
+      { "name": "Banana Flax", "price": 179 },
+      { "name": "Stress Buster Smoothie", "price": 199 }
+    ]
+  },
+  {
+    "category": "Detox Drinks",
+    "items": [
+      { "name": "The Energizer", "price": 169 },
+      { "name": "ABC", "price": 179 },
+      { "name": "The Refresher", "price": 189 }
+    ]
+  },
+  {
+    "category": "Soft Drinks",
+    "items": [
+      { "name": "Water", "price": 20 },
+      { "name": "Soda", "price": 30 },
+      { "name": "Coke", "price": 40 },
+      { "name": "Sprite", "price": 40 }
+    ]
+  },
+  {
+    "category": "Beverages",
+    "items": [
+      { "name": "Plain Milk", "price": 79 },
+      { "name": "Bournvita Milk", "price": 99 },
+      { "name": "Hot Chocolate With Marshmallow", "price": 149 }
+    ]
   }
 ]

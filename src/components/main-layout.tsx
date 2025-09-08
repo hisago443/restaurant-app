@@ -2,13 +2,14 @@
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
-import { Coffee, LayoutGrid, Book, BarChart } from 'lucide-react';
+import { Coffee, LayoutGrid, Book, BarChart, Users } from 'lucide-react';
 
 import { Logo } from "./icons";
 import PosSystem from './pos-system';
 import TableManagement from './table-management';
 import KitchenOrders from './kitchen-orders';
 import AdminDashboard from './admin-dashboard';
+import StaffManagement from "./staff-management";
 
 export default function MainLayout() {
   return (
@@ -34,6 +35,10 @@ export default function MainLayout() {
               <Book className="mr-2 h-4 w-4" />
               Kitchen
             </TabsTrigger>
+             <TabsTrigger value="staff">
+              <Users className="mr-2 h-4 w-4" />
+              Staff
+            </TabsTrigger>
             <TabsTrigger value="admin">
               <BarChart className="mr-2 h-4 w-4" />
               Admin
@@ -49,6 +54,9 @@ export default function MainLayout() {
             </TabsContent>
             <TabsContent value="kitchen" className="m-0 p-0 h-full">
               <KitchenOrders />
+            </TabsContent>
+            <TabsContent value="staff" className="m-0 p-0">
+              <StaffManagement />
             </TabsContent>
             <TabsContent value="admin" className="m-0 p-0">
               <AdminDashboard />
