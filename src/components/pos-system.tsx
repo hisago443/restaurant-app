@@ -11,8 +11,9 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from '@/hooks/use-toast';
-import { Search, Plus, Minus, X, Save, FilePlus } from 'lucide-react';
+import { Search, Plus, Minus, X, Save, FilePlus, LayoutGrid, List } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 import type { MenuCategory, MenuItem, OrderItem } from '@/lib/types';
@@ -23,6 +24,7 @@ import { PaymentDialog } from './payment-dialog';
 const vegColor = 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 border-green-200 dark:border-green-800';
 const nonVegColor = 'bg-rose-100 dark:bg-rose-900/30 text-rose-800 dark:text-rose-200 border-rose-200 dark:border-rose-800';
 
+type ViewMode = 'accordion' | 'grid';
 
 export default function PosSystem() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -33,9 +35,11 @@ export default function PosSystem() {
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
   const { toast } = useToast();
   const [activeAccordionItems, setActiveAccordionItems] = useState<string[]>([]);
+  const [viewMode, setViewMode] = useState<ViewMode>('accordion');
+
+  const typedMenuData: MenuCategory[] = menuData;
 
   const filteredMenu = useMemo(() => {
-    const typedMenuData: MenuCategory[] = menuData;
     if (!searchTerm) return typedMenuData;
     const lowercasedTerm = searchTerm.toLowerCase();
     
@@ -46,7 +50,7 @@ export default function PosSystem() {
         items: subCategory.items.filter(item => item.name.toLowerCase().includes(lowercasedTerm))
       })).filter(subCategory => subCategory.items.length > 0)
     })).filter(category => category.subCategories.length > 0);
-  }, [searchTerm]);
+  }, [searchTerm, typedMenuData]);
 
   useEffect(() => {
     setActiveAccordionItems(filteredMenu.map(c => c.category));
@@ -131,12 +135,36 @@ export default function PosSystem() {
     clearOrder();
   };
 
+  const renderMenuItem = (item: MenuItem, subCategoryName: string) => (
+    <Card
+      key={item.name}
+      className={cn("rounded-lg cursor-pointer transition-all hover:scale-105 hover:shadow-md",
+      subCategoryName.toLowerCase() === 'veg' ? vegColor : nonVegColor)}
+      onClick={() => isClickToAdd && addToOrder(item, 1)}
+    >
+      <CardContent className="p-3">
+        <div className="flex justify-between items-start">
+          <div className="flex items-center gap-2">
+            <span className={cn('h-2.5 w-2.5 rounded-full', subCategoryName.toLowerCase() === 'veg' ? 'bg-green-500' : 'bg-red-500')}></span>
+            <span className="font-semibold pr-2">{item.name}</span>
+          </div>
+          <span className="font-mono text-right whitespace-nowrap">Rs.{item.price.toFixed(2)}</span>
+        </div>
+        {!isClickToAdd && (
+          <div className="flex justify-end mt-2">
+            <Button size="sm" variant="secondary" onClick={() => addToOrder(item)}>Add to Order</Button>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+
   return (
     <div className="flex flex-col md:flex-row h-[calc(100vh-5rem)] gap-4 p-4">
       {/* Left Panel: Menu */}
       <Card className="flex-[3] flex flex-col">
         <CardHeader>
-          <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center justify-between gap-4 flex-wrap">
             <div className="relative flex-grow">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
               <Input
@@ -146,56 +174,71 @@ export default function PosSystem() {
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
-            <div className="flex items-center space-x-2">
-              <Switch id="click-to-add-mode" checked={isClickToAdd} onCheckedChange={setIsClickToAdd} />
-              <Label htmlFor="click-to-add-mode">Click-to-Add</Label>
+            <div className="flex items-center gap-4">
+               <RadioGroup value={viewMode} onValueChange={(v) => setViewMode(v as ViewMode)} className="flex items-center">
+                <RadioGroupItem value="accordion" id="accordion-view" className="peer sr-only" />
+                <Label htmlFor="accordion-view" className="p-2 rounded-md transition-colors hover:bg-accent cursor-pointer data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground">
+                  <List className="h-5 w-5" />
+                </Label>
+                <RadioGroupItem value="grid" id="grid-view" className="peer sr-only"/>
+                <Label htmlFor="grid-view" className="p-2 rounded-md transition-colors hover:bg-accent cursor-pointer data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground">
+                   <LayoutGrid className="h-5 w-5" />
+                </Label>
+              </RadioGroup>
+              <Separator orientation="vertical" className="h-8" />
+              <div className="flex items-center space-x-2">
+                <Switch id="click-to-add-mode" checked={isClickToAdd} onCheckedChange={setIsClickToAdd} />
+                <Label htmlFor="click-to-add-mode">Click-to-Add</Label>
+              </div>
             </div>
           </div>
         </CardHeader>
         <ScrollArea className="flex-grow px-4">
-            <Accordion type="multiple" value={activeAccordionItems} onValueChange={setActiveAccordionItems} className="w-full">
-              {filteredMenu.map((category) => (
-                <AccordionItem key={category.category} value={category.category}>
-                  <AccordionTrigger className="text-xl font-bold hover:no-underline">
-                    {category.category}
-                  </AccordionTrigger>
-                  <AccordionContent>
-                    <div className="space-y-4 pt-2">
+          {viewMode === 'accordion' ? (
+              <Accordion type="multiple" value={activeAccordionItems} onValueChange={setActiveAccordionItems} className="w-full">
+                {filteredMenu.map((category) => (
+                  <AccordionItem key={category.category} value={category.category}>
+                    <AccordionTrigger className="text-xl font-bold hover:no-underline">
+                      {category.category}
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <div className="space-y-4 pt-2">
+                        {category.subCategories.map((subCategory) => (
+                          <div key={subCategory.name}>
+                            <h3 className="text-md font-semibold mb-2 text-muted-foreground pl-2">{subCategory.name}</h3>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                              {subCategory.items.map((item) => renderMenuItem(item, subCategory.name))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
+            ) : (
+              <Tabs defaultValue={filteredMenu[0]?.category} className="w-full">
+                <TabsList className="mb-4">
+                  {filteredMenu.map(category => (
+                    <TabsTrigger key={category.category} value={category.category}>{category.category}</TabsTrigger>
+                  ))}
+                </TabsList>
+                {filteredMenu.map(category => (
+                   <TabsContent key={category.category} value={category.category}>
+                     <div className="space-y-4">
                       {category.subCategories.map((subCategory) => (
                         <div key={subCategory.name}>
                           <h3 className="text-md font-semibold mb-2 text-muted-foreground pl-2">{subCategory.name}</h3>
-                           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-                            {subCategory.items.map((item) => (
-                              <Card
-                                key={item.name}
-                                className={cn("rounded-lg cursor-pointer transition-all hover:scale-105 hover:shadow-md",
-                                subCategory.name.toLowerCase() === 'veg' ? vegColor : nonVegColor)}
-                                onClick={() => isClickToAdd && addToOrder(item, 1)}
-                              >
-                                <CardContent className="p-3">
-                                  <div className="flex justify-between items-start">
-                                    <div className="flex items-center gap-2">
-                                      <span className={cn('h-2.5 w-2.5 rounded-full', subCategory.name.toLowerCase() === 'veg' ? 'bg-green-500' : 'bg-red-500')}></span>
-                                      <span className="font-semibold pr-2">{item.name}</span>
-                                    </div>
-                                    <span className="font-mono text-right whitespace-nowrap">Rs.{item.price.toFixed(2)}</span>
-                                  </div>
-                                  {!isClickToAdd && (
-                                    <div className="flex justify-end mt-2">
-                                      <Button size="sm" variant="secondary" onClick={() => addToOrder(item)}>Add to Order</Button>
-                                    </div>
-                                  )}
-                                </CardContent>
-                              </Card>
-                            ))}
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                            {subCategory.items.map((item) => renderMenuItem(item, subCategory.name))}
                           </div>
                         </div>
                       ))}
                     </div>
-                  </AccordionContent>
-                </AccordionItem>
-              ))}
-            </Accordion>
+                  </TabsContent>
+                ))}
+              </Tabs>
+            )}
         </ScrollArea>
       </Card>
 
@@ -269,7 +312,7 @@ export default function PosSystem() {
           </div>
           <div className="grid grid-cols-2 gap-2 pt-2">
             <Button size="lg" onClick={handleProcessPayment}>
-              <span className="mr-2 font-bold">Rs.</span> Process Payment
+              Process Payment
             </Button>
             
             <AlertDialog>
@@ -303,3 +346,5 @@ export default function PosSystem() {
     </div>
   );
 }
+
+    

@@ -80,3 +80,5 @@ export function PaymentDialog({ isOpen, onOpenChange, total, onPaymentSuccess }:
     </Dialog>
   );
 }
+
+    
