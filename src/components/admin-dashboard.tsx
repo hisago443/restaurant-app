@@ -6,11 +6,11 @@ import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 const topItems = [
-  { name: 'Latte', count: 125 },
-  { name: 'Turkey Club', count: 98 },
-  { name: 'Espresso', count: 85 },
-  { name: 'Croissant', count: 72 },
-  { name: 'Iced Tea', count: 66 },
+  { name: 'Cafe Latte', count: 125 },
+  { name: 'Cold Coffee', count: 98 },
+  { name: 'Black Coffee', count: 85 },
+  { name: 'Banana', count: 72 },
+  { name: 'Lemonade', count: 66 },
 ];
 
 export default function AdminDashboard() {
@@ -21,10 +21,10 @@ export default function AdminDashboard() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
+            <span className="text-muted-foreground">₹</span>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">$4,291.89</div>
+            <div className="text-2xl font-bold">₹4,29,189.00</div>
             <p className="text-xs text-muted-foreground">+20.1% from last month</p>
           </CardContent>
         </Card>
@@ -41,10 +41,10 @@ export default function AdminDashboard() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Average Order Value</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
+            <span className="text-muted-foreground">₹</span>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">$18.26</div>
+            <div className="text-2xl font-bold">₹1,826.00</div>
             <p className="text-xs text-muted-foreground">+5.3% from last week</p>
           </CardContent>
         </Card>

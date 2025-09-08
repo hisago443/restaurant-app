@@ -50,7 +50,7 @@ export function PaymentDialog({ isOpen, onOpenChange, total, onPaymentSuccess }:
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="text-4xl font-bold text-center">
-            Total: ${total.toFixed(2)}
+            Total: ₹{total.toFixed(2)}
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="cash-received" className="text-right">
@@ -68,7 +68,7 @@ export function PaymentDialog({ isOpen, onOpenChange, total, onPaymentSuccess }:
           {error && <p className="text-sm text-destructive text-center">{error}</p>}
           {change !== null && change >= 0 && (
             <div className="text-center text-xl font-medium text-primary">
-              Change Due: ${change.toFixed(2)}
+              Change Due: ₹{change.toFixed(2)}
             </div>
           )}
         </div>

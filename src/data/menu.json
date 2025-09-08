@@ -1,51 +1,51 @@
 [
   {
-    "category": "Coffee",
-    "items": [
-      { "name": "Espresso", "price": 2.50 },
-      { "name": "Americano", "price": 3.00 },
-      { "name": "Latte", "price": 4.00 },
-      { "name": "Cappuccino", "price": 4.00 },
-      { "name": "Mocha", "price": 4.50 },
-      { "name": "Iced Coffee", "price": 3.50 }
-    ]
-  },
-  {
     "category": "Tea",
     "items": [
-      { "name": "Green Tea", "price": 2.50 },
-      { "name": "Black Tea", "price": 2.50 },
-      { "name": "Chai Latte", "price": 4.00 },
-      { "name": "Herbal Tea", "price": 2.75 },
-      { "name": "Iced Tea", "price": 3.00 }
+      { "name": "Lemon Tea", "price": 39 },
+      { "name": "Milk Tea", "price": 39 },
+      { "name": "Masala Tea", "price": 49 },
+      { "name": "Green Tea", "price": 59 },
+      { "name": "Rose Tea", "price": 59 },
+      { "name": "Ginger Lemon Honey", "price": 69 }
     ]
   },
   {
-    "category": "Pastries",
+    "category": "Coffee",
     "items": [
-      { "name": "Croissant", "price": 3.00 },
-      { "name": "Muffin", "price": 2.75 },
-      { "name": "Scone", "price": 2.50 },
-      { "name": "Cinnamon Roll", "price": 3.50 },
-      { "name": "Cookie", "price": 1.50 }
+      { "name": "Black Coffee", "price": 79 },
+      { "name": "Milk Coffee (hot)", "price": 89 },
+      { "name": "Cold Coffee", "price": 129 },
+      { "name": "Cafe Latte", "price": 129 },
+      { "name": "Cappuccino Coffee", "price": 129 },
+      { "name": "Hazelnut Coffee", "price": 139 },
+      { "name": "Caramel Coffee", "price": 139 },
+      { "name": "Iced Hazelnut Coffee", "price": 159 },
+      { "name": "Creamy Iced Vanilla Coffee", "price": 169 }
     ]
   },
   {
-    "category": "Sandwiches",
+    "category": "Milkshakes",
     "items": [
-      { "name": "Turkey Club", "price": 8.50 },
-      { "name": "Veggie Delight", "price": 7.50 },
-      { "name": "Ham & Cheese", "price": 8.00 },
-      { "name": "BLT", "price": 8.00 }
+      { "name": "Banana", "price": 119 },
+      { "name": "Vanilla", "price": 149 },
+      { "name": "Chocolate", "price": 160 },
+      { "name": "Oreo", "price": 179 },
+      { "name": "Peanut Butter", "price": 179 },
+      { "name": "Papaya", "price": 179 },
+      { "name": "Nutella", "price": 189 }
     ]
   },
   {
-    "category": "Juices & Smoothies",
+    "category": "Juices & Coolers",
     "items": [
-        { "name": "Orange Juice", "price": 4.00 },
-        { "name": "Apple Juice", "price": 4.00 },
-        { "name": "Berry Blast Smoothie", "price": 6.00 },
-        { "name": "Green Detox Smoothie", "price": 6.50 }
+      { "name": "Lemonade", "price": 69 },
+      { "name": "Fresh Lime Soda", "price": 89 },
+      { "name": "Lassi", "price": 89 },
+      { "name": "Lemon Mint Ice Tea", "price": 139 },
+      { "name": "Peach Ice Tea", "price": 149 },
+      { "name": "Orange", "price": 149 },
+      { "name": "Watermelon", "price": 149 }
     ]
   }
 ]

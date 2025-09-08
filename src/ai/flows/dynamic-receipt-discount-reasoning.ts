@@ -45,15 +45,15 @@ const prompt = ai.definePrompt({
 Here are the order details:
 Items:
 {{#each items}}
-- {{quantity}} x {{name}} @ $\{{price}}
+- {{quantity}} x {{name}} @ ₹{{price}}
 {{/each}}
-Subtotal: $\{{subtotal}}
+Subtotal: ₹{{subtotal}}
 
 {{#if discount}}
 Discount: {{discount}}%
 {{/if}}
 
-Total: $\{{total}}
+Total: ₹{{total}}
 
 Ensure that if the discount is 0%, the discount information is not displayed in the receipt preview. Only include the discount line if a discount is applied.
 `,
