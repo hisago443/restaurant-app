@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription, DialogClose } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose, DialogDescription } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger, AlertDialogFooter } from "@/components/ui/alert-dialog";
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -173,9 +173,9 @@ export default function StaffManagement() {
                           </div>
                         </TableCell>
                         <TableCell>{employee.role}</TableCell>
-                        <TableCell className="bg-blue-100 dark:bg-blue-900/30">{employee.salary.toLocaleString()}</TableCell>
-                        <TableCell className="bg-blue-300 dark:bg-blue-700/40">{totalAdvance.toLocaleString()}</TableCell>
-                        <TableCell className="bg-blue-200 dark:bg-blue-800/40">{remainingSalary.toLocaleString()}</TableCell>
+                        <TableCell>{employee.salary.toLocaleString()}</TableCell>
+                        <TableCell className="bg-red-100 dark:bg-red-900/30 text-red-900 dark:text-red-200">{totalAdvance.toLocaleString()}</TableCell>
+                        <TableCell className="bg-green-100 dark:bg-green-900/30 text-green-900 dark:text-green-200">{remainingSalary.toLocaleString()}</TableCell>
                         <TableCell className="text-right">
                           <Button variant="ghost" size="icon" onClick={() => openEditDialog(employee)}>
                             <Edit className="h-4 w-4" />
@@ -355,5 +355,3 @@ function EmployeeDialog({ open, onOpenChange, employee, onSave }: { open: boolea
         </Dialog>
     );
 }
-
-    
