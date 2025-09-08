@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription, DialogClose } from '@/components/ui/dialog';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger, AlertDialogFooter, AlertDialogDescription } from "@/components/ui/alert-dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger, AlertDialogFooter } from "@/components/ui/alert-dialog";
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -14,6 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PlusCircle, Edit, Trash2 } from 'lucide-react';
 import type { Employee, Advance } from '@/lib/types';
 import { format, isSameDay } from 'date-fns';
+import { cn } from '@/lib/utils';
 
 const initialEmployees: Employee[] = [
   { id: 'E001', name: 'John Doe', role: 'Manager', salary: 50000, color: 'bg-blue-500' },
@@ -167,14 +168,14 @@ export default function StaffManagement() {
                         <TableCell>{employee.id}</TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
-                            <span className={`h-2 w-2 rounded-full ${employee.color}`} />
+                            <span className={cn('h-2 w-2 rounded-full', employee.color)} />
                             {employee.name}
                           </div>
                         </TableCell>
                         <TableCell>{employee.role}</TableCell>
-                        <TableCell>{employee.salary.toLocaleString()}</TableCell>
-                        <TableCell>{totalAdvance.toLocaleString()}</TableCell>
-                        <TableCell>{remainingSalary.toLocaleString()}</TableCell>
+                        <TableCell className="bg-slate-100 dark:bg-slate-800">{employee.salary.toLocaleString()}</TableCell>
+                        <TableCell className="bg-slate-300 dark:bg-slate-600">{totalAdvance.toLocaleString()}</TableCell>
+                        <TableCell className="bg-slate-200 dark:bg-slate-700">{remainingSalary.toLocaleString()}</TableCell>
                         <TableCell className="text-right">
                           <Button variant="ghost" size="icon" onClick={() => openEditDialog(employee)}>
                             <Edit className="h-4 w-4" />
@@ -253,7 +254,7 @@ export default function StaffManagement() {
                       return (
                       <li key={index} className="flex justify-between items-center p-2 bg-muted rounded-md">
                         <div className="flex items-center gap-2">
-                          {employee && <span className={`h-2 w-2 rounded-full ${employee.color}`} />}
+                          {employee && <span className={cn('h-2 w-2 rounded-full', employee.color)} />}
                           <span>{employee ? employee.name : 'Unknown Employee'}:</span>
                         </div>
                         <span className="font-mono font-bold">Rs.{advance.amount.toLocaleString()}</span>
