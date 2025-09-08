@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger, AlertDialogFooter } from "@/components/ui/alert-dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger, AlertDialogFooter } from "@/components/ui/alert-dialog";
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -63,7 +63,7 @@ function AddAdvanceDialog({ open, onOpenChange, employees, onAddAdvance, selecte
             </Select>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="amount">Amount (₹)</Label>
+            <Label htmlFor="amount">Amount (Rs.)</Label>
             <Input id="amount" type="number" placeholder="e.g., 2000" value={amount} onChange={e => setAmount(e.target.value)} />
           </div>
         </div>
@@ -145,9 +145,9 @@ export default function StaffManagement() {
                     <TableHead>ID</TableHead>
                     <TableHead>Name</TableHead>
                     <TableHead>Role</TableHead>
-                    <TableHead>Salary (₹)</TableHead>
-                    <TableHead>Advance (₹)</TableHead>
-                    <TableHead>Remaining Salary (₹)</TableHead>
+                    <TableHead>Salary (Rs.)</TableHead>
+                    <TableHead>Advance (Rs.)</TableHead>
+                    <TableHead>Remaining Salary (Rs.)</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -237,7 +237,7 @@ export default function StaffManagement() {
                     <CardDescription>Advances and other details for the selected date.</CardDescription>
                   </div>
                   <Button onClick={() => setIsAddAdvanceDialogOpen(true)}>
-                    <span className="mr-2">₹</span> Add Advance
+                    <span className="mr-2">Rs.</span> Add Advance
                   </Button>
                 </div>
               </CardHeader>
@@ -253,7 +253,7 @@ export default function StaffManagement() {
                           {employee && <span className={`h-2 w-2 rounded-full ${employee.color}`} />}
                           <span>{employee ? employee.name : 'Unknown Employee'}:</span>
                         </div>
-                        <span className="font-mono font-bold">₹{advance.amount.toLocaleString()}</span>
+                        <span className="font-mono font-bold">Rs.{advance.amount.toLocaleString()}</span>
                       </li>
                     )})}
                   </ul>

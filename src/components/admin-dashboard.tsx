@@ -51,7 +51,7 @@ export default function AdminDashboard() {
             <DollarSign className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-900 dark:text-green-100">₹4,29,189.00</div>
+            <div className="text-2xl font-bold text-green-900 dark:text-green-100">Rs.4,29,189.00</div>
             <p className="text-xs text-green-700 dark:text-green-300">+20.1% from last month</p>
           </CardContent>
         </Card>
@@ -71,7 +71,7 @@ export default function AdminDashboard() {
             <TrendingUp className="h-4 w-4 text-amber-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-amber-900 dark:text-amber-100">₹1,826.00</div>
+            <div className="text-2xl font-bold text-amber-900 dark:text-amber-100">Rs.1,826.00</div>
             <p className="text-xs text-amber-700 dark:text-amber-300">+5.3% from last week</p>
           </CardContent>
         </Card>
