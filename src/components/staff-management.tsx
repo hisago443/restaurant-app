@@ -98,10 +98,9 @@ export default function StaffManagement() {
     }
   }
 
-  const handleAddEmployee = (employee: Omit<Employee, 'id' | 'color'>) => {
+  const handleAddEmployee = (employee: Omit<Employee, 'color'>) => {
     const newEmployee: Employee = {
       ...employee,
-      id: `E${Date.now()}`,
       color: colors[employees.length % colors.length]
     };
     setEmployees([...employees, newEmployee]);
@@ -280,7 +279,7 @@ export default function StaffManagement() {
             if (editingEmployee) {
                 handleEditEmployee({ ...editingEmployee, ...employeeData });
             } else {
-                handleAddEmployee(employeeData);
+                handleAddEmployee(employeeData as Employee);
             }
         }}
       />
@@ -288,13 +287,14 @@ export default function StaffManagement() {
   );
 }
 
-function EmployeeDialog({ open, onOpenChange, employee, onSave }: { open: boolean; onOpenChange: (open: boolean) => void; employee: Employee | null; onSave: (data: Omit<Employee, 'id' | 'color'>) => void;}) {
+function EmployeeDialog({ open, onOpenChange, employee, onSave }: { open: boolean; onOpenChange: (open: boolean) => void; employee: Employee | null; onSave: (data: Omit<Employee, 'color'>) => void;}) {
+    const [id, setId] = useState(employee?.id || '');
     const [name, setName] = useState(employee?.name || '');
     const [role, setRole] = useState(employee?.role || '');
     const [salary, setSalary] = useState(employee?.salary.toString() || '');
     
     const handleSave = () => {
-        onSave({ name, role, salary: parseFloat(salary) });
+        onSave({ id, name, role, salary: parseFloat(salary) });
         onOpenChange(false);
     }
 
@@ -311,6 +311,10 @@ function EmployeeDialog({ open, onOpenChange, employee, onSave }: { open: boolea
                     <DialogTitle>{employee ? "Edit Employee" : "Add New Employee"}</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4 py-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="id">Employee ID</Label>
+                        <Input id="id" placeholder="e.g., E004" value={id} onChange={(e) => setId(e.target.value)} disabled={!!employee} />
+                    </div>
                     <div className="space-y-2">
                     <Label htmlFor="name">Employee Name</Label>
                     <Input id="name" placeholder="e.g., John Doe" value={name} onChange={(e) => setName(e.target.value)} />
@@ -343,3 +347,5 @@ function EmployeeDialog({ open, onOpenChange, employee, onSave }: { open: boolea
         </Dialog>
     )
 }
+
+    
