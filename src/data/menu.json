@@ -1,0 +1,51 @@
+[
+  {
+    "category": "Coffee",
+    "items": [
+      { "name": "Espresso", "price": 2.50 },
+      { "name": "Americano", "price": 3.00 },
+      { "name": "Latte", "price": 4.00 },
+      { "name": "Cappuccino", "price": 4.00 },
+      { "name": "Mocha", "price": 4.50 },
+      { "name": "Iced Coffee", "price": 3.50 }
+    ]
+  },
+  {
+    "category": "Tea",
+    "items": [
+      { "name": "Green Tea", "price": 2.50 },
+      { "name": "Black Tea", "price": 2.50 },
+      { "name": "Chai Latte", "price": 4.00 },
+      { "name": "Herbal Tea", "price": 2.75 },
+      { "name": "Iced Tea", "price": 3.00 }
+    ]
+  },
+  {
+    "category": "Pastries",
+    "items": [
+      { "name": "Croissant", "price": 3.00 },
+      { "name": "Muffin", "price": 2.75 },
+      { "name": "Scone", "price": 2.50 },
+      { "name": "Cinnamon Roll", "price": 3.50 },
+      { "name": "Cookie", "price": 1.50 }
+    ]
+  },
+  {
+    "category": "Sandwiches",
+    "items": [
+      { "name": "Turkey Club", "price": 8.50 },
+      { "name": "Veggie Delight", "price": 7.50 },
+      { "name": "Ham & Cheese", "price": 8.00 },
+      { "name": "BLT", "price": 8.00 }
+    ]
+  },
+  {
+    "category": "Juices & Smoothies",
+    "items": [
+        { "name": "Orange Juice", "price": 4.00 },
+        { "name": "Apple Juice", "price": 4.00 },
+        { "name": "Berry Blast Smoothie", "price": 6.00 },
+        { "name": "Green Detox Smoothie", "price": 6.50 }
+    ]
+  }
+]
