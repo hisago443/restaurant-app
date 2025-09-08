@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
@@ -13,7 +14,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from '@/hooks/use-toast';
-import { Search, Plus, Minus, X, Save, FilePlus, LayoutGrid, List } from 'lucide-react';
+import { Search, Plus, Minus, X, Save, FilePlus, LayoutGrid, List, Rows } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 import type { MenuCategory, MenuItem, OrderItem } from '@/lib/types';
@@ -24,7 +25,7 @@ import { PaymentDialog } from './payment-dialog';
 const vegColor = 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 border-green-200 dark:border-green-800';
 const nonVegColor = 'bg-rose-100 dark:bg-rose-900/30 text-rose-800 dark:text-rose-200 border-rose-200 dark:border-rose-800';
 
-type ViewMode = 'accordion' | 'grid';
+type ViewMode = 'accordion' | 'grid' | 'list';
 
 export default function PosSystem() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -159,6 +160,79 @@ export default function PosSystem() {
     </Card>
   );
 
+  const renderMenuContent = () => {
+    if (viewMode === 'list') {
+      return (
+        <div className="space-y-6">
+          {filteredMenu.map((category) => (
+            <div key={category.category}>
+              <h2 className="text-xl font-bold mb-4 sticky top-0 bg-background py-2 z-10">{category.category}</h2>
+              <div className="space-y-4">
+                {category.subCategories.map((subCategory) => (
+                  <div key={subCategory.name}>
+                    <h3 className="text-md font-semibold mb-2 text-muted-foreground pl-2">{subCategory.name}</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                      {subCategory.items.map((item) => renderMenuItem(item, subCategory.name))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      );
+    }
+    if (viewMode === 'grid') {
+      return (
+        <Tabs defaultValue={filteredMenu[0]?.category} className="w-full">
+          <TabsList className="mb-4">
+            {filteredMenu.map(category => (
+              <TabsTrigger key={category.category} value={category.category}>{category.category}</TabsTrigger>
+            ))}
+          </TabsList>
+          {filteredMenu.map(category => (
+             <TabsContent key={category.category} value={category.category}>
+               <div className="space-y-4">
+                {category.subCategories.map((subCategory) => (
+                  <div key={subCategory.name}>
+                    <h3 className="text-md font-semibold mb-2 text-muted-foreground pl-2">{subCategory.name}</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                      {subCategory.items.map((item) => renderMenuItem(item, subCategory.name))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </TabsContent>
+          ))}
+        </Tabs>
+      );
+    }
+    // Accordion view is default
+    return (
+      <Accordion type="multiple" value={activeAccordionItems} onValueChange={setActiveAccordionItems} className="w-full">
+        {filteredMenu.map((category) => (
+          <AccordionItem key={category.category} value={category.category}>
+            <AccordionTrigger className="text-xl font-bold hover:no-underline">
+              {category.category}
+            </AccordionTrigger>
+            <AccordionContent>
+              <div className="space-y-4 pt-2">
+                {category.subCategories.map((subCategory) => (
+                  <div key={subCategory.name}>
+                    <h3 className="text-md font-semibold mb-2 text-muted-foreground pl-2">{subCategory.name}</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                      {subCategory.items.map((item) => renderMenuItem(item, subCategory.name))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+        ))}
+      </Accordion>
+    );
+  };
+
   return (
     <div className="flex flex-col md:flex-row h-[calc(100vh-5rem)] gap-4 p-4">
       {/* Left Panel: Menu */}
@@ -184,6 +258,10 @@ export default function PosSystem() {
                 <Label htmlFor="grid-view" className="p-2 rounded-md transition-colors hover:bg-accent cursor-pointer data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground">
                    <LayoutGrid className="h-5 w-5" />
                 </Label>
+                <RadioGroupItem value="list" id="list-view" className="peer sr-only"/>
+                <Label htmlFor="list-view" className="p-2 rounded-md transition-colors hover:bg-accent cursor-pointer data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground">
+                   <Rows className="h-5 w-5" />
+                </Label>
               </RadioGroup>
               <Separator orientation="vertical" className="h-8" />
               <div className="flex items-center space-x-2">
@@ -194,51 +272,7 @@ export default function PosSystem() {
           </div>
         </CardHeader>
         <ScrollArea className="flex-grow px-4">
-          {viewMode === 'accordion' ? (
-              <Accordion type="multiple" value={activeAccordionItems} onValueChange={setActiveAccordionItems} className="w-full">
-                {filteredMenu.map((category) => (
-                  <AccordionItem key={category.category} value={category.category}>
-                    <AccordionTrigger className="text-xl font-bold hover:no-underline">
-                      {category.category}
-                    </AccordionTrigger>
-                    <AccordionContent>
-                      <div className="space-y-4 pt-2">
-                        {category.subCategories.map((subCategory) => (
-                          <div key={subCategory.name}>
-                            <h3 className="text-md font-semibold mb-2 text-muted-foreground pl-2">{subCategory.name}</h3>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-                              {subCategory.items.map((item) => renderMenuItem(item, subCategory.name))}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
-                ))}
-              </Accordion>
-            ) : (
-              <Tabs defaultValue={filteredMenu[0]?.category} className="w-full">
-                <TabsList className="mb-4">
-                  {filteredMenu.map(category => (
-                    <TabsTrigger key={category.category} value={category.category}>{category.category}</TabsTrigger>
-                  ))}
-                </TabsList>
-                {filteredMenu.map(category => (
-                   <TabsContent key={category.category} value={category.category}>
-                     <div className="space-y-4">
-                      {category.subCategories.map((subCategory) => (
-                        <div key={subCategory.name}>
-                          <h3 className="text-md font-semibold mb-2 text-muted-foreground pl-2">{subCategory.name}</h3>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-                            {subCategory.items.map((item) => renderMenuItem(item, subCategory.name))}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </TabsContent>
-                ))}
-              </Tabs>
-            )}
+          {renderMenuContent()}
         </ScrollArea>
       </Card>
 
