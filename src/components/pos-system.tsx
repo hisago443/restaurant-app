@@ -174,7 +174,10 @@ export default function PosSystem() {
                               >
                                 <CardContent className="p-3">
                                   <div className="flex justify-between items-start">
-                                    <span className="font-semibold pr-2">{item.name}</span>
+                                    <div className="flex items-center gap-2">
+                                      <span className={cn('h-2.5 w-2.5 rounded-full', subCategory.name.toLowerCase() === 'veg' ? 'bg-green-500' : 'bg-red-500')}></span>
+                                      <span className="font-semibold pr-2">{item.name}</span>
+                                    </div>
                                     <span className="font-mono text-right whitespace-nowrap">₹{item.price.toFixed(2)}</span>
                                   </div>
                                   {!isClickToAdd && (
