@@ -101,7 +101,7 @@ export default function StaffManagement() {
   const handleAddEmployee = (employee: Omit<Employee, 'id' | 'color'>) => {
     const newEmployee: Employee = {
       ...employee,
-      id: `E${(employees.length + 1).toString().padStart(3, '0')}`,
+      id: `E${Date.now()}`,
       color: colors[employees.length % colors.length]
     };
     setEmployees([...employees, newEmployee]);
