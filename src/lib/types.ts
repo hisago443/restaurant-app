@@ -3,9 +3,14 @@ export interface MenuItem {
   price: number;
 }
 
+export interface MenuSubCategory {
+  name: string;
+  items: MenuItem[];
+}
+
 export interface MenuCategory {
   category: string;
-  items: MenuItem[];
+  subCategories: MenuSubCategory[];
 }
 
 export interface OrderItem extends MenuItem {
@@ -39,6 +44,7 @@ export interface Attendance {
 }
 
 export interface Advance {
+  employeeId: string;
   date: Date;
   amount: number;
 }

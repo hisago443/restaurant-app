@@ -24,6 +24,8 @@ const categoryColors = [
   'bg-amber-100 dark:bg-amber-900/30',
   'bg-violet-100 dark:bg-violet-900/30',
   'bg-lime-100 dark:bg-lime-900/30',
+  'bg-pink-100 dark:bg-pink-900/30',
+  'bg-teal-100 dark:bg-teal-900/30',
 ];
 
 export default function PosSystem() {
@@ -36,12 +38,17 @@ export default function PosSystem() {
   const { toast } = useToast();
 
   const filteredMenu = useMemo(() => {
-    if (!searchTerm) return menuData as MenuCategory[];
+    const typedMenuData: MenuCategory[] = menuData;
+    if (!searchTerm) return typedMenuData;
     const lowercasedTerm = searchTerm.toLowerCase();
-    return menuData.map(category => ({
+    
+    return typedMenuData.map(category => ({
       ...category,
-      items: category.items.filter(item => item.name.toLowerCase().includes(lowercasedTerm))
-    })).filter(category => category.items.length > 0);
+      subCategories: category.subCategories.map(subCategory => ({
+        ...subCategory,
+        items: subCategory.items.filter(item => item.name.toLowerCase().includes(lowercasedTerm))
+      })).filter(subCategory => subCategory.items.length > 0)
+    })).filter(category => category.subCategories.length > 0);
   }, [searchTerm]);
 
   const subtotal = useMemo(() => orderItems.reduce((acc, item) => acc + item.price * item.quantity, 0), [orderItems]);
@@ -144,33 +151,38 @@ export default function PosSystem() {
             </div>
           </div>
         </CardHeader>
-        <ScrollArea className="flex-grow">
-          <div className="p-4 pt-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <ScrollArea className="flex-grow p-4 pt-0">
             {filteredMenu.map((category, catIndex) => (
-              <div key={category.category}>
-                <h2 className="text-xl font-bold mb-2">{category.category}</h2>
-                <div className="space-y-2">
-                  {category.items.map((item) => (
-                    <div
-                      key={item.name}
-                      className={`p-3 rounded-lg cursor-pointer transition-transform hover:scale-105 ${categoryColors[catIndex % categoryColors.length]}`}
-                      onClick={() => isClickToAdd && addToOrder(item, 1)}
-                    >
-                      <div className="flex justify-between">
-                        <span className="font-semibold">{item.name}</span>
-                        <span className="font-mono">₹{item.price.toFixed(2)}</span>
+              <div key={category.category} className="mb-6">
+                <h2 className="text-2xl font-bold mb-3 sticky top-0 bg-background py-2 z-10">{category.category}</h2>
+                <div className="space-y-4">
+                  {category.subCategories.map((subCategory) => (
+                    <div key={subCategory.name}>
+                      <h3 className="text-lg font-semibold mb-2 text-muted-foreground">{subCategory.name}</h3>
+                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                        {subCategory.items.map((item) => (
+                          <div
+                            key={item.name}
+                            className={`p-3 rounded-lg cursor-pointer transition-transform hover:scale-105 ${categoryColors[catIndex % categoryColors.length]}`}
+                            onClick={() => isClickToAdd && addToOrder(item, 1)}
+                          >
+                            <div className="flex justify-between items-start">
+                              <span className="font-semibold pr-2">{item.name}</span>
+                              <span className="font-mono text-right whitespace-nowrap">₹{item.price.toFixed(2)}</span>
+                            </div>
+                            {!isClickToAdd && (
+                              <div className="flex justify-end mt-2">
+                                <Button size="sm" onClick={() => addToOrder(item)}>Add to Order</Button>
+                              </div>
+                            )}
+                          </div>
+                        ))}
                       </div>
-                      {!isClickToAdd && (
-                        <div className="flex justify-end mt-2">
-                          <Button size="sm" onClick={() => addToOrder(item)}>Add to Order</Button>
-                        </div>
-                      )}
                     </div>
                   ))}
                 </div>
               </div>
             ))}
-          </div>
         </ScrollArea>
       </Card>
 
