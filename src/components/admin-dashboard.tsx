@@ -129,6 +129,10 @@ export default function AdminDashboard() {
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-4xl">
+                  <DialogHeader>
+                    <DialogTitle>Sales Report</DialogTitle>
+                    <DialogDescription>A summary of sales activity.</DialogDescription>
+                  </DialogHeader>
                   <SalesReport />
               </DialogContent>
             </Dialog>
@@ -159,6 +163,10 @@ export default function AdminDashboard() {
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-3xl">
+                  <DialogHeader>
+                    <DialogTitle>Inventory Management</DialogTitle>
+                    <DialogDescription>Track and manage your stock levels.</DialogDescription>
+                  </DialogHeader>
                   <InventoryManagement />
               </DialogContent>
             </Dialog>
@@ -170,6 +178,10 @@ export default function AdminDashboard() {
                 </Button>
               </DialogTrigger>
               <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>System Settings</DialogTitle>
+                    <DialogDescription>Manage general application settings.</DialogDescription>
+                  </DialogHeader>
                   <SystemSettings />
               </DialogContent>
             </Dialog>

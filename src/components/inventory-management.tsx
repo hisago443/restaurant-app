@@ -32,7 +32,7 @@ export default function InventoryManagement() {
   };
 
   return (
-    <Card>
+    <Card className="border-none shadow-none">
       <CardHeader>
         <CardTitle>Inventory Management</CardTitle>
         <CardDescription>Track and manage your stock levels.</CardDescription>

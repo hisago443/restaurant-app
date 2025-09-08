@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 
 export default function SystemSettings() {
     return (
-        <Card>
+        <Card className="border-none shadow-none">
             <CardHeader>
                 <CardTitle>System Settings</CardTitle>
                 <CardDescription>Manage general application settings.</CardDescription>

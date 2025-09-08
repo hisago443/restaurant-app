@@ -13,7 +13,7 @@ const data = [
 
 export default function SalesReport() {
   return (
-    <Card>
+    <Card className="border-none shadow-none">
       <CardHeader>
         <CardTitle>Weekly Sales Report</CardTitle>
         <CardDescription>A summary of sales revenue for the current week.</CardDescription>
