@@ -79,5 +79,50 @@
       { "name": "Bournvita Milk", "price": 99 },
       { "name": "Hot Chocolate With Marshmallow", "price": 149 }
     ]
+  },
+  {
+    "category": "Parantha's",
+    "items": [
+      { "name": "Aloo", "price": 49 },
+      { "name": "Gobhi", "price": 59 },
+      { "name": "Paneer", "price": 69 },
+      { "name": "Mix", "price": 79 },
+      { "name": "Egg", "price": 89 },
+      { "name": "Amul Butter", "price": 20 },
+      { "name": "Curd", "price": 30 }
+    ]
+  },
+  {
+    "category": "Omelette",
+    "items": [
+      { "name": "Plain Omelette", "price": 129 },
+      { "name": "Scrambled Egg", "price": 129 },
+      { "name": "Sunny Side Up", "price": 139 },
+      { "name": "Tomatoe Basil Omelette", "price": 139 },
+      { "name": "Mushroom Omelette", "price": 149 },
+      { "name": "Cheese Omelette", "price": 159 },
+      { "name": "Cheese & Corn Omelette", "price": 169 }
+    ]
+  },
+  {
+    "category": "Bread Toast",
+    "items": [
+      { "name": "Butter Toast", "price": 99 },
+      { "name": "Jam Toast", "price": 119 },
+      { "name": "French Toast", "price": 129 },
+      { "name": "Chilly Cheese Toast", "price": 149 },
+      { "name": "Peanut Butter Toast", "price": 169 },
+      { "name": "Banana Nutella Toast", "price": 179 }
+    ]
+  },
+  {
+    "category": "More Options",
+    "items": [
+      { "name": "Cornflakes", "price": 119 },
+      { "name": "Chocos", "price": 119 },
+      { "name": "Poha", "price": 139 },
+      { "name": "Lemon Rice", "price": 149 },
+      { "name": "Porridge", "price": 179 }
+    ]
   }
 ]
