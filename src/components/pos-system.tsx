@@ -13,21 +13,16 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { useToast } from '@/hooks/use-toast';
 import { Search, Plus, Minus, X, Save, FilePlus, DollarSign } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 import type { MenuCategory, MenuItem, OrderItem } from '@/lib/types';
 import menuData from '@/data/menu.json';
 import { generateReceipt, type GenerateReceiptInput } from '@/ai/flows/dynamic-receipt-discount-reasoning';
 import { PaymentDialog } from './payment-dialog';
 
-const categoryColors = [
-  'bg-rose-100 dark:bg-rose-900/30 text-rose-800 dark:text-rose-200 border-rose-200 dark:border-rose-800',
-  'bg-cyan-100 dark:bg-cyan-900/30 text-cyan-800 dark:text-cyan-200 border-cyan-200 dark:border-cyan-800',
-  'bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200 border-amber-200 dark:border-amber-800',
-  'bg-violet-100 dark:bg-violet-900/30 text-violet-800 dark:text-violet-200 border-violet-200 dark:border-violet-800',
-  'bg-lime-100 dark:bg-lime-900/30 text-lime-800 dark:text-lime-200 border-lime-200 dark:border-lime-800',
-  'bg-pink-100 dark:bg-pink-900/30 text-pink-800 dark:text-pink-200 border-pink-200 dark:border-pink-800',
-  'bg-teal-100 dark:bg-teal-900/30 text-teal-800 dark:text-teal-200 border-teal-200 dark:border-teal-800',
-];
+const vegColor = 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 border-green-200 dark:border-green-800';
+const nonVegColor = 'bg-rose-100 dark:bg-rose-900/30 text-rose-800 dark:text-rose-200 border-rose-200 dark:border-rose-800';
+
 
 export default function PosSystem() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -37,6 +32,7 @@ export default function PosSystem() {
   const [receiptPreview, setReceiptPreview] = useState('');
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
   const { toast } = useToast();
+  const [activeAccordionItems, setActiveAccordionItems] = useState<string[]>([]);
 
   const filteredMenu = useMemo(() => {
     const typedMenuData: MenuCategory[] = menuData;
@@ -52,6 +48,10 @@ export default function PosSystem() {
     })).filter(category => category.subCategories.length > 0);
   }, [searchTerm]);
 
+  useEffect(() => {
+    setActiveAccordionItems(filteredMenu.map(c => c.category));
+  }, [filteredMenu]);
+
   const subtotal = useMemo(() => orderItems.reduce((acc, item) => acc + item.price * item.quantity, 0), [orderItems]);
   const total = useMemo(() => subtotal * (1 - discount / 100), [subtotal, discount]);
 
@@ -61,7 +61,7 @@ export default function PosSystem() {
       return;
     }
     const input: GenerateReceiptInput = {
-      items: orderItems,
+      items: orderItems.map(item => ({ name: item.name, price: item.price, quantity: item.quantity })),
       discount,
       subtotal,
       total,
@@ -153,8 +153,8 @@ export default function PosSystem() {
           </div>
         </CardHeader>
         <ScrollArea className="flex-grow px-4">
-            <Accordion type="multiple" defaultValue={filteredMenu.map(c => c.category)} className="w-full">
-              {filteredMenu.map((category, catIndex) => (
+            <Accordion type="multiple" value={activeAccordionItems} onValueChange={setActiveAccordionItems} className="w-full">
+              {filteredMenu.map((category) => (
                 <AccordionItem key={category.category} value={category.category}>
                   <AccordionTrigger className="text-xl font-bold hover:no-underline">
                     {category.category}
@@ -168,7 +168,8 @@ export default function PosSystem() {
                             {subCategory.items.map((item) => (
                               <Card
                                 key={item.name}
-                                className={`rounded-lg cursor-pointer transition-all hover:scale-105 hover:shadow-md ${categoryColors[catIndex % categoryColors.length]}`}
+                                className={cn("rounded-lg cursor-pointer transition-all hover:scale-105 hover:shadow-md",
+                                subCategory.name.toLowerCase() === 'veg' ? vegColor : nonVegColor)}
                                 onClick={() => isClickToAdd && addToOrder(item, 1)}
                               >
                                 <CardContent className="p-3">
