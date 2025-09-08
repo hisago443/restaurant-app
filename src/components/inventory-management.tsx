@@ -15,28 +15,69 @@ const initialInventory = [
   { id: 'I005', name: 'Tomatoes', stock: 25, capacity: 30, unit: 'kg' },
 ];
 
+function InventoryRow({ item, onStockChange, onSetStock }: { item: typeof initialInventory[0], onStockChange: (id: string, amount: number) => void, onSetStock: (id: string, amount: number) => void }) {
+  const [customValue, setCustomValue] = useState<string>("");
+
+  const handleSetStock = () => {
+    const value = parseInt(customValue, 10);
+    if (!isNaN(value)) {
+      onSetStock(item.id, value);
+      setCustomValue("");
+    }
+  };
+
+  return (
+    <TableRow>
+      <TableCell className="font-medium">{item.name}</TableCell>
+      <TableCell>
+        <div className="flex items-center gap-2">
+          <Progress
+            value={(item.stock / item.capacity) * 100}
+            className="w-40 h-3"
+          />
+          <span>{item.stock} / {item.capacity} {item.unit}</span>
+        </div>
+      </TableCell>
+      <TableCell className="text-center">
+        <div className="flex items-center justify-center gap-2">
+            <Button size="sm" variant="outline" onClick={() => onStockChange(item.id, -5)}>-5</Button>
+            <Button size="sm" variant="outline" onClick={() => onStockChange(item.id, -1)}>-1</Button>
+            <Button size="sm" variant="outline" onClick={() => onStockChange(item.id, 1)}>+1</Button>
+            <Button size="sm" variant="secondary" onClick={() => onStockChange(item.id, 5)}>+5</Button>
+            <div className="flex w-full max-w-xs items-center space-x-2">
+              <Input
+                type="number"
+                placeholder="Set stock"
+                value={customValue}
+                onChange={(e) => setCustomValue(e.target.value)}
+                className="h-9 w-24"
+              />
+              <Button size="sm" onClick={handleSetStock}>Set</Button>
+            </div>
+        </div>
+      </TableCell>
+    </TableRow>
+  );
+}
+
+
 export default function InventoryManagement() {
   const [inventory, setInventory] = useState(initialInventory);
-  
+
   const handleStockChange = (id: string, amount: number) => {
     setInventory(inventory.map(item =>
       item.id === id ? { ...item, stock: Math.max(0, Math.min(item.capacity, item.stock + amount)) } : item
     ));
   };
   
-  const getStockLevelColor = (stock: number, capacity: number) => {
-    const percentage = (stock / capacity) * 100;
-    if (percentage < 25) return 'bg-red-500';
-    if (percentage < 50) return 'bg-yellow-500';
-    return 'bg-green-500';
-  };
+  const handleSetStock = (id: string, amount: number) => {
+     setInventory(inventory.map(item =>
+      item.id === id ? { ...item, stock: Math.max(0, Math.min(item.capacity, amount)) } : item
+    ));
+  }
 
   return (
     <Card className="border-none shadow-none">
-      <CardHeader>
-        <CardTitle>Inventory Management</CardTitle>
-        <CardDescription>Track and manage your stock levels.</CardDescription>
-      </CardHeader>
       <CardContent>
         <Table>
           <TableHeader>
@@ -48,23 +89,7 @@ export default function InventoryManagement() {
           </TableHeader>
           <TableBody>
             {inventory.map((item) => (
-              <TableRow key={item.id}>
-                <TableCell className="font-medium">{item.name}</TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-2">
-                    <Progress 
-                      value={(item.stock / item.capacity) * 100} 
-                      className="w-40 h-3"
-                    />
-                    <span>{item.stock} / {item.capacity} {item.unit}</span>
-                  </div>
-                </TableCell>
-                <TableCell className="text-center space-x-2">
-                  <Button size="sm" variant="outline" onClick={() => handleStockChange(item.id, -1)}>-1</Button>
-                  <Button size="sm" variant="outline" onClick={() => handleStockChange(item.id, 1)}>+1</Button>
-                  <Button size="sm" variant="secondary" onClick={() => handleStockChange(item.id, 5)}>+5</Button>
-                </TableCell>
-              </TableRow>
+              <InventoryRow key={item.id} item={item} onStockChange={handleStockChange} onSetStock={handleSetStock} />
             ))}
           </TableBody>
         </Table>
