@@ -49,3 +49,19 @@ export interface Advance {
   date: Date;
   amount: number;
 }
+
+export interface InventoryItem {
+  id: string;
+  name: string;
+  stock: number;
+  capacity: number;
+  unit: string;
+}
+
+export interface ActivityLogEntry {
+  id: number;
+  user: string;
+  action: string;
+  timestamp: string;
+  type: 'Auth' | 'Order' | 'Payment' | 'Report' | 'POS';
+}
