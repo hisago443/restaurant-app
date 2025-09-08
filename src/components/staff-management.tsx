@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -24,6 +25,8 @@ const initialAdvances: Advance[] = [
   { employeeId: 'E002', date: new Date(2024, 6, 5), amount: 2000 },
   { employeeId: 'E003', date: new Date(2024, 6, 15), amount: 1500 },
 ];
+
+const colors = ['bg-blue-500', 'bg-green-500', 'bg-yellow-500', 'bg-purple-500', 'bg-pink-500', 'bg-indigo-500', 'bg-teal-500'];
 
 function AddAdvanceDialog({ open, onOpenChange, employees, onAddAdvance, selectedDate }: { open: boolean, onOpenChange: (open: boolean) => void, employees: Employee[], onAddAdvance: (advance: Omit<Advance, 'date'>) => void, selectedDate: Date }) {
   const [employeeId, setEmployeeId] = useState('');
@@ -79,6 +82,8 @@ export default function StaffManagement() {
   const [advances, setAdvances] = useState<Advance[]>(initialAdvances);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [isAddEmployeeDialogOpen, setIsAddEmployeeDialogOpen] = useState(false);
+  const [isEditEmployeeDialogOpen, setIsEditEmployeeDialogOpen] = useState(false);
+  const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
   const [isAddAdvanceDialogOpen, setIsAddAdvanceDialogOpen] = useState(false);
 
   const advancesForSelectedDate = advances.filter(
@@ -91,6 +96,29 @@ export default function StaffManagement() {
     if (selectedDate) {
       setAdvances([...advances, { ...advance, date: selectedDate }]);
     }
+  }
+
+  const handleAddEmployee = (employee: Omit<Employee, 'id' | 'color'>) => {
+    const newEmployee: Employee = {
+      ...employee,
+      id: `E${(employees.length + 1).toString().padStart(3, '0')}`,
+      color: colors[employees.length % colors.length]
+    };
+    setEmployees([...employees, newEmployee]);
+  }
+  
+  const handleEditEmployee = (employee: Employee) => {
+      setEmployees(employees.map(e => e.id === employee.id ? employee : e));
+      setEditingEmployee(null);
+  }
+
+  const handleDeleteEmployee = (employeeId: string) => {
+      setEmployees(employees.filter(e => e.id !== employeeId));
+  }
+  
+  const openEditDialog = (employee: Employee) => {
+    setEditingEmployee(employee);
+    setIsEditEmployeeDialogOpen(true);
   }
 
   return (
@@ -108,7 +136,7 @@ export default function StaffManagement() {
             </CardHeader>
             <CardContent>
               <div className="mb-4">
-                <Button onClick={() => setIsAddEmployeeDialogOpen(true)}>
+                <Button onClick={() => { setEditingEmployee(null); setIsAddEmployeeDialogOpen(true); }}>
                   <PlusCircle className="mr-2 h-4 w-4" /> Add Employee
                 </Button>
               </div>
@@ -135,12 +163,28 @@ export default function StaffManagement() {
                       <TableCell>{employee.role}</TableCell>
                       <TableCell>{employee.salary.toLocaleString()}</TableCell>
                       <TableCell className="text-right">
-                        <Button variant="ghost" size="icon">
+                        <Button variant="ghost" size="icon" onClick={() => openEditDialog(employee)}>
                           <Edit className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" className="text-destructive">
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        <AlertDialog>
+                           <AlertDialogTrigger asChild>
+                                <Button variant="ghost" size="icon" className="text-destructive">
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                           </AlertDialogTrigger>
+                           <AlertDialogContent>
+                                <AlertDialogHeader>
+                                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                        This action cannot be undone. This will permanently delete {employee.name}'s record.
+                                    </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction onClick={() => handleDeleteEmployee(employee.id)}>Delete</AlertDialogAction>
+                                </AlertDialogFooter>
+                           </AlertDialogContent>
+                        </AlertDialog>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -219,41 +263,68 @@ export default function StaffManagement() {
         selectedDate={selectedDate || new Date()}
       />
 
-      <Dialog open={isAddEmployeeDialogOpen} onOpenChange={setIsAddEmployeeDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Add New Employee</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Employee Name</Label>
-              <Input id="name" placeholder="e.g., John Doe" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="role">Role</Label>
-              <Select>
-                <SelectTrigger id="role">
-                  <SelectValue placeholder="Select a role" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="manager">Manager</SelectItem>
-                  <SelectItem value="chef">Chef</SelectItem>
-                  <SelectItem value="waiter">Waiter</SelectItem>
-                  <SelectItem value="cleaner">Cleaner</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="salary">Salary</Label>
-              <Input id="salary" type="number" placeholder="e.g., 30000" />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsAddEmployeeDialogOpen(false)}>Cancel</Button>
-            <Button onClick={() => setIsAddEmployeeDialogOpen(false)}>Save Employee</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <EmployeeDialog
+        key={editingEmployee?.id ?? 'add'}
+        open={isAddEmployeeDialogOpen || isEditEmployeeDialogOpen}
+        onOpenChange={editingEmployee ? setIsEditEmployeeDialogOpen : setIsAddEmployeeDialogOpen}
+        employee={editingEmployee}
+        onSave={(employeeData) => {
+            if (editingEmployee) {
+                handleEditEmployee({ ...editingEmployee, ...employeeData });
+            } else {
+                handleAddEmployee(employeeData);
+            }
+        }}
+      />
     </div>
   );
+}
+
+function EmployeeDialog({ open, onOpenChange, employee, onSave }: { open: boolean; onOpenChange: (open: boolean) => void; employee: Employee | null; onSave: (data: Omit<Employee, 'id' | 'color'>) => void;}) {
+    const [name, setName] = useState(employee?.name || '');
+    const [role, setRole] = useState(employee?.role || '');
+    const [salary, setSalary] = useState(employee?.salary.toString() || '');
+    
+    const handleSave = () => {
+        onSave({ name, role, salary: parseFloat(salary) });
+        onOpenChange(false);
+    }
+
+    return (
+         <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogContent>
+            <DialogHeader>
+                <DialogTitle>{employee ? "Edit Employee" : "Add New Employee"}</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                <Label htmlFor="name">Employee Name</Label>
+                <Input id="name" placeholder="e.g., John Doe" value={name} onChange={(e) => setName(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                <Label htmlFor="role">Role</Label>
+                <Select value={role} onValueChange={setRole}>
+                    <SelectTrigger id="role">
+                    <SelectValue placeholder="Select a role" />
+                    </SelectTrigger>
+                    <SelectContent>
+                    <SelectItem value="Manager">Manager</SelectItem>
+                    <SelectItem value="Chef">Chef</SelectItem>
+                    <SelectItem value="Waiter">Waiter</SelectItem>
+                    <SelectItem value="Cleaner">Cleaner</SelectItem>
+                    </SelectContent>
+                </Select>
+                </div>
+                <div className="space-y-2">
+                <Label htmlFor="salary">Salary</Label>
+                <Input id="salary" type="number" placeholder="e.g., 30000" value={salary} onChange={(e) => setSalary(e.target.value)}/>
+                </div>
+            </div>
+            <DialogFooter>
+                <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+                <Button onClick={handleSave}>Save Employee</Button>
+            </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    )
 }
