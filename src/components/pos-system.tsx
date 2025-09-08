@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
@@ -14,7 +13,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from '@/hooks/use-toast';
-import { Search, Plus, Minus, X, Save, FilePlus, LayoutGrid, List, Rows } from 'lucide-react';
+import { Search, Plus, Minus, X, Save, FilePlus, LayoutGrid, List, Rows, ChevronsUpDown, ChevronsDownUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 import type { MenuCategory, MenuItem, OrderItem } from '@/lib/types';
@@ -54,8 +53,10 @@ export default function PosSystem() {
   }, [searchTerm, typedMenuData]);
 
   useEffect(() => {
-    setActiveAccordionItems(filteredMenu.map(c => c.category));
-  }, [filteredMenu]);
+    if (viewMode === 'accordion') {
+      setActiveAccordionItems(filteredMenu.map(c => c.category));
+    }
+  }, [filteredMenu, viewMode]);
 
   const subtotal = useMemo(() => orderItems.reduce((acc, item) => acc + item.price * item.quantity, 0), [orderItems]);
   const total = useMemo(() => subtotal * (1 - discount / 100), [subtotal, discount]);
@@ -112,7 +113,7 @@ export default function PosSystem() {
   };
 
   const removeFromOrder = (name: string) => {
-    setOrderItems(orderItems.filter(item => item.name !== name));
+    setOrderItems(orderItems.filter(item => item.name !== item.name));
   };
   
   const clearOrder = () => {
@@ -140,13 +141,13 @@ export default function PosSystem() {
     <Card
       key={item.name}
       className={cn("rounded-lg cursor-pointer transition-all hover:scale-105 hover:shadow-md",
-      subCategoryName.toLowerCase() === 'veg' ? vegColor : nonVegColor)}
+      subCategoryName.toLowerCase().includes('veg') ? vegColor : nonVegColor)}
       onClick={() => isClickToAdd && addToOrder(item, 1)}
     >
       <CardContent className="p-3">
         <div className="flex justify-between items-start">
           <div className="flex items-center gap-2">
-            <span className={cn('h-2.5 w-2.5 rounded-full', subCategoryName.toLowerCase() === 'veg' ? 'bg-green-500' : 'bg-red-500')}></span>
+            <span className={cn('h-2.5 w-2.5 rounded-full', subCategoryName.toLowerCase().includes('veg') ? 'bg-green-500' : 'bg-red-500')}></span>
             <span className="font-semibold pr-2">{item.name}</span>
           </div>
           <span className="font-mono text-right whitespace-nowrap">Rs.{item.price.toFixed(2)}</span>
@@ -251,19 +252,29 @@ export default function PosSystem() {
             <div className="flex items-center gap-4">
                <RadioGroup value={viewMode} onValueChange={(v) => setViewMode(v as ViewMode)} className="flex items-center">
                 <RadioGroupItem value="accordion" id="accordion-view" className="peer sr-only" />
-                <Label htmlFor="accordion-view" className="p-2 rounded-md transition-colors hover:bg-accent cursor-pointer data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground">
+                <Label htmlFor="accordion-view" className="p-2 rounded-md transition-colors hover:bg-accent cursor-pointer peer-data-[state=checked]:bg-primary peer-data-[state=checked]:text-primary-foreground">
                   <List className="h-5 w-5" />
                 </Label>
                 <RadioGroupItem value="grid" id="grid-view" className="peer sr-only"/>
-                <Label htmlFor="grid-view" className="p-2 rounded-md transition-colors hover:bg-accent cursor-pointer data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground">
+                <Label htmlFor="grid-view" className="p-2 rounded-md transition-colors hover:bg-accent cursor-pointer peer-data-[state=checked]:bg-primary peer-data-[state=checked]:text-primary-foreground">
                    <LayoutGrid className="h-5 w-5" />
                 </Label>
                 <RadioGroupItem value="list" id="list-view" className="peer sr-only"/>
-                <Label htmlFor="list-view" className="p-2 rounded-md transition-colors hover:bg-accent cursor-pointer data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground">
+                <Label htmlFor="list-view" className="p-2 rounded-md transition-colors hover:bg-accent cursor-pointer peer-data-[state=checked]:bg-primary peer-data-[state=checked]:text-primary-foreground">
                    <Rows className="h-5 w-5" />
                 </Label>
               </RadioGroup>
               <Separator orientation="vertical" className="h-8" />
+               {viewMode === 'accordion' && (
+                <div className="flex items-center gap-2">
+                  <Button variant="outline" size="sm" onClick={() => setActiveAccordionItems(filteredMenu.map(c => c.category))}>
+                    <ChevronsDownUp className="mr-2 h-4 w-4" /> Expand All
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={() => setActiveAccordionItems([])}>
+                    <ChevronsUpDown className="mr-2 h-4 w-4" /> Collapse All
+                  </Button>
+                </div>
+              )}
               <div className="flex items-center space-x-2">
                 <Switch id="click-to-add-mode" checked={isClickToAdd} onCheckedChange={setIsClickToAdd} />
                 <Label htmlFor="click-to-add-mode">Click-to-Add</Label>
@@ -380,5 +391,3 @@ export default function PosSystem() {
     </div>
   );
 }
-
-    
