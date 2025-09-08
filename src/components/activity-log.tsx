@@ -20,12 +20,8 @@ const typeColors: Record<string, string> = {
 
 export default function ActivityLog() {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Activity Log</CardTitle>
-        <CardDescription>Recent activities across the system.</CardDescription>
-      </CardHeader>
-      <CardContent>
+    <Card className="border-none shadow-none">
+      <CardContent className="p-0">
         <ScrollArea className="h-96">
           <div className="space-y-4">
             {logs.map(log => (

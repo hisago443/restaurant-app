@@ -5,7 +5,7 @@ import { BarChart, Book, Download, DollarSign, TrendingUp, Settings, Package, Us
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import SalesReport from './sales-report';
 import ActivityLog from './activity-log';
 import InventoryManagement from './inventory-management';
@@ -144,7 +144,11 @@ export default function AdminDashboard() {
                 </Button>
               </DialogTrigger>
               <DialogContent>
-                  <ActivityLog />
+                <DialogHeader>
+                  <DialogTitle>Activity Log</DialogTitle>
+                  <DialogDescription>Recent activities across the system.</DialogDescription>
+                </DialogHeader>
+                <ActivityLog />
               </DialogContent>
             </Dialog>
             <Dialog>
