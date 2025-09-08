@@ -12,7 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { useToast } from '@/hooks/use-toast';
-import { Search, Plus, Minus, X, Save, FilePlus, DollarSign } from 'lucide-react';
+import { Search, Plus, Minus, X, Save, FilePlus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 import type { MenuCategory, MenuItem, OrderItem } from '@/lib/types';
@@ -268,7 +268,9 @@ export default function PosSystem() {
             </div>
           </div>
           <div className="grid grid-cols-2 gap-2 pt-2">
-            <Button size="lg" onClick={handleProcessPayment}><DollarSign />Process Payment</Button>
+            <Button size="lg" onClick={handleProcessPayment}>
+              <span className="mr-2 font-bold">Rs.</span> Process Payment
+            </Button>
             
             <AlertDialog>
                 <AlertDialogTrigger asChild>
