@@ -206,5 +206,55 @@
         ]
       }
     ]
+  },
+  {
+    "category": "Chinese & Snacks",
+    "subCategories": [
+      {
+        "name": "Chinese - Veg",
+        "items": [
+          { "name": "Veg Noodles", "price": 179 },
+          { "name": "Chilly Garlic Noodles", "price": 189 },
+          { "name": "Hakka Noodles", "price": 199 },
+          { "name": "Veg Fried Rice", "price": 189 },
+          { "name": "Schezwan Fried Rice", "price": 209 },
+          { "name": "Veg Manchurian", "price": 189 }
+        ]
+      },
+      {
+        "name": "Chinese - Non-Veg",
+        "items": [
+          { "name": "Egg Fried Rice", "price": 219 },
+          { "name": "Chicken Fried Rice", "price": 239 },
+          { "name": "Chicken Manchurian", "price": 229 }
+        ]
+      },
+      {
+        "name": "Maggi",
+        "items": [
+          { "name": "Plain Maggi", "price": 49 },
+          { "name": "Butter Maggi", "price": 79 },
+          { "name": "Vegetable Maggi", "price": 79 }
+        ]
+      },
+      {
+        "name": "Snacks",
+        "items": [
+          { "name": "French Fries", "price": 139 },
+          { "name": "Peri Peri Fries", "price": 149 },
+          { "name": "Cheese Fries", "price": 159 },
+          { "name": "Peanut Masala", "price": 129 },
+          { "name": "Nachos With Salsa", "price": 179 },
+          { "name": "Cheese Nachos With Salsa", "price": 199 },
+          { "name": "Honey Chilly Potato", "price": 189 },
+          { "name": "Chilly Mushroom", "price": 199 },
+          { "name": "Chilly Paneer", "price": 239 },
+          { "name": "Chilly Chicken", "price": 269 },
+          { "name": "Lemon Chicken", "price": 289 },
+          { "name": "Crispy Fried Chicken", "price": 289 },
+          { "name": "Chicken Pakoda", "price": 189 }
+        ]
+      }
+    ]
   }
 ]

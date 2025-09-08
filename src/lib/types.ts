@@ -36,6 +36,7 @@ export interface Employee {
   name: string;
   role: string;
   salary: number;
+  color: string;
 }
 
 export interface Attendance {

@@ -15,9 +15,9 @@ import type { Employee, Advance } from '@/lib/types';
 import { format, isSameDay } from 'date-fns';
 
 const initialEmployees: Employee[] = [
-  { id: 'E001', name: 'John Doe', role: 'Manager', salary: 50000 },
-  { id: 'E002', name: 'Jane Smith', role: 'Chef', salary: 40000 },
-  { id: 'E003', name: 'Mike Johnson', role: 'Waiter', salary: 25000 },
+  { id: 'E001', name: 'John Doe', role: 'Manager', salary: 50000, color: 'bg-blue-500' },
+  { id: 'E002', name: 'Jane Smith', role: 'Chef', salary: 40000, color: 'bg-green-500' },
+  { id: 'E003', name: 'Mike Johnson', role: 'Waiter', salary: 25000, color: 'bg-yellow-500' },
 ];
 
 const initialAdvances: Advance[] = [
@@ -126,7 +126,12 @@ export default function StaffManagement() {
                   {employees.map((employee) => (
                     <TableRow key={employee.id}>
                       <TableCell>{employee.id}</TableCell>
-                      <TableCell>{employee.name}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <span className={`h-2 w-2 rounded-full ${employee.color}`} />
+                          {employee.name}
+                        </div>
+                      </TableCell>
                       <TableCell>{employee.role}</TableCell>
                       <TableCell>{employee.salary.toLocaleString()}</TableCell>
                       <TableCell className="text-right">
@@ -189,7 +194,10 @@ export default function StaffManagement() {
                       const employee = employees.find(e => e.id === advance.employeeId);
                       return (
                       <li key={index} className="flex justify-between items-center p-2 bg-muted rounded-md">
-                        <span>{employee ? employee.name : 'Unknown Employee'}:</span>
+                        <div className="flex items-center gap-2">
+                          {employee && <span className={`h-2 w-2 rounded-full ${employee.color}`} />}
+                          <span>{employee ? employee.name : 'Unknown Employee'}:</span>
+                        </div>
                         <span className="font-mono font-bold">₹{advance.amount.toLocaleString()}</span>
                       </li>
                     )})}
