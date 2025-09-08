@@ -5,13 +5,13 @@ import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger, AlertDialogDescription } from "@/components/ui/alert-dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { PlusCircle, Edit, Trash2, DollarSign } from 'lucide-react';
+import { PlusCircle, Edit, Trash2 } from 'lucide-react';
 import type { Employee, Advance } from '@/lib/types';
 import { format, isSameDay } from 'date-fns';
 
@@ -63,7 +63,7 @@ function AddAdvanceDialog({ open, onOpenChange, employees, onAddAdvance, selecte
             </Select>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="amount">Amount</Label>
+            <Label htmlFor="amount">Amount (₹)</Label>
             <Input id="amount" type="number" placeholder="e.g., 2000" value={amount} onChange={e => setAmount(e.target.value)} />
           </div>
         </div>
@@ -237,7 +237,7 @@ export default function StaffManagement() {
                     <CardDescription>Advances and other details for the selected date.</CardDescription>
                   </div>
                   <Button onClick={() => setIsAddAdvanceDialogOpen(true)}>
-                    <DollarSign className="mr-2 h-4 w-4" /> Add Advance
+                    <span className="mr-2">₹</span> Add Advance
                   </Button>
                 </div>
               </CardHeader>
