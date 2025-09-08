@@ -4,8 +4,8 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger, AlertDialogFooter } from "@/components/ui/alert-dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription, DialogClose } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger, AlertDialogFooter, AlertDialogDescription } from "@/components/ui/alert-dialog";
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -98,9 +98,12 @@ export default function StaffManagement() {
     }
   }
 
-  const handleAddEmployee = (employee: Omit<Employee, 'color' | 'id'> & { id: string }) => {
+  const handleAddEmployee = (employee: Omit<Employee, 'color' | 'id'> & { id?: string }) => {
     const newEmployee: Employee = {
-      ...employee,
+      id: employee.id || `E${Date.now()}`,
+      name: employee.name,
+      role: employee.role,
+      salary: employee.salary,
       color: colors[employees.length % colors.length]
     };
     setEmployees([...employees, newEmployee]);
@@ -291,8 +294,8 @@ export default function StaffManagement() {
   );
 }
 
-function EmployeeDialog({ open, onOpenChange, employee, onSave }: { open: boolean; onOpenChange: (open: boolean) => void; employee: Employee | null; onSave: (data: Omit<Employee, 'color'> & {id: string}) => void;}) {
-    const [id, setId] = useState(employee?.id || `E${String(Date.now()).slice(-4)}`);
+function EmployeeDialog({ open, onOpenChange, employee, onSave }: { open: boolean; onOpenChange: (open: boolean) => void; employee: Employee | null; onSave: (data: Omit<Employee, 'color'> & {id?: string}) => void;}) {
+    const [id, setId] = useState(employee?.id || '');
     const [name, setName] = useState(employee?.name || '');
     const [role, setRole] = useState(employee?.role || '');
     const [salary, setSalary] = useState(employee?.salary.toString() || '');
