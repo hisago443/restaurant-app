@@ -173,7 +173,7 @@ export default function StaffManagement() {
                           </div>
                         </TableCell>
                         <TableCell>{employee.role}</TableCell>
-                        <TableCell>{employee.salary.toLocaleString()}</TableCell>
+                        <TableCell className="bg-yellow-100 dark:bg-yellow-900/30 text-yellow-900 dark:text-yellow-200">{employee.salary.toLocaleString()}</TableCell>
                         <TableCell className="bg-red-100 dark:bg-red-900/30 text-red-900 dark:text-red-200">{totalAdvance.toLocaleString()}</TableCell>
                         <TableCell className="bg-green-100 dark:bg-green-900/30 text-green-900 dark:text-green-200">{remainingSalary.toLocaleString()}</TableCell>
                         <TableCell className="text-right">
