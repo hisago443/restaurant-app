@@ -147,47 +147,55 @@ export default function StaffManagement() {
                     <TableHead>Name</TableHead>
                     <TableHead>Role</TableHead>
                     <TableHead>Salary (₹)</TableHead>
+                    <TableHead>Advance (₹)</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {employees.map((employee) => (
-                    <TableRow key={employee.id}>
-                      <TableCell>{employee.id}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <span className={`h-2 w-2 rounded-full ${employee.color}`} />
-                          {employee.name}
-                        </div>
-                      </TableCell>
-                      <TableCell>{employee.role}</TableCell>
-                      <TableCell>{employee.salary.toLocaleString()}</TableCell>
-                      <TableCell className="text-right">
-                        <Button variant="ghost" size="icon" onClick={() => openEditDialog(employee)}>
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <AlertDialog>
-                           <AlertDialogTrigger asChild>
-                                <Button variant="ghost" size="icon" className="text-destructive">
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                           </AlertDialogTrigger>
-                           <AlertDialogContent>
-                                <AlertDialogHeader>
-                                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                        This action cannot be undone. This will permanently delete {employee.name}'s record.
-                                    </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                    <AlertDialogAction onClick={() => handleDeleteEmployee(employee.id)}>Delete</AlertDialogAction>
-                                </AlertDialogFooter>
-                           </AlertDialogContent>
-                        </AlertDialog>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {employees.map((employee) => {
+                    const totalAdvance = advances
+                      .filter(a => a.employeeId === employee.id)
+                      .reduce((sum, a) => sum + a.amount, 0);
+
+                    return (
+                      <TableRow key={employee.id}>
+                        <TableCell>{employee.id}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <span className={`h-2 w-2 rounded-full ${employee.color}`} />
+                            {employee.name}
+                          </div>
+                        </TableCell>
+                        <TableCell>{employee.role}</TableCell>
+                        <TableCell>{employee.salary.toLocaleString()}</TableCell>
+                        <TableCell>{totalAdvance.toLocaleString()}</TableCell>
+                        <TableCell className="text-right">
+                          <Button variant="ghost" size="icon" onClick={() => openEditDialog(employee)}>
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                                  <Button variant="ghost" size="icon" className="text-destructive">
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                      <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                          This action cannot be undone. This will permanently delete {employee.name}'s record.
+                                      </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                      <AlertDialogAction onClick={() => handleDeleteEmployee(employee.id)}>Delete</AlertDialogAction>
+                                  </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             </CardContent>
