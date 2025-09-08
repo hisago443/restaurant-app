@@ -293,37 +293,44 @@ function EmployeeDialog({ open, onOpenChange, employee, onSave }: { open: boolea
     return (
          <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent>
-            <DialogHeader>
-                <DialogTitle>{employee ? "Edit Employee" : "Add New Employee"}</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
-                <div className="space-y-2">
-                <Label htmlFor="name">Employee Name</Label>
-                <Input id="name" placeholder="e.g., John Doe" value={name} onChange={(e) => setName(e.target.value)} />
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  handleSave();
+                }}
+              >
+                <DialogHeader>
+                    <DialogTitle>{employee ? "Edit Employee" : "Add New Employee"}</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                    <div className="space-y-2">
+                    <Label htmlFor="name">Employee Name</Label>
+                    <Input id="name" placeholder="e.g., John Doe" value={name} onChange={(e) => setName(e.target.value)} />
+                    </div>
+                    <div className="space-y-2">
+                    <Label htmlFor="role">Role</Label>
+                    <Select value={role} onValueChange={setRole}>
+                        <SelectTrigger id="role">
+                        <SelectValue placeholder="Select a role" />
+                        </SelectTrigger>
+                        <SelectContent>
+                        <SelectItem value="Manager">Manager</SelectItem>
+                        <SelectItem value="Chef">Chef</SelectItem>
+                        <SelectItem value="Waiter">Waiter</SelectItem>
+                        <SelectItem value="Cleaner">Cleaner</SelectItem>
+                        </SelectContent>
+                    </Select>
+                    </div>
+                    <div className="space-y-2">
+                    <Label htmlFor="salary">Salary</Label>
+                    <Input id="salary" type="number" placeholder="e.g., 30000" value={salary} onChange={(e) => setSalary(e.target.value)}/>
+                    </div>
                 </div>
-                <div className="space-y-2">
-                <Label htmlFor="role">Role</Label>
-                <Select value={role} onValueChange={setRole}>
-                    <SelectTrigger id="role">
-                    <SelectValue placeholder="Select a role" />
-                    </SelectTrigger>
-                    <SelectContent>
-                    <SelectItem value="Manager">Manager</SelectItem>
-                    <SelectItem value="Chef">Chef</SelectItem>
-                    <SelectItem value="Waiter">Waiter</SelectItem>
-                    <SelectItem value="Cleaner">Cleaner</SelectItem>
-                    </SelectContent>
-                </Select>
-                </div>
-                <div className="space-y-2">
-                <Label htmlFor="salary">Salary</Label>
-                <Input id="salary" type="number" placeholder="e.g., 30000" value={salary} onChange={(e) => setSalary(e.target.value)}/>
-                </div>
-            </div>
-            <DialogFooter>
-                <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-                <Button onClick={handleSave}>Save Employee</Button>
-            </DialogFooter>
+                <DialogFooter>
+                    <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+                    <Button type="submit">Save Employee</Button>
+                </DialogFooter>
+              </form>
             </DialogContent>
         </Dialog>
     )
