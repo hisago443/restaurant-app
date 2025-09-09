@@ -2,7 +2,7 @@
 "use client";
 
 import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose, DialogDescription } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger, AlertDialogFooter, AlertDialogDescription } from "@/components/ui/alert-dialog";
@@ -136,9 +136,9 @@ export default function TableManagement({ tables, updateTableStatus, addTable, r
           </div>
           <div className="flex items-center gap-2 flex-wrap p-4 border-t border-b">
               <Button 
-                variant={filter === 'All' ? 'outline' : 'ghost'}
+                variant={'ghost'}
                 onClick={() => handleStatusButtonClick('All')}
-                className={cn(filter === 'All' && 'ring-2 ring-offset-2 ring-ring')}
+                className={cn('font-bold uppercase', filter === 'All' && 'ring-2 ring-offset-2 ring-ring')}
               >
                 All Tables ({tables.length})
               </Button>
