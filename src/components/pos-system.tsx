@@ -24,6 +24,7 @@ import menuData from '@/data/menu.json';
 import { generateReceipt, type GenerateReceiptInput } from '@/ai/flows/dynamic-receipt-discount-reasoning';
 import { PaymentDialog } from './payment-dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { sendEmailReceipt, SendEmailReceiptInput } from '@/ai/flows/send-email-receipt';
 
 const vegColor = 'bg-green-100 dark:bg-green-900/30';
 const nonVegColor = 'bg-rose-100 dark:bg-rose-900/30';
@@ -206,11 +207,29 @@ export default function PosSystem({ tables, addOrder }: PosSystemProps) {
     setIsPaymentDialogOpen(true);
   };
   
-  const handlePaymentSuccess = () => {
+  const handlePaymentSuccess = async () => {
     setIsPaymentDialogOpen(false);
     toast({ title: "Payment Successful", description: `Payment of Rs.${total.toFixed(2)} confirmed.` });
+    
+    // Automatically send receipt to admin email
+    const adminEmailInput: SendEmailReceiptInput = {
+      customerEmail: 'upandabove.bir@gmail.com',
+      receiptContent: receiptPreview,
+      totalAmount: total,
+    };
+
+    try {
+      await sendEmailReceipt(adminEmailInput);
+      // Optional: show a toast or log success for admin email
+      console.log('Admin receipt sent successfully.');
+    } catch (e) {
+      console.error('Failed to send admin receipt:', e);
+      // Optional: toast for admin email failure
+    }
+
     clearOrder();
   };
+
 
   const renderMenuItem = (item: MenuItem, subCategoryName: string, categoryName: string) => {
     const isNonVeg = subCategoryName.toLowerCase().includes('non-veg');
@@ -306,14 +325,11 @@ export default function PosSystem({ tables, addOrder }: PosSystemProps) {
         <div className="space-y-6">
           {filteredMenu.map((category) => (
              <div key={category.category} className={cn("rounded-lg p-2", categoryColors[category.category])}>
-              <div className={cn("sticky top-0 bg-background/80 backdrop-blur-sm py-2 z-10 flex items-center justify-between gap-2 p-2 rounded-md")}>
-                <div className="flex-1" />
-                <h2 className="text-xl font-bold text-center flex-grow">
+              <div className={cn("sticky top-0 bg-background/80 backdrop-blur-sm py-2 z-10 flex items-center justify-center gap-2 p-2 rounded-md")}>
+                <h2 className="text-xl font-bold text-center">
                   {category.category}
                 </h2>
-                <div className="flex-1 flex justify-end">
-                  <CategoryColorPicker categoryName={category.category} />
-                </div>
+                <CategoryColorPicker categoryName={category.category} />
               </div>
 
               <div className="space-y-4 pt-2">
@@ -338,12 +354,10 @@ export default function PosSystem({ tables, addOrder }: PosSystemProps) {
             <TabsList className="mb-4">
               {filteredMenu.map(category => (
                 <TabsTrigger key={category.category} value={category.category} asChild>
-                    <div className="relative p-2 rounded-sm cursor-pointer">
+                    <div className="relative p-2 rounded-sm cursor-pointer flex items-center gap-2">
                         <span className={cn(categoryColors[category.category] && 'text-black')}>{category.category}</span>
-                         <div className={cn("absolute inset-0 -z-10 rounded-sm", categoryColors[category.category])}/>
-                        <div className="absolute top-0 right-0">
-                            <CategoryColorPicker categoryName={category.category} />
-                        </div>
+                        <CategoryColorPicker categoryName={category.category} />
+                        <div className={cn("absolute inset-0 -z-10 rounded-sm", categoryColors[category.category])}/>
                     </div>
                 </TabsTrigger>
               ))}
@@ -371,8 +385,8 @@ export default function PosSystem({ tables, addOrder }: PosSystemProps) {
       <Accordion type="multiple" value={activeAccordionItems} onValueChange={setActiveAccordionItems} className="w-full">
         {filteredMenu.map((category) => (
           <AccordionItem key={category.category} value={category.category}>
-            <div className={cn("border-b-0 rounded-lg mb-2 overflow-hidden", categoryColors[category.category])}>
-              <div className="flex items-center p-4">
+             <div className={cn("border-b-0 rounded-lg mb-2 overflow-hidden", categoryColors[category.category])}>
+                <div className="flex items-center justify-center p-4 relative">
                   <AccordionTrigger className="flex-1 text-xl font-bold text-black justify-center relative hover:no-underline p-0">
                     <span className="text-center">{category.category}</span>
                   </AccordionTrigger>
@@ -380,7 +394,7 @@ export default function PosSystem({ tables, addOrder }: PosSystemProps) {
                     <CategoryColorPicker categoryName={category.category} />
                     <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200" />
                   </div>
-              </div>
+                </div>
               <AccordionContent className="p-2 pt-0">
                 <div className="space-y-4 pt-2">
                   {category.subCategories.map((subCategory) => (
@@ -592,5 +606,3 @@ export default function PosSystem({ tables, addOrder }: PosSystemProps) {
     </div>
   );
 }
-
-    
