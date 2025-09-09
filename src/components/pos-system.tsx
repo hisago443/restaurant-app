@@ -65,28 +65,6 @@ export default function PosSystem() {
   const [viewMode, setViewMode] = useState<ViewMode>('accordion');
   const [menuItemColors, setMenuItemColors] = useState<Record<string, string>>({});
   const [categoryColors, setCategoryColors] = useState<Record<string, string>>({});
-  const [currentDateTime, setCurrentDateTime] = useState<Date | null>(null);
-
-  useEffect(() => {
-    setCurrentDateTime(new Date());
-    const timer = setInterval(() => {
-      setCurrentDateTime(new Date());
-    }, 1000);
-    return () => clearInterval(timer);
-  }, []);
-
-  const formattedDate = currentDateTime
-    ? currentDateTime.toLocaleDateString(undefined, {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-      })
-    : 'Loading...';
-
-  const formattedTime = currentDateTime
-    ? currentDateTime.toLocaleTimeString()
-    : '';
 
   const typedMenuData: MenuCategory[] = menuData;
 
@@ -182,7 +160,7 @@ export default function PosSystem() {
   };
 
   const removeFromOrder = (name: string) => {
-    setOrderItems(orderItems.filter(item => item.name !== item.name));
+    setOrderItems(orderItems.filter(item => item.name !== name));
   };
   
   const clearOrder = () => {
@@ -300,7 +278,7 @@ export default function PosSystem() {
           {filteredMenu.map((category) => (
              <div key={category.category}>
               <div className={cn("sticky top-0 bg-background py-2 z-10 flex items-center justify-between gap-2 p-2 rounded-md", categoryColors[category.category])}>
-                 <div className="flex-1" />
+                <div className="flex-1" />
                 <h2 className={cn("text-xl font-bold text-center flex-grow", categoryColors[category.category] ? "text-black" : "")}>
                   {category.category}
                 </h2>
@@ -369,8 +347,8 @@ export default function PosSystem() {
           <AccordionItem key={category.category} value={category.category} className={cn("border-b-0", categoryColors[category.category])}>
             <div className="flex items-center w-full p-2 border-b">
                <div className="flex-1" />
-                <AccordionTrigger className="text-xl font-bold hover:no-underline p-0 flex-grow text-center justify-center">
-                    <span className={cn("text-center", categoryColors[category.category] ? "text-black" : "")}>{category.category}</span>
+                <AccordionTrigger className={cn("text-xl font-bold hover:no-underline p-0 flex-grow justify-center", categoryColors[category.category] ? "text-black" : "")}>
+                    <span className="text-center">{category.category}</span>
                 </AccordionTrigger>
                <div className="flex-1 flex justify-end">
                  <CategoryColorPicker categoryName={category.category} />
@@ -448,9 +426,6 @@ export default function PosSystem() {
               </div>
             </div>
           </div>
-            <div className="text-sm text-muted-foreground pt-2 text-center font-semibold">
-              {formattedDate} | {formattedTime}
-            </div>
         </CardHeader>
         <ScrollArea className="flex-grow px-4">
           {renderMenuContent()}
@@ -559,5 +534,3 @@ export default function PosSystem() {
     </div>
   );
 }
-
-    

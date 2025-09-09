@@ -1,5 +1,7 @@
+
 "use client";
 
+import { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Coffee, LayoutGrid, Book, BarChart, Users } from 'lucide-react';
@@ -12,12 +14,39 @@ import AdminDashboard from './admin-dashboard';
 import StaffManagement from "./staff-management";
 
 export default function MainLayout() {
+  const [currentDateTime, setCurrentDateTime] = useState<Date | null>(null);
+
+  useEffect(() => {
+    setCurrentDateTime(new Date());
+    const timer = setInterval(() => {
+      setCurrentDateTime(new Date());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const formattedDate = currentDateTime
+    ? currentDateTime.toLocaleDateString(undefined, {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      })
+    : '';
+
+  const formattedTime = currentDateTime
+    ? currentDateTime.toLocaleTimeString()
+    : '';
+
   return (
     <div className="flex flex-col h-screen bg-background">
-      <header className="flex items-center h-16 px-6 border-b shrink-0">
+      <header className="flex items-center justify-between h-16 px-6 border-b shrink-0">
         <div className="flex items-center gap-2 font-semibold">
           <Logo className="h-6 w-6" />
           <span className="text-lg">Up & Above Assistant</span>
+        </div>
+        <div className="text-sm text-muted-foreground text-center font-semibold">
+          <div>{formattedDate}</div>
+          <div>{formattedTime}</div>
         </div>
       </header>
       <main className="flex-1">
