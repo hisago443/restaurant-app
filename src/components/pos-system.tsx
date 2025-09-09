@@ -184,7 +184,7 @@ export default function PosSystem() {
           <Button
             variant="ghost"
             size="icon"
-            className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+            className="absolute bottom-1 left-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
             onClick={(e) => e.stopPropagation()}
           >
             <Palette className="h-4 w-4" />
@@ -310,18 +310,18 @@ export default function PosSystem() {
             </div>
             <div className="flex items-center gap-4">
                <RadioGroup value={viewMode} onValueChange={(v) => setViewMode(v as ViewMode)} className="flex items-center p-1 bg-muted rounded-md">
-                <Label htmlFor="accordion-view">
-                   <List className={cn("h-5 w-5 p-1.5 box-content rounded-md cursor-pointer transition-colors hover:bg-accent", viewMode === 'accordion' && "bg-primary text-primary-foreground hover:bg-primary/90")} />
+                <Label htmlFor="accordion-view" className={cn("p-1.5 rounded-md cursor-pointer transition-colors hover:bg-accent", viewMode === 'accordion' ? "bg-primary text-primary-foreground hover:bg-primary/90" : "hover:bg-accent")}>
+                   <List className="h-5 w-5 box-content" />
                 </Label>
                 <RadioGroupItem value="accordion" id="accordion-view" className="sr-only" />
                 
-                <Label htmlFor="grid-view">
-                   <LayoutGrid className={cn("h-5 w-5 p-1.5 box-content rounded-md cursor-pointer transition-colors hover:bg-accent", viewMode === 'grid' && "bg-primary text-primary-foreground hover:bg-primary/90")} />
+                <Label htmlFor="grid-view" className={cn("p-1.5 rounded-md cursor-pointer transition-colors", viewMode === 'grid' ? "bg-primary text-primary-foreground hover:bg-primary/90" : "hover:bg-accent")}>
+                   <LayoutGrid className="h-5 w-5 box-content" />
                 </Label>
                 <RadioGroupItem value="grid" id="grid-view" className="sr-only" />
 
-                <Label htmlFor="list-view" >
-                   <Rows className={cn("h-5 w-5 p-1.5 box-content rounded-md cursor-pointer transition-colors hover:bg-accent", viewMode === 'list' && "bg-primary text-primary-foreground hover:bg-primary/90")} />
+                <Label htmlFor="list-view" className={cn("p-1.5 rounded-md cursor-pointer transition-colors", viewMode === 'list' ? "bg-primary text-primary-foreground hover:bg-primary/90" : "hover:bg-accent")}>
+                   <Rows className="h-5 w-5 box-content" />
                 </Label>
                 <RadioGroupItem value="list" id="list-view" className="sr-only"/>
               </RadioGroup>
@@ -452,3 +452,5 @@ export default function PosSystem() {
     </div>
   );
 }
+
+    
