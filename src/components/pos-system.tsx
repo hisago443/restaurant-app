@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
@@ -251,18 +252,20 @@ export default function PosSystem() {
             </div>
             <div className="flex items-center gap-4">
                <RadioGroup value={viewMode} onValueChange={(v) => setViewMode(v as ViewMode)} className="flex items-center p-1 bg-muted rounded-md">
-                <RadioGroupItem value="accordion" id="accordion-view" className="peer sr-only" />
-                <Label htmlFor="accordion-view" className="p-1.5 rounded-md transition-colors hover:bg-accent cursor-pointer data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground peer-data-[state=checked]:bg-primary peer-data-[state=checked]:text-primary-foreground">
+                <Label htmlFor="accordion-view" data-state={viewMode === 'accordion' ? 'checked' : 'unchecked'} className="p-1.5 rounded-md transition-colors hover:bg-accent cursor-pointer data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground">
                   <List className="h-5 w-5" />
                 </Label>
-                <RadioGroupItem value="grid" id="grid-view" className="peer sr-only"/>
-                <Label htmlFor="grid-view" className="p-1.5 rounded-md transition-colors hover:bg-accent cursor-pointer data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground peer-data-[state=checked]:bg-primary peer-data-[state=checked]:text-primary-foreground">
+                <RadioGroupItem value="accordion" id="accordion-view" className="sr-only" />
+                
+                <Label htmlFor="grid-view" data-state={viewMode === 'grid' ? 'checked' : 'unchecked'} className="p-1.5 rounded-md transition-colors hover:bg-accent cursor-pointer data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground">
                    <LayoutGrid className="h-5 w-5" />
                 </Label>
-                <RadioGroupItem value="list" id="list-view" className="peer sr-only"/>
-                <Label htmlFor="list-view" className="p-1.5 rounded-md transition-colors hover:bg-accent cursor-pointer data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground peer-data-[state=checked]:bg-primary peer-data-[state=checked]:text-primary-foreground">
+                <RadioGroupItem value="grid" id="grid-view" className="sr-only" />
+
+                <Label htmlFor="list-view" data-state={viewMode === 'list' ? 'checked' : 'unchecked'} className="p-1.5 rounded-md transition-colors hover:bg-accent cursor-pointer data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground">
                    <Rows className="h-5 w-5" />
                 </Label>
+                <RadioGroupItem value="list" id="list-view" className="sr-only"/>
               </RadioGroup>
               <Separator orientation="vertical" className="h-8" />
                {viewMode === 'accordion' && (
@@ -391,3 +394,5 @@ export default function PosSystem() {
     </div>
   );
 }
+
+    
