@@ -14,10 +14,10 @@ import { PlusCircle, Trash2, LayoutTemplate } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 
 const statusColors: Record<TableStatus, string> = {
-  Available: 'bg-green-500 hover:bg-green-600',
-  Occupied: 'bg-red-400 hover:bg-red-500',
+  Available: 'bg-green-600 hover:bg-green-700',
+  Occupied: 'bg-red-500 hover:bg-red-600',
   Reserved: 'bg-blue-400 hover:bg-blue-500',
-  Cleaning: 'bg-amber-400 hover:bg-amber-500',
+  Cleaning: 'bg-amber-500 hover:bg-amber-600',
 };
 
 interface TableManagementProps {
@@ -149,7 +149,7 @@ export default function TableManagement({ tables, updateTableStatus, addTable, r
               >
                 TOTAL TABLES ({tables.length})
               </Button>
-              <Separator orientation="vertical" className="h-8 bg-foreground/20" />
+              <Separator orientation="vertical" className="h-8 bg-foreground/50" />
               {(Object.keys(statusColors) as TableStatus[]).map(status => (
                   <Button
                     key={status}
@@ -190,8 +190,8 @@ export default function TableManagement({ tables, updateTableStatus, addTable, r
                     onClick={(e) => e.stopPropagation()}
                   />
                 </div>
-                <span className={cn("text-3xl font-bold", table.status === 'Available' ? 'text-white' : 'text-black')}>{table.id}</span>
-                <span className={cn("text-xs font-semibold", table.status === 'Available' ? 'text-white' : 'text-black')}>{table.status}</span>
+                <span className={cn("text-5xl font-bold", table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black')}>{table.id}</span>
+                <span className={cn("text-xs font-semibold", table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black')}>{table.status}</span>
               </div>
             ))}
              {filteredTables.length === 0 && (
@@ -264,5 +264,7 @@ export default function TableManagement({ tables, updateTableStatus, addTable, r
     </div>
   );
 }
+
+    
 
     
