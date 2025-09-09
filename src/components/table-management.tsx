@@ -4,8 +4,8 @@
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger, AlertDialogFooter } from "@/components/ui/alert-dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose, DialogDescription } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger, AlertDialogFooter, AlertDialogDescription } from "@/components/ui/alert-dialog";
 import type { Table, TableStatus } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -136,7 +136,7 @@ export default function TableManagement({ tables, updateTableStatus, addTable, r
           </div>
           <div className="flex items-center gap-2 flex-wrap p-4 border-t border-b">
               <Button 
-                variant={'outline'} 
+                variant={filter === 'All' ? 'outline' : 'ghost'}
                 onClick={() => handleStatusButtonClick('All')}
                 className={cn(filter === 'All' && 'ring-2 ring-offset-2 ring-ring')}
               >
