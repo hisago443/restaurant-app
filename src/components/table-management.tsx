@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose, DialogDescription } from '@/components/ui/dialog';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger, AlertDialogFooter, AlertDialogDescription } from "@/components/ui/alert-dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger, AlertDialogFooter } from "@/components/ui/alert-dialog";
 import type { Table, TableStatus } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -15,7 +15,7 @@ import { Separator } from '@/components/ui/separator';
 
 const statusColors: Record<TableStatus, string> = {
   Available: 'bg-green-500 hover:bg-green-600',
-  Occupied: 'bg-red-600 hover:bg-red-700',
+  Occupied: 'bg-red-500 hover:bg-red-600',
   Reserved: 'bg-blue-400 hover:bg-blue-500',
   Cleaning: 'bg-amber-400 hover:bg-amber-500',
 };
@@ -157,7 +157,7 @@ export default function TableManagement({ tables, updateTableStatus, addTable, r
                     onMouseEnter={() => setHoveredStatus(status)}
                     onMouseLeave={() => setHoveredStatus(null)}
                     className={cn(
-                      status === 'Available' ? 'text-white' : 'text-black',
+                      status === 'Available' || status === 'Occupied' ? 'text-white' : 'text-black',
                       statusColors[status],
                       'transition-all',
                       filter === status && 'ring-2 ring-offset-2 ring-ring'
@@ -191,7 +191,7 @@ export default function TableManagement({ tables, updateTableStatus, addTable, r
                   />
                 </div>
                 <span className={cn("text-6xl font-bold", table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black')}>{table.id}</span>
-                <span className={cn("text-xs font-semibold", table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black')}>{table.status}</span>
+                <span className={cn("text-sm font-semibold", table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black')}>{table.status}</span>
               </div>
             ))}
              {filteredTables.length === 0 && (
