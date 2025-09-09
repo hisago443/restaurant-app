@@ -82,14 +82,24 @@ export default function MainLayout() {
       id: `K${(orders.length + 1).toString().padStart(3, '0')}`,
       status: 'Pending',
     };
-    setOrders(prevOrders => [...prevOrders, newOrder]);
+    setOrders(prevOrders => {
+      const updatedOrders = [...prevOrders, newOrder];
+      const newActiveOrder = updatedOrders.find(o => o.tableId === order.tableId && o.status !== 'Completed');
+      if (newActiveOrder) {
+        setActiveOrder(newActiveOrder);
+      }
+      return updatedOrders;
+    });
     // Also update the table status to Occupied
     updateTableStatus([order.tableId], 'Occupied');
   };
-
+  
   const updateOrder = (updatedOrder: Order) => {
-    setOrders(orders.map(o => (o.id === updatedOrder.id ? updatedOrder : o)));
-    setActiveOrder(updatedOrder);
+    setOrders(prevOrders => {
+      const updatedOrders = prevOrders.map(o => (o.id === updatedOrder.id ? updatedOrder : o));
+      setActiveOrder(updatedOrder);
+      return updatedOrders;
+    });
   };
 
 
@@ -153,8 +163,6 @@ export default function MainLayout() {
   const addEmployee = async (employee: Omit<Employee, 'id'>) => {
     try {
       const docRef = await addDoc(collection(db, "employees"), employee);
-      // Manually add to local state to reflect change immediately
-      // setEmployees(prev => [...prev, { ...employee, id: docRef.id }]); // No longer needed with listener
       toast({ title: 'Employee Added', description: 'New employee saved to the database.' });
     } catch (error) {
       console.error("Error adding employee: ", error);
@@ -171,8 +179,6 @@ export default function MainLayout() {
         salary: employee.salary,
         color: employee.color,
       }, { merge: true });
-       // Manually update local state
-      // setEmployees(prev => prev.map(e => e.id === employee.id ? employee : e)); // No longer needed
       toast({ title: 'Employee Updated', description: 'Employee information has been updated.' });
     } catch (error) {
       console.error("Error updating employee: ", error);
@@ -183,8 +189,6 @@ export default function MainLayout() {
   const deleteEmployee = async (employeeId: string) => {
     try {
       await deleteDoc(doc(db, "employees", employeeId));
-       // Manually update local state
-      // setEmployees(prev => prev.filter(e => e.id !== employeeId)); // No longer needed
       toast({ title: 'Employee Deleted', description: 'Employee has been removed from the database.' });
     } catch (error) {
       console.error("Error deleting employee: ", error);
