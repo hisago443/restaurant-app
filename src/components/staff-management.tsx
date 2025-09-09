@@ -339,6 +339,7 @@ function EmployeeDialog({ open, onOpenChange, employee, onSave }: { open: boolea
                         <SelectItem value="Chef">Chef</SelectItem>
                         <SelectItem value="Waiter">Waiter</SelectItem>
                         <SelectItem value="Cleaner">Cleaner</SelectItem>
+                        <SelectItem value="Bar Tender">Bar Tender</SelectItem>
                         </SelectContent>
                     </Select>
                     </div>
@@ -356,3 +357,5 @@ function EmployeeDialog({ open, onOpenChange, employee, onSave }: { open: boolea
         </Dialog>
     );
 }
+
+    
