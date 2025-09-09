@@ -132,6 +132,10 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
         setIsTablePopoverOpen(false);
     } else if (table.status === 'Cleaning') {
       updateTableStatus([table.id], 'Available');
+      toast({
+          title: 'Table Available',
+          description: `Table ${tableId} is now available for new guests.`,
+      });
       // Keep the popover open so the user can see the status change and select the table if they wish.
     } else if (table.status === 'Reserved') {
         toast({
@@ -139,6 +143,17 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
             description: `Table ${tableId} is reserved. Seat guests from the Tables tab.`,
         });
         setIsTablePopoverOpen(false);
+    }
+  };
+
+  const handleDoubleClickTable = (table: Table) => {
+    if (table.status === 'Occupied') {
+        updateTableStatus([table.id], 'Cleaning');
+        toast({ title: 'Customer Left', description: `Table ${table.id} is now marked for cleaning.` });
+        if (activeOrder && activeOrder.tableId === table.id) {
+            // Clear the active order from the panel since the customer has left.
+            clearOrder(true);
+        }
     }
   };
 
@@ -681,7 +696,8 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
                                     table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black'
                                 )}
                                 onClick={() => handleSelectTable(table.id.toString())}
-                                disabled={!isClickable}
+                                onDoubleClick={() => handleDoubleClickTable(table)}
+                                disabled={!isClickable && table.status !== 'Occupied'}
                             >
                                 {(occupancyCount[table.id] > 0) &&
                                   <div className="absolute bottom-1 right-1 flex items-center gap-1 bg-black/50 text-white text-xs font-bold p-1 rounded-md">
