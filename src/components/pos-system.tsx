@@ -316,10 +316,10 @@ export default function PosSystem({ tables, addOrder }: PosSystemProps) {
       return (
         <div className="space-y-6">
           {filteredMenu.map((category) => (
-             <div key={category.category}>
-              <div className={cn("sticky top-0 bg-background py-2 z-10 flex items-center justify-between gap-2 p-2 rounded-md", categoryColors[category.category])}>
+             <div key={category.category} className={cn("rounded-lg p-2", categoryColors[category.category])}>
+              <div className={cn("sticky top-0 bg-background/80 backdrop-blur-sm py-2 z-10 flex items-center justify-between gap-2 p-2 rounded-md")}>
                 <div className="flex-1" />
-                <h2 className="text-xl font-bold text-center flex-grow text-black">
+                <h2 className="text-xl font-bold text-center flex-grow">
                   {category.category}
                 </h2>
                 <div className="flex-1 flex justify-end">
@@ -349,8 +349,9 @@ export default function PosSystem({ tables, addOrder }: PosSystemProps) {
             <TabsList className="mb-4">
               {filteredMenu.map(category => (
                 <TabsTrigger key={category.category} value={category.category} asChild>
-                    <div className={cn("relative p-2 rounded-sm cursor-pointer", categoryColors[category.category])}>
+                    <div className="relative p-2 rounded-sm cursor-pointer">
                         <span className={cn(categoryColors[category.category] && 'text-black')}>{category.category}</span>
+                         <div className={cn("absolute inset-0 -z-10 rounded-sm", categoryColors[category.category])}/>
                         <div className="absolute top-0 right-0">
                             <CategoryColorPicker categoryName={category.category} />
                         </div>
@@ -381,16 +382,17 @@ export default function PosSystem({ tables, addOrder }: PosSystemProps) {
       <Accordion type="multiple" value={activeAccordionItems} onValueChange={setActiveAccordionItems} className="w-full">
         {filteredMenu.map((category) => (
           <AccordionItem key={category.category} value={category.category} className={cn("border-b-0 rounded-lg mb-2 overflow-hidden", categoryColors[category.category])}>
-            <div className='flex items-center w-full'>
-              <AccordionTrigger className="p-4 hover:no-underline flex-grow text-center justify-center">
-                <span className="text-xl font-bold text-black">{category.category}</span>
-              </AccordionTrigger>
-              <div className='flex items-center gap-2 pr-4'>
+            <div className='flex items-center w-full relative p-4'>
+              <div className="flex-grow flex justify-center">
+                  <AccordionTrigger className="p-0 hover:no-underline text-xl font-bold text-black">
+                      {category.category}
+                  </AccordionTrigger>
+              </div>
+              <div className='flex items-center gap-2 absolute right-4 top-1/2 -translate-y-1/2'>
                 <CategoryColorPicker categoryName={category.category} />
-                <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200" />
               </div>
             </div>
-            <AccordionContent className={cn("p-2", categoryColors[category.category])}>
+            <AccordionContent className="p-2 pt-0">
               <div className="space-y-4 pt-2">
                 {category.subCategories.map((subCategory) => (
                   <div key={subCategory.name}>
@@ -459,7 +461,7 @@ export default function PosSystem({ tables, addOrder }: PosSystemProps) {
                {viewMode === 'accordion' && (
                 <Button variant="outline" size="sm" onClick={toggleAccordion}>
                   <ChevronsUpDown className="mr-2 h-4 w-4" />
-                  {allItemsOpen ? 'Collapse All' : 'Expand All'}
+                  {allItemsOpen ? 'Collapse' : 'Expand'}
                 </Button>
               )}
               <div className="flex items-center space-x-2">
@@ -543,7 +545,7 @@ export default function PosSystem({ tables, addOrder }: PosSystemProps) {
             <div className="space-y-2 text-lg">
               <div className="flex justify-between">
                 <span>Subtotal:</span>
-                <span className="font-bold">Rs.{subtotal.toFixed(2)}</span>
+                <span className="font-bold">₹{subtotal.toFixed(2)}</span>
               </div>
               {discount > 0 && (
                 <div className="flex justify-between text-accent-foreground">
@@ -600,3 +602,5 @@ export default function PosSystem({ tables, addOrder }: PosSystemProps) {
     </div>
   );
 }
+
+    
