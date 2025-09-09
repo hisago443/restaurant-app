@@ -64,11 +64,16 @@ export default function PosSystem() {
   const [activeAccordionItems, setActiveAccordionItems] = useState<string[]>([]);
   const [viewMode, setViewMode] = useState<ViewMode>('accordion');
   const [menuItemColors, setMenuItemColors] = useState<Record<string, string>>({});
+  const [categoryColors, setCategoryColors] = useState<Record<string, string>>({});
 
   const typedMenuData: MenuCategory[] = menuData;
 
   const setItemColor = (itemName: string, colorClass: string) => {
     setMenuItemColors(prev => ({ ...prev, [itemName]: colorClass }));
+  };
+  
+  const setCategoryColor = (categoryName: string, colorClass: string) => {
+    setCategoryColors(prev => ({ ...prev, [categoryName]: colorClass }));
   };
 
   const filteredMenu = useMemo(() => {
@@ -169,14 +174,16 @@ export default function PosSystem() {
     clearOrder();
   };
 
-  const renderMenuItem = (item: MenuItem, subCategoryName: string) => {
+  const renderMenuItem = (item: MenuItem, subCategoryName: string, categoryName: string) => {
     const defaultColor = subCategoryName.toLowerCase().includes('veg') ? vegColor : nonVegColor;
-    const itemColor = menuItemColors[item.name] || defaultColor;
+    const categoryColor = categoryColors[categoryName];
+    const itemColor = menuItemColors[item.name];
+    const finalColor = categoryColor || itemColor || defaultColor;
 
     return (
     <Card
       key={item.name}
-      className={cn("group rounded-lg cursor-pointer transition-all hover:scale-105 hover:shadow-md relative", itemColor)}
+      className={cn("group rounded-lg cursor-pointer transition-all hover:scale-105 hover:shadow-md relative", finalColor)}
       onClick={() => isClickToAdd && addToOrder(item, 1)}
     >
        <Popover>
@@ -220,19 +227,49 @@ export default function PosSystem() {
     </Card>
   )};
 
+  const CategoryColorPicker = ({ categoryName }: { categoryName: string }) => (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-6 w-6"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <Palette className="h-4 w-4" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-auto p-2" onClick={(e) => e.stopPropagation()}>
+        <div className="grid grid-cols-8 gap-1">
+          {colorPalette.map((colorClass, i) => (
+            <div
+              key={i}
+              className={cn("h-6 w-6 rounded-full cursor-pointer", colorClass.split(' ')[0])}
+              onClick={() => setCategoryColor(categoryName, colorClass)}
+            />
+          ))}
+           <Button variant="ghost" size="sm" className="col-span-8 h-8" onClick={() => setCategoryColor(categoryName, '')}>Reset</Button>
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+
   const renderMenuContent = () => {
     if (viewMode === 'list') {
       return (
         <div className="space-y-6">
           {filteredMenu.map((category) => (
             <div key={category.category}>
-              <h2 className="text-xl font-bold mb-4 sticky top-0 bg-background py-2 z-10">{category.category}</h2>
+              <h2 className={cn("text-xl font-bold mb-4 sticky top-0 bg-background py-2 z-10 flex items-center gap-2 p-2 rounded-md", categoryColors[category.category])}>
+                {category.category}
+                <CategoryColorPicker categoryName={category.category} />
+              </h2>
               <div className="space-y-4">
                 {category.subCategories.map((subCategory) => (
                   <div key={subCategory.name}>
                     <h3 className="text-md font-semibold mb-2 text-muted-foreground pl-2">{subCategory.name}</h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-                      {subCategory.items.map((item) => renderMenuItem(item, subCategory.name))}
+                      {subCategory.items.map((item) => renderMenuItem(item, subCategory.name, category.category))}
                     </div>
                   </div>
                 ))}
@@ -247,7 +284,10 @@ export default function PosSystem() {
         <Tabs defaultValue={filteredMenu[0]?.category} className="w-full">
           <TabsList className="mb-4">
             {filteredMenu.map(category => (
-              <TabsTrigger key={category.category} value={category.category}>{category.category}</TabsTrigger>
+               <TabsTrigger key={category.category} value={category.category} className={cn("flex items-center gap-2", categoryColors[category.category])}>
+                {category.category}
+                <CategoryColorPicker categoryName={category.category} />
+              </TabsTrigger>
             ))}
           </TabsList>
           {filteredMenu.map(category => (
@@ -257,7 +297,7 @@ export default function PosSystem() {
                   <div key={subCategory.name}>
                     <h3 className="text-md font-semibold mb-2 text-muted-foreground pl-2">{subCategory.name}</h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-                      {subCategory.items.map((item) => renderMenuItem(item, subCategory.name))}
+                      {subCategory.items.map((item) => renderMenuItem(item, subCategory.name, category.category))}
                     </div>
                   </div>
                 ))}
@@ -271,9 +311,10 @@ export default function PosSystem() {
     return (
       <Accordion type="multiple" value={activeAccordionItems} onValueChange={setActiveAccordionItems} className="w-full">
         {filteredMenu.map((category) => (
-          <AccordionItem key={category.category} value={category.category}>
-            <AccordionTrigger className="text-xl font-bold hover:no-underline">
-              {category.category}
+          <AccordionItem key={category.category} value={category.category} className={cn(categoryColors[category.category])}>
+            <AccordionTrigger className="text-xl font-bold hover:no-underline flex items-center gap-2 p-2">
+              <div className="flex-grow">{category.category}</div>
+              <CategoryColorPicker categoryName={category.category} />
             </AccordionTrigger>
             <AccordionContent>
               <div className="space-y-4 pt-2">
@@ -281,7 +322,7 @@ export default function PosSystem() {
                   <div key={subCategory.name}>
                     <h3 className="text-md font-semibold mb-2 text-muted-foreground pl-2">{subCategory.name}</h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-                      {subCategory.items.map((item) => renderMenuItem(item, subCategory.name))}
+                      {subCategory.items.map((item) => renderMenuItem(item, subCategory.name, category.category))}
                     </div>
                   </div>
                 ))}
@@ -309,21 +350,21 @@ export default function PosSystem() {
               />
             </div>
             <div className="flex items-center gap-4">
-               <RadioGroup value={viewMode} onValueChange={(v) => setViewMode(v as ViewMode)} className="flex items-center p-1 bg-muted rounded-md">
-                <Label htmlFor="accordion-view" className={cn("p-1.5 rounded-md cursor-pointer transition-colors hover:bg-accent", viewMode === 'accordion' ? "bg-primary text-primary-foreground hover:bg-primary/90" : "hover:bg-accent")}>
-                   <List className="h-5 w-5 box-content" />
-                </Label>
-                <RadioGroupItem value="accordion" id="accordion-view" className="sr-only" />
-                
-                <Label htmlFor="grid-view" className={cn("p-1.5 rounded-md cursor-pointer transition-colors", viewMode === 'grid' ? "bg-primary text-primary-foreground hover:bg-primary/90" : "hover:bg-accent")}>
-                   <LayoutGrid className="h-5 w-5 box-content" />
-                </Label>
-                <RadioGroupItem value="grid" id="grid-view" className="sr-only" />
+              <RadioGroup value={viewMode} onValueChange={(v) => setViewMode(v as ViewMode)} className="flex items-center">
+                  <Label htmlFor="accordion-view" className={cn("p-1.5 rounded-md cursor-pointer transition-colors", { 'bg-primary text-primary-foreground': viewMode === 'accordion', 'hover:bg-accent': viewMode !== 'accordion' })}>
+                    <List className="h-5 w-5 box-content" />
+                  </Label>
+                  <RadioGroupItem value="accordion" id="accordion-view" className="sr-only" />
 
-                <Label htmlFor="list-view" className={cn("p-1.5 rounded-md cursor-pointer transition-colors", viewMode === 'list' ? "bg-primary text-primary-foreground hover:bg-primary/90" : "hover:bg-accent")}>
-                   <Rows className="h-5 w-5 box-content" />
-                </Label>
-                <RadioGroupItem value="list" id="list-view" className="sr-only"/>
+                  <Label htmlFor="grid-view" className={cn("p-1.5 rounded-md cursor-pointer transition-colors", { 'bg-primary text-primary-foreground': viewMode === 'grid', 'hover:bg-accent': viewMode !== 'grid' })}>
+                    <LayoutGrid className="h-5 w-5 box-content" />
+                  </Label>
+                  <RadioGroupItem value="grid" id="grid-view" className="sr-only" />
+
+                  <Label htmlFor="list-view" className={cn("p-1.5 rounded-md cursor-pointer transition-colors", { 'bg-primary text-primary-foreground': viewMode === 'list', 'hover:bg-accent': viewMode !== 'list' })}>
+                    <Rows className="h-5 w-5 box-content" />
+                  </Label>
+                  <RadioGroupItem value="list" id="list-view" className="sr-only" />
               </RadioGroup>
               <Separator orientation="vertical" className="h-8" />
                {viewMode === 'accordion' && (
@@ -452,5 +493,3 @@ export default function PosSystem() {
     </div>
   );
 }
-
-    
