@@ -4,9 +4,8 @@
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose, DialogDescription } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { Table, TableStatus } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -31,7 +30,6 @@ interface TableManagementProps {
 export default function TableManagement({ tables, updateTableStatus, addTable, removeLastTable }: TableManagementProps) {
   const [selectedTable, setSelectedTable] = useState<Table | null>(null);
   const [selectedTables, setSelectedTables] = useState<number[]>([]);
-  const [isBulkManageOpen, setIsBulkManageOpen] = useState(false);
   const [isLayoutManagerOpen, setIsLayoutManagerOpen] = useState(false);
   const [filter, setFilter] = useState<TableStatus | 'All'>('All');
 
@@ -63,7 +61,6 @@ export default function TableManagement({ tables, updateTableStatus, addTable, r
       updateTableStatus(tableId, status);
     });
     setSelectedTables([]);
-    setIsBulkManageOpen(false);
   }
 
   const handleStatusButtonClick = (status: TableStatus | 'All') => {
@@ -76,7 +73,7 @@ export default function TableManagement({ tables, updateTableStatus, addTable, r
 
   const handleRemoveLastTable = () => {
     if (tables.length > 0) {
-      const lastTableId = tables[tables.length - 1].id;
+      const lastTableId = tables.reduce((maxId, table) => Math.max(table.id, maxId), -1);
       removeLastTable();
       setSelectedTables(selectedTables.filter(id => id !== lastTableId));
     }
@@ -126,7 +123,6 @@ export default function TableManagement({ tables, updateTableStatus, addTable, r
                 <LayoutTemplate className="mr-2 h-4 w-4" /> Manage Layout
               </Button>
               <Separator orientation="vertical" className="h-8" />
-
               <div className="flex items-center space-x-2">
                 <Checkbox
                   id="select-all"
@@ -136,9 +132,6 @@ export default function TableManagement({ tables, updateTableStatus, addTable, r
                 />
                 <Label htmlFor="select-all">Select All</Label>
               </div>
-              <Button onClick={() => setIsBulkManageOpen(true)} disabled={selectedTables.length === 0}>
-                Manage Selected ({selectedTables.length})
-              </Button>
             </div>
           </div>
           <div className="flex items-center gap-2 flex-wrap p-4 border-t border-b">
@@ -212,34 +205,6 @@ export default function TableManagement({ tables, updateTableStatus, addTable, r
         </DialogContent>
       </Dialog>
       
-      <Dialog open={isBulkManageOpen} onOpenChange={setIsBulkManageOpen}>
-        <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Bulk Manage Tables</DialogTitle>
-              <DialogDescription>
-                Update status for {selectedTables.length} selected tables.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="py-4">
-              <Label htmlFor="bulk-status">New Status</Label>
-              <Select onValueChange={(value: TableStatus) => handleBulkUpdate(value)}>
-                <SelectTrigger id="bulk-status">
-                  <SelectValue placeholder="Select new status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Available">Available</SelectItem>
-                  <SelectItem value="Occupied">Occupied</SelectItem>
-                  <SelectItem value="Reserved">Reserved</SelectItem>
-                  <SelectItem value="Cleaning">Cleaning</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsBulkManageOpen(false)}>Cancel</Button>
-            </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
       <Dialog open={isLayoutManagerOpen} onOpenChange={setIsLayoutManagerOpen}>
         <DialogContent>
             <DialogHeader>
