@@ -224,7 +224,8 @@ export default function PosSystem({ tables, addOrder }: PosSystemProps) {
   };
 
   const renderMenuItem = (item: MenuItem, subCategoryName: string, categoryName: string) => {
-    const defaultColor = subCategoryName.toLowerCase().includes('veg') ? vegColor : nonVegColor;
+    const isVeg = subCategoryName.toLowerCase().includes('veg');
+    const defaultColor = isVeg ? vegColor : nonVegColor;
     const categoryColor = categoryColors[categoryName];
     const itemColor = menuItemColors[item.name];
     
@@ -268,7 +269,7 @@ export default function PosSystem({ tables, addOrder }: PosSystemProps) {
         <CardContent className="p-3">
           <div className="flex justify-between items-start">
             <div className="flex items-center gap-2">
-              <span className={cn('h-2.5 w-2.5 rounded-full', subCategoryName.toLowerCase().includes('veg') ? 'bg-green-500' : 'bg-red-500')}></span>
+              <span className={cn('h-2.5 w-2.5 rounded-full', isVeg ? 'bg-green-500' : 'bg-red-500')}></span>
               <span className="font-semibold pr-2 text-black">{item.name}</span>
             </div>
             <span className="font-mono text-right whitespace-nowrap text-black">Rs.{item.price.toFixed(2)}</span>
