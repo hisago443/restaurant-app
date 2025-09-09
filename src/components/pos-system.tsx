@@ -178,7 +178,7 @@ export default function PosSystem() {
     const defaultColor = subCategoryName.toLowerCase().includes('veg') ? vegColor : nonVegColor;
     const categoryColor = categoryColors[categoryName];
     const itemColor = menuItemColors[item.name];
-    const finalColor = categoryColor || itemColor || defaultColor;
+    const finalColor = itemColor || categoryColor || defaultColor;
 
     return (
       <Card
@@ -313,8 +313,8 @@ export default function PosSystem() {
       <Accordion type="multiple" value={activeAccordionItems} onValueChange={setActiveAccordionItems} className="w-full">
         {filteredMenu.map((category) => (
           <AccordionItem key={category.category} value={category.category} className={cn(categoryColors[category.category])}>
-            <div className="flex items-center p-2">
-              <AccordionTrigger className="text-xl font-bold hover:no-underline flex-grow">
+            <div className="flex items-center justify-between p-2">
+              <AccordionTrigger className="text-xl font-bold hover:no-underline flex-grow justify-center">
                 {category.category}
               </AccordionTrigger>
               <CategoryColorPicker categoryName={category.category} />
