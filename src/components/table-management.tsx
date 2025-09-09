@@ -121,7 +121,7 @@ export default function TableManagement({ tables, updateTableStatus, addTable, r
             </div>
             <div className="flex items-center gap-4">
               <Button variant="outline" onClick={() => setIsLayoutManagerOpen(true)}>
-                <LayoutTemplate className="mr-2 h-4 w-4" /> Manage Layout
+                <LayoutTemplate className="mr-2 h-4 w-4" /> ADD OR REMOVE TABLE
               </Button>
               <Separator orientation="vertical" className="h-8" />
               <div className="flex items-center space-x-2">
