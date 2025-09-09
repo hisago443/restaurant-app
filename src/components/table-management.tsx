@@ -190,7 +190,7 @@ export default function TableManagement({ tables, updateTableStatus, addTable, r
                     onClick={(e) => e.stopPropagation()}
                   />
                 </div>
-                <span className={cn("text-2xl font-bold", table.status === 'Available' ? 'text-white' : 'text-black')}>{table.id}</span>
+                <span className={cn("text-3xl font-bold", table.status === 'Available' ? 'text-white' : 'text-black')}>{table.id}</span>
                 <span className={cn("text-xs font-semibold", table.status === 'Available' ? 'text-white' : 'text-black')}>{table.status}</span>
               </div>
             ))}
