@@ -5,3 +5,14 @@ runConfig:
   # Increase this value if you'd like to automatically spin up
   # more instances in response to increased traffic.
   maxInstances: 1
+schedule:
+  - # Runs every day at midnight
+    schedule: 0 0 * * *
+    http:
+      path: /api/reports/daily
+      method: GET
+  - # Runs on the 1st of every month at midnight
+    schedule: 0 0 1 * *
+    http:
+      path: /api/reports/monthly
+      method: GET

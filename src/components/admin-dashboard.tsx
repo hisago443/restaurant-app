@@ -15,6 +15,8 @@ import BillHistory from './bill-history';
 import type { Bill, Employee } from '@/lib/types';
 import { generateAndSendReport } from '@/ai/flows/generate-report';
 import { useToast } from '@/hooks/use-toast';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 
 
 const topItems: { name: string; count: number }[] = [];
@@ -34,6 +36,9 @@ interface AdminDashboardProps {
 export default function AdminDashboard({ billHistory, employees }: AdminDashboardProps) {
   const { toast } = useToast();
   const [isReportLoading, setIsReportLoading] = useState(false);
+  const [autoSendDaily, setAutoSendDaily] = useState(false);
+  const [autoSendMonthly, setAutoSendMonthly] = useState(false);
+
 
   const handleExportCSV = () => {
     if (salesData.length === 0) return;
@@ -255,16 +260,28 @@ export default function AdminDashboard({ billHistory, employees }: AdminDashboar
                 <CardTitle>Email Reports</CardTitle>
                 <CardDescription>Send summary reports to the administrator.</CardDescription>
               </CardHeader>
-              <CardContent className="flex flex-wrap gap-2">
-                  <Button variant="secondary" onClick={() => handleSendReport('daily')} disabled={isReportLoading}>
-                      <Mail className="mr-2 h-4 w-4" /> Send Daily Report
-                  </Button>
-                  <Button variant="secondary" onClick={() => handleSendReport('monthly')} disabled={isReportLoading}>
-                      <Mail className="mr-2 h-4 w-4" /> Send Monthly Report
-                  </Button>
-                  <Button variant="secondary" onClick={() => handleSendReport('yearly')} disabled={isReportLoading}>
-                      <Mail className="mr-2 h-4 w-4" /> Send Yearly Report
-                  </Button>
+              <CardContent className="flex flex-col gap-4">
+                  <div className='flex flex-wrap gap-2'>
+                    <Button variant="secondary" onClick={() => handleSendReport('daily')} disabled={isReportLoading}>
+                        <Mail className="mr-2 h-4 w-4" /> Send Daily Report
+                    </Button>
+                    <Button variant="secondary" onClick={() => handleSendReport('monthly')} disabled={isReportLoading}>
+                        <Mail className="mr-2 h-4 w-4" /> Send Monthly Report
+                    </Button>
+                    <Button variant="secondary" onClick={() => handleSendReport('yearly')} disabled={isReportLoading}>
+                        <Mail className="mr-2 h-4 w-4" /> Send Yearly Report
+                    </Button>
+                  </div>
+                  <div className="space-y-4">
+                    <div className="flex items-center space-x-2">
+                      <Switch id="auto-daily" checked={autoSendDaily} onCheckedChange={setAutoSendDaily} />
+                      <Label htmlFor="auto-daily">Auto-send Daily Report</Label>
+                    </div>
+                     <div className="flex items-center space-x-2">
+                      <Switch id="auto-monthly" checked={autoSendMonthly} onCheckedChange={setAutoSendMonthly} />
+                      <Label htmlFor="auto-monthly">Auto-send Monthly Report</Label>
+                    </div>
+                  </div>
               </CardContent>
             </Card>
           </CardContent>
