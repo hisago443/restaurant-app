@@ -17,6 +17,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Search, Plus, Minus, X, Save, FilePlus, LayoutGrid, List, Rows, ChevronsUpDown, ChevronsDownUp, Palette, Shuffle, ClipboardList } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { AddItemDialog } from './add-item-dialog';
 
 import type { MenuCategory, MenuItem, OrderItem } from '@/lib/types';
 import menuData from '@/data/menu.json';
@@ -65,6 +66,8 @@ export default function PosSystem() {
   const [viewMode, setViewMode] = useState<ViewMode>('accordion');
   const [menuItemColors, setMenuItemColors] = useState<Record<string, string>>({});
   const [categoryColors, setCategoryColors] = useState<Record<string, string>>({});
+  const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
+  const [isAddItemDialogOpen, setIsAddItemDialogOpen] = useState(false);
 
   const typedMenuData: MenuCategory[] = menuData;
 
@@ -142,13 +145,18 @@ export default function PosSystem() {
     };
   }, [updateReceipt]);
 
-  const addToOrder = (item: MenuItem, quantity = 1) => {
+  const addToOrder = (item: MenuItem, quantity: number) => {
     const existingItem = orderItems.find(orderItem => orderItem.name === item.name);
     if (existingItem) {
       updateQuantity(item.name, existingItem.quantity + quantity);
     } else {
       setOrderItems([...orderItems, { ...item, quantity }]);
     }
+  };
+
+  const handleItemClick = (item: MenuItem) => {
+    setSelectedItem(item);
+    setIsAddItemDialogOpen(true);
   };
 
   const updateQuantity = (name: string, quantity: number) => {
@@ -200,7 +208,7 @@ export default function PosSystem() {
           finalColor,
           isColorApplied && "border-black shadow-lg hover:shadow-xl"
         )}
-        onClick={() => isClickToAdd && addToOrder(item, 1)}
+        onClick={() => isClickToAdd && handleItemClick(item)}
       >
         <Popover>
           <PopoverTrigger asChild>
@@ -236,7 +244,7 @@ export default function PosSystem() {
           </div>
           {!isClickToAdd && (
             <div className="flex justify-end mt-2">
-              <Button size="sm" variant="secondary" onClick={(e) => { e.stopPropagation(); addToOrder(item); }}>Add to Order</Button>
+              <Button size="sm" variant="secondary" onClick={(e) => { e.stopPropagation(); handleItemClick(item); }}>Add to Order</Button>
             </div>
           )}
         </CardContent>
@@ -531,6 +539,12 @@ export default function PosSystem() {
         onOpenChange={setIsPaymentDialogOpen}
         total={total}
         onPaymentSuccess={handlePaymentSuccess}
+      />
+       <AddItemDialog
+        isOpen={isAddItemDialogOpen}
+        onOpenChange={setIsAddItemDialogOpen}
+        item={selectedItem}
+        onConfirm={addToOrder}
       />
     </div>
   );
