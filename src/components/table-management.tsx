@@ -142,6 +142,7 @@ export default function TableManagement({ tables, updateTableStatus, addTable, r
                     key={status}
                     onClick={() => handleStatusButtonClick(status)}
                     className={cn(
+                      'text-black',
                       statusColors[status],
                       'transition-all',
                       filter === status && 'ring-2 ring-offset-2 ring-ring'
@@ -158,7 +159,7 @@ export default function TableManagement({ tables, updateTableStatus, addTable, r
               <div
                 key={table.id}
                 className={cn(
-                  'aspect-square rounded-lg flex flex-col items-center justify-center cursor-pointer transition-all duration-300 shadow-md hover:shadow-xl hover:scale-105 relative',
+                  'aspect-square rounded-lg flex flex-col items-center justify-center cursor-pointer transition-all duration-300 shadow-lg hover:shadow-2xl hover:scale-105 relative border border-black',
                   statusColors[table.status],
                   selectedTables.includes(table.id) && 'ring-4 ring-offset-2 ring-primary'
                 )}
