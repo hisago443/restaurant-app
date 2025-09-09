@@ -350,24 +350,26 @@ export default function PosSystem({ tables, addOrder }: PosSystemProps) {
     if (viewMode === 'grid') {
       return (
         <Tabs defaultValue={filteredMenu[0]?.category} className="w-full">
-          <TabsList className="mb-4">
-             {filteredMenu.map(category => (
-               <div
-                key={category.category}
-                className={cn(
-                  "p-1 rounded-md flex items-center justify-center relative data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm",
-                  categoryColors[category.category]
-                )}
-              >
-                <TabsTrigger value={category.category} className="bg-transparent shadow-none p-2 flex-1 justify-center">
-                  <span className="text-black">{category.category}</span>
-                </TabsTrigger>
-                <div className="ml-auto">
-                    <CategoryColorPicker categoryName={category.category} />
+          <div className="flex justify-center">
+            <TabsList className="mb-4">
+              {filteredMenu.map(category => (
+                <div
+                  key={category.category}
+                  className={cn(
+                    "p-1 rounded-md flex items-center justify-center relative data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm",
+                    categoryColors[category.category]
+                  )}
+                >
+                  <TabsTrigger value={category.category} className="bg-transparent shadow-none p-2 flex-1 justify-center">
+                    <span className="text-black">{category.category}</span>
+                  </TabsTrigger>
+                  <div className="ml-auto">
+                      <CategoryColorPicker categoryName={category.category} />
+                  </div>
                 </div>
-              </div>
-            ))}
-          </TabsList>
+              ))}
+            </TabsList>
+          </div>
           {filteredMenu.map(category => (
              <TabsContent key={category.category} value={category.category}>
                <div className="space-y-4">
