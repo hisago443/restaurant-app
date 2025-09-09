@@ -14,7 +14,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from '@/hooks/use-toast';
-import { Search, Plus, Minus, X, Save, FilePlus, LayoutGrid, List, Rows, ChevronsUpDown, ChevronsDownUp, Palette, Shuffle } from 'lucide-react';
+import { Search, Plus, Minus, X, Save, FilePlus, LayoutGrid, List, Rows, ChevronsUpDown, ChevronsDownUp, Palette, Shuffle, ClipboardList } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
@@ -439,8 +439,9 @@ export default function PosSystem() {
         </CardHeader>
         <ScrollArea className="flex-grow p-4 pt-0">
           {orderItems.length === 0 ? (
-            <div className="flex items-center justify-center h-full text-muted-foreground">
-              <p>No items in order.</p>
+            <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
+              <ClipboardList className="w-16 h-16 text-gray-300" />
+              <p className="mt-4 text-sm font-medium">Add items to get started</p>
             </div>
           ) : (
             <div className="space-y-3">
