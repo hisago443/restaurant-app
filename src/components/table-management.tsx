@@ -1,14 +1,17 @@
+
 "use client";
 
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose, DialogDescription } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { Table, TableStatus } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
+import { PlusCircle, Trash2 } from 'lucide-react';
 
 const initialTables: Table[] = Array.from({ length: 20 }, (_, i) => ({
   id: i + 1,
@@ -55,6 +58,20 @@ export default function TableManagement() {
     setIsBulkManageOpen(false);
   }
 
+  const handleAddTable = () => {
+    const newTableId = tables.length > 0 ? Math.max(...tables.map(t => t.id)) + 1 : 1;
+    const newTable: Table = { id: newTableId, status: 'Available' };
+    setTables([...tables, newTable]);
+  };
+
+  const handleRemoveLastTable = () => {
+    if (tables.length > 0) {
+      const tableToRemove = tables[tables.length - 1];
+      setTables(tables.filter(t => t.id !== tableToRemove.id));
+      setSelectedTables(selectedTables.filter(id => id !== tableToRemove.id));
+    }
+  };
+
   const renderActions = (table: Table) => {
     switch (table.status) {
       case 'Available':
@@ -89,16 +106,41 @@ export default function TableManagement() {
     <div className="p-4">
       <Card>
         <CardHeader>
-          <div className="flex justify-between items-center">
+          <div className="flex justify-between items-center gap-4 flex-wrap">
             <div>
               <CardTitle>Table Layout</CardTitle>
-              <CardDescription>Click on a table to manage it, or select multiple tables to manage them at once.</CardDescription>
+              <CardDescription>Manage your restaurant's table configuration and status.</CardDescription>
             </div>
             <div className="flex items-center gap-4">
+              <Button variant="outline" onClick={handleAddTable}>
+                <PlusCircle className="mr-2 h-4 w-4" /> Add Table
+              </Button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive" disabled={tables.length === 0}>
+                    <Trash2 className="mr-2 h-4 w-4" /> Remove Last Table
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This will permanently remove Table {tables[tables.length -1]?.id}. This action cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleRemoveLastTable}>Delete</AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+
+              <Separator orientation="vertical" className="h-8" />
+
               <div className="flex items-center space-x-2">
                 <Checkbox
                   id="select-all"
-                  onCheckedChange={handleSelectAllTables}
+                  onCheckedChange={(checked) => handleSelectAllTables(Boolean(checked))}
                   checked={selectedTables.length === tables.length && tables.length > 0}
                 />
                 <Label htmlFor="select-all">Select All</Label>
