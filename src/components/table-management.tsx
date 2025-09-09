@@ -2,9 +2,9 @@
 "use client";
 
 import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose, DialogDescription } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger, AlertDialogFooter } from "@/components/ui/alert-dialog";
 import type { Table, TableStatus } from '@/lib/types';
 import { cn } from '@/lib/utils';
@@ -14,10 +14,10 @@ import { PlusCircle, Trash2, LayoutTemplate } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 
 const statusColors: Record<TableStatus, string> = {
-  Available: 'bg-green-400 hover:bg-green-500 text-black',
-  Occupied: 'bg-red-400 hover:bg-red-500 text-black',
-  Reserved: 'bg-blue-400 hover:bg-blue-500 text-black',
-  Cleaning: 'bg-yellow-400 hover:bg-yellow-500 text-black',
+  Available: 'bg-green-400 hover:bg-green-500',
+  Occupied: 'bg-red-400 hover:bg-red-500',
+  Reserved: 'bg-blue-400 hover:bg-blue-500',
+  Cleaning: 'bg-yellow-400 hover:bg-yellow-500',
 };
 
 interface TableManagementProps {
@@ -135,7 +135,13 @@ export default function TableManagement({ tables, updateTableStatus, addTable, r
             </div>
           </div>
           <div className="flex items-center gap-2 flex-wrap p-4 border-t border-b">
-              <Button variant={filter === 'All' ? 'default' : 'outline'} onClick={() => handleStatusButtonClick('All')}>All Tables ({tables.length})</Button>
+              <Button 
+                variant={'outline'} 
+                onClick={() => handleStatusButtonClick('All')}
+                className={cn(filter === 'All' && 'ring-2 ring-offset-2 ring-ring')}
+              >
+                All Tables ({tables.length})
+              </Button>
               <Separator orientation="vertical" className="h-8" />
               {(Object.keys(statusColors) as TableStatus[]).map(status => (
                   <Button
@@ -173,8 +179,8 @@ export default function TableManagement({ tables, updateTableStatus, addTable, r
                     onClick={(e) => e.stopPropagation()}
                   />
                 </div>
-                <span className="text-2xl font-bold">{table.id}</span>
-                <span className="text-xs font-semibold">{table.status}</span>
+                <span className="text-2xl font-bold text-black">{table.id}</span>
+                <span className="text-xs font-semibold text-black">{table.status}</span>
               </div>
             ))}
              {filteredTables.length === 0 && (
