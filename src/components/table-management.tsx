@@ -59,6 +59,21 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
     }
   };
 
+  const handleTableClick = (table: Table) => {
+    // If table is cleaning, a single click makes it available.
+    if (table.status === 'Cleaning') {
+        updateTableStatus([table.id], 'Available');
+        return;
+    }
+    // If a table is already selected, clicking it again opens the dialog
+    if (selectedTable?.id === table.id) {
+       setSelectedTable(table);
+    } else {
+        setSelectedTable(table);
+    }
+    // Logic for multi-select checkbox remains separate
+  };
+
   const handleDoubleClick = (table: Table) => {
     if (table.status === 'Available') {
       updateTableStatus([table.id], 'Occupied');
@@ -70,16 +85,6 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
     }
   };
   
-  const handleSelectTable = (table: Table) => {
-    // If a table is already selected, clicking it again opens the dialog
-    if (selectedTable?.id === table.id) {
-       setSelectedTable(table);
-    } else {
-        setSelectedTable(table);
-    }
-    // Logic for multi-select checkbox remains separate
-  };
-
   const handleCheckboxChange = (tableId: number, checked: boolean) => {
     setSelectedTables(prev => 
       checked
@@ -188,7 +193,7 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
         return (
           <>
             <Button onClick={() => { orderForTable && onEditOrder(orderForTable); setSelectedTable(null);}} disabled={!orderForTable}><Edit className="mr-2 h-4 w-4" />Update Order</Button>
-            <Button variant="outline" onClick={() => { handleOpenPrintDialog(new MouseEvent('click') as any, table); setSelectedTable(null); }} disabled={!orderForTable}><Printer className="mr-2 h-4 w-4" />Print Bill</Button>
+            <Button variant="outline" onClick={(e) => { handleOpenPrintDialog(e, table); setSelectedTable(null); }} disabled={!orderForTable}><Printer className="mr-2 h-4 w-4" />Print Bill</Button>
             <Button variant="destructive" onClick={() => { localUpdateTableStatus(table.id, 'Cleaning'); setSelectedTable(null); }}><SparklesIcon className="mr-2 h-4 w-4" />Mark as Cleaning</Button>
           </>
         );
@@ -276,7 +281,7 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
                   !selectedTables.includes(table.id) && 'border-black/50',
                   hoveredStatus === table.status && 'scale-110 z-10'
                 )}
-                onClick={() => handleSelectTable(table)}
+                onClick={() => handleTableClick(table)}
                 onDoubleClick={() => handleDoubleClick(table)}
               >
                 <div className="absolute top-1 right-1">
@@ -435,5 +440,3 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
     </div>
   );
 }
-
-    

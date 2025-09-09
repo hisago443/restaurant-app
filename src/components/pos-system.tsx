@@ -105,8 +105,8 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
   useEffect(() => {
     try {
       localStorage.setItem('isClickToAdd', JSON.stringify(isClickToAdd));
-    } catch (error) {
-      console.error("Could not save 'isClickToAdd' to localStorage", error);
+    } catch (e) {
+      console.error("Could not save 'isClickToAdd' to localStorage", e);
     }
   }, [isClickToAdd]);
   
@@ -133,8 +133,8 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
     if (table.status === 'Available') {
       clearOrder(false, true); // Clear everything for a new order
       updateTableStatus([tableId], 'Occupied');
-      toast({ title: `Table ${tableId} is now Occupied`, description: 'Add items to the order.' });
-      setIsTablePopoverOpen(false); // Close popover
+      toast({ title: `Table ${tableId} is now Occupied`, description: 'Add items to start the order.' });
+      setIsTablePopoverOpen(false); // Close popover to start adding items
     } else if (table.status === 'Occupied') {
       const existingOrder = orders.find(o => o.tableId === tableId && o.status !== 'Completed');
       if (existingOrder) {
@@ -149,12 +149,20 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
         });
       }
       setIsTablePopoverOpen(false); // Close popover to allow adding items
+    } else {
+       // For other statuses like 'Cleaning' or 'Reserved', we just update the selection
+       // and leave the popover open to show relevant actions.
     }
-    // For other statuses like 'Cleaning' or 'Reserved', we leave the popover open
-    // to show the relevant actions without immediately jumping to the order screen.
   };
   
   const handleDoubleClickTable = (table: Table) => {
+    // Single click on a cleaning table makes it available
+    if (table.status === 'Cleaning') {
+      updateTableStatus([table.id], 'Available');
+      toast({ title: `Table ${table.id} is now Available.` });
+      return;
+    }
+    // Double click on occupied table marks for cleaning
     if (table.status === 'Occupied') {
         updateTableStatus([table.id], 'Cleaning');
         toast({ title: 'Customer Left', description: `Table ${table.id} is now marked for cleaning.` });
@@ -755,11 +763,9 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
                                     <span>{occupancyCount[table.id]}</span>
                                 </div>
                                 }
+                                {React.createElement(statusIcons[table.status], { className: "absolute top-2 left-2 h-4 w-4" })}
                                 <span className="text-2xl font-bold">{table.id}</span>
-                                <div className="flex items-center gap-1 text-xs">
-                                    {React.createElement(statusIcons[table.status], { className: "h-3 w-3" })}
-                                    <span>{table.status}</span>
-                                </div>
+                                <span className="text-xs font-semibold">{table.status}</span>
                             </Button>
                         ))}
                     </div>
@@ -889,3 +895,4 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
   );
 }
 
+    
