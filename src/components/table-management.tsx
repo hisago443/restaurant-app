@@ -15,9 +15,9 @@ import { PlusCircle, Trash2, LayoutTemplate } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 
 const statusColors: Record<TableStatus, string> = {
-  Available: 'bg-green-400 hover:bg-green-500 text-white',
-  Occupied: 'bg-red-400 hover:bg-red-500 text-white',
-  Reserved: 'bg-blue-400 hover:bg-blue-500 text-white',
+  Available: 'bg-green-400 hover:bg-green-500 text-black',
+  Occupied: 'bg-red-400 hover:bg-red-500 text-black',
+  Reserved: 'bg-blue-400 hover:bg-blue-500 text-black',
   Cleaning: 'bg-yellow-400 hover:bg-yellow-500 text-black',
 };
 
@@ -75,10 +75,10 @@ export default function TableManagement({ tables, updateTableStatus, addTable, r
   };
 
   const handleRemoveLastTable = () => {
-    removeLastTable();
     if (tables.length > 0) {
-        const lastTableId = tables[tables.length - 1].id;
-        setSelectedTables(selectedTables.filter(id => id !== lastTableId));
+      const lastTableId = tables[tables.length - 1].id;
+      removeLastTable();
+      setSelectedTables(selectedTables.filter(id => id !== lastTableId));
     }
   };
 
