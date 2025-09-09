@@ -12,6 +12,7 @@ import { cn } from '@/lib/utils';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { PlusCircle, Trash2 } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
 
 const initialTables: Table[] = Array.from({ length: 20 }, (_, i) => ({
   id: i + 1,
