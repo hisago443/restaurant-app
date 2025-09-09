@@ -13,7 +13,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { Eye } from 'lucide-react';
+import { Eye, Printer } from 'lucide-react';
 import type { Bill } from '@/lib/types';
 import { format } from 'date-fns';
 
@@ -23,6 +23,33 @@ interface BillHistoryProps {
 
 export default function BillHistory({ bills }: BillHistoryProps) {
   const [selectedBill, setSelectedBill] = useState<Bill | null>(null);
+
+  const handlePrintBill = (bill: Bill) => {
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(`
+        <html>
+          <head>
+            <title>Receipt for Bill #${bill.id}</title>
+            <style>
+              body { font-family: monospace; margin: 20px; }
+              pre { white-space: pre-wrap; word-wrap: break-word; }
+            </style>
+          </head>
+          <body>
+            <pre>${bill.receiptPreview}</pre>
+            <script>
+              window.onload = function() {
+                window.print();
+                window.close();
+              }
+            </script>
+          </body>
+        </html>
+      `);
+      printWindow.document.close();
+    }
+  };
 
   return (
     <>
@@ -49,14 +76,22 @@ export default function BillHistory({ bills }: BillHistoryProps) {
                   <TableCell className="text-right font-mono">
                     Rs.{bill.total.toFixed(2)}
                   </TableCell>
-                  <TableCell className="text-center">
+                  <TableCell className="text-center space-x-2">
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => setSelectedBill(bill)}
                     >
                       <Eye className="mr-2 h-4 w-4" />
-                      View Receipt
+                      View
+                    </Button>
+                     <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handlePrintBill(bill)}
+                    >
+                      <Printer className="mr-2 h-4 w-4" />
+                      Print
                     </Button>
                   </TableCell>
                 </TableRow>
