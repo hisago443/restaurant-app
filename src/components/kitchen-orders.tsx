@@ -1,20 +1,15 @@
+
 "use client";
 
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { ArrowRight, Check } from 'lucide-react';
+import { ArrowRight, Check, ClipboardList } from 'lucide-react';
 import type { Order } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
-const initialOrders: Order[] = [
-  { id: 'K001', tableId: 5, items: [{ name: 'Latte', price: 4.00, quantity: 2 }, { name: 'Croissant', price: 3.00, quantity: 1 }], status: 'Pending' },
-  { id: 'K002', tableId: 12, items: [{ name: 'Turkey Club', price: 8.50, quantity: 1 }, { name: 'Iced Tea', price: 3.00, quantity: 1 }], status: 'Pending' },
-  { id: 'K003', tableId: 3, items: [{ name: 'Espresso', price: 2.50, quantity: 1 }], status: 'In Preparation' },
-  { id: 'K004', tableId: 8, items: [{ name: 'Veggie Delight', price: 7.50, quantity: 2 }], status: 'In Preparation' },
-  { id: 'K005', tableId: 1, items: [{ name: 'Scone', price: 2.50, quantity: 1 }, { name: 'Green Tea', price: 2.50, quantity: 1 }], status: 'Completed' },
-];
+const initialOrders: Order[] = [];
 
 type OrderStatus = 'Pending' | 'In Preparation' | 'Completed';
 
@@ -58,26 +53,33 @@ export default function KitchenOrders() {
             </CardHeader>
             <ScrollArea className="flex-grow">
               <CardContent className="space-y-4">
-                {orders.filter(order => order.status === status).map(order => (
-                  <Card key={order.id} className={cn("transition-all", {
-                    'border-primary': order.status === 'In Preparation',
-                  })}>
-                    <CardHeader className="p-4">
-                      <CardTitle className="text-lg">Order #{order.id}</CardTitle>
-                      <CardDescription>Table: {order.tableId}</CardDescription>
-                    </CardHeader>
-                    <CardContent className="p-4 pt-0 text-sm">
-                      <ul className="list-disc pl-4">
-                        {order.items.map(item => (
-                          <li key={item.name}>{item.quantity}x {item.name}</li>
-                        ))}
-                      </ul>
-                    </CardContent>
-                    <CardFooter className="p-4 pt-0">
-                      {getActionForOrder(order)}
-                    </CardFooter>
-                  </Card>
-                ))}
+                {orders.filter(order => order.status === status).length === 0 ? (
+                  <div className="flex flex-col items-center justify-center h-full text-muted-foreground pt-16">
+                    <ClipboardList className="w-16 h-16 text-gray-300" />
+                    <p className="mt-4 text-sm font-medium">No {status.toLowerCase()} orders.</p>
+                  </div>
+                ) : (
+                  orders.filter(order => order.status === status).map(order => (
+                    <Card key={order.id} className={cn("transition-all", {
+                      'border-primary': order.status === 'In Preparation',
+                    })}>
+                      <CardHeader className="p-4">
+                        <CardTitle className="text-lg">Order #{order.id}</CardTitle>
+                        <CardDescription>Table: {order.tableId}</CardDescription>
+                      </CardHeader>
+                      <CardContent className="p-4 pt-0 text-sm">
+                        <ul className="list-disc pl-4">
+                          {order.items.map(item => (
+                            <li key={item.name}>{item.quantity}x {item.name}</li>
+                          ))}
+                        </ul>
+                      </CardContent>
+                      <CardFooter className="p-4 pt-0">
+                        {getActionForOrder(order)}
+                      </CardFooter>
+                    </Card>
+                  ))
+                )}
               </CardContent>
             </ScrollArea>
           </Card>
