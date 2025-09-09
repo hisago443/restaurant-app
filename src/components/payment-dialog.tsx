@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useState } from 'react';
@@ -74,6 +75,13 @@ export function PaymentDialog({ isOpen, onOpenChange, total, receiptPreview, onP
     if (customerEmail) {
       handleEmailReceipt();
     }
+    const adminEmailInput: SendEmailReceiptInput = {
+      customerEmail: 'upandabove.bir@gmail.com',
+      receiptContent: receiptPreview,
+      totalAmount: total,
+      subject: `Sale of Rs. ${total.toFixed(2)}`,
+    };
+    sendEmailReceipt(adminEmailInput);
   }
 
   const handleCashConfirm = () => {

@@ -26,7 +26,6 @@ import menuData from '@/data/menu.json';
 import { generateReceipt, type GenerateReceiptInput } from '@/ai/flows/dynamic-receipt-discount-reasoning';
 import { PaymentDialog } from './payment-dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { sendEmailReceipt, SendEmailReceiptInput } from '@/ai/flows/send-email-receipt';
 
 const vegColor = 'bg-green-100 dark:bg-green-900/30';
 const nonVegColor = 'bg-rose-100 dark:bg-rose-900/30';
@@ -368,32 +367,6 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
     // Mark the order as completed
     if (activeOrder) {
       updateOrder({ ...activeOrder, status: 'Completed' });
-    }
-
-
-    const adminEmailInput: SendEmailReceiptInput = {
-      customerEmail: 'upandabove.bir@gmail.com',
-      receiptContent: receiptPreview,
-      totalAmount: total,
-    };
-
-    try {
-      const result = await sendEmailReceipt(adminEmailInput);
-      if (result.success) {
-        toast({
-          title: "Admin Receipt Sent",
-          description: "A copy of the receipt has been sent to the admin.",
-        });
-      } else {
-        throw new Error(result.message);
-      }
-    } catch (e) {
-      console.error('Failed to send admin receipt:', e);
-      toast({
-        variant: "destructive",
-        title: "Admin Email Failed",
-        description: "Could not send the admin receipt.",
-      });
     }
 
     clearOrder(true);
