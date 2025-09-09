@@ -33,6 +33,9 @@ export default function TableManagement({ tables, updateTableStatus, addTable, r
   const [selectedTables, setSelectedTables] = useState<number[]>([]);
   const [isBulkManageOpen, setIsBulkManageOpen] = useState(false);
   const [isLayoutManagerOpen, setIsLayoutManagerOpen] = useState(false);
+  const [filter, setFilter] = useState<TableStatus | 'All'>('All');
+
+  const filteredTables = tables.filter(table => filter === 'All' || table.status === filter);
 
   const localUpdateTableStatus = (tableId: number, status: TableStatus) => {
     updateTableStatus(tableId, status);
@@ -49,7 +52,7 @@ export default function TableManagement({ tables, updateTableStatus, addTable, r
 
   const handleSelectAllTables = (checked: boolean) => {
     if (checked) {
-      setSelectedTables(tables.map(t => t.id));
+      setSelectedTables(filteredTables.map(t => t.id));
     } else {
       setSelectedTables([]);
     }
@@ -64,12 +67,10 @@ export default function TableManagement({ tables, updateTableStatus, addTable, r
   }
 
   const handleRemoveLastTable = () => {
+    if (tables.length === 0) return;
+    const tableToRemove = tables.reduce((last, current) => (current.id > last.id ? current : last));
     removeLastTable();
-    // Also remove the potentially deleted table from selection
-    if (tables.length > 0) {
-      const tableToRemove = tables.reduce((last, current) => (current.id > last.id ? current : last));
-      setSelectedTables(selectedTables.filter(id => id !== tableToRemove.id));
-    }
+    setSelectedTables(selectedTables.filter(id => id !== tableToRemove.id));
   };
 
   const renderActions = (table: Table) => {
@@ -106,7 +107,7 @@ export default function TableManagement({ tables, updateTableStatus, addTable, r
     <div className="p-4">
       <Card>
         <CardHeader>
-          <div className="flex justify-between items-center gap-4 flex-wrap">
+          <div className="flex justify-between items-center gap-4 flex-wrap mb-4">
             <div>
               <CardTitle>Table Layout</CardTitle>
               <CardDescription>Manage your restaurant's table configuration and status.</CardDescription>
@@ -121,7 +122,8 @@ export default function TableManagement({ tables, updateTableStatus, addTable, r
                 <Checkbox
                   id="select-all"
                   onCheckedChange={(checked) => handleSelectAllTables(Boolean(checked))}
-                  checked={selectedTables.length === tables.length && tables.length > 0}
+                  checked={selectedTables.length === filteredTables.length && filteredTables.length > 0}
+                  disabled={filteredTables.length === 0}
                 />
                 <Label htmlFor="select-all">Select All</Label>
               </div>
@@ -130,10 +132,22 @@ export default function TableManagement({ tables, updateTableStatus, addTable, r
               </Button>
             </div>
           </div>
+          <div className="flex items-center gap-2 flex-wrap p-4 border-t border-b">
+              <Button variant={filter === 'All' ? 'default' : 'outline'} onClick={() => setFilter('All')}>All Tables ({tables.length})</Button>
+              {(Object.keys(statusColors) as TableStatus[]).map(status => (
+                  <Button 
+                    key={status} 
+                    variant={filter === status ? 'default' : 'outline'}
+                    onClick={() => setFilter(status)}
+                  >
+                      {status} ({tables.filter(t => t.status === status).length})
+                  </Button>
+              ))}
+          </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pt-6">
           <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-10 gap-4">
-            {tables.map(table => (
+            {filteredTables.map(table => (
               <div
                 key={table.id}
                 className={cn(
@@ -155,6 +169,11 @@ export default function TableManagement({ tables, updateTableStatus, addTable, r
                 <span className="text-xs font-semibold">{table.status}</span>
               </div>
             ))}
+             {filteredTables.length === 0 && (
+              <div className="col-span-full text-center text-muted-foreground">
+                No tables match the current filter.
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
