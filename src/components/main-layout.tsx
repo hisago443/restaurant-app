@@ -2,8 +2,9 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import { collection, onSnapshot, addDoc, doc, setDoc, deleteDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent } from "@/components/ui/card";
 import { Coffee, LayoutGrid, Book, BarChart, Users } from 'lucide-react';
 
 import { Logo } from "./icons";
@@ -13,24 +14,48 @@ import KitchenOrders from './kitchen-orders';
 import AdminDashboard from './admin-dashboard';
 import StaffManagement from "./staff-management";
 import type { Table, TableStatus, Order, Bill, Employee } from '@/lib/types';
-
-const initialTables: Table[] = Array.from({ length: 20 }, (_, i) => ({
-  id: i + 1,
-  status: ['Available', 'Occupied', 'Reserved', 'Cleaning'][Math.floor(Math.random() * 4)] as TableStatus,
-}));
-
-const initialEmployees: Employee[] = [
-  { id: 'E001', name: 'John Doe', role: 'Manager', salary: 50000, color: 'bg-blue-500' },
-  { id: 'E002', name: 'Jane Smith', role: 'Chef', salary: 40000, color: 'bg-green-500' },
-  { id: 'E003', name: 'Mike Johnson', role: 'Waiter', salary: 25000, color: 'bg-yellow-500' },
-];
+import { useToast } from '@/hooks/use-toast';
 
 export default function MainLayout() {
+  const { toast } = useToast();
   const [currentDateTime, setCurrentDateTime] = useState<Date | null>(null);
-  const [tables, setTables] = useState<Table[]>(initialTables);
+  const [tables, setTables] = useState<Table[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [billHistory, setBillHistory] = useState<Bill[]>([]);
-  const [employees, setEmployees] = useState<Employee[]>(initialEmployees);
+  const [employees, setEmployees] = useState<Employee[]>([]);
+
+  useEffect(() => {
+    // Fetch initial tables from random data
+    const initialTables: Table[] = Array.from({ length: 20 }, (_, i) => ({
+      id: i + 1,
+      status: ['Available', 'Occupied', 'Reserved', 'Cleaning'][Math.floor(Math.random() * 4)] as TableStatus,
+    }));
+    setTables(initialTables);
+  
+    // Listen for real-time updates to employees
+    const unsubEmployees = onSnapshot(collection(db, "employees"), (snapshot) => {
+      const employeesData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Employee));
+      setEmployees(employeesData);
+    });
+
+    // Listen for real-time updates to bills
+    const unsubBills = onSnapshot(collection(db, "bills"), (snapshot) => {
+      const billsData = snapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          ...data,
+          id: doc.id,
+          timestamp: data.timestamp.toDate(),
+        } as Bill;
+      });
+      setBillHistory(billsData);
+    });
+
+    return () => {
+      unsubEmployees();
+      unsubBills();
+    };
+  }, []);
 
 
   const addOrder = (order: Omit<Order, 'id' | 'status'>) => {
@@ -44,13 +69,18 @@ export default function MainLayout() {
     updateTableStatus([order.tableId], 'Occupied');
   };
 
-  const addBill = (bill: Omit<Bill, 'id'| 'timestamp'>) => {
-    const newBill: Bill = {
+  const addBill = async (bill: Omit<Bill, 'id'| 'timestamp'>) => {
+    try {
+      const billWithTimestamp = {
         ...bill,
-        id: `B${(billHistory.length + 1).toString().padStart(4, '0')}`,
         timestamp: new Date(),
-    };
-    setBillHistory(prev => [newBill, ...prev]);
+      };
+      await addDoc(collection(db, "bills"), billWithTimestamp);
+      toast({ title: 'Bill Saved', description: 'The bill has been saved to the database.' });
+    } catch (error) {
+      console.error("Error adding bill to Firestore: ", error);
+      toast({ variant: 'destructive', title: 'Save Failed', description: 'Could not save the bill to the database.' });
+    }
   };
 
   const updateTableStatus = (tableIds: number[], status: TableStatus) => {
@@ -93,6 +123,43 @@ export default function MainLayout() {
   const formattedTime = currentDateTime
     ? currentDateTime.toLocaleTimeString()
     : '';
+
+  const addEmployee = async (employee: Omit<Employee, 'id'>) => {
+    try {
+      await addDoc(collection(db, "employees"), employee);
+      toast({ title: 'Employee Added', description: 'New employee saved to the database.' });
+    } catch (error) {
+      console.error("Error adding employee: ", error);
+      toast({ variant: 'destructive', title: 'Save Failed', description: 'Could not save the employee.' });
+    }
+  };
+
+  const updateEmployee = async (employee: Employee) => {
+    try {
+      const employeeRef = doc(db, "employees", employee.id);
+      await setDoc(employeeRef, {
+        name: employee.name,
+        role: employee.role,
+        salary: employee.salary,
+        color: employee.color,
+      }, { merge: true });
+      toast({ title: 'Employee Updated', description: 'Employee information has been updated.' });
+    } catch (error) {
+      console.error("Error updating employee: ", error);
+      toast({ variant: 'destructive', title: 'Update Failed', description: 'Could not update employee details.' });
+    }
+  };
+
+  const deleteEmployee = async (employeeId: string) => {
+    try {
+      await deleteDoc(doc(db, "employees", employeeId));
+      toast({ title: 'Employee Deleted', description: 'Employee has been removed from the database.' });
+    } catch (error) {
+      console.error("Error deleting employee: ", error);
+      toast({ variant: 'destructive', title: 'Delete Failed', description: 'Could not delete the employee.' });
+    }
+  };
+
 
   return (
     <div className="flex flex-col h-screen bg-background">
@@ -147,7 +214,12 @@ export default function MainLayout() {
               <KitchenOrders orders={orders} setOrders={setOrders} />
             </TabsContent>
             <TabsContent value="staff" className="m-0 p-0">
-              <StaffManagement employees={employees} setEmployees={setEmployees} />
+              <StaffManagement 
+                employees={employees} 
+                addEmployee={addEmployee}
+                updateEmployee={updateEmployee}
+                deleteEmployee={deleteEmployee}
+              />
             </TabsContent>
             <TabsContent value="admin" className="m-0 p-0">
               <AdminDashboard billHistory={billHistory} employees={employees} />

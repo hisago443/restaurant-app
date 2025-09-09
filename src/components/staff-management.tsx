@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose, DialogDescription } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger, AlertDialogFooter } from "@/components/ui/alert-dialog";
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -74,11 +74,13 @@ function AddAdvanceDialog({ open, onOpenChange, employees, onAddAdvance, selecte
 
 interface StaffManagementProps {
   employees: Employee[];
-  setEmployees: React.Dispatch<React.SetStateAction<Employee[]>>;
+  addEmployee: (employee: Omit<Employee, 'id'>) => Promise<void>;
+  updateEmployee: (employee: Employee) => Promise<void>;
+  deleteEmployee: (employeeId: string) => Promise<void>;
 }
 
 
-export default function StaffManagement({ employees, setEmployees }: StaffManagementProps) {
+export default function StaffManagement({ employees, addEmployee, updateEmployee, deleteEmployee }: StaffManagementProps) {
   const [advances, setAdvances] = useState<Advance[]>(initialAdvances);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [isAddEmployeeDialogOpen, setIsAddEmployeeDialogOpen] = useState(false);
@@ -98,24 +100,21 @@ export default function StaffManagement({ employees, setEmployees }: StaffManage
     }
   }
 
-  const handleAddEmployee = (employee: Omit<Employee, 'color' | 'id'> & { id?: string }) => {
-    const newEmployee: Employee = {
-      id: employee.id || `E${Date.now()}`,
-      name: employee.name,
-      role: employee.role,
-      salary: employee.salary,
+  const handleAddEmployee = (employee: Omit<Employee, 'id' | 'color'>) => {
+    const newEmployee: Omit<Employee, 'id'> = {
+      ...employee,
       color: colors[employees.length % colors.length]
     };
-    setEmployees([...employees, newEmployee]);
+    addEmployee(newEmployee);
   }
   
   const handleEditEmployee = (employee: Employee) => {
-      setEmployees(employees.map(e => e.id === employee.id ? employee : e));
+      updateEmployee(employee);
       setEditingEmployee(null);
   }
 
   const handleDeleteEmployee = (employeeId: string) => {
-      setEmployees(employees.filter(e => e.id !== employeeId));
+      deleteEmployee(employeeId);
   }
   
   const openEditDialog = (employee: Employee) => {
@@ -286,7 +285,7 @@ export default function StaffManagement({ employees, setEmployees }: StaffManage
             if (editingEmployee) {
                 handleEditEmployee({ ...editingEmployee, ...employeeData });
             } else {
-                handleAddEmployee(employeeData as Omit<Employee, 'color'> & {id: string});
+                handleAddEmployee(employeeData as Omit<Employee, 'id' | 'color'>);
             }
         }}
       />
@@ -294,16 +293,29 @@ export default function StaffManagement({ employees, setEmployees }: StaffManage
   );
 }
 
-function EmployeeDialog({ open, onOpenChange, employee, onSave }: { open: boolean; onOpenChange: (open: boolean) => void; employee: Employee | null; onSave: (data: Omit<Employee, 'color'> & {id?: string}) => void;}) {
-    const [id, setId] = useState(employee?.id || '');
+function EmployeeDialog({ open, onOpenChange, employee, onSave }: { open: boolean; onOpenChange: (open: boolean) => void; employee: Employee | null; onSave: (data: Omit<Employee, 'id' | 'color'> & {id?: string}) => void;}) {
+    
     const [name, setName] = useState(employee?.name || '');
     const [role, setRole] = useState(employee?.role || '');
     const [salary, setSalary] = useState(employee?.salary.toString() || '');
     
     const handleSave = () => {
-        onSave({ id, name, role, salary: parseFloat(salary) });
+        const data: Omit<Employee, 'color' | 'id'> & {id?: string} = { name, role, salary: parseFloat(salary) };
+        if (employee) {
+            data.id = employee.id;
+        }
+        onSave(data);
         onOpenChange(false);
     }
+    
+    // Reset form when dialog opens for a new employee
+    useState(() => {
+        if (!employee) {
+            setName('');
+            setRole('');
+            setSalary('');
+        }
+    });
 
     return (
          <Dialog open={open} onOpenChange={onOpenChange}>
@@ -319,16 +331,12 @@ function EmployeeDialog({ open, onOpenChange, employee, onSave }: { open: boolea
                 </DialogHeader>
                 <div className="space-y-4 py-4">
                     <div className="space-y-2">
-                        <Label htmlFor="id">Employee ID</Label>
-                        <Input id="id" placeholder="e.g., E004" value={id} onChange={(e) => setId(e.target.value)} disabled={!!employee} />
-                    </div>
-                    <div className="space-y-2">
                     <Label htmlFor="name">Employee Name</Label>
-                    <Input id="name" placeholder="e.g., John Doe" value={name} onChange={(e) => setName(e.target.value)} />
+                    <Input id="name" placeholder="e.g., John Doe" value={name} onChange={(e) => setName(e.target.value)} required />
                     </div>
                     <div className="space-y-2">
                     <Label htmlFor="role">Role</Label>
-                    <Select value={role} onValueChange={setRole}>
+                    <Select value={role} onValueChange={setRole} required>
                         <SelectTrigger id="role">
                         <SelectValue placeholder="Select a role" />
                         </SelectTrigger>
@@ -343,7 +351,7 @@ function EmployeeDialog({ open, onOpenChange, employee, onSave }: { open: boolea
                     </div>
                     <div className="space-y-2">
                     <Label htmlFor="salary">Salary</Label>
-                    <Input id="salary" type="number" placeholder="e.g., 30000" value={salary} onChange={(e) => setSalary(e.target.value)}/>
+                    <Input id="salary" type="number" placeholder="e.g., 30000" value={salary} onChange={(e) => setSalary(e.target.value)} required/>
                     </div>
                 </div>
                 <DialogFooter>

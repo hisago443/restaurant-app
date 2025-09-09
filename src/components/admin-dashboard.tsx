@@ -53,13 +53,11 @@ export default function AdminDashboard({ billHistory, employees }: AdminDashboar
     setIsReportLoading(true);
     toast({
       title: 'Generating Report...',
-      description: `Please wait while we generate the ${reportType} report.`,
+      description: `Please wait while we generate the ${reportType} report. This may take a moment.`,
     });
 
     const input = {
       reportType,
-      billHistory,
-      employees,
       recipientEmail: 'upandabove.bir@gmail.com',
     };
 

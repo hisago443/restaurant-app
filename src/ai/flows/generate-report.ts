@@ -1,34 +1,49 @@
 
 'use server';
 /**
- * @fileOverview A flow to generate and email sales and staff reports.
+ * @fileOverview A flow to generate and email sales and staff reports by fetching data from Firestore.
  *
- * - generateAndSendReport - A function that compiles a report and emails it.
+ * - generateAndSendReport - A function that fetches data, compiles a report, and emails it.
  */
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-import type { Bill, Employee } from '@/lib/types';
 import { sendEmailReceipt } from './send-email-receipt';
-import { GenerateReportInputSchema, GenerateReportOutputSchema, type GenerateReportInput, type GenerateReportOutput } from '@/lib/types';
+import { GenerateReportInputSchema, GenerateReportOutputSchema, type GenerateReportInput, type GenerateReportOutput, type Bill, type Employee } from '@/lib/types';
+import { db } from '@/lib/firebase';
+import { collection, getDocs } from 'firebase/firestore';
+
 
 // We have to create a wrapper because the frontend cannot pass complex types like `Date`
 // to the backend flow. We convert them to JSON-serializable formats here.
 export async function generateAndSendReport(
   input: {
     reportType: 'daily' | 'monthly' | 'yearly';
-    billHistory: Bill[];
-    employees: Employee[];
     recipientEmail: string;
   }
 ): Promise<GenerateReportOutput> {
+  // Fetch data from Firestore
+  const billsSnapshot = await getDocs(collection(db, "bills"));
+  const billHistory: Bill[] = billsSnapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+          ...data,
+          id: doc.id,
+          timestamp: data.timestamp.toDate(), // Convert Firestore Timestamp to Date
+      } as Bill;
+  });
+  
+  const employeesSnapshot = await getDocs(collection(db, "employees"));
+  const employees: Employee[] = employeesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Employee));
+  
   const serializableInput: GenerateReportInput = {
     ...input,
-    billHistory: input.billHistory.map(bill => ({
+    billHistory: billHistory.map(bill => ({
       id: bill.id,
       total: bill.total,
       timestamp: bill.timestamp.toISOString(),
     })),
+    employees,
   };
   return generateReportFlow(serializableInput);
 }
