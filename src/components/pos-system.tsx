@@ -127,6 +127,7 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
         const existingOrder = orders.find(o => o.tableId === tableId && o.status !== 'Completed');
         if (existingOrder) {
             setActiveOrder(existingOrder);
+            setIsTablePopoverOpen(false); // Close popover after selection
         } else {
              toast({
                 variant: 'destructive',
@@ -627,6 +628,7 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
             <Button onClick={() => {
                 if (orderForTable) {
                     setActiveOrder(orderForTable);
+                    setIsTablePopoverOpen(false);
                 } else {
                     toast({
                         variant: 'destructive',
@@ -635,7 +637,7 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
                     });
                 }
             }}>
-              <Edit className="mr-2 h-4 w-4" />Modify Order
+              <Edit className="mr-2 h-4 w-4" />Update Order
             </Button>
             <Button variant="outline" onClick={handlePrintProvisionalBill} disabled={!orderForTable}><Printer className="mr-2 h-4 w-4" /> Print Provisional Bill</Button>
             <Button variant="destructive" onClick={() => updateTableStatus([selectedTable.id], 'Cleaning')}><SparklesIcon className="mr-2 h-4 w-4" />Mark as Cleaning</Button>
