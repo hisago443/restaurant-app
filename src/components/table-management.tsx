@@ -41,6 +41,12 @@ export default function TableManagement({ tables, updateTableStatus, addTable, r
     updateTableStatus(tableId, status);
     setSelectedTable(null);
   };
+
+  const handleDoubleClick = (table: Table) => {
+    if (table.status === 'Available') {
+      updateTableStatus(table.id, 'Occupied');
+    }
+  };
   
   const handleSelectTable = (tableId: number) => {
     setSelectedTables(prev => 
@@ -169,12 +175,13 @@ export default function TableManagement({ tables, updateTableStatus, addTable, r
               <div
                 key={table.id}
                 className={cn(
-                  'aspect-square rounded-lg flex flex-col items-center justify-center cursor-pointer transition-all duration-300 shadow-lg hover:shadow-2xl relative border border-black',
+                  'aspect-square rounded-lg flex flex-col items-center justify-center cursor-pointer transition-all duration-300 shadow-lg hover:shadow-2xl relative border-2 border-black',
                   statusColors[table.status],
                   selectedTables.includes(table.id) && 'ring-4 ring-offset-2 ring-primary',
                   hoveredStatus === table.status && 'scale-110 z-10'
                 )}
                 onClick={() => setSelectedTable(table)}
+                onDoubleClick={() => handleDoubleClick(table)}
               >
                 <div className="absolute top-1 left-1">
                   <Checkbox 

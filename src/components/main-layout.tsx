@@ -71,7 +71,7 @@ export default function MainLayout() {
           <Logo className="h-6 w-6" />
           <span className="text-lg">Up & Above Assistant</span>
         </div>
-        <div className="text-sm text-foreground text-center font-semibold">
+        <div className="text-sm text-foreground text-center font-semibold bg-muted p-2 rounded-lg shadow-inner">
           <div>{formattedDate}</div>
           <div>{formattedTime}</div>
         </div>
