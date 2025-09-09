@@ -1,3 +1,5 @@
+import { z } from 'zod';
+
 export interface MenuItem {
   name: string;
   price: number;
@@ -75,3 +77,34 @@ export interface ActivityLogEntry {
   timestamp: string;
   type: 'Auth' | 'Order' | 'Payment' | 'Report' | 'POS';
 }
+
+// Zod schema for serializable Bill
+export const BillSchema = z.object({
+  id: z.string(),
+  total: z.number(),
+  timestamp: z.string().describe('ISO date string'),
+});
+
+// Zod schema for serializable Employee
+export const EmployeeSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  role: z.string(),
+  salary: z.number(),
+});
+
+// Zod schema for GenerateReport input
+export const GenerateReportInputSchema = z.object({
+  reportType: z.enum(['daily', 'monthly', 'yearly']).describe('The type of report to generate.'),
+  billHistory: z.array(BillSchema).describe('A list of all bills.'),
+  employees: z.array(EmployeeSchema).describe('A list of all employees.'),
+  recipientEmail: z.string().email().describe('The email address to send the report to.'),
+});
+export type GenerateReportInput = z.infer<typeof GenerateReportInputSchema>;
+
+// Zod schema for GenerateReport output
+export const GenerateReportOutputSchema = z.object({
+  success: z.boolean(),
+  message: z.string(),
+});
+export type GenerateReportOutput = z.infer<typeof GenerateReportOutputSchema>;

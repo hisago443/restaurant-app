@@ -2,7 +2,7 @@
 "use client";
 
 import { useState } from 'react';
-import { BarChart, Book, Download, TrendingUp, Settings, Package, User, ShoppingCart, History } from 'lucide-react';
+import { BarChart, Book, Download, TrendingUp, Settings, Package, User, ShoppingCart, History, Mail } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -12,7 +12,9 @@ import ActivityLog from './activity-log';
 import InventoryManagement from './inventory-management';
 import SystemSettings from './system-settings';
 import BillHistory from './bill-history';
-import type { Bill } from '@/lib/types';
+import type { Bill, Employee } from '@/lib/types';
+import { generateAndSendReport } from '@/ai/flows/generate-report';
+import { useToast } from '@/hooks/use-toast';
 
 
 const topItems: { name: string; count: number }[] = [];
@@ -26,9 +28,12 @@ const salesData = [
 
 interface AdminDashboardProps {
   billHistory: Bill[];
+  employees: Employee[];
 }
 
-export default function AdminDashboard({ billHistory }: AdminDashboardProps) {
+export default function AdminDashboard({ billHistory, employees }: AdminDashboardProps) {
+  const { toast } = useToast();
+  const [isReportLoading, setIsReportLoading] = useState(false);
 
   const handleExportCSV = () => {
     if (salesData.length === 0) return;
@@ -42,6 +47,42 @@ export default function AdminDashboard({ billHistory }: AdminDashboardProps) {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  };
+  
+  const handleSendReport = async (reportType: 'daily' | 'monthly' | 'yearly') => {
+    setIsReportLoading(true);
+    toast({
+      title: 'Generating Report...',
+      description: `Please wait while we generate the ${reportType} report.`,
+    });
+
+    const input = {
+      reportType,
+      billHistory,
+      employees,
+      recipientEmail: 'upandabove.bir@gmail.com',
+    };
+
+    try {
+      const result = await generateAndSendReport(input);
+      if (result.success) {
+        toast({
+          title: 'Report Sent!',
+          description: `The ${reportType} report has been sent successfully.`,
+        });
+      } else {
+        throw new Error(result.message);
+      }
+    } catch (e: any) {
+      console.error(`Failed to send ${reportType} report:`, e);
+      toast({
+        variant: 'destructive',
+        title: 'Report Failed',
+        description: e.message || `Could not send the ${reportType} report. Please try again.`,
+      });
+    } finally {
+      setIsReportLoading(false);
+    }
   };
 
   return (
@@ -211,6 +252,23 @@ export default function AdminDashboard({ billHistory }: AdminDashboardProps) {
                   <SystemSettings />
               </DialogContent>
             </Dialog>
+             <Card className="sm:col-span-2">
+              <CardHeader>
+                <CardTitle>Email Reports</CardTitle>
+                <CardDescription>Send summary reports to the administrator.</CardDescription>
+              </CardHeader>
+              <CardContent className="flex flex-wrap gap-2">
+                  <Button variant="secondary" onClick={() => handleSendReport('daily')} disabled={isReportLoading}>
+                      <Mail className="mr-2 h-4 w-4" /> Send Daily Report
+                  </Button>
+                  <Button variant="secondary" onClick={() => handleSendReport('monthly')} disabled={isReportLoading}>
+                      <Mail className="mr-2 h-4 w-4" /> Send Monthly Report
+                  </Button>
+                  <Button variant="secondary" onClick={() => handleSendReport('yearly')} disabled={isReportLoading}>
+                      <Mail className="mr-2 h-4 w-4" /> Send Yearly Report
+                  </Button>
+              </CardContent>
+            </Card>
           </CardContent>
         </Card>
       </div>

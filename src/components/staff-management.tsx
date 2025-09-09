@@ -17,12 +17,6 @@ import type { Employee, Advance } from '@/lib/types';
 import { format, isSameDay } from 'date-fns';
 import { cn } from '@/lib/utils';
 
-const initialEmployees: Employee[] = [
-  { id: 'E001', name: 'John Doe', role: 'Manager', salary: 50000, color: 'bg-blue-500' },
-  { id: 'E002', name: 'Jane Smith', role: 'Chef', salary: 40000, color: 'bg-green-500' },
-  { id: 'E003', name: 'Mike Johnson', role: 'Waiter', salary: 25000, color: 'bg-yellow-500' },
-];
-
 const initialAdvances: Advance[] = [
   { employeeId: 'E002', date: new Date(2024, 6, 5), amount: 2000 },
   { employeeId: 'E003', date: new Date(2024, 6, 15), amount: 1500 },
@@ -78,9 +72,13 @@ function AddAdvanceDialog({ open, onOpenChange, employees, onAddAdvance, selecte
   );
 }
 
+interface StaffManagementProps {
+  employees: Employee[];
+  setEmployees: React.Dispatch<React.SetStateAction<Employee[]>>;
+}
 
-export default function StaffManagement() {
-  const [employees, setEmployees] = useState<Employee[]>(initialEmployees);
+
+export default function StaffManagement({ employees, setEmployees }: StaffManagementProps) {
   const [advances, setAdvances] = useState<Advance[]>(initialAdvances);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [isAddEmployeeDialogOpen, setIsAddEmployeeDialogOpen] = useState(false);

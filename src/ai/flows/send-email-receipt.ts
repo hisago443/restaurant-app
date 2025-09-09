@@ -14,6 +14,7 @@ const SendEmailReceiptInputSchema = z.object({
   customerEmail: z.string().email().describe('The email address of the customer.'),
   receiptContent: z.string().describe('The text content of the receipt.'),
   totalAmount: z.number().describe('The total amount of the bill.'),
+  subject: z.string().optional().describe('The subject of the email.'),
 });
 
 export type SendEmailReceiptInput = z.infer<typeof SendEmailReceiptInputSchema>;
@@ -33,7 +34,8 @@ const sendEmailReceiptFlow = ai.defineFlow(
   },
   async (input) => {
     console.log(`Simulating sending email to ${input.customerEmail}`);
-    console.log(`Receipt: \n${input.receiptContent}`);
+    console.log(`Subject: ${input.subject || `Your receipt for ₹${input.totalAmount.toFixed(2)}`}`);
+    console.log(`Body: \n${input.receiptContent}`);
 
     // In a real implementation, you would integrate with an email service
     // like SendGrid, Resend, or AWS SES here.
@@ -44,7 +46,7 @@ const sendEmailReceiptFlow = ai.defineFlow(
     //   await emailService.send({
     //     to: input.customerEmail,
     //     from: 'noreply@upandabove.com',
-    //     subject: `Your receipt for ₹${input.totalAmount.toFixed(2)}`,
+    //     subject: input.subject || `Your receipt for ₹${input.totalAmount.toFixed(2)}`,
     //     body: input.receiptContent,
     //   });
     //   return { success: true, message: 'Email sent successfully.' };

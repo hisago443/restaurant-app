@@ -12,18 +12,25 @@ import TableManagement from './table-management';
 import KitchenOrders from './kitchen-orders';
 import AdminDashboard from './admin-dashboard';
 import StaffManagement from "./staff-management";
-import type { Table, TableStatus, Order, Bill } from '@/lib/types';
+import type { Table, TableStatus, Order, Bill, Employee } from '@/lib/types';
 
 const initialTables: Table[] = Array.from({ length: 20 }, (_, i) => ({
   id: i + 1,
   status: ['Available', 'Occupied', 'Reserved', 'Cleaning'][Math.floor(Math.random() * 4)] as TableStatus,
 }));
 
+const initialEmployees: Employee[] = [
+  { id: 'E001', name: 'John Doe', role: 'Manager', salary: 50000, color: 'bg-blue-500' },
+  { id: 'E002', name: 'Jane Smith', role: 'Chef', salary: 40000, color: 'bg-green-500' },
+  { id: 'E003', name: 'Mike Johnson', role: 'Waiter', salary: 25000, color: 'bg-yellow-500' },
+];
+
 export default function MainLayout() {
   const [currentDateTime, setCurrentDateTime] = useState<Date | null>(null);
   const [tables, setTables] = useState<Table[]>(initialTables);
   const [orders, setOrders] = useState<Order[]>([]);
   const [billHistory, setBillHistory] = useState<Bill[]>([]);
+  const [employees, setEmployees] = useState<Employee[]>(initialEmployees);
 
 
   const addOrder = (order: Omit<Order, 'id' | 'status'>) => {
@@ -140,10 +147,10 @@ export default function MainLayout() {
               <KitchenOrders orders={orders} setOrders={setOrders} />
             </TabsContent>
             <TabsContent value="staff" className="m-0 p-0">
-              <StaffManagement />
+              <StaffManagement employees={employees} setEmployees={setEmployees} />
             </TabsContent>
             <TabsContent value="admin" className="m-0 p-0">
-              <AdminDashboard billHistory={billHistory} />
+              <AdminDashboard billHistory={billHistory} employees={employees} />
             </TabsContent>
           </div>
         </Tabs>
