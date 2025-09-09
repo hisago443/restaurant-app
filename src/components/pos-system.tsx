@@ -247,9 +247,9 @@ export default function PosSystem() {
           <div className="flex justify-between items-start">
             <div className="flex items-center gap-2">
               <span className={cn('h-2.5 w-2.5 rounded-full', subCategoryName.toLowerCase().includes('veg') ? 'bg-green-500' : 'bg-red-500')}></span>
-              <span className={cn("font-semibold pr-2", isColorApplied ? "text-black" : "")}>{item.name}</span>
+              <span className="font-semibold pr-2 text-black">{item.name}</span>
             </div>
-            <span className={cn("font-mono text-right whitespace-nowrap", isColorApplied ? "text-black" : "")}>Rs.{item.price.toFixed(2)}</span>
+            <span className="font-mono text-right whitespace-nowrap text-black">Rs.{item.price.toFixed(2)}</span>
           </div>
           {!isClickToAdd && (
             <div className="flex justify-end mt-2">
@@ -296,7 +296,7 @@ export default function PosSystem() {
              <div key={category.category}>
               <div className={cn("sticky top-0 bg-background py-2 z-10 flex items-center justify-between gap-2 p-2 rounded-md", categoryColors[category.category])}>
                 <div className="flex-1" />
-                <h2 className={cn("text-xl font-bold text-center flex-grow", categoryColors[category.category] ? "text-black" : "")}>
+                <h2 className="text-xl font-bold text-center flex-grow text-black">
                   {category.category}
                 </h2>
                 <div className="flex-1 flex justify-end">
@@ -332,7 +332,7 @@ export default function PosSystem() {
                 )}
               >
                 <TabsTrigger value={category.category} className="bg-transparent shadow-none p-2 flex-1 justify-center">
-                  <span className={cn(categoryColors[category.category] ? "text-black" : "")}>{category.category}</span>
+                  <span className="text-black">{category.category}</span>
                 </TabsTrigger>
                 <div className="ml-auto">
                     <CategoryColorPicker categoryName={category.category} />
@@ -363,7 +363,7 @@ export default function PosSystem() {
         {filteredMenu.map((category) => (
           <AccordionItem key={category.category} value={category.category} className={cn("border-b-0", categoryColors[category.category])}>
             <div className="flex items-center w-full p-2 border-b">
-                <AccordionTrigger className={cn("text-xl font-bold hover:no-underline p-0 flex-grow justify-center", categoryColors[category.category] ? "text-black" : "")}>
+                <AccordionTrigger className="text-xl font-bold hover:no-underline p-0 flex-grow justify-center text-black">
                     <span className="text-center flex-1">{category.category}</span>
                 </AccordionTrigger>
                <div className="flex-none">
