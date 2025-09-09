@@ -68,9 +68,9 @@ export default function TableManagement({ tables, updateTableStatus, addTable, r
 
   const handleRemoveLastTable = () => {
     if (tables.length === 0) return;
-    const tableToRemove = tables.reduce((last, current) => (current.id > last.id ? current : last));
     removeLastTable();
-    setSelectedTables(selectedTables.filter(id => id !== tableToRemove.id));
+    const lastTableId = tables.reduce((maxId, table) => Math.max(maxId, table.id), 0);
+    setSelectedTables(selectedTables.filter(id => id !== lastTableId));
   };
 
   const renderActions = (table: Table) => {
