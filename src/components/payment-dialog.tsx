@@ -54,7 +54,7 @@ export function PaymentDialog({ isOpen, onOpenChange, total, onPaymentSuccess }:
         <DialogHeader>
           <DialogTitle>Process Payment</DialogTitle>
           <DialogDescription>
-            Total Amount to be Paid: <span className="font-bold text-foreground">Rs.{total.toFixed(2)}</span>
+            Total Amount to be Paid: <span className="font-bold text-foreground">₹{total.toFixed(2)}</span>
           </DialogDescription>
         </DialogHeader>
         <Tabs defaultValue="cash" className="w-full pt-4">
@@ -80,7 +80,7 @@ export function PaymentDialog({ isOpen, onOpenChange, total, onPaymentSuccess }:
               {error && <p className="text-sm text-destructive text-center">{error}</p>}
               {change !== null && change >= 0 && (
                 <div className="text-center text-xl font-medium text-primary">
-                  Change Due: Rs.{change.toFixed(2)}
+                  Change Due: ₹{change.toFixed(2)}
                 </div>
               )}
             </div>

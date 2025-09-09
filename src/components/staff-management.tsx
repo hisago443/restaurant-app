@@ -64,7 +64,7 @@ function AddAdvanceDialog({ open, onOpenChange, employees, onAddAdvance, selecte
             </Select>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="amount">Amount (Rs.)</Label>
+            <Label htmlFor="amount">Amount (₹)</Label>
             <Input id="amount" type="number" placeholder="e.g., 2000" value={amount} onChange={e => setAmount(e.target.value)} />
           </div>
         </div>
@@ -149,9 +149,9 @@ export default function StaffManagement() {
                     <TableHead>ID</TableHead>
                     <TableHead>Name</TableHead>
                     <TableHead>Role</TableHead>
-                    <TableHead>Salary (Rs.)</TableHead>
-                    <TableHead>Advance (Rs.)</TableHead>
-                    <TableHead>Remaining Salary (Rs.)</TableHead>
+                    <TableHead>Salary (₹)</TableHead>
+                    <TableHead>Advance (₹)</TableHead>
+                    <TableHead>Remaining Salary (₹)</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -241,7 +241,7 @@ export default function StaffManagement() {
                     <CardDescription>Advances and other details for the selected date.</CardDescription>
                   </div>
                   <Button onClick={() => setIsAddAdvanceDialogOpen(true)}>
-                    <span className="mr-2">Rs.</span> Add Advance
+                    <span className="mr-2">₹</span> Add Advance
                   </Button>
                 </div>
               </CardHeader>
@@ -257,7 +257,7 @@ export default function StaffManagement() {
                           {employee && <span className={cn('h-2 w-2 rounded-full', employee.color)} />}
                           <span>{employee ? employee.name : 'Unknown Employee'}:</span>
                         </div>
-                        <span className="font-mono font-bold">Rs.{advance.amount.toLocaleString()}</span>
+                        <span className="font-mono font-bold">₹{advance.amount.toLocaleString()}</span>
                       </li>
                     )})}
                   </ul>
