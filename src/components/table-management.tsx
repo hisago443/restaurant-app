@@ -16,7 +16,7 @@ import { Separator } from '@/components/ui/separator';
 
 const statusColors: Record<TableStatus, string> = {
   Available: 'bg-green-400 hover:bg-green-500 text-white',
-  Occupied: 'bg-orange-400 hover:bg-orange-500 text-white',
+  Occupied: 'bg-red-400 hover:bg-red-500 text-white',
   Reserved: 'bg-blue-400 hover:bg-blue-500 text-white',
   Cleaning: 'bg-yellow-400 hover:bg-yellow-500 text-black',
 };
