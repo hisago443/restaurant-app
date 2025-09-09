@@ -204,6 +204,10 @@ export default function PosSystem({ tables, addOrder }: PosSystemProps) {
       toast({ variant: "destructive", title: "Empty Order", description: "Cannot process payment for an empty order." });
       return;
     }
+    if (!selectedTable) {
+      toast({ variant: 'destructive', title: 'No Table Selected', description: 'Please select a table before processing payment.' });
+      return;
+    }
     setIsPaymentDialogOpen(true);
   };
   
@@ -394,13 +398,13 @@ export default function PosSystem({ tables, addOrder }: PosSystemProps) {
       <Accordion type="multiple" value={activeAccordionItems} onValueChange={setActiveAccordionItems} className="w-full">
         {filteredMenu.map((category) => (
           <AccordionItem key={category.category} value={category.category} className={cn("border-b-0 rounded-lg mb-2 overflow-hidden", categoryColors[category.category])}>
-            <div className="flex items-center justify-between p-4 hover:bg-muted/50 rounded-t-lg">
+             <div className="flex items-center p-4 hover:bg-muted/50 rounded-t-lg">
                 <span className="text-xl font-bold text-black text-center flex-grow">{category.category}</span>
                 <div className='flex items-center gap-2'>
                   <CategoryColorPicker categoryName={category.category} />
-                   <AccordionTrigger>
-                        <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200" />
-                    </AccordionTrigger>
+                  <AccordionTrigger>
+                    <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200" />
+                  </AccordionTrigger>
                 </div>
             </div>
             <AccordionContent className="p-2 pt-0">
