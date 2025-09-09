@@ -138,7 +138,13 @@ export default function TableManagement({ tables, updateTableStatus, addTable, r
                   <Button 
                     key={status} 
                     variant={filter === status ? 'default' : 'outline'}
-                    onClick={() => setFilter(status)}
+                    onClick={() => {
+                        if (selectedTables.length > 0) {
+                            handleBulkUpdate(status);
+                        } else {
+                            setFilter(status)
+                        }
+                    }}
                   >
                       {status} ({tables.filter(t => t.status === status).length})
                   </Button>
