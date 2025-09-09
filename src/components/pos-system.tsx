@@ -32,6 +32,8 @@ const colorPalette = [
     'bg-sky-200 dark:bg-sky-800/70',
     'bg-amber-200 dark:bg-amber-800/70',
     'bg-pink-200 dark:bg-pink-800/70',
+    'bg-lime-200 dark:bg-lime-800/70',
+    'bg-purple-200 dark:bg-purple-800/70',
 ];
 
 type ViewMode = 'accordion' | 'grid' | 'list';
@@ -241,7 +243,7 @@ export default function PosSystem({ tables, addOrder }: PosSystemProps) {
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-auto p-2" onClick={(e) => e.stopPropagation()}>
-            <div className="grid grid-cols-3 gap-1">
+            <div className="grid grid-cols-5 gap-1">
               {colorPalette.map((colorClass, i) => (
                 <div
                   key={i}
@@ -249,7 +251,7 @@ export default function PosSystem({ tables, addOrder }: PosSystemProps) {
                   onClick={() => setItemColor(item.name, colorClass)}
                 />
               ))}
-              <Button variant="ghost" size="sm" className="col-span-3 h-8" onClick={() => setItemColor(item.name, '')}>Reset</Button>
+              <Button variant="ghost" size="sm" className="col-span-5 h-8" onClick={() => setItemColor(item.name, '')}>Reset</Button>
             </div>
           </PopoverContent>
         </Popover>
@@ -284,7 +286,7 @@ export default function PosSystem({ tables, addOrder }: PosSystemProps) {
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-auto p-2" onClick={(e) => e.stopPropagation()}>
-        <div className="grid grid-cols-3 gap-1">
+        <div className="grid grid-cols-5 gap-1">
           {colorPalette.map((colorClass, i) => (
             <div
               key={i}
@@ -292,7 +294,7 @@ export default function PosSystem({ tables, addOrder }: PosSystemProps) {
               onClick={() => setCategoryColor(categoryName, colorClass)}
             />
           ))}
-           <Button variant="ghost" size="sm" className="col-span-3 h-8" onClick={() => setCategoryColor(categoryName, '')}>Reset</Button>
+           <Button variant="ghost" size="sm" className="col-span-5 h-8" onClick={() => setCategoryColor(categoryName, '')}>Reset</Button>
         </div>
       </PopoverContent>
     </Popover>
@@ -369,15 +371,13 @@ export default function PosSystem({ tables, addOrder }: PosSystemProps) {
       <Accordion type="multiple" value={activeAccordionItems} onValueChange={setActiveAccordionItems} className="w-full">
         {filteredMenu.map((category) => (
           <AccordionItem key={category.category} value={category.category} className={cn("border-b-0 rounded-lg mb-2 overflow-hidden", categoryColors[category.category])}>
-             <div className="flex items-center relative">
-               <AccordionTrigger className="flex flex-1 items-center transition-all p-4 hover:no-underline text-xl font-bold text-black justify-center">
-                  <span className="text-center flex-grow">{category.category}</span>
+            <AccordionTrigger className="flex flex-1 items-center transition-all p-4 hover:no-underline text-xl font-bold text-black justify-center relative">
+                <span className="text-center flex-grow">{category.category}</span>
+                <div className='flex items-center gap-2 absolute right-4 top-1/2 -translate-y-1/2'>
+                  <CategoryColorPicker categoryName={category.category} />
                   <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200" />
-               </AccordionTrigger>
-               <div className="absolute right-12 top-1/2 -translate-y-1/2">
-                 <CategoryColorPicker categoryName={category.category} />
-               </div>
-             </div>
+                </div>
+            </AccordionTrigger>
             <AccordionContent className="p-2 pt-0">
               <div className="space-y-4 pt-2">
                 {category.subCategories.map((subCategory) => (
