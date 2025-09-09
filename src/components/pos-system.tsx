@@ -14,7 +14,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from '@/hooks/use-toast';
-import { Search, Plus, Minus, X, Save, FilePlus, LayoutGrid, List, Rows, ChevronsUpDown, Palette, Shuffle, ClipboardList, Send, ChevronDown, CheckCircle2, Users, Bookmark, Sparkles, Repeat } from 'lucide-react';
+import { Search, Plus, Minus, X, Save, FilePlus, LayoutGrid, List, Rows, ChevronsUpDown, Palette, Shuffle, ClipboardList, Send, ChevronDown, CheckCircle2, Users, Bookmark, Sparkles, Repeat, Printer } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { AddItemDialog } from './add-item-dialog';
@@ -307,6 +307,42 @@ export default function PosSystem({ tables, addOrder, addBill, updateTableStatus
     }
 
     clearOrder(true);
+  };
+
+  const handlePrintProvisionalBill = () => {
+    if (!selectedTable || orderItems.length === 0) {
+      toast({
+        variant: 'destructive',
+        title: 'Cannot Print',
+        description: 'Please select a table with an active order to print a bill.',
+      });
+      return;
+    }
+
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(`
+        <html>
+          <head>
+            <title>Provisional Bill for Table #${selectedTable}</title>
+            <style>
+              body { font-family: monospace; margin: 20px; }
+              pre { white-space: pre-wrap; word-wrap: break-word; }
+            </style>
+          </head>
+          <body>
+            <pre>${receiptPreview}</pre>
+            <script>
+              window.onload = function() {
+                window.print();
+                window.close();
+              }
+            </script>
+          </body>
+        </html>
+      `);
+      printWindow.document.close();
+    }
   };
 
 
@@ -673,13 +709,17 @@ export default function PosSystem({ tables, addOrder, addBill, updateTableStatus
               </div>
             </div>
             <div className="grid grid-cols-2 gap-2 pt-2">
+              <Button size="lg" variant="outline" onClick={handlePrintProvisionalBill}>
+                <Printer className="mr-2 h-4 w-4" /> Print Bill
+              </Button>
               <Button size="lg" onClick={handleProcessPayment}>
                 Process Payment
               </Button>
-              
+            </div>
+             <div className="grid grid-cols-2 gap-2 pt-2">
               <AlertDialog>
                   <AlertDialogTrigger asChild>
-                      <Button size="lg" variant="outline"><FilePlus />New Bill</Button>
+                      <Button size="lg" variant="destructive" className="w-full col-span-2"><FilePlus />New Bill</Button>
                   </AlertDialogTrigger>
                   <AlertDialogContent>
                       <AlertDialogHeader>
