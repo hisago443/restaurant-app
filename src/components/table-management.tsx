@@ -1,17 +1,18 @@
 
 "use client";
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose, DialogDescription } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger, AlertDialogFooter, AlertDialogDescription } from "@/components/ui/alert-dialog";
-import type { Table, TableStatus } from '@/lib/types';
+import type { Table, TableStatus, Order, OrderItem, Bill } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
-import { PlusCircle, Trash2, LayoutTemplate, Sparkles, Users, CheckCircle2, Bookmark, Armchair, ClipboardList, LogOut, UserCheck, BookmarkX, BookmarkPlus } from 'lucide-react';
+import { PlusCircle, Trash2, LayoutTemplate, Sparkles, Users, CheckCircle2, Bookmark, Armchair, ClipboardList, LogOut, UserCheck, BookmarkX, BookmarkPlus, Printer, Repeat } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
+import { isSameDay } from 'date-fns';
 
 const statusColors: Record<TableStatus, string> = {
   Available: 'bg-green-400 hover:bg-green-500',
@@ -29,18 +30,37 @@ const statusIcons: Record<TableStatus, React.ElementType> = {
 
 interface TableManagementProps {
   tables: Table[];
+  orders: Order[];
+  billHistory: Bill[];
   updateTableStatus: (tableIds: number[], status: TableStatus) => void;
   addTable: () => void;
   removeLastTable: () => void;
 }
 
-export default function TableManagement({ tables, updateTableStatus, addTable, removeLastTable }: TableManagementProps) {
+export default function TableManagement({ tables, orders, billHistory, updateTableStatus, addTable, removeLastTable }: TableManagementProps) {
   const [selectedTable, setSelectedTable] = useState<Table | null>(null);
   const [selectedTables, setSelectedTables] = useState<number[]>([]);
   const [isLayoutManagerOpen, setIsLayoutManagerOpen] = useState(false);
   const [filter, setFilter] = useState<TableStatus | 'All'>('All');
   const [hoveredStatus, setHoveredStatus] = useState<TableStatus | null>(null);
+  const [isPrintDialogOpen, setIsPrintDialogOpen] = useState(false);
+  const [tableForPrint, setTableForPrint] = useState<Table | null>(null);
 
+  const occupancyCount = useMemo(() => {
+    const counts: Record<number, number> = {};
+    const todaysBills = billHistory.filter(bill => isSameDay(bill.timestamp, new Date()));
+    
+    todaysBills.forEach(bill => {
+      counts[bill.tableId] = (counts[bill.tableId] || 0) + 1;
+    });
+
+    // Also count current orders not yet billed
+    orders.forEach(order => {
+        counts[order.tableId] = (counts[order.tableId] || 0) + 1;
+    });
+
+    return counts;
+  }, [billHistory, orders]);
 
   const filteredTables = tables.filter(table => filter === 'All' || table.status === filter);
 
@@ -92,6 +112,45 @@ export default function TableManagement({ tables, updateTableStatus, addTable, r
       setSelectedTables(prev => prev.filter(id => id !== lastTable.id));
     }
   };
+  
+  const handleOpenPrintDialog = (e: React.MouseEvent, table: Table) => {
+    e.stopPropagation();
+    setTableForPrint(table);
+    setIsPrintDialogOpen(true);
+  };
+  
+  const handlePrint = (order: Order) => {
+     const subtotal = order.items.reduce((acc, item) => acc + item.price * item.quantity, 0);
+     const receiptContent = order.items.map(item => `${item.quantity}x ${item.name} @ ₹${item.price.toFixed(2)}`).join('\n') + `\n\nSubtotal: ₹${subtotal.toFixed(2)}`;
+
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(`
+        <html>
+          <head>
+            <title>Provisional Bill for Table #${order.tableId}</title>
+            <style>
+              body { font-family: monospace; margin: 20px; }
+              pre { white-space: pre-wrap; word-wrap: break-word; }
+            </style>
+          </head>
+          <body>
+            <h2>Provisional Bill - Table ${order.tableId}</h2>
+            <pre>${receiptContent}</pre>
+            <script>
+              window.onload = function() {
+                window.print();
+                window.close();
+              }
+            </script>
+          </body>
+        </html>
+      `);
+      printWindow.document.close();
+      setIsPrintDialogOpen(false);
+    }
+  };
+
 
   const renderActions = (table: Table) => {
     switch (table.status) {
@@ -193,6 +252,24 @@ export default function TableManagement({ tables, updateTableStatus, addTable, r
                 onClick={() => setSelectedTable(table)}
                 onDoubleClick={() => handleDoubleClick(table)}
               >
+                <div className="absolute top-1 right-1 flex flex-col items-end gap-1">
+                    {table.status === 'Occupied' && (
+                        <Button
+                            variant="secondary"
+                            size="icon"
+                            className="h-7 w-7 bg-white/30 hover:bg-white/50"
+                            onClick={(e) => handleOpenPrintDialog(e, table)}
+                        >
+                            <Printer className="h-4 w-4 text-black" />
+                        </Button>
+                    )}
+                    {(occupancyCount[table.id] > 0) &&
+                        <div className="flex items-center gap-1 bg-black/50 text-white text-xs font-bold p-1 rounded-md">
+                            <Repeat className="h-3 w-3" />
+                            <span>{occupancyCount[table.id]}</span>
+                        </div>
+                    }
+                </div>
                 <div className="absolute top-1 left-1">
                   <Checkbox 
                     className="bg-white/50 border-gray-500"
@@ -273,6 +350,54 @@ export default function TableManagement({ tables, updateTableStatus, addTable, r
             <DialogFooter>
               <Button onClick={() => setIsLayoutManagerOpen(false)}>Done</Button>
             </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      <Dialog open={isPrintDialogOpen} onOpenChange={setIsPrintDialogOpen}>
+        <DialogContent>
+            {tableForPrint && (() => {
+                const order = orders.find(o => o.tableId === tableForPrint.id);
+                if (!order) {
+                    return (
+                        <>
+                            <DialogHeader>
+                                <DialogTitle>Error</DialogTitle>
+                                <DialogDescription>No active order found for Table {tableForPrint.id}.</DialogDescription>
+                            </DialogHeader>
+                            <DialogFooter>
+                                <Button onClick={() => setIsPrintDialogOpen(false)}>Close</Button>
+                            </DialogFooter>
+                        </>
+                    )
+                }
+                const subtotal = order.items.reduce((acc, item) => acc + item.price * item.quantity, 0);
+                return (
+                    <>
+                        <DialogHeader>
+                            <DialogTitle>Print Provisional Bill for Table {tableForPrint.id}</DialogTitle>
+                        </DialogHeader>
+                        <div className="py-4 space-y-2">
+                           {order.items.map(item => (
+                               <div key={item.name} className="flex justify-between">
+                                   <span>{item.quantity}x {item.name}</span>
+                                   <span>₹{(item.price * item.quantity).toFixed(2)}</span>
+                               </div>
+                           ))}
+                           <Separator />
+                           <div className="flex justify-between font-bold">
+                               <span>Subtotal</span>
+                               <span>₹{subtotal.toFixed(2)}</span>
+                           </div>
+                        </div>
+                        <DialogFooter>
+                            <Button variant="outline" onClick={() => setIsPrintDialogOpen(false)}>Cancel</Button>
+                            <Button onClick={() => handlePrint(order)}>
+                                <Printer className="mr-2 h-4 w-4" /> Print Bill
+                            </Button>
+                        </DialogFooter>
+                    </>
+                )
+            })()}
         </DialogContent>
       </Dialog>
     </div>

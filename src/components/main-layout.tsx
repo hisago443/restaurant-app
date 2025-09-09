@@ -205,6 +205,8 @@ export default function MainLayout() {
             <TabsContent value="tables" className="m-0 p-0">
               <TableManagement 
                 tables={tables}
+                orders={orders}
+                billHistory={billHistory}
                 updateTableStatus={updateTableStatus}
                 addTable={addTable}
                 removeLastTable={removeLastTable}
