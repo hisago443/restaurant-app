@@ -142,7 +142,7 @@ export default function TableManagement({ tables, updateTableStatus, addTable, r
                 onClick={() => handleStatusButtonClick('All')}
                 className={cn('font-bold uppercase', filter === 'All' && 'ring-2 ring-offset-2 ring-ring')}
               >
-                ALL TABLES ({tables.length})
+                TOTAL TABLES ({tables.length})
               </Button>
               <Separator orientation="vertical" className="h-8" />
               {(Object.keys(statusColors) as TableStatus[]).map(status => (
