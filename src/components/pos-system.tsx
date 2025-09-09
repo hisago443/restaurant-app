@@ -23,32 +23,32 @@ import menuData from '@/data/menu.json';
 import { generateReceipt, type GenerateReceiptInput } from '@/ai/flows/dynamic-receipt-discount-reasoning';
 import { PaymentDialog } from './payment-dialog';
 
-const vegColor = 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 border-green-200 dark:border-green-800';
-const nonVegColor = 'bg-rose-100 dark:bg-rose-900/30 text-rose-800 dark:text-rose-200 border-rose-200 dark:border-rose-800';
+const vegColor = 'bg-green-100 dark:bg-green-900/30 border-green-200 dark:border-green-800';
+const nonVegColor = 'bg-rose-100 dark:bg-rose-900/30 border-rose-200 dark:border-rose-800';
 
 const colorPalette = [
-  'bg-slate-100 dark:bg-slate-900/30 text-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-800',
-  'bg-gray-100 dark:bg-gray-900/30 text-gray-800 dark:text-gray-200 border-gray-200 dark:border-gray-800',
-  'bg-zinc-100 dark:bg-zinc-900/30 text-zinc-800 dark:text-zinc-200 border-zinc-200 dark:border-zinc-800',
-  'bg-neutral-100 dark:bg-neutral-900/30 text-neutral-800 dark:text-neutral-200 border-neutral-200 dark:border-neutral-800',
-  'bg-stone-100 dark:bg-stone-900/30 text-stone-800 dark:text-stone-200 border-stone-200 dark:border-stone-800',
-  'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200 border-red-200 dark:border-red-800',
-  'bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-200 border-orange-200 dark:border-orange-800',
-  'bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200 border-amber-200 dark:border-amber-800',
-  'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 border-yellow-200 dark:border-yellow-800',
-  'bg-lime-100 dark:bg-lime-900/30 text-lime-800 dark:text-lime-200 border-lime-200 dark:border-lime-800',
-  'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 border-green-200 dark:border-green-800',
-  'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-200 border-emerald-200 dark:border-emerald-800',
-  'bg-teal-100 dark:bg-teal-900/30 text-teal-800 dark:text-teal-200 border-teal-200 dark:border-teal-800',
-  'bg-cyan-100 dark:bg-cyan-900/30 text-cyan-800 dark:text-cyan-200 border-cyan-200 dark:border-cyan-800',
-  'bg-sky-100 dark:bg-sky-900/30 text-sky-800 dark:text-sky-200 border-sky-200 dark:border-sky-800',
-  'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 border-blue-200 dark:border-blue-800',
-  'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-800 dark:text-indigo-200 border-indigo-200 dark:border-indigo-800',
-  'bg-violet-100 dark:bg-violet-900/30 text-violet-800 dark:text-violet-200 border-violet-200 dark:border-violet-800',
-  'bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-200 border-purple-200 dark:border-purple-800',
-  'bg-fuchsia-100 dark:bg-fuchsia-900/30 text-fuchsia-800 dark:text-fuchsia-200 border-fuchsia-200 dark:border-fuchsia-800',
-  'bg-pink-100 dark:bg-pink-900/30 text-pink-800 dark:text-pink-200 border-pink-200 dark:border-pink-800',
-  'bg-rose-100 dark:bg-rose-900/30 text-rose-800 dark:text-rose-200 border-rose-200 dark:border-rose-800',
+  'bg-slate-100 dark:bg-slate-900/30',
+  'bg-gray-100 dark:bg-gray-900/30',
+  'bg-zinc-100 dark:bg-zinc-900/30',
+  'bg-neutral-100 dark:bg-neutral-900/30',
+  'bg-stone-100 dark:bg-stone-900/30',
+  'bg-red-100 dark:bg-red-900/30',
+  'bg-orange-100 dark:bg-orange-900/30',
+  'bg-amber-100 dark:bg-amber-900/30',
+  'bg-yellow-100 dark:bg-yellow-900/30',
+  'bg-lime-100 dark:bg-lime-900/30',
+  'bg-green-100 dark:bg-green-900/30',
+  'bg-emerald-100 dark:bg-emerald-900/30',
+  'bg-teal-100 dark:bg-teal-900/30',
+  'bg-cyan-100 dark:bg-cyan-900/30',
+  'bg-sky-100 dark:bg-sky-900/30',
+  'bg-blue-100 dark:bg-blue-900/30',
+  'bg-indigo-100 dark:bg-indigo-900/30',
+  'bg-violet-100 dark:bg-violet-900/30',
+  'bg-purple-100 dark:bg-purple-900/30',
+  'bg-fuchsia-100 dark:bg-fuchsia-900/30',
+  'bg-pink-100 dark:bg-pink-900/30',
+  'bg-rose-100 dark:bg-rose-900/30',
 ];
 
 type ViewMode = 'accordion' | 'grid' | 'list';
@@ -185,7 +185,7 @@ export default function PosSystem() {
       <Card
         key={item.name}
         className={cn(
-          "group rounded-lg cursor-pointer transition-all hover:scale-105 relative",
+          "group rounded-lg cursor-pointer transition-all hover:scale-105 relative text-black",
           finalColor,
           (itemColor || categoryColor) && "border-black shadow-lg hover:shadow-xl"
         )}
@@ -207,7 +207,7 @@ export default function PosSystem() {
               {colorPalette.map((colorClass, i) => (
                 <div
                   key={i}
-                  className={cn("h-6 w-6 rounded-full cursor-pointer", colorClass.split(' ')[0])}
+                  className={cn("h-6 w-6 rounded-full cursor-pointer", colorClass)}
                   onClick={() => setItemColor(item.name, colorClass)}
                 />
               ))}
@@ -250,7 +250,7 @@ export default function PosSystem() {
           {colorPalette.map((colorClass, i) => (
             <div
               key={i}
-              className={cn("h-6 w-6 rounded-full cursor-pointer", colorClass.split(' ')[0])}
+              className={cn("h-6 w-6 rounded-full cursor-pointer", colorClass)}
               onClick={() => setCategoryColor(categoryName, colorClass)}
             />
           ))}
@@ -266,7 +266,7 @@ export default function PosSystem() {
         <div className="space-y-6">
           {filteredMenu.map((category) => (
             <div key={category.category}>
-              <div className={cn("sticky top-0 bg-background py-2 z-10 flex items-center justify-between gap-2 p-2 rounded-md", categoryColors[category.category])}>
+              <div className={cn("sticky top-0 bg-background py-2 z-10 flex items-center justify-between gap-2 p-2 rounded-md text-black", categoryColors[category.category])}>
                 <div className="flex-1" />
                 <h2 className="text-xl font-bold text-center">
                   {category.category}
@@ -299,14 +299,14 @@ export default function PosSystem() {
                <div
                 key={category.category}
                 className={cn(
-                  "p-1 rounded-md flex items-center justify-center relative data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm",
+                  "p-1 rounded-md flex items-center justify-center relative data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm text-black",
                   categoryColors[category.category]
                 )}
               >
                 <TabsTrigger value={category.category} className="bg-transparent shadow-none p-2 flex-1 justify-center">
                   {category.category}
                 </TabsTrigger>
-                <div className="absolute right-1 top-1/2 -translate-y-1/2">
+                <div className="ml-auto">
                     <CategoryColorPicker categoryName={category.category} />
                 </div>
               </div>
@@ -334,12 +334,13 @@ export default function PosSystem() {
       <Accordion type="multiple" value={activeAccordionItems} onValueChange={setActiveAccordionItems} className="w-full">
         {filteredMenu.map((category) => (
           <AccordionItem key={category.category} value={category.category} className={cn("border-b-0", categoryColors[category.category])}>
-            <AccordionTrigger className="text-xl font-bold hover:no-underline p-2 border-b">
-              <div className="flex-1 text-center">{category.category}</div>
-              <div className="px-2">
-                <CategoryColorPicker categoryName={category.category} />
-              </div>
-            </AccordionTrigger>
+             <AccordionTrigger className="text-xl font-bold hover:no-underline p-2 border-b text-black">
+               <div className="flex-1" />
+               <span className="text-center">{category.category}</span>
+               <div className="flex-1 flex justify-end">
+                 <CategoryColorPicker categoryName={category.category} />
+               </div>
+             </AccordionTrigger>
             <AccordionContent>
               <div className="space-y-4 pt-2 p-2">
                 {category.subCategories.map((subCategory) => (
@@ -515,5 +516,3 @@ export default function PosSystem() {
     </div>
   );
 }
-
-    
