@@ -180,15 +180,15 @@ export default function AdminDashboard({ billHistory, employees }: AdminDashboar
               <DialogTrigger asChild>
                 <Button variant="outline" size="lg" className="justify-start gap-2">
                   <BarChart className="h-5 w-5" />
-                  <span>Generate Sales Report</span>
+                  <span>View Sales Reports</span>
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-4xl">
                   <DialogHeader>
-                    <DialogTitle>Sales Report</DialogTitle>
-                    <DialogDescription>A summary of sales activity.</DialogDescription>
+                    <DialogTitle>Sales Reports</DialogTitle>
+                    <DialogDescription>A summary of sales activity across different periods.</DialogDescription>
                   </DialogHeader>
-                  <SalesReport />
+                  <SalesReport bills={billHistory} />
               </DialogContent>
             </Dialog>
             <Dialog>
