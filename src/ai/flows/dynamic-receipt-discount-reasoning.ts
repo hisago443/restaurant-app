@@ -46,7 +46,7 @@ const prompt = ai.definePrompt({
 Here are the order details:
 Items:
 {{#each items}}
-- {{quantity}} x {{name}} @ Rs.{{price}}
+- {{quantity}} x {{name}} @ ₹{{price}}
 {{/each}}
 Subtotal: Rs.{{subtotal}}
 

@@ -14,7 +14,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from '@/hooks/use-toast';
-import { Search, Plus, Minus, X, Save, FilePlus, LayoutGrid, List, Rows, ChevronsUpDown, ChevronsDownUp, Palette, Shuffle, ClipboardList, Send } from 'lucide-react';
+import { Search, Plus, Minus, X, Save, FilePlus, LayoutGrid, List, Rows, ChevronsUpDown, Palette, Shuffle, ClipboardList, Send, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { AddItemDialog } from './add-item-dialog';
@@ -219,13 +219,13 @@ export default function PosSystem({ tables, addOrder }: PosSystemProps) {
   
   const handlePaymentSuccess = () => {
     setIsPaymentDialogOpen(false);
-    toast({ title: "Payment Successful", description: `Payment of ₹${total.toFixed(2)} confirmed.` });
+    toast({ title: "Payment Successful", description: `Payment of Rs.${total.toFixed(2)} confirmed.` });
     clearOrder();
   };
 
   const renderMenuItem = (item: MenuItem, subCategoryName: string, categoryName: string) => {
-    const isVeg = subCategoryName.toLowerCase().includes('veg');
-    const defaultColor = isVeg ? vegColor : nonVegColor;
+    const isNonVeg = subCategoryName.toLowerCase().includes('non-veg');
+    const defaultColor = isNonVeg ? nonVegColor : vegColor;
     const categoryColor = categoryColors[categoryName];
     const itemColor = menuItemColors[item.name];
     
@@ -269,7 +269,7 @@ export default function PosSystem({ tables, addOrder }: PosSystemProps) {
         <CardContent className="p-3">
           <div className="flex justify-between items-start">
             <div className="flex items-center gap-2">
-              <span className={cn('h-2.5 w-2.5 rounded-full', subCategoryName.toLowerCase().includes('non-veg') ? 'bg-red-500' : 'bg-green-500')}></span>
+              <span className={cn('h-2.5 w-2.5 rounded-full', isNonVeg ? 'bg-red-500' : 'bg-green-500')}></span>
               <span className="font-semibold pr-2 text-black">{item.name}</span>
             </div>
             <span className="font-mono text-right whitespace-nowrap text-black">₹{item.price.toFixed(2)}</span>
@@ -348,18 +348,20 @@ export default function PosSystem({ tables, addOrder }: PosSystemProps) {
           <div className="flex justify-center">
             <TabsList className="mb-4">
               {filteredMenu.map(category => (
-                <TabsTrigger key={category.category} value={category.category} className={cn("relative", categoryColors[category.category])}>
-                    <span className={cn(categoryColors[category.category] && 'text-black')}>{category.category}</span>
-                    <div className="ml-2">
-                      <CategoryColorPicker categoryName={category.category} />
+                <TabsTrigger key={category.category} value={category.category} asChild>
+                    <div className={cn("relative p-2 rounded-sm cursor-pointer", categoryColors[category.category])}>
+                        <span className={cn(categoryColors[category.category] && 'text-black')}>{category.category}</span>
+                        <div className="absolute top-0 right-0">
+                            <CategoryColorPicker categoryName={category.category} />
+                        </div>
                     </div>
                 </TabsTrigger>
               ))}
             </TabsList>
           </div>
           {filteredMenu.map(category => (
-             <TabsContent key={category.category} value={category.category} className={cn("rounded-lg", categoryColors[category.category])}>
-               <div className="space-y-4 p-2">
+             <TabsContent key={category.category} value={category.category} className={cn("rounded-lg p-2", categoryColors[category.category])}>
+               <div className="space-y-4">
                 {category.subCategories.map((subCategory) => (
                   <div key={subCategory.name}>
                     <h3 className="text-md font-semibold mb-2 text-muted-foreground pl-2">{subCategory.name}</h3>
@@ -379,17 +381,17 @@ export default function PosSystem({ tables, addOrder }: PosSystemProps) {
       <Accordion type="multiple" value={activeAccordionItems} onValueChange={setActiveAccordionItems} className="w-full">
         {filteredMenu.map((category) => (
           <AccordionItem key={category.category} value={category.category} className={cn("border-b-0 rounded-lg mb-2 overflow-hidden", categoryColors[category.category])}>
-            <div className="flex items-center justify-center relative p-4">
-                <span className="text-xl font-bold text-center flex-grow text-black">{category.category}</span>
-                <div className="absolute right-4 top-1/2 -translate-y-1/2">
-                   <div className='flex items-center gap-2'>
-                    <CategoryColorPicker categoryName={category.category} />
-                    <AccordionTrigger className="p-0 hover:no-underline" />
-                   </div>
-                </div>
+            <div className='flex items-center w-full'>
+              <AccordionTrigger className="p-4 hover:no-underline flex-grow text-center justify-center">
+                <span className="text-xl font-bold text-black">{category.category}</span>
+              </AccordionTrigger>
+              <div className='flex items-center gap-2 pr-4'>
+                <CategoryColorPicker categoryName={category.category} />
+                <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200" />
+              </div>
             </div>
-            <AccordionContent>
-              <div className="space-y-4 pt-2 p-2">
+            <AccordionContent className={cn("p-2", categoryColors[category.category])}>
+              <div className="space-y-4 pt-2">
                 {category.subCategories.map((subCategory) => (
                   <div key={subCategory.name}>
                     <h3 className="text-md font-semibold mb-2 text-muted-foreground pl-2">{subCategory.name}</h3>
@@ -541,17 +543,17 @@ export default function PosSystem({ tables, addOrder }: PosSystemProps) {
             <div className="space-y-2 text-lg">
               <div className="flex justify-between">
                 <span>Subtotal:</span>
-                <span className="font-bold">₹{subtotal.toFixed(2)}</span>
+                <span className="font-bold">Rs.{subtotal.toFixed(2)}</span>
               </div>
               {discount > 0 && (
                 <div className="flex justify-between text-accent-foreground">
                   <span>Discount ({discount}%):</span>
-                  <span className="font-bold">-₹{(subtotal - total).toFixed(2)}</span>
+                  <span className="font-bold">-Rs.{(subtotal - total).toFixed(2)}</span>
                 </div>
               )}
               <div className="flex justify-between font-bold text-2xl border-t pt-2">
                 <span>Total:</span>
-                <span>₹{total.toFixed(2)}</span>
+                <span>Rs.{total.toFixed(2)}</span>
               </div>
             </div>
             <div className="grid grid-cols-2 gap-2 pt-2">
