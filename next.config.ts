@@ -24,6 +24,20 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  // Disable favicon generation
+  experimental: {
+    appDir: true,
+    serverComponentsExternalPackages: ['@react-email/components'],
+    missingSuspenseWithCSRBailout: false,
+  },
+  webpack: (config, { isServer }) => {
+    // Disable favicon generation
+    config.module.rules.push({
+      test: /favicon\.ico$/,
+      use: 'null-loader',
+    });
+    return config;
+  },
 };
 
 export default nextConfig;

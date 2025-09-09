@@ -47,7 +47,7 @@ interface PosSystemProps {
 
 export default function PosSystem({ tables, addOrder, addBill }: PosSystemProps) {
   const [searchTerm, setSearchTerm] = useState('');
-  const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
+  const [orderItems, setOrderItems]_system = useState<OrderItem[]>([]);
   const [discount, setDiscount] = useState(0);
   const [isClickToAdd, setIsClickToAdd] = useState(false);
   const [receiptPreview, setReceiptPreview] = useState('');
