@@ -766,37 +766,37 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
                 <span>Rs.{total.toFixed(2)}</span>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-2 pt-2">
-              <Button size="lg" variant="outline" onClick={handlePrintProvisionalBill}>
-                <Printer className="mr-2 h-4 w-4" /> Print Bill
-              </Button>
-              <Button size="lg" onClick={handleProcessPayment}>
-                Process Payment
-              </Button>
+            <div className="flex flex-col gap-2 pt-2">
+                <Button size="lg" variant="secondary" className="w-full" onClick={handleSendToKitchen}>
+                    {activeOrder ? <Edit className="mr-2 h-4 w-4" /> : <Send className="mr-2 h-4 w-4" />}
+                    {activeOrder ? 'Update KOT' : 'Send KOT to Kitchen'}
+                </Button>
+                <div className="grid grid-cols-2 gap-2">
+                    <Button size="lg" variant="outline" onClick={handlePrintProvisionalBill}>
+                        <Printer className="mr-2 h-4 w-4" /> Print Bill
+                    </Button>
+                    <Button size="lg" onClick={handleProcessPayment}>
+                        Process Payment
+                    </Button>
+                </div>
+                <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                        <Button size="lg" variant="destructive" className="w-full"><FilePlus />New Bill</Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                        <AlertDialogTitle>Create a New Bill?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            This will clear the current order. Make sure to save it if needed.
+                        </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => clearOrder(false, true)}>Continue</AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
             </div>
-             <div className="grid grid-cols-2 gap-2 pt-2">
-              <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                      <Button size="lg" variant="destructive" className="w-full col-span-2"><FilePlus />New Bill</Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                      <AlertDialogHeader>
-                      <AlertDialogTitle>Create a New Bill?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                          This will clear the current order. Make sure to save it if needed.
-                      </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction onClick={() => clearOrder(false, true)}>Continue</AlertDialogAction>
-                      </AlertDialogFooter>
-                  </AlertDialogContent>
-              </AlertDialog>
-            </div>
-            <Button size="lg" variant="secondary" className="w-full" onClick={handleSendToKitchen}>
-                {activeOrder ? <Edit className="mr-2 h-4 w-4" /> : <Send className="mr-2 h-4 w-4" />}
-                {activeOrder ? 'Update KOT' : 'Send KOT to Kitchen'}
-            </Button>
           </div>
       </Card>
       <PaymentDialog
