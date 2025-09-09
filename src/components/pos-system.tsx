@@ -29,21 +29,8 @@ const vegColor = 'bg-green-100 dark:bg-green-900/30';
 const nonVegColor = 'bg-rose-100 dark:bg-rose-900/30';
 
 const colorPalette = [
-    'bg-red-200 dark:bg-red-800/70',
-    'bg-orange-200 dark:bg-orange-800/70',
-    'bg-amber-200 dark:bg-amber-800/70',
-    'bg-yellow-200 dark:bg-yellow-800/70',
-    'bg-lime-200 dark:bg-lime-800/70',
-    'bg-green-200 dark:bg-green-800/70',
-    'bg-emerald-200 dark:bg-emerald-800/70',
-    'bg-teal-200 dark:bg-teal-800/70',
-    'bg-cyan-200 dark:bg-cyan-800/70',
     'bg-sky-200 dark:bg-sky-800/70',
-    'bg-blue-200 dark:bg-blue-800/70',
-    'bg-indigo-200 dark:bg-indigo-800/70',
-    'bg-violet-200 dark:bg-violet-800/70',
-    'bg-purple-200 dark:bg-purple-800/70',
-    'bg-fuchsia-200 dark:bg-fuchsia-800/70',
+    'bg-amber-200 dark:bg-amber-800/70',
     'bg-pink-200 dark:bg-pink-800/70',
 ];
 
@@ -254,7 +241,7 @@ export default function PosSystem({ tables, addOrder }: PosSystemProps) {
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-auto p-2" onClick={(e) => e.stopPropagation()}>
-            <div className="grid grid-cols-8 gap-1">
+            <div className="grid grid-cols-3 gap-1">
               {colorPalette.map((colorClass, i) => (
                 <div
                   key={i}
@@ -262,7 +249,7 @@ export default function PosSystem({ tables, addOrder }: PosSystemProps) {
                   onClick={() => setItemColor(item.name, colorClass)}
                 />
               ))}
-              <Button variant="ghost" size="sm" className="col-span-8 h-8" onClick={() => setItemColor(item.name, '')}>Reset</Button>
+              <Button variant="ghost" size="sm" className="col-span-3 h-8" onClick={() => setItemColor(item.name, '')}>Reset</Button>
             </div>
           </PopoverContent>
         </Popover>
@@ -297,7 +284,7 @@ export default function PosSystem({ tables, addOrder }: PosSystemProps) {
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-auto p-2" onClick={(e) => e.stopPropagation()}>
-        <div className="grid grid-cols-8 gap-1">
+        <div className="grid grid-cols-3 gap-1">
           {colorPalette.map((colorClass, i) => (
             <div
               key={i}
@@ -305,7 +292,7 @@ export default function PosSystem({ tables, addOrder }: PosSystemProps) {
               onClick={() => setCategoryColor(categoryName, colorClass)}
             />
           ))}
-           <Button variant="ghost" size="sm" className="col-span-8 h-8" onClick={() => setCategoryColor(categoryName, '')}>Reset</Button>
+           <Button variant="ghost" size="sm" className="col-span-3 h-8" onClick={() => setCategoryColor(categoryName, '')}>Reset</Button>
         </div>
       </PopoverContent>
     </Popover>
@@ -381,15 +368,14 @@ export default function PosSystem({ tables, addOrder }: PosSystemProps) {
     return (
       <Accordion type="multiple" value={activeAccordionItems} onValueChange={setActiveAccordionItems} className="w-full">
         {filteredMenu.map((category) => (
-          <AccordionItem key={category.category} value={category.category} className={cn("border-b-0 rounded-lg mb-2 overflow-hidden", categoryColors[category.category])}>
+           <AccordionItem key={category.category} value={category.category} className={cn("border-b-0 rounded-lg mb-2 overflow-hidden", categoryColors[category.category])}>
             <div className='flex items-center w-full relative p-4'>
-              <div className="flex-grow flex justify-center">
-                  <AccordionTrigger className="p-0 hover:no-underline text-xl font-bold text-black">
-                      {category.category}
-                  </AccordionTrigger>
-              </div>
+                <AccordionTrigger className="p-0 hover:no-underline text-xl font-bold text-black flex-grow justify-center">
+                    {category.category}
+                </AccordionTrigger>
               <div className='flex items-center gap-2 absolute right-4 top-1/2 -translate-y-1/2'>
                 <CategoryColorPicker categoryName={category.category} />
+                <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200" />
               </div>
             </div>
             <AccordionContent className="p-2 pt-0">
@@ -602,5 +588,3 @@ export default function PosSystem({ tables, addOrder }: PosSystemProps) {
     </div>
   );
 }
-
-    
