@@ -393,10 +393,11 @@ export default function PosSystem({ tables, addOrder }: PosSystemProps) {
         {filteredMenu.map((category) => (
           <AccordionItem key={category.category} value={category.category} className={cn("border-b-0", categoryColors[category.category])}>
             <div className="flex items-center w-full p-2 border-b">
-              <AccordionTrigger className="text-xl font-bold hover:no-underline p-0 flex-grow justify-center text-black">
+              <div className="flex-1" />
+              <AccordionTrigger className="text-xl font-bold hover:no-underline p-0 flex-grow justify-center text-black text-center">
                   {category.category}
               </AccordionTrigger>
-              <div className="flex-none">
+              <div className="flex-1 flex justify-end">
                 <CategoryColorPicker categoryName={category.category} />
               </div>
             </div>
