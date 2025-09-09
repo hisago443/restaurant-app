@@ -75,10 +75,11 @@ export default function TableManagement({ tables, updateTableStatus, addTable, r
   };
 
   const handleRemoveLastTable = () => {
-    if (tables.length === 0) return;
-    const tableToRemove = tables.reduce((last, current) => (current.id > last.id ? current : last));
     removeLastTable();
-    setSelectedTables(selectedTables.filter(id => id !== tableToRemove.id));
+    if (tables.length > 0) {
+        const lastTableId = tables[tables.length - 1].id;
+        setSelectedTables(selectedTables.filter(id => id !== lastTableId));
+    }
   };
 
   const renderActions = (table: Table) => {
@@ -147,9 +148,9 @@ export default function TableManagement({ tables, updateTableStatus, addTable, r
                     key={status}
                     onClick={() => handleStatusButtonClick(status)}
                     className={cn(
-                      filter === status ? statusColors[status] : 'text-current',
+                      statusColors[status],
                       'transition-all',
-                      filter !== status && 'bg-transparent border border-input hover:bg-accent'
+                      filter === status && 'ring-2 ring-offset-2 ring-ring'
                     )}
                   >
                       {status} ({tables.filter(t => t.status === status).length})
