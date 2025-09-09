@@ -12,9 +12,36 @@ import TableManagement from './table-management';
 import KitchenOrders from './kitchen-orders';
 import AdminDashboard from './admin-dashboard';
 import StaffManagement from "./staff-management";
+import type { Table, TableStatus } from '@/lib/types';
+
+const initialTables: Table[] = Array.from({ length: 20 }, (_, i) => ({
+  id: i + 1,
+  status: ['Available', 'Occupied', 'Reserved', 'Cleaning'][Math.floor(Math.random() * 4)] as TableStatus,
+}));
 
 export default function MainLayout() {
   const [currentDateTime, setCurrentDateTime] = useState<Date | null>(null);
+  const [tables, setTables] = useState<Table[]>(initialTables);
+
+  const updateTableStatus = (tableId: number, status: TableStatus) => {
+    setTables(tables.map(t => (t.id === tableId ? { ...t, status } : t)));
+  };
+
+  const addTable = () => {
+    const newTableId = tables.length > 0 ? Math.max(...tables.map(t => t.id)) + 1 : 1;
+    const newTable: Table = { id: newTableId, status: 'Available' };
+    setTables([...tables, newTable]);
+  };
+
+  const removeLastTable = () => {
+    if (tables.length > 0) {
+      setTables(prevTables => {
+        if (prevTables.length === 0) return [];
+        const tableToRemove = prevTables.reduce((last, current) => (current.id > last.id ? current : last));
+        return prevTables.filter(t => t.id !== tableToRemove.id);
+      });
+    }
+  };
 
   useEffect(() => {
     setCurrentDateTime(new Date());
@@ -79,7 +106,12 @@ export default function MainLayout() {
                 <PosSystem />
             </TabsContent>
             <TabsContent value="tables" className="m-0 p-0">
-              <TableManagement />
+              <TableManagement 
+                tables={tables}
+                updateTableStatus={updateTableStatus}
+                addTable={addTable}
+                removeLastTable={removeLastTable}
+              />
             </TabsContent>
             <TabsContent value="kitchen" className="m-0 p-0 h-full">
               <KitchenOrders />

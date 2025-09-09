@@ -14,11 +14,6 @@ import { Label } from '@/components/ui/label';
 import { PlusCircle, Trash2, LayoutTemplate } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 
-const initialTables: Table[] = Array.from({ length: 20 }, (_, i) => ({
-  id: i + 1,
-  status: ['Available', 'Occupied', 'Reserved', 'Cleaning'][Math.floor(Math.random() * 4)] as TableStatus,
-}));
-
 const statusColors: Record<TableStatus, string> = {
   Available: 'bg-green-400 hover:bg-green-500 text-white',
   Occupied: 'bg-orange-400 hover:bg-orange-500 text-white',
@@ -26,15 +21,21 @@ const statusColors: Record<TableStatus, string> = {
   Cleaning: 'bg-yellow-400 hover:bg-yellow-500 text-black',
 };
 
-export default function TableManagement() {
-  const [tables, setTables] = useState<Table[]>(initialTables);
+interface TableManagementProps {
+  tables: Table[];
+  updateTableStatus: (tableId: number, status: TableStatus) => void;
+  addTable: () => void;
+  removeLastTable: () => void;
+}
+
+export default function TableManagement({ tables, updateTableStatus, addTable, removeLastTable }: TableManagementProps) {
   const [selectedTable, setSelectedTable] = useState<Table | null>(null);
   const [selectedTables, setSelectedTables] = useState<number[]>([]);
   const [isBulkManageOpen, setIsBulkManageOpen] = useState(false);
   const [isLayoutManagerOpen, setIsLayoutManagerOpen] = useState(false);
 
-  const updateTableStatus = (tableId: number, status: TableStatus) => {
-    setTables(tables.map(t => t.id === tableId ? { ...t, status } : t));
+  const localUpdateTableStatus = (tableId: number, status: TableStatus) => {
+    updateTableStatus(tableId, status);
     setSelectedTable(null);
   };
   
@@ -55,22 +56,18 @@ export default function TableManagement() {
   }
   
   const handleBulkUpdate = (status: TableStatus) => {
-    setTables(tables.map(t => selectedTables.includes(t.id) ? { ...t, status } : t));
+    selectedTables.forEach(tableId => {
+      updateTableStatus(tableId, status);
+    });
     setSelectedTables([]);
     setIsBulkManageOpen(false);
   }
 
-  const handleAddTable = () => {
-    const newTableId = tables.length > 0 ? Math.max(...tables.map(t => t.id)) + 1 : 1;
-    const newTable: Table = { id: newTableId, status: 'Available' };
-    setTables([...tables, newTable]);
-  };
-
   const handleRemoveLastTable = () => {
+    removeLastTable();
+    // Also remove the potentially deleted table from selection
     if (tables.length > 0) {
-      // Sort by ID descending to find the last one regardless of array order
       const tableToRemove = tables.reduce((last, current) => (current.id > last.id ? current : last));
-      setTables(tables.filter(t => t.id !== tableToRemove.id));
       setSelectedTables(selectedTables.filter(id => id !== tableToRemove.id));
     }
   };
@@ -80,26 +77,26 @@ export default function TableManagement() {
       case 'Available':
         return (
           <>
-            <Button onClick={() => updateTableStatus(table.id, 'Occupied')}>Seat Guests</Button>
-            <Button variant="outline" onClick={() => updateTableStatus(table.id, 'Reserved')}>Reserve Table</Button>
+            <Button onClick={() => localUpdateTableStatus(table.id, 'Occupied')}>Seat Guests</Button>
+            <Button variant="outline" onClick={() => localUpdateTableStatus(table.id, 'Reserved')}>Reserve Table</Button>
           </>
         );
       case 'Occupied':
         return (
           <>
             <Button>View Order</Button>
-            <Button variant="destructive" onClick={() => updateTableStatus(table.id, 'Cleaning')}>Customer Left</Button>
+            <Button variant="destructive" onClick={() => localUpdateTableStatus(table.id, 'Cleaning')}>Customer Left</Button>
           </>
         );
       case 'Reserved':
         return (
           <>
-            <Button onClick={() => updateTableStatus(table.id, 'Occupied')}>Guest Arrived</Button>
-            <Button variant="outline" onClick={() => updateTableStatus(table.id, 'Available')}>Cancel Reservation</Button>
+            <Button onClick={() => localUpdateTableStatus(table.id, 'Occupied')}>Guest Arrived</Button>
+            <Button variant="outline" onClick={() => localUpdateTableStatus(table.id, 'Available')}>Cancel Reservation</Button>
           </>
         );
       case 'Cleaning':
-        return <Button onClick={() => updateTableStatus(table.id, 'Available')}>Mark as Available</Button>;
+        return <Button onClick={() => localUpdateTableStatus(table.id, 'Available')}>Mark as Available</Button>;
       default:
         return null;
     }
@@ -220,7 +217,7 @@ export default function TableManagement() {
               </DialogDescription>
             </DialogHeader>
             <div className="grid grid-cols-2 gap-4 py-4">
-              <Button variant="outline" onClick={handleAddTable}>
+              <Button variant="outline" onClick={addTable}>
                 <PlusCircle className="mr-2 h-4 w-4" /> Add a New Table
               </Button>
               <AlertDialog>
