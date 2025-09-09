@@ -22,7 +22,7 @@ const statusColors: Record<TableStatus, string> = {
 
 interface TableManagementProps {
   tables: Table[];
-  updateTableStatus: (tableId: number, status: TableStatus) => void;
+  updateTableStatus: (tableIds: number[], status: TableStatus) => void;
   addTable: () => void;
   removeLastTable: () => void;
 }
@@ -38,13 +38,13 @@ export default function TableManagement({ tables, updateTableStatus, addTable, r
   const filteredTables = tables.filter(table => filter === 'All' || table.status === filter);
 
   const localUpdateTableStatus = (tableId: number, status: TableStatus) => {
-    updateTableStatus(tableId, status);
+    updateTableStatus([tableId], status);
     setSelectedTable(null);
   };
 
   const handleDoubleClick = (table: Table) => {
     if (table.status === 'Available') {
-      updateTableStatus(table.id, 'Occupied');
+      updateTableStatus([table.id], 'Occupied');
     }
   };
   
@@ -65,9 +65,7 @@ export default function TableManagement({ tables, updateTableStatus, addTable, r
   }
   
   const handleBulkUpdate = (status: TableStatus) => {
-    selectedTables.forEach(tableId => {
-      updateTableStatus(tableId, status);
-    });
+    updateTableStatus(selectedTables, status);
     setSelectedTables([]);
   }
 

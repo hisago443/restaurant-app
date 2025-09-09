@@ -23,8 +23,8 @@ export default function MainLayout() {
   const [currentDateTime, setCurrentDateTime] = useState<Date | null>(null);
   const [tables, setTables] = useState<Table[]>(initialTables);
 
-  const updateTableStatus = (tableId: number, status: TableStatus) => {
-    setTables(tables.map(t => (t.id === tableId ? { ...t, status } : t)));
+  const updateTableStatus = (tableIds: number[], status: TableStatus) => {
+    setTables(tables.map(t => (tableIds.includes(t.id) ? { ...t, status } : t)));
   };
 
   const addTable = () => {
