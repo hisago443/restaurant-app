@@ -14,7 +14,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from '@/hooks/use-toast';
-import { Search, Plus, Minus, X, Save, FilePlus, LayoutGrid, List, Rows, ChevronsUpDown, Palette, Shuffle, ClipboardList, Send, ChevronDown, CheckCircle2, Users, Bookmark, Sparkles } from 'lucide-react';
+import { Search, Plus, Minus, X, Save, FilePlus, LayoutGrid, List, Rows, ChevronsUpDown, Palette, Shuffle, ClipboardList, Send, ChevronDown, CheckCircle2, Users, Bookmark, Sparkles, Repeat } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { AddItemDialog } from './add-item-dialog';
@@ -58,9 +58,10 @@ interface PosSystemProps {
   addOrder: (order: Omit<Order, 'id' | 'status'>) => void;
   addBill: (bill: Omit<Bill, 'id' | 'timestamp'>) => void;
   updateTableStatus: (tableIds: number[], status: TableStatus) => void;
+  occupancyCount: Record<number, number>;
 }
 
-export default function PosSystem({ tables, addOrder, addBill, updateTableStatus }: PosSystemProps) {
+export default function PosSystem({ tables, addOrder, addBill, updateTableStatus, occupancyCount }: PosSystemProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
   const [discount, setDiscount] = useState(0);
@@ -579,7 +580,7 @@ export default function PosSystem({ tables, addOrder, addBill, updateTableStatus
                                 key={table.id}
                                 variant="outline"
                                 className={cn(
-                                    "flex flex-col h-20 w-20 justify-center items-center gap-1",
+                                    "flex flex-col h-20 w-20 justify-center items-center gap-1 relative",
                                     statusColors[table.status],
                                     selectedTable === table.id.toString() && 'ring-2 ring-offset-2 ring-ring',
                                     !isClickable && 'opacity-50 cursor-not-allowed',
@@ -588,6 +589,12 @@ export default function PosSystem({ tables, addOrder, addBill, updateTableStatus
                                 onClick={() => handleSelectTable(table.id.toString())}
                                 disabled={!isClickable}
                             >
+                                {(occupancyCount[table.id] > 0) &&
+                                  <div className="absolute bottom-1 right-1 flex items-center gap-1 bg-black/50 text-white text-xs font-bold p-1 rounded-md">
+                                      <Repeat className="h-3 w-3" />
+                                      <span>{occupancyCount[table.id]}</span>
+                                  </div>
+                                }
                                 <span className="text-2xl font-bold">{table.id}</span>
                                 <div className="flex items-center gap-1 text-xs">
                                     <Icon className="h-3 w-3" />

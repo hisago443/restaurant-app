@@ -1,11 +1,12 @@
 
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { collection, onSnapshot, addDoc, doc, setDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Coffee, LayoutGrid, Book, BarChart, Users } from 'lucide-react';
+import { isSameDay } from 'date-fns';
 
 import { Logo } from "./icons";
 import PosSystem from './pos-system';
@@ -182,6 +183,35 @@ export default function MainLayout() {
     }
   };
 
+  const occupancyCount = useMemo(() => {
+    const counts: Record<number, number> = {};
+    const todaysBills = billHistory.filter(bill => isSameDay(bill.timestamp, new Date()));
+    
+    todaysBills.forEach(bill => {
+      counts[bill.tableId] = (counts[bill.tableId] || 0) + 1;
+    });
+
+    // Also count current orders not yet billed to reflect live occupancy
+    orders.forEach(order => {
+      const billedToday = todaysBills.some(b => 
+        b.tableId === order.tableId && 
+        JSON.stringify(b.orderItems) === JSON.stringify(order.items)
+      );
+      if (!billedToday) {
+        // This is a simple check. It assumes an order becomes a bill.
+        // A better check might involve order IDs if they were persisted on bills.
+        const existingCount = counts[order.tableId] || 0;
+        // Check if an active order for this table is already in counts to avoid double counting
+        const activeOrderAlreadyCounted = orders.filter(o => o.tableId === order.tableId).length > 1;
+
+        if (existingCount === 0 || !activeOrderAlreadyCounted) {
+             counts[order.tableId] = existingCount + 1;
+        }
+      }
+    });
+
+    return counts;
+  }, [billHistory, orders]);
 
   return (
     <div className="flex flex-col h-screen bg-background">
@@ -222,7 +252,7 @@ export default function MainLayout() {
           
           <div className="flex-grow overflow-auto">
             <TabsContent value="pos" className="m-0 p-0 h-full">
-                <PosSystem tables={tables} addOrder={addOrder} addBill={addBill} updateTableStatus={updateTableStatus} />
+                <PosSystem tables={tables} addOrder={addOrder} addBill={addBill} updateTableStatus={updateTableStatus} occupancyCount={occupancyCount} />
             </TabsContent>
             <TabsContent value="tables" className="m-0 p-0">
               <TableManagement 
@@ -232,6 +262,7 @@ export default function MainLayout() {
                 updateTableStatus={updateTableStatus}
                 addTable={addTable}
                 removeLastTable={removeLastTable}
+                occupancyCount={occupancyCount}
               />
             </TabsContent>
             <TabsContent value="kitchen" className="m-0 p-0 h-full">

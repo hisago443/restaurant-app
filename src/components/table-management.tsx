@@ -12,7 +12,6 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { PlusCircle, Trash2, LayoutTemplate, Sparkles, Users, CheckCircle2, Bookmark, Armchair, ClipboardList, LogOut, UserCheck, BookmarkX, BookmarkPlus, Printer, Repeat } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
-import { isSameDay } from 'date-fns';
 
 const statusColors: Record<TableStatus, string> = {
   Available: 'bg-green-400 hover:bg-green-500',
@@ -35,9 +34,10 @@ interface TableManagementProps {
   updateTableStatus: (tableIds: number[], status: TableStatus) => void;
   addTable: () => void;
   removeLastTable: () => void;
+  occupancyCount: Record<number, number>;
 }
 
-export default function TableManagement({ tables, orders, billHistory, updateTableStatus, addTable, removeLastTable }: TableManagementProps) {
+export default function TableManagement({ tables, orders, billHistory, updateTableStatus, addTable, removeLastTable, occupancyCount }: TableManagementProps) {
   const [selectedTable, setSelectedTable] = useState<Table | null>(null);
   const [selectedTables, setSelectedTables] = useState<number[]>([]);
   const [isLayoutManagerOpen, setIsLayoutManagerOpen] = useState(false);
@@ -45,22 +45,6 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
   const [hoveredStatus, setHoveredStatus] = useState<TableStatus | null>(null);
   const [isPrintDialogOpen, setIsPrintDialogOpen] = useState(false);
   const [tableForPrint, setTableForPrint] = useState<Table | null>(null);
-
-  const occupancyCount = useMemo(() => {
-    const counts: Record<number, number> = {};
-    const todaysBills = billHistory.filter(bill => isSameDay(bill.timestamp, new Date()));
-    
-    todaysBills.forEach(bill => {
-      counts[bill.tableId] = (counts[bill.tableId] || 0) + 1;
-    });
-
-    // Also count current orders not yet billed
-    orders.forEach(order => {
-        counts[order.tableId] = (counts[order.tableId] || 0) + 1;
-    });
-
-    return counts;
-  }, [billHistory, orders]);
 
   const filteredTables = tables.filter(table => filter === 'All' || table.status === filter);
 
@@ -358,7 +342,7 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
       <Dialog open={isPrintDialogOpen} onOpenChange={setIsPrintDialogOpen}>
         <DialogContent>
             {tableForPrint && (() => {
-                const order = orders.find(o => o.tableId === tableForPrint.id);
+                const order = orders.find(o => o.tableId === tableForPrint.id && o.status !== 'Completed');
                 if (!order) {
                     return (
                         <>
