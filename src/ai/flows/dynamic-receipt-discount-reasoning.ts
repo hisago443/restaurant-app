@@ -41,22 +41,43 @@ const prompt = ai.definePrompt({
   name: 'generateReceiptPrompt',
   input: {schema: GenerateReceiptInputSchema},
   output: {schema: GenerateReceiptOutputSchema},
-  prompt: `You are a point-of-sale (POS) assistant for a cafe. Generate a receipt preview based on the order details, discount, and total amount. The receipt should include the list of items with their quantities and prices, the subtotal, the applied discount (if any), and the total amount.
+  prompt: `You are a point-of-sale (POS) assistant for a cafe. Generate a receipt preview that is well-formatted, easy to read, and professional.
+
+The receipt should have the following structure:
+1.  A header.
+2.  A numbered list of items with quantity, name, and total price for that line item.
+3.  A summary section with Subtotal, Discount (if applicable), and Total.
+4.  A footer.
+
+Use proper spacing and alignment to make it look like a real receipt.
+- The item lines should be numbered.
+- The prices should be aligned to the right.
+- The summary section should be clearly separated.
+- If the discount is 0, do not show the "Discount" line.
 
 Here are the order details:
-Items:
-{{#each items}}
-- {{quantity}} x {{name}} @ ₹{{price}}
-{{/each}}
-Subtotal: Rs.{{subtotal}}
+- Items: {{json items}}
+- Subtotal: {{subtotal}}
+- Discount: {{discount}}%
+- Total: {{total}}
 
-{{#if discount}}
-Discount: {{discount}}%
-{{/if}}
+Example of a good format:
+*************************
+    Up & Above Cafe
+*************************
 
-Total: Rs.{{total}}
+Order Details:
+1. 2 x Latte             ₹178.00
+2. 1 x Croissant          ₹90.00
 
-Ensure that if the discount is 0%, the discount information is not displayed in the receipt preview. Only include the discount line if a discount is applied.
+-------------------------
+Subtotal:              ₹268.00
+Discount (10%):        -₹26.80
+-------------------------
+Total:                 ₹241.20
+
+   Thank you for dining!
+*************************
 `,
 });
 
