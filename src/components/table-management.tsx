@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose, DialogDescription } from '@/components/ui/dialog';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger, AlertDialogFooter } from "@/components/ui/alert-dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger, AlertDialogFooter, AlertDialogDescription } from "@/components/ui/alert-dialog";
 import type { Table, TableStatus } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -14,10 +14,10 @@ import { PlusCircle, Trash2, LayoutTemplate } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 
 const statusColors: Record<TableStatus, string> = {
-  Available: 'bg-green-500 hover:bg-green-600',
-  Occupied: 'bg-red-500 hover:bg-red-600',
+  Available: 'bg-green-400 hover:bg-green-500',
+  Occupied: 'bg-red-400 hover:bg-red-500',
   Reserved: 'bg-blue-400 hover:bg-blue-500',
-  Cleaning: 'bg-amber-400 hover:bg-amber-500',
+  Cleaning: 'bg-amber-300 hover:bg-amber-400',
 };
 
 interface TableManagementProps {
@@ -191,7 +191,7 @@ export default function TableManagement({ tables, updateTableStatus, addTable, r
                   />
                 </div>
                 <span className={cn("text-6xl font-bold", table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black')}>{table.id}</span>
-                <span className={cn("text-sm font-semibold", table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black')}>{table.status}</span>
+                <span className={cn("text-base font-semibold", table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black')}>{table.status}</span>
               </div>
             ))}
              {filteredTables.length === 0 && (
