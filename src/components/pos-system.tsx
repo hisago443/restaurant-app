@@ -91,16 +91,25 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
   }, [activeOrder, selectedTableId]);
 
   useEffect(() => {
-    const savedState = localStorage.getItem('isClickToAdd');
-    if (savedState !== null) {
-      setIsClickToAdd(JSON.parse(savedState));
+    try {
+      const savedState = localStorage.getItem('isClickToAdd');
+      if (savedState !== null) {
+        setIsClickToAdd(JSON.parse(savedState));
+      }
+    } catch (error) {
+      console.error("Could not parse 'isClickToAdd' from localStorage", error);
+      setIsClickToAdd(true); // Default to true if parsing fails
     }
   }, []);
-
+  
   useEffect(() => {
-    localStorage.setItem('isClickToAdd', JSON.stringify(isClickToAdd));
+    try {
+      localStorage.setItem('isClickToAdd', JSON.stringify(isClickToAdd));
+    } catch (error) {
+      console.error("Could not save 'isClickToAdd' to localStorage", error);
+    }
   }, [isClickToAdd]);
-
+  
   useEffect(() => {
     if (activeOrder) {
       setSelectedTableId(activeOrder.tableId);
@@ -125,10 +134,12 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
       clearOrder(false, true); // Clear everything for a new order
       updateTableStatus([tableId], 'Occupied');
       toast({ title: `Table ${tableId} is now Occupied`, description: 'Add items to the order.' });
+      setIsTablePopoverOpen(false); // Close popover
     } else if (table.status === 'Occupied') {
       const existingOrder = orders.find(o => o.tableId === tableId && o.status !== 'Completed');
       if (existingOrder) {
         setActiveOrder(existingOrder);
+        toast({ title: `Editing Order for Table ${tableId}`, description: 'Add or modify items.' });
       } else {
         // If no KOT exists, start a new order for this occupied table
         clearOrder(false, true);
@@ -137,10 +148,10 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
           description: `Table is occupied. You can start a new order.`,
         });
       }
+      setIsTablePopoverOpen(false); // Close popover to allow adding items
     }
-    // For other statuses, we just show the actions in the popover.
-    // The popover will close automatically on selection if needed.
-    // setIsTablePopoverOpen(false); 
+    // For other statuses like 'Cleaning' or 'Reserved', we leave the popover open
+    // to show the relevant actions without immediately jumping to the order screen.
   };
   
   const handleDoubleClickTable = (table: Table) => {
@@ -619,7 +630,6 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
         return (
           <Button onClick={() => {
             handleSelectTable(selectedTable.id)
-            setIsTablePopoverOpen(false);
           }}>
             <Users className="mr-2 h-4 w-4" />Create New Order
           </Button>
@@ -637,7 +647,7 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
             }}>
               <Edit className="mr-2 h-4 w-4" />Update Order
             </Button>
-            <Button variant="outline" onClick={() => { handlePrintProvisionalBill(); setIsTablePopoverOpen(false); }} disabled={!orderForTable}><Printer className="mr-2 h-4 w-4" /> Print Bill</Button>
+            <Button variant="outline" onClick={() => { handlePrintProvisionalBill(); setIsTablePopoverOpen(false); }} disabled={!orderForTable}><Printer className="mr-2 h-4 w-4" /> Print Provisional Bill</Button>
             <Button variant="destructive" onClick={() => { updateTableStatus([selectedTable.id], 'Cleaning'); setIsTablePopoverOpen(false); }}><SparklesIcon className="mr-2 h-4 w-4" />Mark as Cleaning</Button>
           </div>
         );
@@ -753,9 +763,9 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
                             </Button>
                         ))}
                     </div>
-                    {selectedTable && (
+                    {selectedTableId && (
                       <div className="mt-4 p-2 border-t">
-                          <h4 className="font-semibold mb-2">Actions for Table {selectedTable.id}</h4>
+                          <h4 className="font-semibold mb-2">Actions for Table {selectedTableId}</h4>
                           <div className="flex flex-wrap gap-2">
                            {renderTableActions()}
                           </div>
@@ -878,3 +888,4 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
     </div>
   );
 }
+
