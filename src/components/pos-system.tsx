@@ -348,8 +348,8 @@ export default function PosSystem({ tables, addOrder }: PosSystemProps) {
             </TabsList>
           </div>
           {filteredMenu.map(category => (
-             <TabsContent key={category.category} value={category.category} className={cn("rounded-lg p-2", categoryColors[category.category])}>
-               <div className="space-y-4">
+             <TabsContent key={category.category} value={category.category}>
+               <div className={cn("rounded-lg p-2 space-y-4", categoryColors[category.category])}>
                 {category.subCategories.map((subCategory) => (
                   <div key={subCategory.name}>
                     <h3 className="text-md font-semibold mb-2 text-muted-foreground pl-2">{subCategory.name}</h3>
@@ -368,16 +368,14 @@ export default function PosSystem({ tables, addOrder }: PosSystemProps) {
     return (
       <Accordion type="multiple" value={activeAccordionItems} onValueChange={setActiveAccordionItems} className="w-full">
         {filteredMenu.map((category) => (
-           <AccordionItem key={category.category} value={category.category} className={cn("border-b-0 rounded-lg mb-2 overflow-hidden", categoryColors[category.category])}>
-            <div className='flex items-center w-full relative p-4'>
-                <AccordionTrigger className="p-0 hover:no-underline text-xl font-bold text-black flex-grow justify-center">
-                    {category.category}
-                </AccordionTrigger>
-              <div className='flex items-center gap-2 absolute right-4 top-1/2 -translate-y-1/2'>
-                <CategoryColorPicker categoryName={category.category} />
-                <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200" />
-              </div>
-            </div>
+          <AccordionItem key={category.category} value={category.category} className={cn("border-b-0 rounded-lg mb-2 overflow-hidden", categoryColors[category.category])}>
+            <AccordionTrigger className="p-4 hover:no-underline text-xl font-bold text-black flex-grow justify-center relative">
+                <span className="text-center flex-grow">{category.category}</span>
+                <div className='flex items-center gap-2 absolute right-4 top-1/2 -translate-y-1/2'>
+                  <CategoryColorPicker categoryName={category.category} />
+                  <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200" />
+                </div>
+            </AccordionTrigger>
             <AccordionContent className="p-2 pt-0">
               <div className="space-y-4 pt-2">
                 {category.subCategories.map((subCategory) => (
@@ -531,7 +529,7 @@ export default function PosSystem({ tables, addOrder }: PosSystemProps) {
             <div className="space-y-2 text-lg">
               <div className="flex justify-between">
                 <span>Subtotal:</span>
-                <span className="font-bold">₹{subtotal.toFixed(2)}</span>
+                <span className="font-bold">Rs.{subtotal.toFixed(2)}</span>
               </div>
               {discount > 0 && (
                 <div className="flex justify-between text-accent-foreground">
@@ -588,3 +586,5 @@ export default function PosSystem({ tables, addOrder }: PosSystemProps) {
     </div>
   );
 }
+
+    
