@@ -26,8 +26,6 @@ const nextConfig: NextConfig = {
   },
   experimental: {
   },
-  // This is required to allow requests from the development environment.
-  allowedDevOrigins: ['*'],
 };
 
 export default nextConfig;
