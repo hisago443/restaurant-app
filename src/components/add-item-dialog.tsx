@@ -65,7 +65,12 @@ export function AddItemDialog({ isOpen, onOpenChange, item, onConfirm }: AddItem
                 id="quantity"
                 type="number"
                 value={quantity}
-                onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value, 10) || 1))}
+                onChange={(e) => {
+                    const value = e.target.value;
+                    // Allow clearing the input, otherwise set to a valid number >= 1
+                    setQuantity(value === '' ? 1 : Math.max(1, parseInt(value, 10)));
+                }}
+                onFocus={(e) => e.target.select()}
                 className="w-16 text-center"
                 />
                 <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => handleQuantityChange(1)}><Plus className="h-4 w-4" /></Button>
