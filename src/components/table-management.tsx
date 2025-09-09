@@ -10,7 +10,7 @@ import type { Table, TableStatus } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
-import { PlusCircle, Trash2, LayoutTemplate } from 'lucide-react';
+import { PlusCircle, Trash2, LayoutTemplate, Sparkles } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 
 const statusColors: Record<TableStatus, string> = {
@@ -163,6 +163,7 @@ export default function TableManagement({ tables, updateTableStatus, addTable, r
                       filter === status && 'ring-2 ring-offset-2 ring-ring'
                     )}
                   >
+                      {status === 'Cleaning' && <Sparkles className="mr-2 h-4 w-4" />}
                       {status} ({tables.filter(t => t.status === status).length})
                   </Button>
               ))}
@@ -191,7 +192,10 @@ export default function TableManagement({ tables, updateTableStatus, addTable, r
                   />
                 </div>
                 <span className={cn("text-6xl font-bold", table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black')}>{table.id}</span>
-                <span className={cn("text-base font-semibold", table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black')}>{table.status}</span>
+                <div className="flex items-center gap-1">
+                  {table.status === 'Cleaning' && <Sparkles className="h-4 w-4 text-black" />}
+                  <span className={cn("text-base font-semibold", table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black')}>{table.status}</span>
+                </div>
               </div>
             ))}
              {filteredTables.length === 0 && (
