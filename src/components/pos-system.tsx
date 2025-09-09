@@ -219,7 +219,7 @@ export default function PosSystem({ tables, addOrder }: PosSystemProps) {
   
   const handlePaymentSuccess = () => {
     setIsPaymentDialogOpen(false);
-    toast({ title: "Payment Successful", description: `Payment of Rs.${total.toFixed(2)} confirmed.` });
+    toast({ title: "Payment Successful", description: `Payment of ₹${total.toFixed(2)} confirmed.` });
     clearOrder();
   };
 
@@ -272,7 +272,7 @@ export default function PosSystem({ tables, addOrder }: PosSystemProps) {
               <span className={cn('h-2.5 w-2.5 rounded-full', isVeg ? 'bg-green-500' : 'bg-red-500')}></span>
               <span className="font-semibold pr-2 text-black">{item.name}</span>
             </div>
-            <span className="font-mono text-right whitespace-nowrap text-black">Rs.{item.price.toFixed(2)}</span>
+            <span className="font-mono text-right whitespace-nowrap text-black">₹{item.price.toFixed(2)}</span>
           </div>
           {!isClickToAdd && (
             <div className="flex justify-end mt-2">
@@ -509,7 +509,7 @@ export default function PosSystem({ tables, addOrder }: PosSystemProps) {
                 <div key={item.name} className="flex items-center">
                   <div className="flex-grow">
                     <p className="font-medium">{item.name}</p>
-                    <p className="text-sm text-muted-foreground">Rs.{item.price.toFixed(2)}</p>
+                    <p className="text-sm text-muted-foreground">₹{item.price.toFixed(2)}</p>
                   </div>
                   <div className="flex items-center gap-2">
                     <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => updateQuantity(item.name, item.quantity - 1)}><Minus className="h-4 w-4" /></Button>
@@ -548,17 +548,17 @@ export default function PosSystem({ tables, addOrder }: PosSystemProps) {
             <div className="space-y-2 text-lg">
               <div className="flex justify-between">
                 <span>Subtotal:</span>
-                <span className="font-bold">Rs.{subtotal.toFixed(2)}</span>
+                <span className="font-bold">₹{subtotal.toFixed(2)}</span>
               </div>
               {discount > 0 && (
                 <div className="flex justify-between text-accent-foreground">
                   <span>Discount ({discount}%):</span>
-                  <span className="font-bold">-Rs.{(subtotal - total).toFixed(2)}</span>
+                  <span className="font-bold">-₹{(subtotal - total).toFixed(2)}</span>
                 </div>
               )}
               <div className="flex justify-between font-bold text-2xl border-t pt-2">
                 <span>Total:</span>
-                <span>Rs.{total.toFixed(2)}</span>
+                <span>₹{total.toFixed(2)}</span>
               </div>
             </div>
             <div className="grid grid-cols-2 gap-2 pt-2">
