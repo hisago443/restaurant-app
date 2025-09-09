@@ -1,6 +1,7 @@
 
 "use client";
 
+import * as React from 'react';
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -116,7 +117,6 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
     if (table.status === 'Available') {
       clearOrder(false, true); // Clear everything for a new order
       setSelectedTable(tableId);
-      updateTableStatus([table.id], 'Occupied');
       setIsTablePopoverOpen(false);
     } else if (table.status === 'Occupied') {
         const existingOrder = orders.find(o => o.tableId.toString() === tableId && o.status !== 'Completed');

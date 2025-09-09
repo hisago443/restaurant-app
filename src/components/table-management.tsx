@@ -2,6 +2,7 @@
 
 "use client";
 
+import * as React from 'react';
 import { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -274,7 +275,7 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
                 </div>
                 <span className={cn("text-6xl font-bold", table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black')}>{table.id}</span>
                 <div className="flex items-center gap-1">
-                  <Icon className={cn("h-4 w-4", table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black')} />
+                  {React.createElement(Icon, { className: cn("h-4 w-4", table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black') })}
                   <span className={cn("text-base font-semibold", table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black')}>{table.status}</span>
                 </div>
               </div>
