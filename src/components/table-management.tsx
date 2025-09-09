@@ -2,7 +2,7 @@
 "use client";
 
 import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose, DialogDescription } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger, AlertDialogFooter } from "@/components/ui/alert-dialog";
@@ -117,10 +117,9 @@ export default function TableManagement({ tables, updateTableStatus, addTable, r
           <div className="flex justify-between items-center gap-4 flex-wrap mb-4">
             <div>
               <CardTitle>Table Layout</CardTitle>
-              <CardDescription>Manage your restaurant's table configuration and status.</CardDescription>
             </div>
             <div className="flex items-center gap-4">
-              <Button variant="outline" onClick={() => setIsLayoutManagerOpen(true)}>
+              <Button variant="outline" className="font-bold" onClick={() => setIsLayoutManagerOpen(true)}>
                 <LayoutTemplate className="mr-2 h-4 w-4" /> ADD OR REMOVE TABLE
               </Button>
               <Separator orientation="vertical" className="h-8" />
@@ -137,6 +136,7 @@ export default function TableManagement({ tables, updateTableStatus, addTable, r
           </div>
           <div className="flex items-center gap-2 flex-wrap p-4 border-t border-b">
               <Button variant={filter === 'All' ? 'default' : 'outline'} onClick={() => handleStatusButtonClick('All')}>All Tables ({tables.length})</Button>
+              <Separator orientation="vertical" className="h-8" />
               {(Object.keys(statusColors) as TableStatus[]).map(status => (
                   <Button
                     key={status}
