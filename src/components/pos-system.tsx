@@ -63,6 +63,17 @@ export default function PosSystem({ tables, addOrder, addBill }: PosSystemProps)
 
   const typedMenuData: MenuCategory[] = menuData;
 
+  useEffect(() => {
+    const savedState = localStorage.getItem('isClickToAdd');
+    if (savedState !== null) {
+      setIsClickToAdd(JSON.parse(savedState));
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem('isClickToAdd', JSON.stringify(isClickToAdd));
+  }, [isClickToAdd]);
+
   const setItemColor = (itemName: string, colorClass: string) => {
     setMenuItemColors(prev => ({ ...prev, [itemName]: colorClass }));
   };
