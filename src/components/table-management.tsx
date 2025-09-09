@@ -66,11 +66,19 @@ export default function TableManagement({ tables, updateTableStatus, addTable, r
     setIsBulkManageOpen(false);
   }
 
+  const handleStatusButtonClick = (status: TableStatus | 'All') => {
+    if (status !== 'All' && selectedTables.length > 0) {
+      handleBulkUpdate(status);
+    } else {
+      setFilter(status);
+    }
+  };
+
   const handleRemoveLastTable = () => {
     if (tables.length === 0) return;
+    const tableToRemove = tables.reduce((last, current) => (current.id > last.id ? current : last));
     removeLastTable();
-    const lastTableId = tables.reduce((maxId, table) => Math.max(maxId, table.id), 0);
-    setSelectedTables(selectedTables.filter(id => id !== lastTableId));
+    setSelectedTables(selectedTables.filter(id => id !== tableToRemove.id));
   };
 
   const renderActions = (table: Table) => {
@@ -133,18 +141,12 @@ export default function TableManagement({ tables, updateTableStatus, addTable, r
             </div>
           </div>
           <div className="flex items-center gap-2 flex-wrap p-4 border-t border-b">
-              <Button variant={filter === 'All' ? 'default' : 'outline'} onClick={() => setFilter('All')}>All Tables ({tables.length})</Button>
+              <Button variant={filter === 'All' ? 'default' : 'outline'} onClick={() => handleStatusButtonClick('All')}>All Tables ({tables.length})</Button>
               {(Object.keys(statusColors) as TableStatus[]).map(status => (
                   <Button 
                     key={status} 
                     variant={filter === status ? 'default' : 'outline'}
-                    onClick={() => {
-                        if (selectedTables.length > 0) {
-                            handleBulkUpdate(status);
-                        } else {
-                            setFilter(status)
-                        }
-                    }}
+                    onClick={() => handleStatusButtonClick(status)}
                   >
                       {status} ({tables.filter(t => t.status === status).length})
                   </Button>
