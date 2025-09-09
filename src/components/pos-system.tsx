@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
@@ -15,7 +14,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from '@/hooks/use-toast';
-import { Search, Plus, Minus, X, Save, FilePlus, LayoutGrid, List, Rows, ChevronsUpDown, Palette, Shuffle, ClipboardList, Send, ChevronDown, CheckCircle2, Users, Bookmark, Sparkles, Repeat, Printer, Edit } from 'lucide-react';
+import { Search, Plus, Minus, X, Save, FilePlus, LayoutGrid, List, Rows, ChevronsUpDown, Palette, Shuffle, ClipboardList, Send, ChevronDown, CheckCircle2, Users, Bookmark, Sparkles, Repeat, Printer, Edit, SparklesIcon, UserCheck, BookmarkX } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { AddItemDialog } from './add-item-dialog';
@@ -26,6 +25,7 @@ import { generateReceipt, type GenerateReceiptInput } from '@/ai/flows/dynamic-r
 import { PaymentDialog } from './payment-dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { sendEmailReceipt, SendEmailReceiptInput } from '@/ai/flows/send-email-receipt';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 const vegColor = 'bg-green-100 dark:bg-green-900/30';
 const nonVegColor = 'bg-rose-100 dark:bg-rose-900/30';
@@ -106,7 +106,7 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
         setSelectedTable(null);
       }
     }
-  }, [activeOrder]);
+  }, [activeOrder, orderItems.length]);
 
 
   const handleSelectTable = (tableId: string) => {
@@ -673,48 +673,68 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
           <div className="pt-2">
             <Label>Select Table</Label>
             <Popover open={isTablePopoverOpen} onOpenChange={setIsTablePopoverOpen}>
-              <PopoverTrigger asChild>
-                <Button variant="outline" className="w-full justify-start text-left font-normal">
-                  {selectedTable ? `Table ${selectedTable}` : "Select a table..."}
-                   <ChevronDown className="ml-auto h-4 w-4 opacity-50" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-2" align="start">
-                <div className="grid grid-cols-5 gap-2">
-                    {tables.map(table => {
-                        const Icon = statusIcons[table.status];
-                        const isClickable = table.status === 'Available' || table.status === 'Cleaning' || table.status === 'Occupied';
-                        return (
-                            <Button
-                                key={table.id}
-                                variant="outline"
-                                className={cn(
-                                    "flex flex-col h-20 w-20 justify-center items-center gap-1 relative",
-                                    statusColors[table.status],
-                                    selectedTable === table.id.toString() && 'ring-2 ring-offset-2 ring-ring',
-                                    !isClickable && 'opacity-50 cursor-not-allowed',
-                                    table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black'
+                <PopoverTrigger asChild>
+                    <Button variant="outline" className="w-full justify-start text-left font-normal">
+                    {selectedTable ? `Table ${selectedTable}` : "Select a table..."}
+                    <ChevronDown className="ml-auto h-4 w-4 opacity-50" />
+                    </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-2" align="start">
+                    <div className="grid grid-cols-5 gap-2">
+                        {tables.map(table => (
+                        <DropdownMenu key={table.id}>
+                            <DropdownMenuTrigger asChild>
+                                <Button
+                                    variant="outline"
+                                    className={cn(
+                                        "flex flex-col h-20 w-20 justify-center items-center gap-1 relative",
+                                        statusColors[table.status],
+                                        selectedTable === table.id.toString() && 'ring-2 ring-offset-2 ring-ring',
+                                        table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black'
+                                    )}
+                                    onClick={() => handleSelectTable(table.id.toString())}
+                                    onDoubleClick={() => handleDoubleClickTable(table)}
+                                >
+                                    {(occupancyCount[table.id] > 0) &&
+                                    <div className="absolute bottom-1 right-1 flex items-center gap-1 bg-black/50 text-white text-xs font-bold p-1 rounded-md">
+                                        <Repeat className="h-3 w-3" />
+                                        <span>{occupancyCount[table.id]}</span>
+                                    </div>
+                                    }
+                                    <span className="text-2xl font-bold">{table.id}</span>
+                                    <div className="flex items-center gap-1 text-xs">
+                                        {React.createElement(statusIcons[table.status], { className: "h-3 w-3" })}
+                                        <span>{table.status}</span>
+                                    </div>
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent>
+                                <DropdownMenuLabel>Table {table.id} Actions</DropdownMenuLabel>
+                                <DropdownMenuSeparator />
+                                {table.status === 'Occupied' && (
+                                    <>
+                                        <DropdownMenuItem onClick={() => handleSelectTable(table.id.toString())}><Edit className="mr-2 h-4 w-4" /> Modify Order</DropdownMenuItem>
+                                        <DropdownMenuItem onClick={handlePrintProvisionalBill}><Printer className="mr-2 h-4 w-4" /> Print Provisional Bill</DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => updateTableStatus([table.id], 'Cleaning')}><SparklesIcon className="mr-2 h-4 w-4" /> Mark as Cleaning</DropdownMenuItem>
+                                    </>
                                 )}
-                                onClick={() => handleSelectTable(table.id.toString())}
-                                onDoubleClick={() => handleDoubleClickTable(table)}
-                                disabled={!isClickable && table.status !== 'Occupied'}
-                            >
-                                {(occupancyCount[table.id] > 0) &&
-                                  <div className="absolute bottom-1 right-1 flex items-center gap-1 bg-black/50 text-white text-xs font-bold p-1 rounded-md">
-                                      <Repeat className="h-3 w-3" />
-                                      <span>{occupancyCount[table.id]}</span>
-                                  </div>
-                                }
-                                <span className="text-2xl font-bold">{table.id}</span>
-                                <div className="flex items-center gap-1 text-xs">
-                                    <Icon className="h-3 w-3" />
-                                    <span>{table.status}</span>
-                                </div>
-                            </Button>
-                        )
-                    })}
-                </div>
-              </PopoverContent>
+                                {table.status === 'Cleaning' && (
+                                    <DropdownMenuItem onClick={() => updateTableStatus([table.id], 'Available')}><CheckCircle2 className="mr-2 h-4 w-4" /> Mark as Available</DropdownMenuItem>
+                                )}
+                                {table.status === 'Reserved' && (
+                                    <>
+                                        <DropdownMenuItem onClick={() => updateTableStatus([table.id], 'Occupied')}><UserCheck className="mr-2 h-4 w-4" /> Seat Guests</DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => updateTableStatus([table.id], 'Available')}><BookmarkX className="mr-2 h-4 w-4" /> Cancel Reservation</DropdownMenuItem>
+                                    </>
+                                )}
+                                <DropdownMenuItem disabled>
+                                    <Repeat className="mr-2 h-4 w-4" /> Daily Turnover: {occupancyCount[table.id] || 0}
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                        ))}
+                    </div>
+                </PopoverContent>
             </Popover>
           </div>
         </CardHeader>

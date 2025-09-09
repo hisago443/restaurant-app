@@ -41,27 +41,33 @@ const prompt = ai.definePrompt({
   name: 'generateReceiptPrompt',
   input: {schema: GenerateReceiptInputSchema},
   output: {schema: GenerateReceiptOutputSchema},
-  prompt: `You are a point-of-sale (POS) assistant for a cafe. Generate a receipt preview that is well-formatted, easy to read, and professional.
+  prompt: `You are a point-of-sale (POS) assistant for a cafe. Your task is to generate a receipt preview. The receipt must be well-formatted, easy to read, and professional.
 
 The receipt should have the following structure:
-1.  A header.
-2.  A numbered list of items with quantity, name, and total price for that line item.
-3.  A summary section with Subtotal, Discount (if applicable), and Total.
-4.  A footer.
+1. A header (e.g., Cafe Name).
+2. A section for "Order Details" with a numbered list of items. Each line should show: quantity, item name, and the total price for that line item (quantity * price).
+3. A summary section showing the "Subtotal", "Discount" (only if applicable), and the final "Total".
+4. A footer (e.g., a thank you message).
 
-Use proper spacing and alignment to make it look like a real receipt.
-- The item lines should be numbered.
-- The prices should be aligned to the right.
-- The summary section should be clearly separated.
-- If the discount is 0, do not show the "Discount" line.
+**Formatting Rules:**
+- Use a monospaced font style for alignment.
+- Ensure all prices are right-aligned for a clean look.
+- The summary section should be clearly separated with lines.
+- **CRITICAL**: If the discount percentage is 0, you MUST NOT show the "Discount" line in the summary.
 
-Here are the order details:
-- Items: {{json items}}
-- Subtotal: {{subtotal}}
-- Discount: {{discount}}%
-- Total: {{total}}
+**Order Data:**
+- **Items**: I will provide an array of item objects. For each item, you must calculate the line total (item.price * item.quantity).
+- **Discount Percentage**: {{discount}}%
+- **Subtotal**: ₹{{subtotal}}
+- **Total**: ₹{{total}}
 
-Example of a good format:
+**Here are the items for the current order:**
+{{#each items}}
+- {{quantity}} x {{name}} (at ₹{{price}} each)
+{{/each}}
+
+
+**Example of a correctly formatted receipt with a discount:**
 *************************
     Up & Above Cafe
 *************************
@@ -78,6 +84,25 @@ Total:                 ₹241.20
 
    Thank you for dining!
 *************************
+
+**Example of a correctly formatted receipt without a discount:**
+*************************
+    Up & Above Cafe
+*************************
+
+Order Details:
+1. 1 x Espresso           ₹95.00
+2. 1 x Muffin             ₹80.00
+
+-------------------------
+Subtotal:              ₹175.00
+-------------------------
+Total:                 ₹175.00
+
+   Thank you for dining!
+*************************
+
+Now, please generate the receipt for the provided order data.
 `,
 });
 
