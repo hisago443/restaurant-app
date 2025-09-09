@@ -477,7 +477,7 @@ export default function PosSystem({ tables, addOrder }: PosSystemProps) {
       </Card>
 
       {/* Right Panel: Order Summary */}
-      <Card className="flex-[1] flex flex-col">
+      <Card className="flex-[1] flex flex-col h-full">
         <CardHeader>
           <CardTitle>Current Order</CardTitle>
           <div className="pt-2">
@@ -519,72 +519,72 @@ export default function PosSystem({ tables, addOrder }: PosSystemProps) {
             </div>
           )}
         </ScrollArea>
-        <Separator />
-        <CardContent className="p-4 space-y-4">
-          <div>
-            <Label className="font-semibold mb-2 block">Discount</Label>
-            <RadioGroup value={discount.toString()} onValueChange={(val) => setDiscount(Number(val))} className="flex space-x-1 sm:space-x-0 sm:grid sm:grid-cols-3 gap-2">
-              {[0, 5, 10, 15, 20].map(d => (
-                <div key={d} className="flex items-center space-x-2">
-                  <RadioGroupItem value={d.toString()} id={`d-${d}`} />
-                  <Label htmlFor={`d-${d}`} className="p-2 rounded-md transition-colors hover:bg-accent cursor-pointer" >{d}%</Label>
-                </div>
-              ))}
-            </RadioGroup>
-          </div>
-          <Card className="bg-muted/50">
-            <CardHeader className="p-4">
-              <CardTitle className="text-lg">Receipt Preview</CardTitle>
-            </CardHeader>
-            <CardContent className="p-4 pt-0">
-              <pre className="text-sm font-mono whitespace-pre-wrap break-words min-h-[100px] bg-background p-2 rounded-md">
-                {receiptPreview || 'Add items to see preview...'}
-              </pre>
-            </CardContent>
-          </Card>
-          <div className="space-y-2 text-lg">
-            <div className="flex justify-between">
-              <span>Subtotal:</span>
-              <span className="font-bold">Rs.{subtotal.toFixed(2)}</span>
+        <div className="mt-auto p-4 space-y-4">
+            <Separator />
+            <div>
+              <Label className="font-semibold mb-2 block">Discount</Label>
+              <RadioGroup value={discount.toString()} onValueChange={(val) => setDiscount(Number(val))} className="flex items-center flex-wrap gap-2">
+                {[0, 5, 10, 15, 20].map(d => (
+                  <div key={d} className="flex items-center space-x-2">
+                    <RadioGroupItem value={d.toString()} id={`d-${d}`} />
+                    <Label htmlFor={`d-${d}`} className="p-2 rounded-md transition-colors hover:bg-accent cursor-pointer" >{d}%</Label>
+                  </div>
+                ))}
+              </RadioGroup>
             </div>
-            {discount > 0 && (
-              <div className="flex justify-between text-accent-foreground">
-                <span>Discount ({discount}%):</span>
-                <span className="font-bold">-Rs.{(subtotal - total).toFixed(2)}</span>
+            <Card className="bg-muted/50">
+              <CardHeader className="p-4">
+                <CardTitle className="text-lg">Receipt Preview</CardTitle>
+              </CardHeader>
+              <CardContent className="p-4 pt-0">
+                <pre className="text-sm font-mono whitespace-pre-wrap break-words min-h-[100px] bg-background p-2 rounded-md">
+                  {receiptPreview || 'Add items to see preview...'}
+                </pre>
+              </CardContent>
+            </Card>
+            <div className="space-y-2 text-lg">
+              <div className="flex justify-between">
+                <span>Subtotal:</span>
+                <span className="font-bold">Rs.{subtotal.toFixed(2)}</span>
               </div>
-            )}
-            <div className="flex justify-between font-bold text-2xl border-t pt-2">
-              <span>Total:</span>
-              <span>Rs.{total.toFixed(2)}</span>
+              {discount > 0 && (
+                <div className="flex justify-between text-accent-foreground">
+                  <span>Discount ({discount}%):</span>
+                  <span className="font-bold">-Rs.{(subtotal - total).toFixed(2)}</span>
+                </div>
+              )}
+              <div className="flex justify-between font-bold text-2xl border-t pt-2">
+                <span>Total:</span>
+                <span>Rs.{total.toFixed(2)}</span>
+              </div>
             </div>
+            <div className="grid grid-cols-2 gap-2 pt-2">
+              <Button size="lg" onClick={handleProcessPayment}>
+                Process Payment
+              </Button>
+              
+              <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                      <Button size="lg" variant="outline"><FilePlus />New Bill</Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                      <AlertDialogHeader>
+                      <AlertDialogTitle>Create a New Bill?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                          This will clear the current order. Make sure to save it if needed.
+                      </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={clearOrder}>Continue</AlertDialogAction>
+                      </AlertDialogFooter>
+                  </AlertDialogContent>
+              </AlertDialog>
+            </div>
+            <Button size="lg" variant="secondary" className="w-full" onClick={handleSendToKitchen}>
+                <Send className="mr-2 h-4 w-4" /> Send KOT to Kitchen
+              </Button>
           </div>
-          <div className="grid grid-cols-2 gap-2 pt-2">
-            <Button size="lg" onClick={handleProcessPayment}>
-              Process Payment
-            </Button>
-            
-            <AlertDialog>
-                <AlertDialogTrigger asChild>
-                    <Button size="lg" variant="outline"><FilePlus />New Bill</Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                    <AlertDialogTitle>Create a New Bill?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                        This will clear the current order. Make sure to save it if needed.
-                    </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={clearOrder}>Continue</AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
-          </div>
-           <Button size="lg" variant="secondary" className="w-full" onClick={handleSendToKitchen}>
-              <Send className="mr-2 h-4 w-4" /> Send KOT to Kitchen
-            </Button>
-        </CardContent>
       </Card>
       <PaymentDialog
         isOpen={isPaymentDialogOpen}
