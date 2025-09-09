@@ -12,7 +12,7 @@ import TableManagement from './table-management';
 import KitchenOrders from './kitchen-orders';
 import AdminDashboard from './admin-dashboard';
 import StaffManagement from "./staff-management";
-import type { Table, TableStatus } from '@/lib/types';
+import type { Table, TableStatus, Order } from '@/lib/types';
 
 const initialTables: Table[] = Array.from({ length: 20 }, (_, i) => ({
   id: i + 1,
@@ -22,6 +22,18 @@ const initialTables: Table[] = Array.from({ length: 20 }, (_, i) => ({
 export default function MainLayout() {
   const [currentDateTime, setCurrentDateTime] = useState<Date | null>(null);
   const [tables, setTables] = useState<Table[]>(initialTables);
+  const [orders, setOrders] = useState<Order[]>([]);
+
+  const addOrder = (order: Omit<Order, 'id' | 'status'>) => {
+    const newOrder: Order = {
+      ...order,
+      id: `K${(orders.length + 1).toString().padStart(3, '0')}`,
+      status: 'Pending',
+    };
+    setOrders(prevOrders => [...prevOrders, newOrder]);
+    // Also update the table status to Occupied
+    updateTableStatus([order.tableId], 'Occupied');
+  };
 
   const updateTableStatus = (tableIds: number[], status: TableStatus) => {
     setTables(tables.map(t => (tableIds.includes(t.id) ? { ...t, status } : t)));
@@ -103,7 +115,7 @@ export default function MainLayout() {
           
           <div className="flex-grow overflow-auto">
             <TabsContent value="pos" className="m-0 p-0 h-full">
-                <PosSystem />
+                <PosSystem tables={tables} addOrder={addOrder} />
             </TabsContent>
             <TabsContent value="tables" className="m-0 p-0">
               <TableManagement 
@@ -114,7 +126,7 @@ export default function MainLayout() {
               />
             </TabsContent>
             <TabsContent value="kitchen" className="m-0 p-0 h-full">
-              <KitchenOrders />
+              <KitchenOrders orders={orders} setOrders={setOrders} />
             </TabsContent>
             <TabsContent value="staff" className="m-0 p-0">
               <StaffManagement />

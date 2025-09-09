@@ -14,15 +14,16 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from '@/hooks/use-toast';
-import { Search, Plus, Minus, X, Save, FilePlus, LayoutGrid, List, Rows, ChevronsUpDown, ChevronsDownUp, Palette, Shuffle, ClipboardList } from 'lucide-react';
+import { Search, Plus, Minus, X, Save, FilePlus, LayoutGrid, List, Rows, ChevronsUpDown, ChevronsDownUp, Palette, Shuffle, ClipboardList, Send } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { AddItemDialog } from './add-item-dialog';
 
-import type { MenuCategory, MenuItem, OrderItem } from '@/lib/types';
+import type { MenuCategory, MenuItem, OrderItem, Table, Order } from '@/lib/types';
 import menuData from '@/data/menu.json';
 import { generateReceipt, type GenerateReceiptInput } from '@/ai/flows/dynamic-receipt-discount-reasoning';
 import { PaymentDialog } from './payment-dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const vegColor = 'bg-green-100 dark:bg-green-900/30';
 const nonVegColor = 'bg-rose-100 dark:bg-rose-900/30';
@@ -54,7 +55,12 @@ const colorPalette = [
 
 type ViewMode = 'accordion' | 'grid' | 'list';
 
-export default function PosSystem() {
+interface PosSystemProps {
+  tables: Table[];
+  addOrder: (order: Omit<Order, 'id' | 'status'>) => void;
+}
+
+export default function PosSystem({ tables, addOrder }: PosSystemProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
   const [discount, setDiscount] = useState(0);
@@ -68,6 +74,7 @@ export default function PosSystem() {
   const [categoryColors, setCategoryColors] = useState<Record<string, string>>({});
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
   const [isAddItemDialogOpen, setIsAddItemDialogOpen] = useState(false);
+  const [selectedTable, setSelectedTable] = useState<string | null>(null);
 
   const typedMenuData: MenuCategory[] = menuData;
 
@@ -183,7 +190,29 @@ export default function PosSystem() {
   const clearOrder = () => {
     setOrderItems([]);
     setDiscount(0);
+    setSelectedTable(null);
     toast({ title: "New Bill", description: "Current order cleared." });
+  };
+
+  const handleSendToKitchen = () => {
+    if (orderItems.length === 0) {
+      toast({ variant: 'destructive', title: 'Empty Order', description: 'Cannot send an empty order to the kitchen.' });
+      return;
+    }
+    if (!selectedTable) {
+      toast({ variant: 'destructive', title: 'No Table Selected', description: 'Please select a table before sending to the kitchen.' });
+      return;
+    }
+
+    const orderPayload = {
+      items: orderItems,
+      tableId: Number(selectedTable),
+    };
+    addOrder(orderPayload);
+    
+    toast({ title: 'Order Sent!', description: `KOT sent to the kitchen for Table ${selectedTable}.` });
+    // You might want to clear the order here or keep it for billing
+    // clearOrder(); // Uncomment if the order should be cleared after sending
   };
 
   const handleProcessPayment = () => {
@@ -197,7 +226,6 @@ export default function PosSystem() {
   const handlePaymentSuccess = () => {
     setIsPaymentDialogOpen(false);
     toast({ title: "Payment Successful", description: `Payment of Rs.${total.toFixed(2)} confirmed.` });
-    // Here you would typically save the order to the backend
     clearOrder();
   };
 
@@ -452,6 +480,19 @@ export default function PosSystem() {
       <Card className="flex-[1] flex flex-col">
         <CardHeader>
           <CardTitle>Current Order</CardTitle>
+          <div className="pt-2">
+            <Label htmlFor="table-select">Select Table</Label>
+            <Select value={selectedTable ?? ''} onValueChange={setSelectedTable}>
+                <SelectTrigger id="table-select">
+                    <SelectValue placeholder="Select a table..." />
+                </SelectTrigger>
+                <SelectContent>
+                    {tables.map(table => (
+                        <SelectItem key={table.id} value={table.id.toString()}>Table {table.id} ({table.status})</SelectItem>
+                    ))}
+                </SelectContent>
+            </Select>
+          </div>
         </CardHeader>
         <ScrollArea className="flex-grow p-4 pt-0">
           {orderItems.length === 0 ? (
@@ -540,6 +581,9 @@ export default function PosSystem() {
                 </AlertDialogContent>
             </AlertDialog>
           </div>
+           <Button size="lg" variant="secondary" className="w-full" onClick={handleSendToKitchen}>
+              <Send className="mr-2 h-4 w-4" /> Send KOT to Kitchen
+            </Button>
         </CardContent>
       </Card>
       <PaymentDialog

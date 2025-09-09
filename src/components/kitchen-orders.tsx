@@ -9,14 +9,16 @@ import { ArrowRight, Check, ClipboardList } from 'lucide-react';
 import type { Order } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
-const initialOrders: Order[] = [];
+interface KitchenOrdersProps {
+  orders: Order[];
+  setOrders: React.Dispatch<React.SetStateAction<Order[]>>;
+}
 
 type OrderStatus = 'Pending' | 'In Preparation' | 'Completed';
 
 const statusColumns: OrderStatus[] = ['Pending', 'In Preparation', 'Completed'];
 
-export default function KitchenOrders() {
-  const [orders, setOrders] = useState<Order[]>(initialOrders);
+export default function KitchenOrders({ orders, setOrders }: KitchenOrdersProps) {
 
   const moveOrder = (orderId: string, toStatus: OrderStatus) => {
     setOrders(orders.map(order => order.id === orderId ? { ...order, status: toStatus } : order));
