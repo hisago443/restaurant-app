@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose, DialogDescription } from '@/components/ui/dialog';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger, AlertDialogFooter, AlertDialogDescription } from "@/components/ui/alert-dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger, AlertDialogFooter } from "@/components/ui/alert-dialog";
 import type { Table, TableStatus } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -157,7 +157,7 @@ export default function TableManagement({ tables, updateTableStatus, addTable, r
                     onMouseEnter={() => setHoveredStatus(status)}
                     onMouseLeave={() => setHoveredStatus(null)}
                     className={cn(
-                      'text-black',
+                      status === 'Available' ? 'text-white' : 'text-black',
                       statusColors[status],
                       'transition-all',
                       filter === status && 'ring-2 ring-offset-2 ring-ring'
@@ -190,8 +190,8 @@ export default function TableManagement({ tables, updateTableStatus, addTable, r
                     onClick={(e) => e.stopPropagation()}
                   />
                 </div>
-                <span className="text-2xl font-bold text-black">{table.id}</span>
-                <span className="text-xs font-semibold text-black">{table.status}</span>
+                <span className={cn("text-2xl font-bold", table.status === 'Available' ? 'text-white' : 'text-black')}>{table.id}</span>
+                <span className={cn("text-xs font-semibold", table.status === 'Available' ? 'text-white' : 'text-black')}>{table.status}</span>
               </div>
             ))}
              {filteredTables.length === 0 && (
@@ -228,9 +228,9 @@ export default function TableManagement({ tables, updateTableStatus, addTable, r
         <DialogContent>
             <DialogHeader>
               <DialogTitle>Manage Table Layout</DialogTitle>
-              <DialogDescription>
+              <AlertDialogDescription>
                 Add or remove tables to match your restaurant's layout.
-              </DialogDescription>
+              </AlertDialogDescription>
             </DialogHeader>
             <div className="grid grid-cols-2 gap-4 py-4">
               <Button variant="outline" onClick={addTable}>
@@ -264,3 +264,5 @@ export default function TableManagement({ tables, updateTableStatus, addTable, r
     </div>
   );
 }
+
+    
