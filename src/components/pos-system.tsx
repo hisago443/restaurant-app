@@ -181,51 +181,52 @@ export default function PosSystem() {
     const finalColor = categoryColor || itemColor || defaultColor;
 
     return (
-    <Card
-      key={item.name}
-      className={cn("group rounded-lg cursor-pointer transition-all hover:scale-105 hover:shadow-md relative", finalColor)}
-      onClick={() => isClickToAdd && addToOrder(item, 1)}
-    >
-       <Popover>
-        <PopoverTrigger asChild>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="absolute bottom-1 left-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <Palette className="h-4 w-4" />
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-auto p-2" onClick={(e) => e.stopPropagation()}>
-          <div className="grid grid-cols-8 gap-1">
-            {colorPalette.map((colorClass, i) => (
-              <div
-                key={i}
-                className={cn("h-6 w-6 rounded-full cursor-pointer", colorClass.split(' ')[0])}
-                onClick={() => setItemColor(item.name, colorClass)}
-              />
-            ))}
-             <Button variant="ghost" size="sm" className="col-span-8 h-8" onClick={() => setItemColor(item.name, defaultColor)}>Reset</Button>
+      <Card
+        key={item.name}
+        className={cn("group rounded-lg cursor-pointer transition-all hover:scale-105 hover:shadow-md relative", finalColor)}
+        onClick={() => isClickToAdd && addToOrder(item, 1)}
+      >
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute bottom-1 left-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <Palette className="h-4 w-4" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-2" onClick={(e) => e.stopPropagation()}>
+            <div className="grid grid-cols-8 gap-1">
+              {colorPalette.map((colorClass, i) => (
+                <div
+                  key={i}
+                  className={cn("h-6 w-6 rounded-full cursor-pointer", colorClass.split(' ')[0])}
+                  onClick={() => setItemColor(item.name, colorClass)}
+                />
+              ))}
+              <Button variant="ghost" size="sm" className="col-span-8 h-8" onClick={() => setItemColor(item.name, '')}>Reset</Button>
+            </div>
+          </PopoverContent>
+        </Popover>
+        <CardContent className="p-3">
+          <div className="flex justify-between items-start">
+            <div className="flex items-center gap-2">
+              <span className={cn('h-2.5 w-2.5 rounded-full', subCategoryName.toLowerCase().includes('veg') ? 'bg-green-500' : 'bg-red-500')}></span>
+              <span className="font-semibold pr-2">{item.name}</span>
+            </div>
+            <span className="font-mono text-right whitespace-nowrap">Rs.{item.price.toFixed(2)}</span>
           </div>
-        </PopoverContent>
-      </Popover>
-      <CardContent className="p-3">
-        <div className="flex justify-between items-start">
-          <div className="flex items-center gap-2">
-            <span className={cn('h-2.5 w-2.5 rounded-full', subCategoryName.toLowerCase().includes('veg') ? 'bg-green-500' : 'bg-red-500')}></span>
-            <span className="font-semibold pr-2">{item.name}</span>
-          </div>
-          <span className="font-mono text-right whitespace-nowrap">Rs.{item.price.toFixed(2)}</span>
-        </div>
-        {!isClickToAdd && (
-          <div className="flex justify-end mt-2">
-            <Button size="sm" variant="secondary" onClick={(e) => { e.stopPropagation(); addToOrder(item); }}>Add to Order</Button>
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  )};
+          {!isClickToAdd && (
+            <div className="flex justify-end mt-2">
+              <Button size="sm" variant="secondary" onClick={(e) => { e.stopPropagation(); addToOrder(item); }}>Add to Order</Button>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    )
+  };
 
   const CategoryColorPicker = ({ categoryName }: { categoryName: string }) => (
     <Popover>
@@ -312,10 +313,12 @@ export default function PosSystem() {
       <Accordion type="multiple" value={activeAccordionItems} onValueChange={setActiveAccordionItems} className="w-full">
         {filteredMenu.map((category) => (
           <AccordionItem key={category.category} value={category.category} className={cn(categoryColors[category.category])}>
-            <AccordionTrigger className="text-xl font-bold hover:no-underline flex items-center gap-2 p-2">
-              <div className="flex-grow">{category.category}</div>
+            <div className="flex items-center p-2">
+              <AccordionTrigger className="text-xl font-bold hover:no-underline flex-grow">
+                {category.category}
+              </AccordionTrigger>
               <CategoryColorPicker categoryName={category.category} />
-            </AccordionTrigger>
+            </div>
             <AccordionContent>
               <div className="space-y-4 pt-2">
                 {category.subCategories.map((subCategory) => (
