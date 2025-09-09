@@ -29,24 +29,23 @@ const vegColor = 'bg-green-100 dark:bg-green-900/30';
 const nonVegColor = 'bg-rose-100 dark:bg-rose-900/30';
 
 const colorPalette = [
-    'bg-red-200 dark:bg-red-900/50',
-    'bg-orange-200 dark:bg-orange-900/50',
-    'bg-amber-200 dark:bg-amber-900/50',
-    'bg-yellow-200 dark:bg-yellow-900/50',
-    'bg-lime-200 dark:bg-lime-900/50',
-    'bg-green-200 dark:bg-green-900/50',
-    'bg-emerald-200 dark:bg-emerald-900/50',
-    'bg-teal-200 dark:bg-teal-900/50',
-    'bg-cyan-200 dark:bg-cyan-900/50',
-    'bg-sky-200 dark:bg-sky-900/50',
-    'bg-blue-200 dark:bg-blue-900/50',
-    'bg-indigo-200 dark:bg-indigo-900/50',
-    'bg-violet-200 dark:bg-violet-900/50',
-    'bg-purple-200 dark:bg-purple-900/50',
-    'bg-fuchsia-200 dark:bg-fuchsia-900/50',
-    'bg-pink-200 dark:bg-pink-900/50',
+    'bg-red-200 dark:bg-red-800/70',
+    'bg-orange-200 dark:bg-orange-800/70',
+    'bg-amber-200 dark:bg-amber-800/70',
+    'bg-yellow-200 dark:bg-yellow-800/70',
+    'bg-lime-200 dark:bg-lime-800/70',
+    'bg-green-200 dark:bg-green-800/70',
+    'bg-emerald-200 dark:bg-emerald-800/70',
+    'bg-teal-200 dark:bg-teal-800/70',
+    'bg-cyan-200 dark:bg-cyan-800/70',
+    'bg-sky-200 dark:bg-sky-800/70',
+    'bg-blue-200 dark:bg-blue-800/70',
+    'bg-indigo-200 dark:bg-indigo-800/70',
+    'bg-violet-200 dark:bg-violet-800/70',
+    'bg-purple-200 dark:bg-purple-800/70',
+    'bg-fuchsia-200 dark:bg-fuchsia-800/70',
+    'bg-pink-200 dark:bg-pink-800/70',
 ];
-
 
 type ViewMode = 'accordion' | 'grid' | 'list';
 
@@ -349,20 +348,12 @@ export default function PosSystem({ tables, addOrder }: PosSystemProps) {
           <div className="flex justify-center">
             <TabsList className="mb-4">
               {filteredMenu.map(category => (
-                <div
-                  key={category.category}
-                  className={cn(
-                    "p-1 rounded-md flex items-center justify-center relative data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm",
-                    categoryColors[category.category]
-                  )}
-                >
-                  <TabsTrigger value={category.category} className="bg-transparent shadow-none p-2 flex-1 justify-center">
-                    <span className="text-black">{category.category}</span>
-                  </TabsTrigger>
-                  <div className="ml-auto">
+                <TabsTrigger key={category.category} value={category.category} className={cn("relative", categoryColors[category.category])}>
+                    <span className={cn(categoryColors[category.category] && 'text-black')}>{category.category}</span>
+                    <div className="ml-2">
                       <CategoryColorPicker categoryName={category.category} />
-                  </div>
-                </div>
+                    </div>
+                </TabsTrigger>
               ))}
             </TabsList>
           </div>
@@ -388,12 +379,15 @@ export default function PosSystem({ tables, addOrder }: PosSystemProps) {
       <Accordion type="multiple" value={activeAccordionItems} onValueChange={setActiveAccordionItems} className="w-full">
         {filteredMenu.map((category) => (
           <AccordionItem key={category.category} value={category.category} className={cn("border-b-0 rounded-lg mb-2 overflow-hidden", categoryColors[category.category])}>
-            <AccordionTrigger className="text-xl font-bold hover:no-underline flex-1 p-4 text-black justify-center relative">
-                <div className="absolute left-4 top-1/2 -translate-y-1/2">
+            <div className="flex items-center justify-center relative p-4">
+                <span className="text-xl font-bold text-center flex-grow text-black">{category.category}</span>
+                <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                   <div className='flex items-center gap-2'>
                     <CategoryColorPicker categoryName={category.category} />
+                    <AccordionTrigger className="p-0 hover:no-underline" />
+                   </div>
                 </div>
-                <span>{category.category}</span>
-            </AccordionTrigger>
+            </div>
             <AccordionContent>
               <div className="space-y-4 pt-2 p-2">
                 {category.subCategories.map((subCategory) => (
@@ -462,7 +456,7 @@ export default function PosSystem({ tables, addOrder }: PosSystemProps) {
               </Button>
                {viewMode === 'accordion' && (
                 <Button variant="outline" size="sm" onClick={toggleAccordion}>
-                  {allItemsOpen ? <ChevronsDownUp className="mr-2 h-4 w-4" /> : <ChevronsUpDown className="mr-2 h-4 w-4" />}
+                  <ChevronsUpDown className="mr-2 h-4 w-4" />
                   {allItemsOpen ? 'Collapse All' : 'Expand All'}
                 </Button>
               )}
