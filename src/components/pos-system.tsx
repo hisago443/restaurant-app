@@ -211,7 +211,6 @@ export default function PosSystem({ tables, addOrder }: PosSystemProps) {
     setIsPaymentDialogOpen(false);
     toast({ title: "Payment Successful", description: `Payment of Rs.${total.toFixed(2)} confirmed.` });
     
-    // Automatically send receipt to admin email
     const adminEmailInput: SendEmailReceiptInput = {
       customerEmail: 'upandabove.bir@gmail.com',
       receiptContent: receiptPreview,
@@ -395,13 +394,15 @@ export default function PosSystem({ tables, addOrder }: PosSystemProps) {
       <Accordion type="multiple" value={activeAccordionItems} onValueChange={setActiveAccordionItems} className="w-full">
         {filteredMenu.map((category) => (
           <AccordionItem key={category.category} value={category.category} className={cn("border-b-0 rounded-lg mb-2 overflow-hidden", categoryColors[category.category])}>
-              <AccordionTrigger className="flex flex-1 items-center transition-all p-4 hover:no-underline text-xl font-bold text-black relative">
-                <span className="text-center flex-grow">{category.category}</span>
-                <div className='flex items-center gap-2 absolute right-4 top-1/2 -translate-y-1/2'>
+            <div className="flex items-center justify-between p-4 hover:bg-muted/50 rounded-t-lg">
+                <span className="text-xl font-bold text-black text-center flex-grow">{category.category}</span>
+                <div className='flex items-center gap-2'>
                   <CategoryColorPicker categoryName={category.category} />
-                  <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200" />
+                   <AccordionTrigger>
+                        <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200" />
+                    </AccordionTrigger>
                 </div>
-            </AccordionTrigger>
+            </div>
             <AccordionContent className="p-2 pt-0">
               <div className="space-y-4 pt-2">
                 {category.subCategories.map((subCategory) => (
@@ -612,5 +613,3 @@ export default function PosSystem({ tables, addOrder }: PosSystemProps) {
     </div>
   );
 }
-
-    
