@@ -285,14 +285,17 @@ export default function PosSystem() {
         <Tabs defaultValue={filteredMenu[0]?.category} className="w-full">
           <TabsList className="mb-4">
             {filteredMenu.map(category => (
-              <div key={category.category} className={cn(
-                  "p-1 rounded-md data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm",
+              <div
+                key={category.category}
+                className={cn(
+                  "p-1 rounded-md flex items-center gap-2 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm",
                   categoryColors[category.category]
-                )}>
-                <TabsTrigger value={category.category} className="bg-transparent shadow-none p-2 flex items-center gap-2">
+                )}
+              >
+                <TabsTrigger value={category.category} className="bg-transparent shadow-none p-2">
                   {category.category}
-                  <CategoryColorPicker categoryName={category.category} />
                 </TabsTrigger>
+                <CategoryColorPicker categoryName={category.category} />
               </div>
             ))}
           </TabsList>
@@ -318,7 +321,7 @@ export default function PosSystem() {
       <Accordion type="multiple" value={activeAccordionItems} onValueChange={setActiveAccordionItems} className="w-full">
         {filteredMenu.map((category) => (
           <AccordionItem key={category.category} value={category.category} className={cn(categoryColors[category.category])}>
-            <div className="flex items-center justify-between p-2">
+            <div className="flex items-center justify-center p-2">
               <AccordionTrigger className="text-xl font-bold hover:no-underline flex-grow justify-center">
                 {category.category}
               </AccordionTrigger>
@@ -359,17 +362,17 @@ export default function PosSystem() {
             </div>
             <div className="flex items-center gap-4">
               <RadioGroup value={viewMode} onValueChange={(v) => setViewMode(v as ViewMode)} className="flex items-center">
-                  <Label htmlFor="accordion-view" className={cn("p-1.5 rounded-md cursor-pointer transition-colors", { 'bg-primary text-primary-foreground': viewMode === 'accordion', 'hover:bg-accent': viewMode !== 'accordion' })}>
+                  <Label htmlFor="accordion-view" className={cn("p-1.5 rounded-md cursor-pointer transition-colors", viewMode === 'accordion' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent' )}>
                     <List className="h-5 w-5 box-content" />
                   </Label>
                   <RadioGroupItem value="accordion" id="accordion-view" className="sr-only" />
 
-                  <Label htmlFor="grid-view" className={cn("p-1.5 rounded-md cursor-pointer transition-colors", { 'bg-primary text-primary-foreground': viewMode === 'grid', 'hover:bg-accent': viewMode !== 'grid' })}>
+                  <Label htmlFor="grid-view" className={cn("p-1.5 rounded-md cursor-pointer transition-colors", viewMode === 'grid' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent')}>
                     <LayoutGrid className="h-5 w-5 box-content" />
                   </Label>
                   <RadioGroupItem value="grid" id="grid-view" className="sr-only" />
 
-                  <Label htmlFor="list-view" className={cn("p-1.5 rounded-md cursor-pointer transition-colors", { 'bg-primary text-primary-foreground': viewMode === 'list', 'hover:bg-accent': viewMode !== 'list' })}>
+                  <Label htmlFor="list-view" className={cn("p-1.5 rounded-md cursor-pointer transition-colors", viewMode === 'list' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent' )}>
                     <Rows className="h-5 w-5 box-content" />
                   </Label>
                   <RadioGroupItem value="list" id="list-view" className="sr-only" />
