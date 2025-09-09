@@ -155,6 +155,15 @@ export default function PosSystem() {
   };
 
   const handleItemClick = (item: MenuItem) => {
+    if (isClickToAdd) {
+      addToOrder(item, 1);
+    } else {
+      setSelectedItem(item);
+      setIsAddItemDialogOpen(true);
+    }
+  };
+
+  const handleAddButtonClick = (item: MenuItem) => {
     setSelectedItem(item);
     setIsAddItemDialogOpen(true);
   };
@@ -208,7 +217,7 @@ export default function PosSystem() {
           finalColor,
           isColorApplied && "border-black shadow-lg hover:shadow-xl"
         )}
-        onClick={() => isClickToAdd && handleItemClick(item)}
+        onClick={() => handleItemClick(item)}
       >
         <Popover>
           <PopoverTrigger asChild>
@@ -244,7 +253,7 @@ export default function PosSystem() {
           </div>
           {!isClickToAdd && (
             <div className="flex justify-end mt-2">
-              <Button size="sm" variant="secondary" onClick={(e) => { e.stopPropagation(); handleItemClick(item); }}>Add to Order</Button>
+              <Button size="sm" variant="secondary" onClick={(e) => { e.stopPropagation(); handleAddButtonClick(item); }}>Add to Order</Button>
             </div>
           )}
         </CardContent>
@@ -354,11 +363,10 @@ export default function PosSystem() {
         {filteredMenu.map((category) => (
           <AccordionItem key={category.category} value={category.category} className={cn("border-b-0", categoryColors[category.category])}>
             <div className="flex items-center w-full p-2 border-b">
-               <div className="flex-1" />
                 <AccordionTrigger className={cn("text-xl font-bold hover:no-underline p-0 flex-grow justify-center", categoryColors[category.category] ? "text-black" : "")}>
-                    <span className="text-center">{category.category}</span>
+                    <span className="text-center flex-1">{category.category}</span>
                 </AccordionTrigger>
-               <div className="flex-1 flex justify-end">
+               <div className="flex-none">
                  <CategoryColorPicker categoryName={category.category} />
                </div>
             </div>
