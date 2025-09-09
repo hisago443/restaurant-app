@@ -370,26 +370,30 @@ export default function PosSystem({ tables, addOrder }: PosSystemProps) {
     return (
       <Accordion type="multiple" value={activeAccordionItems} onValueChange={setActiveAccordionItems} className="w-full">
         {filteredMenu.map((category) => (
-          <AccordionItem key={category.category} value={category.category} className={cn("border-b-0 rounded-lg mb-2 overflow-hidden", categoryColors[category.category])}>
-            <AccordionTrigger className="flex flex-1 items-center transition-all p-4 hover:no-underline text-xl font-bold text-black justify-center relative">
-                <span className="text-center flex-grow">{category.category}</span>
-                <div className='flex items-center gap-2 absolute right-4 top-1/2 -translate-y-1/2'>
-                  <CategoryColorPicker categoryName={category.category} />
-                  <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200" />
-                </div>
-            </AccordionTrigger>
-            <AccordionContent className="p-2 pt-0">
-              <div className="space-y-4 pt-2">
-                {category.subCategories.map((subCategory) => (
-                  <div key={subCategory.name}>
-                    <h3 className="text-md font-semibold mb-2 text-muted-foreground pl-2">{subCategory.name}</h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-                      {subCategory.items.map((item) => renderMenuItem(item, subCategory.name, category.category))}
-                    </div>
+          <AccordionItem key={category.category} value={category.category}>
+            <div className={cn("border-b-0 rounded-lg mb-2 overflow-hidden", categoryColors[category.category])}>
+              <div className="flex items-center p-4">
+                  <AccordionTrigger className="flex-1 text-xl font-bold text-black justify-center relative hover:no-underline p-0">
+                    <span className="text-center">{category.category}</span>
+                  </AccordionTrigger>
+                  <div className='flex items-center gap-2 pl-4'>
+                    <CategoryColorPicker categoryName={category.category} />
+                    <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200" />
                   </div>
-                ))}
               </div>
-            </AccordionContent>
+              <AccordionContent className="p-2 pt-0">
+                <div className="space-y-4 pt-2">
+                  {category.subCategories.map((subCategory) => (
+                    <div key={subCategory.name}>
+                      <h3 className="text-md font-semibold mb-2 text-muted-foreground pl-2">{subCategory.name}</h3>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                        {subCategory.items.map((item) => renderMenuItem(item, subCategory.name, category.category))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </AccordionContent>
+            </div>
           </AccordionItem>
         ))}
       </Accordion>
@@ -588,3 +592,5 @@ export default function PosSystem({ tables, addOrder }: PosSystemProps) {
     </div>
   );
 }
+
+    
