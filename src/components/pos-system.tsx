@@ -262,7 +262,7 @@ export default function PosSystem() {
           {filteredMenu.map((category) => (
             <div key={category.category}>
               <div className={cn("sticky top-0 bg-background py-2 z-10 flex items-center justify-between gap-2 p-2 rounded-md", categoryColors[category.category])}>
-                <div className="flex-1"></div>
+                 <div className="flex-1"></div>
                 <h2 className="text-xl font-bold text-center flex-1">
                   {category.category}
                 </h2>
@@ -290,8 +290,8 @@ export default function PosSystem() {
       return (
         <Tabs defaultValue={filteredMenu[0]?.category} className="w-full">
           <TabsList className="mb-4">
-            {filteredMenu.map(category => (
-              <div
+             {filteredMenu.map(category => (
+               <div
                 key={category.category}
                 className={cn(
                   "p-1 rounded-md flex items-center gap-2 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm",
@@ -327,11 +327,12 @@ export default function PosSystem() {
       <Accordion type="multiple" value={activeAccordionItems} onValueChange={setActiveAccordionItems} className="w-full">
         {filteredMenu.map((category) => (
           <AccordionItem key={category.category} value={category.category} className={cn(categoryColors[category.category])}>
-            <div className="flex items-center p-2 relative">
-              <AccordionTrigger className="text-xl font-bold hover:no-underline justify-center flex-grow">
+            <div className="flex items-center p-2">
+              <div className="flex-1"></div>
+              <AccordionTrigger className="text-xl font-bold hover:no-underline justify-center flex-grow p-0">
                   {category.category}
               </AccordionTrigger>
-              <div className="absolute right-2 top-1/2 -translate-y-1/2">
+              <div className="flex-1 flex justify-end">
                 <CategoryColorPicker categoryName={category.category} />
               </div>
             </div>
