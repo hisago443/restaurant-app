@@ -178,6 +178,7 @@ export default function PosSystem() {
     const defaultColor = subCategoryName.toLowerCase().includes('veg') ? vegColor : nonVegColor;
     const categoryColor = categoryColors[categoryName];
     const itemColor = menuItemColors[item.name];
+    
     const finalColor = itemColor || categoryColor || defaultColor;
 
     return (
@@ -266,11 +267,11 @@ export default function PosSystem() {
           {filteredMenu.map((category) => (
             <div key={category.category}>
               <div className={cn("sticky top-0 bg-background py-2 z-10 flex items-center justify-between gap-2 p-2 rounded-md", categoryColors[category.category])}>
-                <div className="w-6" />
-                <h2 className="text-xl font-bold text-center flex-1">
+                <div className="flex-1" />
+                <h2 className="text-xl font-bold text-center">
                   {category.category}
                 </h2>
-                <div className="flex justify-end w-6">
+                <div className="flex-1 flex justify-end">
                   <CategoryColorPicker categoryName={category.category} />
                 </div>
               </div>
@@ -333,15 +334,12 @@ export default function PosSystem() {
       <Accordion type="multiple" value={activeAccordionItems} onValueChange={setActiveAccordionItems} className="w-full">
         {filteredMenu.map((category) => (
           <AccordionItem key={category.category} value={category.category} className={cn("border-b-0", categoryColors[category.category])}>
-             <div className="flex items-center p-2 border-b">
-                <div className="w-6" />
-                <AccordionTrigger className="text-xl font-bold hover:no-underline flex-1 justify-center p-0">
-                    {category.category}
-                </AccordionTrigger>
-                <div className="flex justify-end w-6">
-                  <CategoryColorPicker categoryName={category.category} />
-                </div>
+            <AccordionTrigger className="text-xl font-bold hover:no-underline p-2 border-b">
+              <div className="flex-1 text-center">{category.category}</div>
+              <div className="px-2">
+                <CategoryColorPicker categoryName={category.category} />
               </div>
+            </AccordionTrigger>
             <AccordionContent>
               <div className="space-y-4 pt-2 p-2">
                 {category.subCategories.map((subCategory) => (
@@ -517,3 +515,5 @@ export default function PosSystem() {
     </div>
   );
 }
+
+    
