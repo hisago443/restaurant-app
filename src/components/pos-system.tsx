@@ -9,7 +9,7 @@ import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -23,8 +23,8 @@ import menuData from '@/data/menu.json';
 import { generateReceipt, type GenerateReceiptInput } from '@/ai/flows/dynamic-receipt-discount-reasoning';
 import { PaymentDialog } from './payment-dialog';
 
-const vegColor = 'bg-green-100 dark:bg-green-900/30 border-green-200 dark:border-green-800';
-const nonVegColor = 'bg-rose-100 dark:bg-rose-900/30 border-rose-200 dark:border-rose-800';
+const vegColor = 'bg-green-100 dark:bg-green-900/30';
+const nonVegColor = 'bg-rose-100 dark:bg-rose-900/30';
 
 const colorPalette = [
   'bg-slate-100 dark:bg-slate-900/30',
@@ -65,6 +65,28 @@ export default function PosSystem() {
   const [viewMode, setViewMode] = useState<ViewMode>('accordion');
   const [menuItemColors, setMenuItemColors] = useState<Record<string, string>>({});
   const [categoryColors, setCategoryColors] = useState<Record<string, string>>({});
+  const [currentDateTime, setCurrentDateTime] = useState<Date | null>(null);
+
+  useEffect(() => {
+    setCurrentDateTime(new Date());
+    const timer = setInterval(() => {
+      setCurrentDateTime(new Date());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const formattedDate = currentDateTime
+    ? currentDateTime.toLocaleDateString(undefined, {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      })
+    : 'Loading...';
+
+  const formattedTime = currentDateTime
+    ? currentDateTime.toLocaleTimeString()
+    : '';
 
   const typedMenuData: MenuCategory[] = menuData;
 
@@ -160,7 +182,7 @@ export default function PosSystem() {
   };
 
   const removeFromOrder = (name: string) => {
-    setOrderItems(orderItems.filter(item => item.name !== name));
+    setOrderItems(orderItems.filter(item => item.name !== item.name));
   };
   
   const clearOrder = () => {
@@ -278,8 +300,8 @@ export default function PosSystem() {
           {filteredMenu.map((category) => (
              <div key={category.category}>
               <div className={cn("sticky top-0 bg-background py-2 z-10 flex items-center justify-between gap-2 p-2 rounded-md", categoryColors[category.category])}>
-                <div className="flex-1" />
-                <h2 className={cn("text-xl font-bold text-center", categoryColors[category.category] ? "text-black" : "")}>
+                 <div className="flex-1" />
+                <h2 className={cn("text-xl font-bold text-center flex-grow", categoryColors[category.category] ? "text-black" : "")}>
                   {category.category}
                 </h2>
                 <div className="flex-1 flex justify-end">
@@ -347,7 +369,7 @@ export default function PosSystem() {
           <AccordionItem key={category.category} value={category.category} className={cn("border-b-0", categoryColors[category.category])}>
             <div className="flex items-center w-full p-2 border-b">
                <div className="flex-1" />
-                <AccordionTrigger className="text-xl font-bold hover:no-underline p-0 flex-grow text-center">
+                <AccordionTrigger className="text-xl font-bold hover:no-underline p-0 flex-grow text-center justify-center">
                     <span className={cn("text-center", categoryColors[category.category] ? "text-black" : "")}>{category.category}</span>
                 </AccordionTrigger>
                <div className="flex-1 flex justify-end">
@@ -378,14 +400,16 @@ export default function PosSystem() {
       <Card className="flex-[3] flex flex-col">
         <CardHeader>
           <div className="flex items-center justify-between gap-4 flex-wrap">
-            <div className="relative flex-grow">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-              <Input
-                placeholder="Search menu items..."
-                className="pl-10"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
+             <div className="flex-grow">
+              <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                  <Input
+                    placeholder="Search menu items..."
+                    className="pl-10"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+              </div>
             </div>
             <div className="flex items-center gap-4">
                <RadioGroup value={viewMode} onValueChange={(v) => setViewMode(v as ViewMode)} className="flex items-center">
@@ -424,6 +448,9 @@ export default function PosSystem() {
               </div>
             </div>
           </div>
+            <div className="text-sm text-muted-foreground pt-2 text-center font-semibold">
+              {formattedDate} | {formattedTime}
+            </div>
         </CardHeader>
         <ScrollArea className="flex-grow px-4">
           {renderMenuContent()}
@@ -532,3 +559,5 @@ export default function PosSystem() {
     </div>
   );
 }
+
+    
