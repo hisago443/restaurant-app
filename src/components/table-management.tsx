@@ -5,7 +5,7 @@ import * as React from 'react';
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose, DialogDescription as DialogDescriptionComponent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose, DialogDescription } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger, AlertDialogFooter, AlertDialogDescription } from "@/components/ui/alert-dialog";
 import type { Table, TableStatus, Order, Bill } from '@/lib/types';
 import { cn } from '@/lib/utils';
@@ -175,31 +175,32 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
 
 
   const renderActions = (table: Table) => {
+    const orderForTable = orders.find(o => o.tableId === table.id && o.status !== 'Completed');
     switch (table.status) {
       case 'Available':
         return (
           <>
-            <Button onClick={() => localUpdateTableStatus(table.id, 'Occupied')}><Users className="mr-2 h-4 w-4" />Seat Guests</Button>
-            <Button variant="outline" onClick={() => localUpdateTableStatus(table.id, 'Reserved')}><Bookmark className="mr-2 h-4 w-4" />Reserve Table</Button>
+            <Button onClick={() => { onEditOrder({ id: '', items: [], status: 'Pending', tableId: table.id }); setSelectedTable(null); }}><Users className="mr-2 h-4 w-4" />Create Order</Button>
+            <Button variant="outline" onClick={() => { localUpdateTableStatus(table.id, 'Reserved'); setSelectedTable(null); }}><Bookmark className="mr-2 h-4 w-4" />Reserve Table</Button>
           </>
         );
       case 'Occupied':
-        const order = orders.find(o => o.tableId === table.id && o.status !== 'Completed');
         return (
           <>
-            <Button onClick={() => order && onEditOrder(order)} disabled={!order}><Edit className="mr-2 h-4 w-4" />Modify Order</Button>
-            <Button variant="destructive" onClick={() => localUpdateTableStatus(table.id, 'Cleaning')}><SparklesIcon className="mr-2 h-4 w-4" />Customer Left</Button>
+            <Button onClick={() => { orderForTable && onEditOrder(orderForTable); setSelectedTable(null);}} disabled={!orderForTable}><Edit className="mr-2 h-4 w-4" />Update Order</Button>
+            <Button variant="outline" onClick={() => { handleOpenPrintDialog(new MouseEvent('click') as any, table); setSelectedTable(null); }} disabled={!orderForTable}><Printer className="mr-2 h-4 w-4" />Print Bill</Button>
+            <Button variant="destructive" onClick={() => { localUpdateTableStatus(table.id, 'Cleaning'); setSelectedTable(null); }}><SparklesIcon className="mr-2 h-4 w-4" />Mark as Cleaning</Button>
           </>
         );
       case 'Reserved':
         return (
           <>
-            <Button onClick={() => localUpdateTableStatus(table.id, 'Occupied')}><UserCheck className="mr-2 h-4 w-4" />Guest Arrived</Button>
-            <Button variant="outline" onClick={() => localUpdateTableStatus(table.id, 'Available')}><BookmarkX className="mr-2 h-4 w-4" />Cancel Reservation</Button>
+            <Button onClick={() => { localUpdateTableStatus(table.id, 'Occupied'); setSelectedTable(null); }}><UserCheck className="mr-2 h-4 w-4" />Guest Arrived</Button>
+            <Button variant="outline" onClick={() => { localUpdateTableStatus(table.id, 'Available'); setSelectedTable(null); }}><BookmarkX className="mr-2 h-4 w-4" />Cancel Reservation</Button>
           </>
         );
       case 'Cleaning':
-        return <Button onClick={() => localUpdateTableStatus(table.id, 'Available')}><CheckCircle2 className="mr-2 h-4 w-4" />Mark as Available</Button>;
+        return <Button onClick={() => { localUpdateTableStatus(table.id, 'Available'); setSelectedTable(null); }}><CheckCircle2 className="mr-2 h-4 w-4" />Mark as Available</Button>;
       default:
         return null;
     }
@@ -326,9 +327,9 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
             <>
               <DialogHeader>
                 <DialogTitle>Table {selectedTable.id} - {selectedTable.status}</DialogTitle>
-                 <DialogDescriptionComponent>
+                 <DialogDescription>
                   Daily Turnover: {occupancyCount[selectedTable.id] || 0}
-                </DialogDescriptionComponent>
+                </DialogDescription>
               </DialogHeader>
               <div className="py-4">
                 <p className="font-semibold mb-2">Select an action for this table:</p>
@@ -350,9 +351,9 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
         <DialogContent>
             <DialogHeader>
               <DialogTitle>Manage Table Layout</DialogTitle>
-              <AlertDialogDescription>
+              <DialogDescription>
                 Add or remove tables to match your restaurant's layout.
-              </AlertDialogDescription>
+              </DialogDescription>
             </DialogHeader>
             <div className="grid grid-cols-2 gap-4 py-4">
               <Button variant="outline" onClick={addTable}>
@@ -393,7 +394,7 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
                         <>
                             <DialogHeader>
                                 <DialogTitle>Error</DialogTitle>
-                                <DialogDescriptionComponent>No active order found for Table {tableForPrint.id}.</DialogDescriptionComponent>
+                                <DialogDescription>No active order found for Table {tableForPrint.id}.</DialogDescription>
                             </DialogHeader>
                             <DialogFooter>
                                 <Button onClick={() => setIsPrintDialogOpen(false)}>Close</Button>

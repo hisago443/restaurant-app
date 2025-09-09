@@ -117,29 +117,30 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
   const handleSelectTable = (tableId: number) => {
     const table = tables.find(t => t.id === tableId);
     if (!table) return;
-
+  
+    // Always set the selected table first
+    setSelectedTableId(tableId);
+  
     if (table.status === 'Available') {
       clearOrder(false, true); // Clear everything for a new order
-      setSelectedTableId(tableId);
       updateTableStatus([tableId], 'Occupied');
       toast({ title: `Table ${tableId} is now Occupied`, description: 'Add items to the order.' });
     } else if (table.status === 'Occupied') {
-        const existingOrder = orders.find(o => o.tableId === tableId && o.status !== 'Completed');
-        if (existingOrder) {
-            setActiveOrder(existingOrder);
-            setIsTablePopoverOpen(false); // Close popover after selection
-        } else {
-             toast({
-                variant: 'destructive',
-                title: 'Order Not Found',
-                description: `Could not find an active order for Table ${tableId}.`,
-            });
-        }
+      const existingOrder = orders.find(o => o.tableId === tableId && o.status !== 'Completed');
+      if (existingOrder) {
+        setActiveOrder(existingOrder);
+      } else {
+        // If no KOT exists, start a new order for this occupied table
+        clearOrder(false, true);
+        toast({
+          title: `New KOT for Table ${tableId}`,
+          description: `Table is occupied. You can start a new order.`,
+        });
+      }
     }
-    // For other statuses, just select the table to show actions
-    else {
-        setSelectedTableId(tableId);
-    }
+    // For other statuses, we just show the actions in the popover.
+    // The popover will close automatically on selection if needed.
+    // setIsTablePopoverOpen(false); 
   };
   
   const handleDoubleClickTable = (table: Table) => {
@@ -618,40 +619,37 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
         return (
           <Button onClick={() => {
             handleSelectTable(selectedTable.id)
+            setIsTablePopoverOpen(false);
           }}>
             <Users className="mr-2 h-4 w-4" />Create New Order
           </Button>
         );
       case 'Occupied':
         return (
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Button onClick={() => {
                 if (orderForTable) {
                     setActiveOrder(orderForTable);
                     setIsTablePopoverOpen(false);
                 } else {
-                    toast({
-                        variant: 'destructive',
-                        title: 'Order not found',
-                        description: 'No active order for this table.'
-                    });
+                    handleSelectTable(selectedTable.id)
                 }
             }}>
               <Edit className="mr-2 h-4 w-4" />Update Order
             </Button>
-            <Button variant="outline" onClick={handlePrintProvisionalBill} disabled={!orderForTable}><Printer className="mr-2 h-4 w-4" /> Print Provisional Bill</Button>
-            <Button variant="destructive" onClick={() => updateTableStatus([selectedTable.id], 'Cleaning')}><SparklesIcon className="mr-2 h-4 w-4" />Mark as Cleaning</Button>
+            <Button variant="outline" onClick={() => { handlePrintProvisionalBill(); setIsTablePopoverOpen(false); }} disabled={!orderForTable}><Printer className="mr-2 h-4 w-4" /> Print Bill</Button>
+            <Button variant="destructive" onClick={() => { updateTableStatus([selectedTable.id], 'Cleaning'); setIsTablePopoverOpen(false); }}><SparklesIcon className="mr-2 h-4 w-4" />Mark as Cleaning</Button>
           </div>
         );
       case 'Reserved':
         return (
           <div className="flex gap-2">
-            <Button onClick={() => updateTableStatus([selectedTable.id], 'Occupied')}><UserCheck className="mr-2 h-4 w-4" /> Seat Guests</Button>
-            <Button variant="outline" onClick={() => updateTableStatus([selectedTable.id], 'Available')}><BookmarkX className="mr-2 h-4 w-4" /> Cancel Reservation</Button>
+            <Button onClick={() => { updateTableStatus([selectedTable.id], 'Occupied'); setIsTablePopoverOpen(false); }}><UserCheck className="mr-2 h-4 w-4" /> Seat Guests</Button>
+            <Button variant="outline" onClick={() => { updateTableStatus([selectedTable.id], 'Available'); setIsTablePopoverOpen(false); }}><BookmarkX className="mr-2 h-4 w-4" /> Cancel Reservation</Button>
           </div>
         );
       case 'Cleaning':
-        return <Button onClick={() => updateTableStatus([selectedTable.id], 'Available')}><CheckCircle2 className="mr-2 h-4 w-4" />Mark as Available</Button>;
+        return <Button onClick={() => { updateTableStatus([selectedTable.id], 'Available'); setIsTablePopoverOpen(false); }}><CheckCircle2 className="mr-2 h-4 w-4" />Mark as Available</Button>;
       default:
         return null;
     }
