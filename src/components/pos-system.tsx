@@ -90,15 +90,21 @@ export default function PosSystem({ tables, addOrder, addBill, updateTableStatus
     localStorage.setItem('isClickToAdd', JSON.stringify(isClickToAdd));
   }, [isClickToAdd]);
 
-  const handleSelectTable = (tableId: string | null) => {
-    setSelectedTable(tableId);
-    if (tableId) {
-      const table = tables.find(t => t.id.toString() === tableId);
-      if (table && table.status === 'Available') {
-        updateTableStatus([parseInt(tableId, 10)], 'Occupied');
-      }
+  const handleSelectTable = (tableId: string) => {
+    const table = tables.find(t => t.id.toString() === tableId);
+    if (!table) return;
+
+    if (table.status === 'Available') {
+      setSelectedTable(tableId);
+      updateTableStatus([table.id], 'Occupied');
+      setIsTablePopoverOpen(false);
+    } else if (table.status === 'Cleaning') {
+      updateTableStatus([table.id], 'Available');
+      // Keep the popover open so the user can see the status change and select the table if they wish.
+    } else {
+        // For 'Occupied' or 'Reserved', do nothing.
+      setIsTablePopoverOpen(false);
     }
-    setIsTablePopoverOpen(false);
   };
 
   const setItemColor = (itemName: string, colorClass: string) => {
@@ -567,6 +573,7 @@ export default function PosSystem({ tables, addOrder, addBill, updateTableStatus
                 <div className="grid grid-cols-5 gap-2">
                     {tables.map(table => {
                         const Icon = statusIcons[table.status];
+                        const isClickable = table.status === 'Available' || table.status === 'Cleaning';
                         return (
                             <Button
                                 key={table.id}
@@ -575,11 +582,11 @@ export default function PosSystem({ tables, addOrder, addBill, updateTableStatus
                                     "flex flex-col h-20 w-20 justify-center items-center gap-1",
                                     statusColors[table.status],
                                     selectedTable === table.id.toString() && 'ring-2 ring-offset-2 ring-ring',
-                                    table.status !== 'Available' && 'opacity-50 cursor-not-allowed',
+                                    !isClickable && 'opacity-50 cursor-not-allowed',
                                     table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black'
                                 )}
                                 onClick={() => handleSelectTable(table.id.toString())}
-                                disabled={table.status !== 'Available'}
+                                disabled={!isClickable}
                             >
                                 <span className="text-2xl font-bold">{table.id}</span>
                                 <div className="flex items-center gap-1 text-xs">
