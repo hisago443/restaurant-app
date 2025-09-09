@@ -194,11 +194,18 @@ export default function PosSystem({ tables, addOrder, addBill, updateTableStatus
     setOrderItems(orderItems.filter(item => item.name !== name));
   };
   
-  const clearOrder = () => {
+  const clearOrder = (delayTableClear = false) => {
     setOrderItems([]);
     setDiscount(0);
-    setSelectedTable(null);
-    toast({ title: "New Bill", description: "Current order cleared." });
+    if (delayTableClear) {
+      setTimeout(() => {
+        setSelectedTable(null);
+        toast({ title: "New Bill Ready", description: "Select a table to start a new order." });
+      }, 2000);
+    } else {
+      setSelectedTable(null);
+      toast({ title: "New Bill", description: "Current order cleared." });
+    }
   };
 
   const handleSendToKitchen = () => {
@@ -276,7 +283,7 @@ export default function PosSystem({ tables, addOrder, addBill, updateTableStatus
       });
     }
 
-    clearOrder();
+    clearOrder(true);
   };
 
 
@@ -627,7 +634,7 @@ export default function PosSystem({ tables, addOrder, addBill, updateTableStatus
                       </AlertDialogHeader>
                       <AlertDialogFooter>
                           <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction onClick={clearOrder}>Continue</AlertDialogAction>
+                          <AlertDialogAction onClick={() => clearOrder()}>Continue</AlertDialogAction>
                       </AlertDialogFooter>
                   </AlertDialogContent>
               </AlertDialog>
