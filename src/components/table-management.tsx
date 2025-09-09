@@ -4,8 +4,8 @@
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose, DialogDescription } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger, AlertDialogFooter } from "@/components/ui/alert-dialog";
 import type { Table, TableStatus } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -68,14 +68,15 @@ export default function TableManagement({ tables, updateTableStatus, addTable, r
       handleBulkUpdate(status);
     } else {
       setFilter(status);
+      setSelectedTables([]);
     }
   };
 
   const handleRemoveLastTable = () => {
     if (tables.length > 0) {
-      const lastTableId = tables.reduce((maxId, table) => Math.max(table.id, maxId), -1);
       removeLastTable();
-      setSelectedTables(selectedTables.filter(id => id !== lastTableId));
+      const lastTable = tables.reduce((prev, current) => (prev.id > current.id) ? prev : current);
+      setSelectedTables(prev => prev.filter(id => id !== lastTable.id));
     }
   };
 
