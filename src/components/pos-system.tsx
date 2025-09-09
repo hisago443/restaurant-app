@@ -266,7 +266,7 @@ export default function PosSystem() {
           {filteredMenu.map((category) => (
             <div key={category.category}>
               <div className={cn("sticky top-0 bg-background py-2 z-10 flex items-center justify-between gap-2 p-2 rounded-md", categoryColors[category.category])}>
-                 <div className="w-6" />
+                <div className="w-6" />
                 <h2 className="text-xl font-bold text-center flex-1">
                   {category.category}
                 </h2>
@@ -298,14 +298,16 @@ export default function PosSystem() {
                <div
                 key={category.category}
                 className={cn(
-                  "p-1 rounded-md flex items-center gap-2 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm",
+                  "p-1 rounded-md flex items-center justify-center relative data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm",
                   categoryColors[category.category]
                 )}
               >
                 <TabsTrigger value={category.category} className="bg-transparent shadow-none p-2 flex-1 justify-center">
                   {category.category}
                 </TabsTrigger>
-                <CategoryColorPicker categoryName={category.category} />
+                <div className="absolute right-1 top-1/2 -translate-y-1/2">
+                    <CategoryColorPicker categoryName={category.category} />
+                </div>
               </div>
             ))}
           </TabsList>
@@ -515,5 +517,3 @@ export default function PosSystem() {
     </div>
   );
 }
-
-    
