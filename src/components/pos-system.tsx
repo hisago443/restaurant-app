@@ -70,7 +70,7 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
   const [searchTerm, setSearchTerm] = useState('');
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
   const [discount, setDiscount] = useState(0);
-  const [isClickToAdd, setIsClickToAdd] = useState(false);
+  const [isClickToAdd, setIsClickToAdd] = useState(true);
   const [receiptPreview, setReceiptPreview] = useState('');
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
   const { toast } = useToast();
