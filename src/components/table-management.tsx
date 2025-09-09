@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose, DialogDescription } from '@/components/ui/dialog';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger, AlertDialogFooter } from "@/components/ui/alert-dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger, AlertDialogFooter, AlertDialogDescription } from "@/components/ui/alert-dialog";
 import type { Table, TableStatus } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -228,9 +228,9 @@ export default function TableManagement({ tables, updateTableStatus, addTable, r
         <DialogContent>
             <DialogHeader>
               <DialogTitle>Manage Table Layout</DialogTitle>
-              <AlertDialogDescription>
+              <DialogDescription>
                 Add or remove tables to match your restaurant's layout.
-              </AlertDialogDescription>
+              </DialogDescription>
             </DialogHeader>
             <div className="grid grid-cols-2 gap-4 py-4">
               <Button variant="outline" onClick={addTable}>
@@ -264,5 +264,3 @@ export default function TableManagement({ tables, updateTableStatus, addTable, r
     </div>
   );
 }
-
-    
