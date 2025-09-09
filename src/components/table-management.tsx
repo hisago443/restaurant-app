@@ -32,6 +32,8 @@ export default function TableManagement({ tables, updateTableStatus, addTable, r
   const [selectedTables, setSelectedTables] = useState<number[]>([]);
   const [isLayoutManagerOpen, setIsLayoutManagerOpen] = useState(false);
   const [filter, setFilter] = useState<TableStatus | 'All'>('All');
+  const [hoveredStatus, setHoveredStatus] = useState<TableStatus | null>(null);
+
 
   const filteredTables = tables.filter(table => filter === 'All' || table.status === filter);
 
@@ -140,13 +142,15 @@ export default function TableManagement({ tables, updateTableStatus, addTable, r
                 onClick={() => handleStatusButtonClick('All')}
                 className={cn('font-bold uppercase', filter === 'All' && 'ring-2 ring-offset-2 ring-ring')}
               >
-                All Tables ({tables.length})
+                ALL TABLES ({tables.length})
               </Button>
               <Separator orientation="vertical" className="h-8" />
               {(Object.keys(statusColors) as TableStatus[]).map(status => (
                   <Button
                     key={status}
                     onClick={() => handleStatusButtonClick(status)}
+                    onMouseEnter={() => setHoveredStatus(status)}
+                    onMouseLeave={() => setHoveredStatus(null)}
                     className={cn(
                       'text-black',
                       statusColors[status],
@@ -165,9 +169,10 @@ export default function TableManagement({ tables, updateTableStatus, addTable, r
               <div
                 key={table.id}
                 className={cn(
-                  'aspect-square rounded-lg flex flex-col items-center justify-center cursor-pointer transition-all duration-300 shadow-lg hover:shadow-2xl hover:scale-105 relative border border-black',
+                  'aspect-square rounded-lg flex flex-col items-center justify-center cursor-pointer transition-all duration-300 shadow-lg hover:shadow-2xl relative border border-black',
                   statusColors[table.status],
-                  selectedTables.includes(table.id) && 'ring-4 ring-offset-2 ring-primary'
+                  selectedTables.includes(table.id) && 'ring-4 ring-offset-2 ring-primary',
+                  hoveredStatus === table.status && 'scale-110 z-10'
                 )}
                 onClick={() => setSelectedTable(table)}
               >
