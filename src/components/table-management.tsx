@@ -254,7 +254,7 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
                 onClick={() => setSelectedTable(table)}
                 onDoubleClick={() => handleDoubleClick(table)}
               >
-                <div className="absolute top-1 right-1 flex flex-col items-end gap-1">
+                <div className="absolute top-1 right-1">
                     {table.status === 'Occupied' && (
                         <Button
                             variant="secondary"
@@ -265,13 +265,13 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
                             <Printer className="h-4 w-4 text-black" />
                         </Button>
                     )}
-                    {(occupancyCount[table.id] > 0) &&
-                        <div className="flex items-center gap-1 bg-black/50 text-white text-xs font-bold p-1 rounded-md">
-                            <Repeat className="h-3 w-3" />
-                            <span>{occupancyCount[table.id]}</span>
-                        </div>
-                    }
                 </div>
+                 {(occupancyCount[table.id] > 0) &&
+                    <div className="absolute bottom-1 left-1 flex items-center gap-1 bg-black/50 text-white text-xs font-bold p-1 rounded-md">
+                        <Repeat className="h-3 w-3" />
+                        <span>{occupancyCount[table.id]}</span>
+                    </div>
+                }
                 <div className="absolute top-1 left-1">
                   <Checkbox 
                     className="bg-white/50 border-gray-500"
