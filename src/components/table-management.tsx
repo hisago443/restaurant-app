@@ -14,7 +14,7 @@ import { PlusCircle, Trash2, LayoutTemplate } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 
 const statusColors: Record<TableStatus, string> = {
-  Available: 'bg-green-400 hover:bg-green-500',
+  Available: 'bg-green-500 hover:bg-green-600',
   Occupied: 'bg-red-400 hover:bg-red-500',
   Reserved: 'bg-blue-400 hover:bg-blue-500',
   Cleaning: 'bg-amber-400 hover:bg-amber-500',
@@ -264,3 +264,5 @@ export default function TableManagement({ tables, updateTableStatus, addTable, r
     </div>
   );
 }
+
+    
