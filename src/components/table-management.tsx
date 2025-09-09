@@ -143,10 +143,14 @@ export default function TableManagement({ tables, updateTableStatus, addTable, r
           <div className="flex items-center gap-2 flex-wrap p-4 border-t border-b">
               <Button variant={filter === 'All' ? 'default' : 'outline'} onClick={() => handleStatusButtonClick('All')}>All Tables ({tables.length})</Button>
               {(Object.keys(statusColors) as TableStatus[]).map(status => (
-                  <Button 
-                    key={status} 
-                    variant={filter === status ? 'default' : 'outline'}
+                  <Button
+                    key={status}
                     onClick={() => handleStatusButtonClick(status)}
+                    className={cn(
+                      filter === status ? statusColors[status] : 'text-current',
+                      'transition-all',
+                      filter !== status && 'bg-transparent border border-input hover:bg-accent'
+                    )}
                   >
                       {status} ({tables.filter(t => t.status === status).length})
                   </Button>
