@@ -67,9 +67,9 @@ export default function TableManagement() {
 
   const handleRemoveLastTable = () => {
     if (tables.length > 0) {
-      const tableToRemove = tables[tables.length - 1];
-      setTables(tables.filter(t => t.id !== tableToRemove.id));
-      setSelectedTables(selectedTables.filter(id => id !== tableToRemove.id));
+      const lastTableId = tables[tables.length - 1].id;
+      setTables(tables.slice(0, -1));
+      setSelectedTables(selectedTables.filter(id => id !== lastTableId));
     }
   };
 
