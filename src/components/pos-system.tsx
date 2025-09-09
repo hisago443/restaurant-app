@@ -121,6 +121,8 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
     if (table.status === 'Available') {
       clearOrder(false, true); // Clear everything for a new order
       setSelectedTableId(tableId);
+      updateTableStatus([tableId], 'Occupied');
+      toast({ title: `Table ${tableId} is now Occupied`, description: 'Add items to the order.' });
     } else if (table.status === 'Occupied') {
         const existingOrder = orders.find(o => o.tableId === tableId && o.status !== 'Completed');
         if (existingOrder) {
@@ -134,9 +136,11 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
         }
     }
     // For other statuses, just select the table to show actions
-    setSelectedTableId(tableId);
+    else {
+        setSelectedTableId(tableId);
+    }
   };
-
+  
   const handleDoubleClickTable = (table: Table) => {
     if (table.status === 'Occupied') {
         updateTableStatus([table.id], 'Cleaning');
@@ -602,15 +606,17 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
   };
 
   const selectedTable = tables.find(t => t.id === selectedTableId);
+  
   const renderTableActions = () => {
     if (!selectedTable) return null;
+
+    const orderForTable = orders.find(o => o.tableId === selectedTable.id && o.status !== 'Completed');
 
     switch (selectedTable.status) {
       case 'Available':
         return (
           <Button onClick={() => {
             handleSelectTable(selectedTable.id)
-            setIsTablePopoverOpen(false);
           }}>
             <Users className="mr-2 h-4 w-4" />Create New Order
           </Button>
@@ -619,12 +625,19 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
         return (
           <div className="flex gap-2">
             <Button onClick={() => {
-              handleSelectTable(selectedTable.id)
-              setIsTablePopoverOpen(false);
+                if (orderForTable) {
+                    setActiveOrder(orderForTable);
+                } else {
+                    toast({
+                        variant: 'destructive',
+                        title: 'Order not found',
+                        description: 'No active order for this table.'
+                    });
+                }
             }}>
               <Edit className="mr-2 h-4 w-4" />Modify Order
             </Button>
-            <Button variant="outline" onClick={handlePrintProvisionalBill}><Printer className="mr-2 h-4 w-4" /> Print Provisional Bill</Button>
+            <Button variant="outline" onClick={handlePrintProvisionalBill} disabled={!orderForTable}><Printer className="mr-2 h-4 w-4" /> Print Provisional Bill</Button>
             <Button variant="destructive" onClick={() => updateTableStatus([selectedTable.id], 'Cleaning')}><SparklesIcon className="mr-2 h-4 w-4" />Mark as Cleaning</Button>
           </div>
         );
