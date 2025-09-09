@@ -14,7 +14,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from '@/hooks/use-toast';
-import { Search, Plus, Minus, X, Save, FilePlus, LayoutGrid, List, Rows, ChevronsUpDown, Palette, Shuffle, ClipboardList, Send, ChevronDown } from 'lucide-react';
+import { Search, Plus, Minus, X, Save, FilePlus, LayoutGrid, List, Rows, ChevronsUpDown, Palette, Shuffle, ClipboardList, Send, ChevronDown, CheckCircle2, Users, Bookmark, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { AddItemDialog } from './add-item-dialog';
@@ -39,6 +39,20 @@ const colorPalette = [
 
 type ViewMode = 'accordion' | 'grid' | 'list';
 
+const statusColors: Record<TableStatus, string> = {
+  Available: 'bg-green-400 hover:bg-green-500',
+  Occupied: 'bg-red-400 hover:bg-red-500',
+  Reserved: 'bg-blue-400 hover:bg-blue-500',
+  Cleaning: 'bg-amber-300 hover:bg-amber-400',
+};
+
+const statusIcons: Record<TableStatus, React.ElementType> = {
+  Available: CheckCircle2,
+  Occupied: Users,
+  Reserved: Bookmark,
+  Cleaning: Sparkles,
+};
+
 interface PosSystemProps {
   tables: Table[];
   addOrder: (order: Omit<Order, 'id' | 'status'>) => void;
@@ -61,6 +75,7 @@ export default function PosSystem({ tables, addOrder, addBill, updateTableStatus
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
   const [isAddItemDialogOpen, setIsAddItemDialogOpen] = useState(false);
   const [selectedTable, setSelectedTable] = useState<string | null>(null);
+  const [isTablePopoverOpen, setIsTablePopoverOpen] = useState(false);
 
   const typedMenuData: MenuCategory[] = menuData;
 
@@ -83,6 +98,7 @@ export default function PosSystem({ tables, addOrder, addBill, updateTableStatus
         updateTableStatus([parseInt(tableId, 10)], 'Occupied');
       }
     }
+    setIsTablePopoverOpen(false);
   };
 
   const setItemColor = (itemName: string, colorClass: string) => {
@@ -539,17 +555,43 @@ export default function PosSystem({ tables, addOrder, addBill, updateTableStatus
         <CardHeader>
           <CardTitle>Current Order</CardTitle>
           <div className="pt-2">
-            <Label htmlFor="table-select">Select Table</Label>
-            <Select value={selectedTable ?? ''} onValueChange={handleSelectTable}>
-                <SelectTrigger id="table-select">
-                    <SelectValue placeholder="Select a table..." />
-                </SelectTrigger>
-                <SelectContent>
-                    {tables.map(table => (
-                        <SelectItem key={table.id} value={table.id.toString()}>Table {table.id} ({table.status})</SelectItem>
-                    ))}
-                </SelectContent>
-            </Select>
+            <Label>Select Table</Label>
+            <Popover open={isTablePopoverOpen} onOpenChange={setIsTablePopoverOpen}>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="w-full justify-start text-left font-normal">
+                  {selectedTable ? `Table ${selectedTable}` : "Select a table..."}
+                   <ChevronDown className="ml-auto h-4 w-4 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-2" align="start">
+                <div className="grid grid-cols-5 gap-2">
+                    {tables.map(table => {
+                        const Icon = statusIcons[table.status];
+                        return (
+                            <Button
+                                key={table.id}
+                                variant="outline"
+                                className={cn(
+                                    "flex flex-col h-20 w-20 justify-center items-center gap-1",
+                                    statusColors[table.status],
+                                    selectedTable === table.id.toString() && 'ring-2 ring-offset-2 ring-ring',
+                                    table.status !== 'Available' && 'opacity-50 cursor-not-allowed',
+                                    table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black'
+                                )}
+                                onClick={() => handleSelectTable(table.id.toString())}
+                                disabled={table.status !== 'Available'}
+                            >
+                                <span className="text-2xl font-bold">{table.id}</span>
+                                <div className="flex items-center gap-1 text-xs">
+                                    <Icon className="h-3 w-3" />
+                                    <span>{table.status}</span>
+                                </div>
+                            </Button>
+                        )
+                    })}
+                </div>
+              </PopoverContent>
+            </Popover>
           </div>
         </CardHeader>
         <ScrollArea className="flex-grow p-4 pt-0">
