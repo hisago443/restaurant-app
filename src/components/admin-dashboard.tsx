@@ -2,7 +2,7 @@
 "use client";
 
 import { useState } from 'react';
-import { BarChart, Book, Download, TrendingUp, Settings, Package, User, ShoppingCart } from 'lucide-react';
+import { BarChart, Book, Download, TrendingUp, Settings, Package, User, ShoppingCart, History } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -11,6 +11,9 @@ import SalesReport from './sales-report';
 import ActivityLog from './activity-log';
 import InventoryManagement from './inventory-management';
 import SystemSettings from './system-settings';
+import BillHistory from './bill-history';
+import type { Bill } from '@/lib/types';
+
 
 const topItems: { name: string; count: number }[] = [];
 
@@ -21,7 +24,11 @@ const salesData = [
     { date: '2024-07-27', orderId: 'K003', amount: 2.50, items: '1x Espresso' },
 ];
 
-export default function AdminDashboard() {
+interface AdminDashboardProps {
+  billHistory: Bill[];
+}
+
+export default function AdminDashboard({ billHistory }: AdminDashboardProps) {
 
   const handleExportCSV = () => {
     if (salesData.length === 0) return;
@@ -140,6 +147,21 @@ export default function AdminDashboard() {
                   <SalesReport />
               </DialogContent>
             </Dialog>
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="lg" className="justify-start gap-2">
+                  <History className="h-5 w-5" />
+                  <span>View Bill History</span>
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-5xl">
+                <DialogHeader>
+                  <DialogTitle>Bill History</DialogTitle>
+                  <DialogDescription>A log of all completed transactions.</DialogDescription>
+                </DialogHeader>
+                <BillHistory bills={billHistory} />
+              </DialogContent>
+            </Dialog>
             <Button variant="outline" size="lg" className="justify-start gap-2" onClick={handleExportCSV}>
               <Download className="h-5 w-5" />
               <span>Export Sales Data (CSV)</span>
@@ -176,7 +198,7 @@ export default function AdminDashboard() {
             </Dialog>
             <Dialog>
               <DialogTrigger asChild>
-                 <Button variant="outline" size="lg" className="justify-start gap-2 col-span-1 sm:col-span-2">
+                 <Button variant="outline" size="lg" className="justify-start gap-2">
                     <Settings className="h-5 w-5" />
                     <span>System Settings</span>
                 </Button>

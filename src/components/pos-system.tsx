@@ -19,7 +19,7 @@ import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { AddItemDialog } from './add-item-dialog';
 
-import type { MenuCategory, MenuItem, OrderItem, Table, Order } from '@/lib/types';
+import type { MenuCategory, MenuItem, OrderItem, Table, Order, Bill } from '@/lib/types';
 import menuData from '@/data/menu.json';
 import { generateReceipt, type GenerateReceiptInput } from '@/ai/flows/dynamic-receipt-discount-reasoning';
 import { PaymentDialog } from './payment-dialog';
@@ -42,9 +42,10 @@ type ViewMode = 'accordion' | 'grid' | 'list';
 interface PosSystemProps {
   tables: Table[];
   addOrder: (order: Omit<Order, 'id' | 'status'>) => void;
+  addBill: (bill: Omit<Bill, 'id' | 'timestamp'>) => void;
 }
 
-export default function PosSystem({ tables, addOrder }: PosSystemProps) {
+export default function PosSystem({ tables, addOrder, addBill }: PosSystemProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
   const [discount, setDiscount] = useState(0);
@@ -215,6 +216,14 @@ export default function PosSystem({ tables, addOrder }: PosSystemProps) {
     setIsPaymentDialogOpen(false);
     toast({ title: "Payment Successful", description: `Payment of Rs.${total.toFixed(2)} confirmed.` });
     
+    const billPayload: Omit<Bill, 'id' | 'timestamp'> = {
+      orderItems: orderItems,
+      tableId: Number(selectedTable),
+      total: total,
+      receiptPreview: receiptPreview,
+    };
+    addBill(billPayload);
+
     const adminEmailInput: SendEmailReceiptInput = {
       customerEmail: 'upandabove.bir@gmail.com',
       receiptContent: receiptPreview,
@@ -398,14 +407,14 @@ export default function PosSystem({ tables, addOrder }: PosSystemProps) {
       <Accordion type="multiple" value={activeAccordionItems} onValueChange={setActiveAccordionItems} className="w-full">
         {filteredMenu.map((category) => (
           <AccordionItem key={category.category} value={category.category} className={cn("border-b-0 rounded-lg mb-2 overflow-hidden", categoryColors[category.category])}>
-             <div className="flex items-center p-4 hover:bg-muted/50 rounded-t-lg">
-                <span className="text-xl font-bold text-black text-center flex-grow">{category.category}</span>
-                <div className='flex items-center gap-2'>
-                  <CategoryColorPicker categoryName={category.category} />
-                  <AccordionTrigger>
-                    <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200" />
-                  </AccordionTrigger>
-                </div>
+            <div className="flex items-center p-4 hover:bg-muted/50 rounded-t-lg relative">
+                 <div className="text-xl font-bold text-black text-center flex-grow">{category.category}</div>
+                 <div className='flex items-center gap-2'>
+                    <CategoryColorPicker categoryName={category.category} />
+                    <AccordionTrigger>
+                      <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200" />
+                    </AccordionTrigger>
+                 </div>
             </div>
             <AccordionContent className="p-2 pt-0">
               <div className="space-y-4 pt-2">

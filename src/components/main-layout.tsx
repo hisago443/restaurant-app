@@ -12,7 +12,7 @@ import TableManagement from './table-management';
 import KitchenOrders from './kitchen-orders';
 import AdminDashboard from './admin-dashboard';
 import StaffManagement from "./staff-management";
-import type { Table, TableStatus, Order } from '@/lib/types';
+import type { Table, TableStatus, Order, Bill } from '@/lib/types';
 
 const initialTables: Table[] = Array.from({ length: 20 }, (_, i) => ({
   id: i + 1,
@@ -23,6 +23,8 @@ export default function MainLayout() {
   const [currentDateTime, setCurrentDateTime] = useState<Date | null>(null);
   const [tables, setTables] = useState<Table[]>(initialTables);
   const [orders, setOrders] = useState<Order[]>([]);
+  const [billHistory, setBillHistory] = useState<Bill[]>([]);
+
 
   const addOrder = (order: Omit<Order, 'id' | 'status'>) => {
     const newOrder: Order = {
@@ -33,6 +35,15 @@ export default function MainLayout() {
     setOrders(prevOrders => [...prevOrders, newOrder]);
     // Also update the table status to Occupied
     updateTableStatus([order.tableId], 'Occupied');
+  };
+
+  const addBill = (bill: Omit<Bill, 'id'| 'timestamp'>) => {
+    const newBill: Bill = {
+        ...bill,
+        id: `B${(billHistory.length + 1).toString().padStart(4, '0')}`,
+        timestamp: new Date(),
+    };
+    setBillHistory(prev => [newBill, ...prev]);
   };
 
   const updateTableStatus = (tableIds: number[], status: TableStatus) => {
@@ -115,7 +126,7 @@ export default function MainLayout() {
           
           <div className="flex-grow overflow-auto">
             <TabsContent value="pos" className="m-0 p-0 h-full">
-                <PosSystem tables={tables} addOrder={addOrder} />
+                <PosSystem tables={tables} addOrder={addOrder} addBill={addBill} />
             </TabsContent>
             <TabsContent value="tables" className="m-0 p-0">
               <TableManagement 
@@ -132,7 +143,7 @@ export default function MainLayout() {
               <StaffManagement />
             </TabsContent>
             <TabsContent value="admin" className="m-0 p-0">
-              <AdminDashboard />
+              <AdminDashboard billHistory={billHistory} />
             </TabsContent>
           </div>
         </Tabs>

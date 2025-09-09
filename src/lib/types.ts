@@ -31,6 +31,16 @@ export interface Order {
   status: 'Pending' | 'In Preparation' | 'Completed';
 }
 
+export interface Bill {
+  id: string;
+  orderItems: OrderItem[];
+  tableId: number;
+  total: number;
+  receiptPreview: string;
+  timestamp: Date;
+}
+
+
 export interface Employee {
   id: string;
   name: string;
