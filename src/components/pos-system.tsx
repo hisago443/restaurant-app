@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
@@ -14,7 +15,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from '@/hooks/use-toast';
-import { Search, Plus, Minus, X, Save, FilePlus, LayoutGrid, List, Rows, ChevronsUpDown, Palette, Shuffle, ClipboardList, Send, ChevronDown, CheckCircle2, Users, Bookmark, Sparkles, Repeat, Printer } from 'lucide-react';
+import { Search, Plus, Minus, X, Save, FilePlus, LayoutGrid, List, Rows, ChevronsUpDown, Palette, Shuffle, ClipboardList, Send, ChevronDown, CheckCircle2, Users, Bookmark, Sparkles, Repeat, Printer, Edit } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { AddItemDialog } from './add-item-dialog';
@@ -55,13 +56,17 @@ const statusIcons: Record<TableStatus, React.ElementType> = {
 
 interface PosSystemProps {
   tables: Table[];
+  orders: Order[];
   addOrder: (order: Omit<Order, 'id' | 'status'>) => void;
+  updateOrder: (order: Order) => void;
   addBill: (bill: Omit<Bill, 'id' | 'timestamp'>) => void;
   updateTableStatus: (tableIds: number[], status: TableStatus) => void;
   occupancyCount: Record<number, number>;
+  activeOrder: Order | null;
+  setActiveOrder: (order: Order | null) => void;
 }
 
-export default function PosSystem({ tables, addOrder, addBill, updateTableStatus, occupancyCount }: PosSystemProps) {
+export default function PosSystem({ tables, orders, addOrder, updateOrder, addBill, updateTableStatus, occupancyCount, activeOrder, setActiveOrder }: PosSystemProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
   const [discount, setDiscount] = useState(0);
@@ -91,20 +96,49 @@ export default function PosSystem({ tables, addOrder, addBill, updateTableStatus
     localStorage.setItem('isClickToAdd', JSON.stringify(isClickToAdd));
   }, [isClickToAdd]);
 
+  useEffect(() => {
+    if (activeOrder) {
+      setSelectedTable(activeOrder.tableId.toString());
+      setOrderItems(activeOrder.items);
+    } else {
+      // Don't clear if there are items, user might be building a new order
+      if (orderItems.length === 0) {
+        setSelectedTable(null);
+      }
+    }
+  }, [activeOrder]);
+
+
   const handleSelectTable = (tableId: string) => {
     const table = tables.find(t => t.id.toString() === tableId);
     if (!table) return;
 
     if (table.status === 'Available') {
+      clearOrder(false, true); // Clear everything for a new order
       setSelectedTable(tableId);
       updateTableStatus([table.id], 'Occupied');
       setIsTablePopoverOpen(false);
+    } else if (table.status === 'Occupied') {
+        const existingOrder = orders.find(o => o.tableId.toString() === tableId && o.status !== 'Completed');
+        if (existingOrder) {
+            setActiveOrder(existingOrder);
+        } else {
+             toast({
+                variant: 'destructive',
+                title: 'Order Not Found',
+                description: `Could not find an active order for Table ${tableId}.`,
+            });
+        }
+        setIsTablePopoverOpen(false);
     } else if (table.status === 'Cleaning') {
       updateTableStatus([table.id], 'Available');
       // Keep the popover open so the user can see the status change and select the table if they wish.
-    } else {
-        // For 'Occupied' or 'Reserved', do nothing.
-      setIsTablePopoverOpen(false);
+    } else if (table.status === 'Reserved') {
+        toast({
+            title: 'Table Reserved',
+            description: `Table ${tableId} is reserved. Seat guests from the Tables tab.`,
+        });
+        setIsTablePopoverOpen(false);
     }
   };
 
@@ -217,9 +251,19 @@ export default function PosSystem({ tables, addOrder, addBill, updateTableStatus
     setOrderItems(orderItems.filter(item => item.name !== name));
   };
   
-  const clearOrder = (delayTableClear = false) => {
+  const clearOrder = (delayTableClear = false, forceClear = false) => {
+    if (forceClear) {
+      setOrderItems([]);
+      setDiscount(0);
+      setActiveOrder(null);
+      setSelectedTable(null);
+      toast({ title: "New Bill", description: "Current order cleared." });
+      return;
+    }
+
     setOrderItems([]);
     setDiscount(0);
+    setActiveOrder(null);
     if (delayTableClear) {
       setTimeout(() => {
         setSelectedTable(null);
@@ -241,15 +285,23 @@ export default function PosSystem({ tables, addOrder, addBill, updateTableStatus
       return;
     }
 
-    const orderPayload = {
-      items: orderItems,
-      tableId: Number(selectedTable),
-    };
-    addOrder(orderPayload);
-    
-    toast({ title: 'Order Sent!', description: `KOT sent to the kitchen for Table ${selectedTable}.` });
-    // You might want to clear the order here or keep it for billing
-    // clearOrder(); // Uncomment if the order should be cleared after sending
+    if (activeOrder) {
+      // This is an update to an existing order
+      updateOrder({
+        ...activeOrder,
+        items: orderItems,
+      });
+      toast({ title: 'Order Updated!', description: `KOT updated for Table ${selectedTable}.` });
+
+    } else {
+      // This is a new order
+      const orderPayload = {
+        items: orderItems,
+        tableId: Number(selectedTable),
+      };
+      addOrder(orderPayload);
+      toast({ title: 'Order Sent!', description: `KOT sent to the kitchen for Table ${selectedTable}.` });
+    }
   };
 
   const handleProcessPayment = () => {
@@ -280,6 +332,12 @@ export default function PosSystem({ tables, addOrder, addBill, updateTableStatus
 
     // Update table status to 'Cleaning'
     updateTableStatus([parseInt(selectedTable, 10)], 'Cleaning');
+    
+    // Mark the order as completed
+    if (activeOrder) {
+      updateOrder({ ...activeOrder, status: 'Completed' });
+    }
+
 
     const adminEmailInput: SendEmailReceiptInput = {
       customerEmail: 'upandabove.bir@gmail.com',
@@ -596,7 +654,7 @@ export default function PosSystem({ tables, addOrder, addBill, updateTableStatus
       {/* Right Panel: Order Summary */}
       <Card className="flex-[1] flex flex-col h-full">
         <CardHeader>
-          <CardTitle>Current Order</CardTitle>
+          <CardTitle>{activeOrder ? `Editing Order #${activeOrder.id}` : 'Current Order'}</CardTitle>
           <div className="pt-2">
             <Label>Select Table</Label>
             <Popover open={isTablePopoverOpen} onOpenChange={setIsTablePopoverOpen}>
@@ -610,7 +668,7 @@ export default function PosSystem({ tables, addOrder, addBill, updateTableStatus
                 <div className="grid grid-cols-5 gap-2">
                     {tables.map(table => {
                         const Icon = statusIcons[table.status];
-                        const isClickable = table.status === 'Available' || table.status === 'Cleaning';
+                        const isClickable = table.status === 'Available' || table.status === 'Cleaning' || table.status === 'Occupied';
                         return (
                             <Button
                                 key={table.id}
@@ -730,14 +788,15 @@ export default function PosSystem({ tables, addOrder, addBill, updateTableStatus
                       </AlertDialogHeader>
                       <AlertDialogFooter>
                           <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction onClick={() => clearOrder()}>Continue</AlertDialogAction>
+                          <AlertDialogAction onClick={() => clearOrder(false, true)}>Continue</AlertDialogAction>
                       </AlertDialogFooter>
                   </AlertDialogContent>
               </AlertDialog>
             </div>
             <Button size="lg" variant="secondary" className="w-full" onClick={handleSendToKitchen}>
-                <Send className="mr-2 h-4 w-4" /> Send KOT to Kitchen
-              </Button>
+                {activeOrder ? <Edit className="mr-2 h-4 w-4" /> : <Send className="mr-2 h-4 w-4" />}
+                {activeOrder ? 'Update KOT' : 'Send KOT to Kitchen'}
+            </Button>
           </div>
       </Card>
       <PaymentDialog

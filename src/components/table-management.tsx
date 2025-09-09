@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useState, useMemo } from 'react';
@@ -10,7 +11,7 @@ import type { Table, TableStatus, Order, OrderItem, Bill } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
-import { PlusCircle, Trash2, LayoutTemplate, Sparkles, Users, CheckCircle2, Bookmark, Armchair, ClipboardList, LogOut, UserCheck, BookmarkX, BookmarkPlus, Printer, Repeat } from 'lucide-react';
+import { PlusCircle, Trash2, LayoutTemplate, Sparkles, Users, CheckCircle2, Bookmark, Armchair, ClipboardList, LogOut, UserCheck, BookmarkX, BookmarkPlus, Printer, Repeat, Edit } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 
 const statusColors: Record<TableStatus, string> = {
@@ -35,9 +36,10 @@ interface TableManagementProps {
   addTable: () => void;
   removeLastTable: () => void;
   occupancyCount: Record<number, number>;
+  onEditOrder: (order: Order) => void;
 }
 
-export default function TableManagement({ tables, orders, billHistory, updateTableStatus, addTable, removeLastTable, occupancyCount }: TableManagementProps) {
+export default function TableManagement({ tables, orders, billHistory, updateTableStatus, addTable, removeLastTable, occupancyCount, onEditOrder }: TableManagementProps) {
   const [selectedTable, setSelectedTable] = useState<Table | null>(null);
   const [selectedTables, setSelectedTables] = useState<number[]>([]);
   const [isLayoutManagerOpen, setIsLayoutManagerOpen] = useState(false);
@@ -56,6 +58,11 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
   const handleDoubleClick = (table: Table) => {
     if (table.status === 'Available') {
       updateTableStatus([table.id], 'Occupied');
+    } else if (table.status === 'Occupied') {
+      const order = orders.find(o => o.tableId === table.id && o.status !== 'Completed');
+      if (order) {
+        onEditOrder(order);
+      }
     }
   };
   
@@ -146,9 +153,10 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
           </>
         );
       case 'Occupied':
+        const order = orders.find(o => o.tableId === table.id && o.status !== 'Completed');
         return (
           <>
-            <Button><ClipboardList className="mr-2 h-4 w-4" />View Order</Button>
+            <Button onClick={() => order && onEditOrder(order)} disabled={!order}><Edit className="mr-2 h-4 w-4" />Modify Order</Button>
             <Button variant="destructive" onClick={() => localUpdateTableStatus(table.id, 'Cleaning')}><Sparkles className="mr-2 h-4 w-4" />Customer Left</Button>
           </>
         );

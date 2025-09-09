@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useState, useEffect, useMemo } from 'react';
@@ -24,6 +25,8 @@ export default function MainLayout() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [billHistory, setBillHistory] = useState<Bill[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
+  const [activeOrder, setActiveOrder] = useState<Order | null>(null);
+  const [activeTab, setActiveTab] = useState('pos');
 
   useEffect(() => {
     // Fetch initial tables with default status
@@ -83,6 +86,12 @@ export default function MainLayout() {
     // Also update the table status to Occupied
     updateTableStatus([order.tableId], 'Occupied');
   };
+
+  const updateOrder = (updatedOrder: Order) => {
+    setOrders(orders.map(o => (o.id === updatedOrder.id ? updatedOrder : o)));
+    setActiveOrder(updatedOrder);
+  };
+
 
   const addBill = async (bill: Omit<Bill, 'id'| 'timestamp'>) => {
     try {
@@ -226,7 +235,10 @@ export default function MainLayout() {
         </div>
       </header>
       <main className="flex-1">
-        <Tabs defaultValue="pos" className="h-full flex flex-col">
+        <Tabs value={activeTab} onValueChange={(tab) => {
+          if (tab !== 'pos') setActiveOrder(null);
+          setActiveTab(tab)
+        }} className="h-full flex flex-col">
           <TabsList className="m-4 self-start">
             <TabsTrigger value="pos">
               <Coffee className="mr-2 h-4 w-4" />
@@ -252,7 +264,17 @@ export default function MainLayout() {
           
           <div className="flex-grow overflow-auto">
             <TabsContent value="pos" className="m-0 p-0 h-full">
-                <PosSystem tables={tables} addOrder={addOrder} addBill={addBill} updateTableStatus={updateTableStatus} occupancyCount={occupancyCount} />
+                <PosSystem 
+                  tables={tables}
+                  orders={orders}
+                  addOrder={addOrder}
+                  updateOrder={updateOrder}
+                  addBill={addBill}
+                  updateTableStatus={updateTableStatus}
+                  occupancyCount={occupancyCount}
+                  activeOrder={activeOrder}
+                  setActiveOrder={setActiveOrder}
+                />
             </TabsContent>
             <TabsContent value="tables" className="m-0 p-0">
               <TableManagement 
@@ -263,6 +285,10 @@ export default function MainLayout() {
                 addTable={addTable}
                 removeLastTable={removeLastTable}
                 occupancyCount={occupancyCount}
+                onEditOrder={(order) => {
+                  setActiveOrder(order);
+                  setActiveTab('pos');
+                }}
               />
             </TabsContent>
             <TabsContent value="kitchen" className="m-0 p-0 h-full">
