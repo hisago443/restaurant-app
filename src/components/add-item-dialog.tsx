@@ -24,7 +24,7 @@ interface AddItemDialogProps {
 }
 
 export function AddItemDialog({ isOpen, onOpenChange, item, onConfirm }: AddItemDialogProps) {
-  const [quantity, setQuantity] = useState(1);
+  const [quantity, setQuantity] = useState<number | string>(1);
 
   useEffect(() => {
     if (isOpen) {
@@ -33,14 +33,15 @@ export function AddItemDialog({ isOpen, onOpenChange, item, onConfirm }: AddItem
   }, [isOpen]);
 
   const handleConfirm = () => {
-    if (item && quantity > 0) {
-      onConfirm(item, quantity);
+    const numericQuantity = Number(quantity);
+    if (item && numericQuantity > 0) {
+      onConfirm(item, numericQuantity);
       onOpenChange(false);
     }
   };
 
   const handleQuantityChange = (amount: number) => {
-    setQuantity(prev => Math.max(1, prev + amount));
+    setQuantity(prev => Math.max(1, Number(prev) + amount));
   };
   
   if (!item) return null;
@@ -67,8 +68,12 @@ export function AddItemDialog({ isOpen, onOpenChange, item, onConfirm }: AddItem
                 value={quantity}
                 onChange={(e) => {
                     const value = e.target.value;
-                    // Allow clearing the input, otherwise set to a valid number >= 1
-                    setQuantity(value === '' ? 1 : Math.max(1, parseInt(value, 10)));
+                    setQuantity(value);
+                }}
+                onBlur={(e) => {
+                  if (e.target.value === '' || Number(e.target.value) < 1) {
+                    setQuantity(1);
+                  }
                 }}
                 onFocus={(e) => e.target.select()}
                 className="w-16 text-center"
