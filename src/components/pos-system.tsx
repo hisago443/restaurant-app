@@ -252,15 +252,15 @@ export default function PosSystem() {
             <div className="flex items-center gap-4">
                <RadioGroup value={viewMode} onValueChange={(v) => setViewMode(v as ViewMode)} className="flex items-center p-1 bg-muted rounded-md">
                 <RadioGroupItem value="accordion" id="accordion-view" className="peer sr-only" />
-                <Label htmlFor="accordion-view" className="p-1.5 rounded-md transition-colors hover:bg-background cursor-pointer peer-data-[state=checked]:bg-primary peer-data-[state=checked]:text-primary-foreground">
+                <Label htmlFor="accordion-view" className="p-1.5 rounded-md transition-colors hover:bg-accent cursor-pointer peer-data-[state=checked]:bg-primary peer-data-[state=checked]:text-primary-foreground">
                   <List className="h-5 w-5" />
                 </Label>
                 <RadioGroupItem value="grid" id="grid-view" className="peer sr-only"/>
-                <Label htmlFor="grid-view" className="p-1.5 rounded-md transition-colors hover:bg-background cursor-pointer peer-data-[state=checked]:bg-primary peer-data-[state=checked]:text-primary-foreground">
+                <Label htmlFor="grid-view" className="p-1.5 rounded-md transition-colors hover:bg-accent cursor-pointer peer-data-[state=checked]:bg-primary peer-data-[state=checked]:text-primary-foreground">
                    <LayoutGrid className="h-5 w-5" />
                 </Label>
                 <RadioGroupItem value="list" id="list-view" className="peer sr-only"/>
-                <Label htmlFor="list-view" className="p-1.5 rounded-md transition-colors hover:bg-background cursor-pointer peer-data-[state=checked]:bg-primary peer-data-[state=checked]:text-primary-foreground">
+                <Label htmlFor="list-view" className="p-1.5 rounded-md transition-colors hover:bg-accent cursor-pointer peer-data-[state=checked]:bg-primary peer-data-[state=checked]:text-primary-foreground">
                    <Rows className="h-5 w-5" />
                 </Label>
               </RadioGroup>
