@@ -11,7 +11,7 @@ import type { Table, TableStatus } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
-import { PlusCircle, Trash2 } from 'lucide-react';
+import { PlusCircle, Trash2, LayoutTemplate } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 
 const initialTables: Table[] = Array.from({ length: 20 }, (_, i) => ({
@@ -31,6 +31,7 @@ export default function TableManagement() {
   const [selectedTable, setSelectedTable] = useState<Table | null>(null);
   const [selectedTables, setSelectedTables] = useState<number[]>([]);
   const [isBulkManageOpen, setIsBulkManageOpen] = useState(false);
+  const [isLayoutManagerOpen, setIsLayoutManagerOpen] = useState(false);
 
   const updateTableStatus = (tableId: number, status: TableStatus) => {
     setTables(tables.map(t => t.id === tableId ? { ...t, status } : t));
@@ -67,9 +68,10 @@ export default function TableManagement() {
 
   const handleRemoveLastTable = () => {
     if (tables.length > 0) {
-      const lastTableId = tables[tables.length - 1].id;
-      setTables(tables.slice(0, -1));
-      setSelectedTables(selectedTables.filter(id => id !== lastTableId));
+      // Sort by ID descending to find the last one regardless of array order
+      const tableToRemove = tables.reduce((last, current) => (current.id > last.id ? current : last));
+      setTables(tables.filter(t => t.id !== tableToRemove.id));
+      setSelectedTables(selectedTables.filter(id => id !== tableToRemove.id));
     }
   };
 
@@ -113,29 +115,9 @@ export default function TableManagement() {
               <CardDescription>Manage your restaurant's table configuration and status.</CardDescription>
             </div>
             <div className="flex items-center gap-4">
-              <Button variant="outline" onClick={handleAddTable}>
-                <PlusCircle className="mr-2 h-4 w-4" /> Add Table
+              <Button variant="outline" onClick={() => setIsLayoutManagerOpen(true)}>
+                <LayoutTemplate className="mr-2 h-4 w-4" /> Manage Layout
               </Button>
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button variant="destructive" disabled={tables.length === 0}>
-                    <Trash2 className="mr-2 h-4 w-4" /> Remove Last Table
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      This will permanently remove Table {tables[tables.length -1]?.id}. This action cannot be undone.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleRemoveLastTable}>Delete</AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-
               <Separator orientation="vertical" className="h-8" />
 
               <div className="flex items-center space-x-2">
@@ -225,6 +207,44 @@ export default function TableManagement() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setIsBulkManageOpen(false)}>Cancel</Button>
+            </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isLayoutManagerOpen} onOpenChange={setIsLayoutManagerOpen}>
+        <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Manage Table Layout</DialogTitle>
+              <DialogDescription>
+                Add or remove tables to match your restaurant's layout.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid grid-cols-2 gap-4 py-4">
+              <Button variant="outline" onClick={handleAddTable}>
+                <PlusCircle className="mr-2 h-4 w-4" /> Add a New Table
+              </Button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive" disabled={tables.length === 0}>
+                    <Trash2 className="mr-2 h-4 w-4" /> Remove Last Table
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This will permanently remove the last table. This action cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleRemoveLastTable}>Delete</AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
+            <DialogFooter>
+              <Button onClick={() => setIsLayoutManagerOpen(false)}>Done</Button>
             </DialogFooter>
         </DialogContent>
       </Dialog>
