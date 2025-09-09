@@ -261,11 +261,17 @@ export default function PosSystem() {
         <div className="space-y-6">
           {filteredMenu.map((category) => (
             <div key={category.category}>
-              <h2 className={cn("text-xl font-bold mb-4 sticky top-0 bg-background py-2 z-10 flex items-center gap-2 p-2 rounded-md", categoryColors[category.category])}>
-                {category.category}
-                <CategoryColorPicker categoryName={category.category} />
-              </h2>
-              <div className="space-y-4">
+              <div className={cn("sticky top-0 bg-background py-2 z-10 flex items-center justify-between gap-2 p-2 rounded-md", categoryColors[category.category])}>
+                <div className="flex-1"></div>
+                <h2 className="text-xl font-bold text-center flex-1">
+                  {category.category}
+                </h2>
+                <div className="flex-1 flex justify-end">
+                  <CategoryColorPicker categoryName={category.category} />
+                </div>
+              </div>
+
+              <div className="space-y-4 pt-2">
                 {category.subCategories.map((subCategory) => (
                   <div key={subCategory.name}>
                     <h3 className="text-md font-semibold mb-2 text-muted-foreground pl-2">{subCategory.name}</h3>
@@ -321,11 +327,13 @@ export default function PosSystem() {
       <Accordion type="multiple" value={activeAccordionItems} onValueChange={setActiveAccordionItems} className="w-full">
         {filteredMenu.map((category) => (
           <AccordionItem key={category.category} value={category.category} className={cn(categoryColors[category.category])}>
-            <div className="flex items-center justify-center p-2">
-              <AccordionTrigger className="text-xl font-bold hover:no-underline flex-grow justify-center">
-                {category.category}
+            <div className="flex items-center p-2 relative">
+              <AccordionTrigger className="text-xl font-bold hover:no-underline justify-center flex-grow">
+                  {category.category}
               </AccordionTrigger>
-              <CategoryColorPicker categoryName={category.category} />
+              <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                <CategoryColorPicker categoryName={category.category} />
+              </div>
             </div>
             <AccordionContent>
               <div className="space-y-4 pt-2">
@@ -504,3 +512,5 @@ export default function PosSystem() {
     </div>
   );
 }
+
+    
