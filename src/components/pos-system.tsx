@@ -14,7 +14,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from '@/hooks/use-toast';
-import { Search, Plus, Minus, X, Save, FilePlus, LayoutGrid, List, Rows, ChevronsUpDown, ChevronsDownUp, Palette } from 'lucide-react';
+import { Search, Plus, Minus, X, Save, FilePlus, LayoutGrid, List, Rows, ChevronsUpDown, ChevronsDownUp, Palette, Shuffle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
@@ -74,6 +74,16 @@ export default function PosSystem() {
   
   const setCategoryColor = (categoryName: string, colorClass: string) => {
     setCategoryColors(prev => ({ ...prev, [categoryName]: colorClass }));
+  };
+
+  const handleShuffleColors = () => {
+    const shuffledPalette = [...colorPalette].sort(() => 0.5 - Math.random());
+    const newCategoryColors: Record<string, string> = {};
+    typedMenuData.forEach((category, index) => {
+      newCategoryColors[category.category] = shuffledPalette[index % shuffledPalette.length];
+    });
+    setCategoryColors(newCategoryColors);
+    toast({ title: "Colors Shuffled!", description: "New random colors have been applied to the categories." });
   };
 
   const filteredMenu = useMemo(() => {
@@ -180,14 +190,15 @@ export default function PosSystem() {
     const itemColor = menuItemColors[item.name];
     
     const finalColor = itemColor || categoryColor || defaultColor;
+    const isColorApplied = !!(itemColor || categoryColor);
 
     return (
       <Card
         key={item.name}
         className={cn(
-          "group rounded-lg cursor-pointer transition-all hover:scale-105 relative text-black",
+          "group rounded-lg cursor-pointer transition-all hover:scale-105 relative",
           finalColor,
-          (itemColor || categoryColor) && "border-black shadow-lg hover:shadow-xl"
+          isColorApplied && "border-black shadow-lg hover:shadow-xl"
         )}
         onClick={() => isClickToAdd && addToOrder(item, 1)}
       >
@@ -219,9 +230,9 @@ export default function PosSystem() {
           <div className="flex justify-between items-start">
             <div className="flex items-center gap-2">
               <span className={cn('h-2.5 w-2.5 rounded-full', subCategoryName.toLowerCase().includes('veg') ? 'bg-green-500' : 'bg-red-500')}></span>
-              <span className="font-semibold pr-2">{item.name}</span>
+              <span className={cn("font-semibold pr-2", isColorApplied ? "text-black" : "")}>{item.name}</span>
             </div>
-            <span className="font-mono text-right whitespace-nowrap">Rs.{item.price.toFixed(2)}</span>
+            <span className={cn("font-mono text-right whitespace-nowrap", isColorApplied ? "text-black" : "")}>Rs.{item.price.toFixed(2)}</span>
           </div>
           {!isClickToAdd && (
             <div className="flex justify-end mt-2">
@@ -265,10 +276,10 @@ export default function PosSystem() {
       return (
         <div className="space-y-6">
           {filteredMenu.map((category) => (
-            <div key={category.category}>
-              <div className={cn("sticky top-0 bg-background py-2 z-10 flex items-center justify-between gap-2 p-2 rounded-md text-black", categoryColors[category.category])}>
+             <div key={category.category}>
+              <div className={cn("sticky top-0 bg-background py-2 z-10 flex items-center justify-between gap-2 p-2 rounded-md", categoryColors[category.category])}>
                 <div className="flex-1" />
-                <h2 className="text-xl font-bold text-center">
+                <h2 className={cn("text-xl font-bold text-center", categoryColors[category.category] ? "text-black" : "")}>
                   {category.category}
                 </h2>
                 <div className="flex-1 flex justify-end">
@@ -299,12 +310,12 @@ export default function PosSystem() {
                <div
                 key={category.category}
                 className={cn(
-                  "p-1 rounded-md flex items-center justify-center relative data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm text-black",
+                  "p-1 rounded-md flex items-center justify-center relative data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm",
                   categoryColors[category.category]
                 )}
               >
                 <TabsTrigger value={category.category} className="bg-transparent shadow-none p-2 flex-1 justify-center">
-                  {category.category}
+                  <span className={cn(categoryColors[category.category] ? "text-black" : "")}>{category.category}</span>
                 </TabsTrigger>
                 <div className="ml-auto">
                     <CategoryColorPicker categoryName={category.category} />
@@ -334,13 +345,15 @@ export default function PosSystem() {
       <Accordion type="multiple" value={activeAccordionItems} onValueChange={setActiveAccordionItems} className="w-full">
         {filteredMenu.map((category) => (
           <AccordionItem key={category.category} value={category.category} className={cn("border-b-0", categoryColors[category.category])}>
-             <AccordionTrigger className="text-xl font-bold hover:no-underline p-2 border-b text-black">
+            <div className="flex items-center w-full p-2 border-b">
                <div className="flex-1" />
-               <span className="text-center">{category.category}</span>
+                <AccordionTrigger className="text-xl font-bold hover:no-underline p-0 flex-grow text-center">
+                    <span className={cn("text-center", categoryColors[category.category] ? "text-black" : "")}>{category.category}</span>
+                </AccordionTrigger>
                <div className="flex-1 flex justify-end">
                  <CategoryColorPicker categoryName={category.category} />
                </div>
-             </AccordionTrigger>
+            </div>
             <AccordionContent>
               <div className="space-y-4 pt-2 p-2">
                 {category.subCategories.map((subCategory) => (
@@ -392,6 +405,9 @@ export default function PosSystem() {
                   </Label>
               </RadioGroup>
               <Separator orientation="vertical" className="h-8" />
+              <Button variant="outline" size="sm" onClick={handleShuffleColors}>
+                <Shuffle className="mr-2 h-4 w-4" /> Shuffle Colors
+              </Button>
                {viewMode === 'accordion' && (
                 <div className="flex items-center gap-2">
                   <Button variant="outline" size="sm" onClick={() => setActiveAccordionItems(filteredMenu.map(c => c.category))}>
