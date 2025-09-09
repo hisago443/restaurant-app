@@ -1,3 +1,4 @@
+
 import type {NextConfig} from 'next';
 
 const nextConfig: NextConfig = {
@@ -24,20 +25,8 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  // Disable favicon generation
-  experimental: {
-    appDir: true,
-    serverComponentsExternalPackages: ['@react-email/components'],
-    missingSuspenseWithCSRBailout: false,
-  },
-  webpack: (config, { isServer }) => {
-    // Disable favicon generation
-    config.module.rules.push({
-      test: /favicon\.ico$/,
-      use: 'null-loader',
-    });
-    return config;
-  },
+  // Stop bundling external packages used by server components
+  serverExternalPackages: ['@react-email/components'],
 };
 
 export default nextConfig;
