@@ -125,8 +125,9 @@ export default function TableManagement({ tables, updateTableStatus, addTable, r
               <CardTitle>Table Layout</CardTitle>
             </div>
             <div className="flex items-center gap-4">
-              <Button variant="outline" className="font-bold" onClick={() => setIsLayoutManagerOpen(true)}>
-                <LayoutTemplate className="mr-2 h-4 w-4" /> ADD OR REMOVE TABLE
+              <Button variant="outline" onClick={() => setIsLayoutManagerOpen(true)}>
+                <LayoutTemplate className="mr-2 h-4 w-4" /> 
+                <span className="font-bold">ADD OR REMOVE TABLE</span>
               </Button>
               <Separator orientation="vertical" className="h-8" />
               <div className="flex items-center space-x-2">
@@ -148,7 +149,7 @@ export default function TableManagement({ tables, updateTableStatus, addTable, r
               >
                 TOTAL TABLES ({tables.length})
               </Button>
-              <Separator orientation="vertical" className="h-8" />
+              <Separator orientation="vertical" className="h-8 bg-foreground/20" />
               {(Object.keys(statusColors) as TableStatus[]).map(status => (
                   <Button
                     key={status}
