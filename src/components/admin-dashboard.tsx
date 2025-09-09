@@ -49,10 +49,10 @@ export default function AdminDashboard() {
         <Card className="bg-green-100 dark:bg-green-900/30 border-green-200 dark:border-green-800 shadow-lg hover:shadow-xl transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-green-800 dark:text-green-200">Total Revenue</CardTitle>
-            <span className="text-green-600 font-bold">₹</span>
+            <span className="text-green-600 font-bold">Rs.</span>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-900 dark:text-green-100">₹4,29,189.00</div>
+            <div className="text-2xl font-bold text-green-900 dark:text-green-100">Rs.4,29,189.00</div>
             <p className="text-xs text-green-700 dark:text-green-300">+20.1% from last month</p>
           </CardContent>
         </Card>
@@ -72,7 +72,7 @@ export default function AdminDashboard() {
             <TrendingUp className="h-4 w-4 text-amber-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-amber-900 dark:text-amber-100">₹1,826.00</div>
+            <div className="text-2xl font-bold text-amber-900 dark:text-amber-100">Rs.1,826.00</div>
             <p className="text-xs text-amber-700 dark:text-amber-300">+5.3% from last week</p>
           </CardContent>
         </Card>

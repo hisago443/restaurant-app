@@ -52,7 +52,7 @@ export function AddItemDialog({ isOpen, onOpenChange, item, onConfirm }: AddItem
         <DialogHeader>
           <DialogTitle>{item.name}</DialogTitle>
           <DialogDescription>
-            Price: <span className="font-bold text-foreground">₹{item.price.toFixed(2)}</span>
+            Price: <span className="font-bold text-foreground">Rs.{item.price.toFixed(2)}</span>
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
