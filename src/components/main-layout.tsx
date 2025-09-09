@@ -25,10 +25,10 @@ export default function MainLayout() {
   const [employees, setEmployees] = useState<Employee[]>([]);
 
   useEffect(() => {
-    // Fetch initial tables from random data
+    // Fetch initial tables with default status
     const initialTables: Table[] = Array.from({ length: 20 }, (_, i) => ({
       id: i + 1,
-      status: ['Available', 'Occupied', 'Reserved', 'Cleaning'][Math.floor(Math.random() * 4)] as TableStatus,
+      status: 'Available',
     }));
     setTables(initialTables);
   
