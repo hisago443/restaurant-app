@@ -14,8 +14,9 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from '@/hooks/use-toast';
-import { Search, Plus, Minus, X, Save, FilePlus, LayoutGrid, List, Rows, ChevronsUpDown, ChevronsDownUp } from 'lucide-react';
+import { Search, Plus, Minus, X, Save, FilePlus, LayoutGrid, List, Rows, ChevronsUpDown, ChevronsDownUp, Palette } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 import type { MenuCategory, MenuItem, OrderItem } from '@/lib/types';
 import menuData from '@/data/menu.json';
@@ -24,6 +25,31 @@ import { PaymentDialog } from './payment-dialog';
 
 const vegColor = 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 border-green-200 dark:border-green-800';
 const nonVegColor = 'bg-rose-100 dark:bg-rose-900/30 text-rose-800 dark:text-rose-200 border-rose-200 dark:border-rose-800';
+
+const colorPalette = [
+  'bg-slate-100 dark:bg-slate-900/30 text-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-800',
+  'bg-gray-100 dark:bg-gray-900/30 text-gray-800 dark:text-gray-200 border-gray-200 dark:border-gray-800',
+  'bg-zinc-100 dark:bg-zinc-900/30 text-zinc-800 dark:text-zinc-200 border-zinc-200 dark:border-zinc-800',
+  'bg-neutral-100 dark:bg-neutral-900/30 text-neutral-800 dark:text-neutral-200 border-neutral-200 dark:border-neutral-800',
+  'bg-stone-100 dark:bg-stone-900/30 text-stone-800 dark:text-stone-200 border-stone-200 dark:border-stone-800',
+  'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200 border-red-200 dark:border-red-800',
+  'bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-200 border-orange-200 dark:border-orange-800',
+  'bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200 border-amber-200 dark:border-amber-800',
+  'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 border-yellow-200 dark:border-yellow-800',
+  'bg-lime-100 dark:bg-lime-900/30 text-lime-800 dark:text-lime-200 border-lime-200 dark:border-lime-800',
+  'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 border-green-200 dark:border-green-800',
+  'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-200 border-emerald-200 dark:border-emerald-800',
+  'bg-teal-100 dark:bg-teal-900/30 text-teal-800 dark:text-teal-200 border-teal-200 dark:border-teal-800',
+  'bg-cyan-100 dark:bg-cyan-900/30 text-cyan-800 dark:text-cyan-200 border-cyan-200 dark:border-cyan-800',
+  'bg-sky-100 dark:bg-sky-900/30 text-sky-800 dark:text-sky-200 border-sky-200 dark:border-sky-800',
+  'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 border-blue-200 dark:border-blue-800',
+  'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-800 dark:text-indigo-200 border-indigo-200 dark:border-indigo-800',
+  'bg-violet-100 dark:bg-violet-900/30 text-violet-800 dark:text-violet-200 border-violet-200 dark:border-violet-800',
+  'bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-200 border-purple-200 dark:border-purple-800',
+  'bg-fuchsia-100 dark:bg-fuchsia-900/30 text-fuchsia-800 dark:text-fuchsia-200 border-fuchsia-200 dark:border-fuchsia-800',
+  'bg-pink-100 dark:bg-pink-900/30 text-pink-800 dark:text-pink-200 border-pink-200 dark:border-pink-800',
+  'bg-rose-100 dark:bg-rose-900/30 text-rose-800 dark:text-rose-200 border-rose-200 dark:border-rose-800',
+];
 
 type ViewMode = 'accordion' | 'grid' | 'list';
 
@@ -37,8 +63,13 @@ export default function PosSystem() {
   const { toast } = useToast();
   const [activeAccordionItems, setActiveAccordionItems] = useState<string[]>([]);
   const [viewMode, setViewMode] = useState<ViewMode>('accordion');
+  const [menuItemColors, setMenuItemColors] = useState<Record<string, string>>({});
 
   const typedMenuData: MenuCategory[] = menuData;
+
+  const setItemColor = (itemName: string, colorClass: string) => {
+    setMenuItemColors(prev => ({ ...prev, [itemName]: colorClass }));
+  };
 
   const filteredMenu = useMemo(() => {
     if (!searchTerm) return typedMenuData;
@@ -138,13 +169,40 @@ export default function PosSystem() {
     clearOrder();
   };
 
-  const renderMenuItem = (item: MenuItem, subCategoryName: string) => (
+  const renderMenuItem = (item: MenuItem, subCategoryName: string) => {
+    const defaultColor = subCategoryName.toLowerCase().includes('veg') ? vegColor : nonVegColor;
+    const itemColor = menuItemColors[item.name] || defaultColor;
+
+    return (
     <Card
       key={item.name}
-      className={cn("rounded-lg cursor-pointer transition-all hover:scale-105 hover:shadow-md",
-      subCategoryName.toLowerCase().includes('veg') ? vegColor : nonVegColor)}
+      className={cn("group rounded-lg cursor-pointer transition-all hover:scale-105 hover:shadow-md relative", itemColor)}
       onClick={() => isClickToAdd && addToOrder(item, 1)}
     >
+       <Popover>
+        <PopoverTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Palette className="h-4 w-4" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-auto p-2" onClick={(e) => e.stopPropagation()}>
+          <div className="grid grid-cols-8 gap-1">
+            {colorPalette.map((colorClass, i) => (
+              <div
+                key={i}
+                className={cn("h-6 w-6 rounded-full cursor-pointer", colorClass.split(' ')[0])}
+                onClick={() => setItemColor(item.name, colorClass)}
+              />
+            ))}
+             <Button variant="ghost" size="sm" className="col-span-8 h-8" onClick={() => setItemColor(item.name, defaultColor)}>Reset</Button>
+          </div>
+        </PopoverContent>
+      </Popover>
       <CardContent className="p-3">
         <div className="flex justify-between items-start">
           <div className="flex items-center gap-2">
@@ -155,12 +213,12 @@ export default function PosSystem() {
         </div>
         {!isClickToAdd && (
           <div className="flex justify-end mt-2">
-            <Button size="sm" variant="secondary" onClick={() => addToOrder(item)}>Add to Order</Button>
+            <Button size="sm" variant="secondary" onClick={(e) => { e.stopPropagation(); addToOrder(item); }}>Add to Order</Button>
           </div>
         )}
       </CardContent>
     </Card>
-  );
+  )};
 
   const renderMenuContent = () => {
     if (viewMode === 'list') {
@@ -252,18 +310,18 @@ export default function PosSystem() {
             </div>
             <div className="flex items-center gap-4">
                <RadioGroup value={viewMode} onValueChange={(v) => setViewMode(v as ViewMode)} className="flex items-center p-1 bg-muted rounded-md">
-                <Label htmlFor="accordion-view" data-state={viewMode === 'accordion' ? 'checked' : 'unchecked'} className="p-1.5 rounded-md transition-colors hover:bg-accent cursor-pointer data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground">
-                  <List className="h-5 w-5" />
+                <Label htmlFor="accordion-view">
+                   <List className={cn("h-5 w-5 p-1.5 box-content rounded-md cursor-pointer transition-colors hover:bg-accent", viewMode === 'accordion' && "bg-primary text-primary-foreground hover:bg-primary/90")} />
                 </Label>
                 <RadioGroupItem value="accordion" id="accordion-view" className="sr-only" />
                 
-                <Label htmlFor="grid-view" data-state={viewMode === 'grid' ? 'checked' : 'unchecked'} className="p-1.5 rounded-md transition-colors hover:bg-accent cursor-pointer data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground">
-                   <LayoutGrid className="h-5 w-5" />
+                <Label htmlFor="grid-view">
+                   <LayoutGrid className={cn("h-5 w-5 p-1.5 box-content rounded-md cursor-pointer transition-colors hover:bg-accent", viewMode === 'grid' && "bg-primary text-primary-foreground hover:bg-primary/90")} />
                 </Label>
                 <RadioGroupItem value="grid" id="grid-view" className="sr-only" />
 
-                <Label htmlFor="list-view" data-state={viewMode === 'list' ? 'checked' : 'unchecked'} className="p-1.5 rounded-md transition-colors hover:bg-accent cursor-pointer data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground">
-                   <Rows className="h-5 w-5" />
+                <Label htmlFor="list-view" >
+                   <Rows className={cn("h-5 w-5 p-1.5 box-content rounded-md cursor-pointer transition-colors hover:bg-accent", viewMode === 'list' && "bg-primary text-primary-foreground hover:bg-primary/90")} />
                 </Label>
                 <RadioGroupItem value="list" id="list-view" className="sr-only"/>
               </RadioGroup>
@@ -394,5 +452,3 @@ export default function PosSystem() {
     </div>
   );
 }
-
-    
