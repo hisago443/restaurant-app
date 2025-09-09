@@ -178,12 +178,17 @@ export default function PosSystem() {
     const defaultColor = subCategoryName.toLowerCase().includes('veg') ? vegColor : nonVegColor;
     const categoryColor = categoryColors[categoryName];
     const itemColor = menuItemColors[item.name];
-    const finalColor = itemColor || categoryColor || defaultColor;
+    let finalColor = itemColor || categoryColor || defaultColor;
+
+    const colorClasses = finalColor.split(' ');
+    const bgClass = colorClasses.find(c => c.startsWith('bg-'));
+    const textClass = colorClasses.find(c => c.startsWith('text-'));
+    const finalColorClasses = `${bgClass} ${textClass}`;
 
     return (
       <Card
         key={item.name}
-        className={cn("group rounded-lg cursor-pointer transition-all hover:scale-105 hover:shadow-md relative", finalColor)}
+        className={cn("group rounded-lg cursor-pointer transition-all hover:scale-105 hover:shadow-md relative border-border", finalColorClasses)}
         onClick={() => isClickToAdd && addToOrder(item, 1)}
       >
         <Popover>
@@ -262,7 +267,7 @@ export default function PosSystem() {
           {filteredMenu.map((category) => (
             <div key={category.category}>
               <div className={cn("sticky top-0 bg-background py-2 z-10 flex items-center justify-between gap-2 p-2 rounded-md", categoryColors[category.category])}>
-                 <div className="flex-1"></div>
+                <div className="flex-1"></div>
                 <h2 className="text-xl font-bold text-center flex-1">
                   {category.category}
                 </h2>
@@ -513,5 +518,3 @@ export default function PosSystem() {
     </div>
   );
 }
-
-    
