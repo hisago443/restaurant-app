@@ -157,22 +157,22 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
       case 'Available':
         return (
           <>
-            <Button onClick={() => localUpdateTableStatus(table.id, 'Occupied')}><Armchair className="mr-2 h-4 w-4" />Seat Guests</Button>
-            <Button variant="outline" onClick={() => localUpdateTableStatus(table.id, 'Reserved')}><BookmarkPlus className="mr-2 h-4 w-4" />Reserve Table</Button>
+            <Button onClick={() => localUpdateTableStatus(table.id, 'Occupied')}><Users className="mr-2 h-4 w-4" />Seat Guests</Button>
+            <Button variant="outline" onClick={() => localUpdateTableStatus(table.id, 'Reserved')}><Bookmark className="mr-2 h-4 w-4" />Reserve Table</Button>
           </>
         );
       case 'Occupied':
         return (
           <>
             <Button><ClipboardList className="mr-2 h-4 w-4" />View Order</Button>
-            <Button variant="destructive" onClick={() => localUpdateTableStatus(table.id, 'Cleaning')}><LogOut className="mr-2 h-4 w-4" />Customer Left</Button>
+            <Button variant="destructive" onClick={() => localUpdateTableStatus(table.id, 'Cleaning')}><Sparkles className="mr-2 h-4 w-4" />Customer Left</Button>
           </>
         );
       case 'Reserved':
         return (
           <>
-            <Button onClick={() => localUpdateTableStatus(table.id, 'Occupied')}><UserCheck className="mr-2 h-4 w-4" />Guest Arrived</Button>
-            <Button variant="outline" onClick={() => localUpdateTableStatus(table.id, 'Available')}><BookmarkX className="mr-2 h-4 w-4" />Cancel Reservation</Button>
+            <Button onClick={() => localUpdateTableStatus(table.id, 'Occupied')}><Users className="mr-2 h-4 w-4" />Guest Arrived</Button>
+            <Button variant="outline" onClick={() => localUpdateTableStatus(table.id, 'Available')}><CheckCircle2 className="mr-2 h-4 w-4" />Cancel Reservation</Button>
           </>
         );
       case 'Cleaning':
@@ -240,7 +240,9 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
         </CardHeader>
         <CardContent className="pt-6">
           <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-10 gap-4">
-            {filteredTables.map(table => (
+            {filteredTables.map(table => {
+              const Icon = statusIcons[table.status];
+              return (
               <div
                 key={table.id}
                 className={cn(
@@ -280,11 +282,11 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
                 </div>
                 <span className={cn("text-6xl font-bold", table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black')}>{table.id}</span>
                 <div className="flex items-center gap-1">
-                  {table.status === 'Cleaning' && <Sparkles className="h-4 w-4 text-black" />}
+                  <Icon className={cn("h-4 w-4", table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black')} />
                   <span className={cn("text-base font-semibold", table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black')}>{table.status}</span>
                 </div>
               </div>
-            ))}
+            )})}
              {filteredTables.length === 0 && (
               <div className="col-span-full text-center text-muted-foreground">
                 No tables match the current filter.
