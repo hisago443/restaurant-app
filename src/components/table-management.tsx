@@ -10,7 +10,7 @@ import type { Table, TableStatus } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
-import { PlusCircle, Trash2, LayoutTemplate, Sparkles } from 'lucide-react';
+import { PlusCircle, Trash2, LayoutTemplate, Sparkles, Users, CheckCircle2, Bookmark, Armchair, ClipboardList, LogOut, UserCheck, BookmarkX, BookmarkPlus } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 
 const statusColors: Record<TableStatus, string> = {
@@ -18,6 +18,13 @@ const statusColors: Record<TableStatus, string> = {
   Occupied: 'bg-red-400 hover:bg-red-500',
   Reserved: 'bg-blue-400 hover:bg-blue-500',
   Cleaning: 'bg-amber-300 hover:bg-amber-400',
+};
+
+const statusIcons: Record<TableStatus, React.ElementType> = {
+  Available: CheckCircle2,
+  Occupied: Users,
+  Reserved: Bookmark,
+  Cleaning: Sparkles,
 };
 
 interface TableManagementProps {
@@ -91,26 +98,26 @@ export default function TableManagement({ tables, updateTableStatus, addTable, r
       case 'Available':
         return (
           <>
-            <Button onClick={() => localUpdateTableStatus(table.id, 'Occupied')}>Seat Guests</Button>
-            <Button variant="outline" onClick={() => localUpdateTableStatus(table.id, 'Reserved')}>Reserve Table</Button>
+            <Button onClick={() => localUpdateTableStatus(table.id, 'Occupied')}><Armchair className="mr-2 h-4 w-4" />Seat Guests</Button>
+            <Button variant="outline" onClick={() => localUpdateTableStatus(table.id, 'Reserved')}><BookmarkPlus className="mr-2 h-4 w-4" />Reserve Table</Button>
           </>
         );
       case 'Occupied':
         return (
           <>
-            <Button>View Order</Button>
-            <Button variant="destructive" onClick={() => localUpdateTableStatus(table.id, 'Cleaning')}>Customer Left</Button>
+            <Button><ClipboardList className="mr-2 h-4 w-4" />View Order</Button>
+            <Button variant="destructive" onClick={() => localUpdateTableStatus(table.id, 'Cleaning')}><LogOut className="mr-2 h-4 w-4" />Customer Left</Button>
           </>
         );
       case 'Reserved':
         return (
           <>
-            <Button onClick={() => localUpdateTableStatus(table.id, 'Occupied')}>Guest Arrived</Button>
-            <Button variant="outline" onClick={() => localUpdateTableStatus(table.id, 'Available')}>Cancel Reservation</Button>
+            <Button onClick={() => localUpdateTableStatus(table.id, 'Occupied')}><UserCheck className="mr-2 h-4 w-4" />Guest Arrived</Button>
+            <Button variant="outline" onClick={() => localUpdateTableStatus(table.id, 'Available')}><BookmarkX className="mr-2 h-4 w-4" />Cancel Reservation</Button>
           </>
         );
       case 'Cleaning':
-        return <Button onClick={() => localUpdateTableStatus(table.id, 'Available')}>Mark as Available</Button>;
+        return <Button onClick={() => localUpdateTableStatus(table.id, 'Available')}><CheckCircle2 className="mr-2 h-4 w-4" />Mark as Available</Button>;
       default:
         return null;
     }
@@ -150,23 +157,26 @@ export default function TableManagement({ tables, updateTableStatus, addTable, r
                 TOTAL TABLES ({tables.length})
               </Button>
               <Separator orientation="vertical" className="h-8 bg-foreground/50" />
-              {(Object.keys(statusColors) as TableStatus[]).map(status => (
-                  <Button
-                    key={status}
-                    onClick={() => handleStatusButtonClick(status)}
-                    onMouseEnter={() => setHoveredStatus(status)}
-                    onMouseLeave={() => setHoveredStatus(null)}
-                    className={cn(
-                      status === 'Available' || status === 'Occupied' ? 'text-white' : 'text-black',
-                      statusColors[status],
-                      'transition-all',
-                      filter === status && 'ring-2 ring-offset-2 ring-ring'
-                    )}
-                  >
-                      {status === 'Cleaning' && <Sparkles className="mr-2 h-4 w-4" />}
-                      {status} ({tables.filter(t => t.status === status).length})
-                  </Button>
-              ))}
+              {(Object.keys(statusColors) as TableStatus[]).map(status => {
+                  const Icon = statusIcons[status];
+                  return (
+                    <Button
+                      key={status}
+                      onClick={() => handleStatusButtonClick(status)}
+                      onMouseEnter={() => setHoveredStatus(status)}
+                      onMouseLeave={() => setHoveredStatus(null)}
+                      className={cn(
+                        status === 'Available' || status === 'Occupied' ? 'text-white' : 'text-black',
+                        statusColors[status],
+                        'transition-all',
+                        filter === status && 'ring-2 ring-offset-2 ring-ring'
+                      )}
+                    >
+                        <Icon className="mr-2 h-4 w-4" />
+                        {status} ({tables.filter(t => t.status === status).length})
+                    </Button>
+                  );
+              })}
           </div>
         </CardHeader>
         <CardContent className="pt-6">
