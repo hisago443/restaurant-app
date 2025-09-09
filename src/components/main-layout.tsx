@@ -222,7 +222,7 @@ export default function MainLayout() {
           
           <div className="flex-grow overflow-auto">
             <TabsContent value="pos" className="m-0 p-0 h-full">
-                <PosSystem tables={tables} addOrder={addOrder} addBill={addBill} />
+                <PosSystem tables={tables} addOrder={addOrder} addBill={addBill} updateTableStatus={updateTableStatus} />
             </TabsContent>
             <TabsContent value="tables" className="m-0 p-0">
               <TableManagement 

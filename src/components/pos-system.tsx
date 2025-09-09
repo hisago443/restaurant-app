@@ -19,7 +19,7 @@ import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { AddItemDialog } from './add-item-dialog';
 
-import type { MenuCategory, MenuItem, OrderItem, Table, Order, Bill } from '@/lib/types';
+import type { MenuCategory, MenuItem, OrderItem, Table, Order, Bill, TableStatus } from '@/lib/types';
 import menuData from '@/data/menu.json';
 import { generateReceipt, type GenerateReceiptInput } from '@/ai/flows/dynamic-receipt-discount-reasoning';
 import { PaymentDialog } from './payment-dialog';
@@ -43,9 +43,10 @@ interface PosSystemProps {
   tables: Table[];
   addOrder: (order: Omit<Order, 'id' | 'status'>) => void;
   addBill: (bill: Omit<Bill, 'id' | 'timestamp'>) => void;
+  updateTableStatus: (tableIds: number[], status: TableStatus) => void;
 }
 
-export default function PosSystem({ tables, addOrder, addBill }: PosSystemProps) {
+export default function PosSystem({ tables, addOrder, addBill, updateTableStatus }: PosSystemProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
   const [discount, setDiscount] = useState(0);
@@ -73,6 +74,16 @@ export default function PosSystem({ tables, addOrder, addBill }: PosSystemProps)
   useEffect(() => {
     localStorage.setItem('isClickToAdd', JSON.stringify(isClickToAdd));
   }, [isClickToAdd]);
+
+  const handleSelectTable = (tableId: string | null) => {
+    setSelectedTable(tableId);
+    if (tableId) {
+      const table = tables.find(t => t.id.toString() === tableId);
+      if (table && table.status === 'Available') {
+        updateTableStatus([parseInt(tableId, 10)], 'Occupied');
+      }
+    }
+  };
 
   const setItemColor = (itemName: string, colorClass: string) => {
     setMenuItemColors(prev => ({ ...prev, [itemName]: colorClass }));
@@ -224,6 +235,8 @@ export default function PosSystem({ tables, addOrder, addBill }: PosSystemProps)
   };
   
   const handlePaymentSuccess = async () => {
+    if (!selectedTable) return;
+
     setIsPaymentDialogOpen(false);
     toast({ title: "Payment Successful", description: `Payment of Rs.${total.toFixed(2)} confirmed.` });
     
@@ -234,6 +247,9 @@ export default function PosSystem({ tables, addOrder, addBill }: PosSystemProps)
       receiptPreview: receiptPreview,
     };
     addBill(billPayload);
+
+    // Update table status to 'Cleaning'
+    updateTableStatus([parseInt(selectedTable, 10)], 'Cleaning');
 
     const adminEmailInput: SendEmailReceiptInput = {
       customerEmail: 'upandabove.bir@gmail.com',
@@ -517,7 +533,7 @@ export default function PosSystem({ tables, addOrder, addBill }: PosSystemProps)
           <CardTitle>Current Order</CardTitle>
           <div className="pt-2">
             <Label htmlFor="table-select">Select Table</Label>
-            <Select value={selectedTable ?? ''} onValueChange={setSelectedTable}>
+            <Select value={selectedTable ?? ''} onValueChange={handleSelectTable}>
                 <SelectTrigger id="table-select">
                     <SelectValue placeholder="Select a table..." />
                 </SelectTrigger>
