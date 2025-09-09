@@ -5,8 +5,8 @@ import * as React from 'react';
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose, DialogDescription } from '@/components/ui/dialog';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger, AlertDialogFooter } from "@/components/ui/alert-dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose, DialogDescription as DialogDescriptionComponent } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger, AlertDialogFooter, AlertDialogDescription } from "@/components/ui/alert-dialog";
 import type { Table, TableStatus, Order, Bill } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -326,9 +326,9 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
             <>
               <DialogHeader>
                 <DialogTitle>Table {selectedTable.id} - {selectedTable.status}</DialogTitle>
-                 <DialogDescription>
+                 <DialogDescriptionComponent>
                   Daily Turnover: {occupancyCount[selectedTable.id] || 0}
-                </DialogDescription>
+                </DialogDescriptionComponent>
               </DialogHeader>
               <div className="py-4">
                 <p className="font-semibold mb-2">Select an action for this table:</p>
@@ -350,9 +350,9 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
         <DialogContent>
             <DialogHeader>
               <DialogTitle>Manage Table Layout</DialogTitle>
-              <DialogDescription>
+              <AlertDialogDescription>
                 Add or remove tables to match your restaurant's layout.
-              </DialogDescription>
+              </AlertDialogDescription>
             </DialogHeader>
             <div className="grid grid-cols-2 gap-4 py-4">
               <Button variant="outline" onClick={addTable}>
@@ -393,7 +393,7 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
                         <>
                             <DialogHeader>
                                 <DialogTitle>Error</DialogTitle>
-                                <DialogDescription>No active order found for Table {tableForPrint.id}.</DialogDescription>
+                                <DialogDescriptionComponent>No active order found for Table {tableForPrint.id}.</DialogDescriptionComponent>
                             </DialogHeader>
                             <DialogFooter>
                                 <Button onClick={() => setIsPrintDialogOpen(false)}>Close</Button>
