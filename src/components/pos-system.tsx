@@ -225,7 +225,7 @@ export default function PosSystem() {
           )}
         </CardContent>
       </Card>
-    )
+    );
   };
 
   const CategoryColorPicker = ({ categoryName }: { categoryName: string }) => (
@@ -285,10 +285,15 @@ export default function PosSystem() {
         <Tabs defaultValue={filteredMenu[0]?.category} className="w-full">
           <TabsList className="mb-4">
             {filteredMenu.map(category => (
-               <TabsTrigger key={category.category} value={category.category} className={cn("flex items-center gap-2", categoryColors[category.category])}>
-                {category.category}
-                <CategoryColorPicker categoryName={category.category} />
-              </TabsTrigger>
+              <div key={category.category} className={cn(
+                  "p-1 rounded-md data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm",
+                  categoryColors[category.category]
+                )}>
+                <TabsTrigger value={category.category} className="bg-transparent shadow-none p-2 flex items-center gap-2">
+                  {category.category}
+                  <CategoryColorPicker categoryName={category.category} />
+                </TabsTrigger>
+              </div>
             ))}
           </TabsList>
           {filteredMenu.map(category => (
