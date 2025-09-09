@@ -14,20 +14,67 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { QrCode, Wallet } from 'lucide-react';
+import { QrCode, Wallet, Mail } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { sendEmailReceipt, type SendEmailReceiptInput } from '@/ai/flows/send-email-receipt';
 
 interface PaymentDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   total: number;
+  receiptPreview: string;
   onPaymentSuccess: () => void;
 }
 
-export function PaymentDialog({ isOpen, onOpenChange, total, onPaymentSuccess }: PaymentDialogProps) {
+export function PaymentDialog({ isOpen, onOpenChange, total, receiptPreview, onPaymentSuccess }: PaymentDialogProps) {
   const [cashReceived, setCashReceived] = useState<number | null>(null);
+  const [customerEmail, setCustomerEmail] = useState('');
   const [error, setError] = useState('');
+  const { toast } = useToast();
 
   const change = cashReceived !== null ? cashReceived - total : null;
+
+  const handleEmailReceipt = async () => {
+    if (!customerEmail) {
+      toast({
+        variant: "destructive",
+        title: "Missing Email",
+        description: "Please enter a customer email to send the receipt.",
+      });
+      return;
+    }
+    
+    const input: SendEmailReceiptInput = {
+      customerEmail,
+      receiptContent: receiptPreview,
+      totalAmount: total,
+    };
+
+    try {
+      const result = await sendEmailReceipt(input);
+      if (result.success) {
+        toast({
+          title: "Receipt Sent",
+          description: `A copy of the receipt has been sent to ${customerEmail}.`,
+        });
+      } else {
+        throw new Error(result.message);
+      }
+    } catch (e) {
+        toast({
+          variant: "destructive",
+          title: "Email Failed",
+          description: "Could not send the email receipt. Please try again.",
+      });
+    }
+  };
+
+  const processPayment = () => {
+    onPaymentSuccess();
+    if (customerEmail) {
+      handleEmailReceipt();
+    }
+  }
 
   const handleCashConfirm = () => {
     if (cashReceived === null || cashReceived < total) {
@@ -35,15 +82,16 @@ export function PaymentDialog({ isOpen, onOpenChange, total, onPaymentSuccess }:
       return;
     }
     setError('');
-    onPaymentSuccess();
+    processPayment();
   };
   
   const handleOnlineConfirm = () => {
-    onPaymentSuccess();
+    processPayment();
   };
 
   const handleClose = () => {
     setCashReceived(null);
+    setCustomerEmail('');
     setError('');
     onOpenChange(false);
   }
@@ -57,7 +105,25 @@ export function PaymentDialog({ isOpen, onOpenChange, total, onPaymentSuccess }:
             Total Amount to be Paid: <span className="font-bold text-foreground">₹{total.toFixed(2)}</span>
           </DialogDescription>
         </DialogHeader>
-        <Tabs defaultValue="cash" className="w-full pt-4">
+
+        <div className="space-y-2 py-4">
+            <Label htmlFor="customer-email">Customer Email (Optional)</Label>
+            <div className="flex items-center gap-2">
+                <Input
+                  id="customer-email"
+                  type="email"
+                  placeholder="name@example.com"
+                  value={customerEmail}
+                  onChange={(e) => setCustomerEmail(e.target.value)}
+                />
+                <Button variant="outline" size="icon" onClick={handleEmailReceipt} disabled={!customerEmail}>
+                    <Mail className="h-4 w-4" />
+                </Button>
+            </div>
+             <p className="text-xs text-muted-foreground">Enter an email to send the receipt after payment.</p>
+        </div>
+
+        <Tabs defaultValue="cash" className="w-full">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="cash"><Wallet className="mr-2 h-4 w-4" />Cash</TabsTrigger>
             <TabsTrigger value="online"><QrCode className="mr-2 h-4 w-4" />Online</TabsTrigger>

@@ -546,6 +546,7 @@ export default function PosSystem() {
         isOpen={isPaymentDialogOpen}
         onOpenChange={setIsPaymentDialogOpen}
         total={total}
+        receiptPreview={receiptPreview}
         onPaymentSuccess={handlePaymentSuccess}
       />
        <AddItemDialog
