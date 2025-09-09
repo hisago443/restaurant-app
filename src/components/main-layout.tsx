@@ -32,30 +32,44 @@ export default function MainLayout() {
     }));
     setTables(initialTables);
   
-    // Listen for real-time updates to employees
-    const unsubEmployees = onSnapshot(collection(db, "employees"), (snapshot) => {
-      const employeesData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Employee));
-      setEmployees(employeesData);
-    });
+    // // Listen for real-time updates to employees
+    // const unsubEmployees = onSnapshot(collection(db, "employees"), (snapshot) => {
+    //   const employeesData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Employee));
+    //   setEmployees(employeesData);
+    // }, (error) => {
+    //     console.error("Firestore Error (employees): ", error);
+    //     toast({
+    //         variant: 'destructive',
+    //         title: 'Firestore Connection Error',
+    //         description: 'Could not fetch employee data. Please check your connection and Firestore security rules.',
+    //     })
+    // });
 
-    // Listen for real-time updates to bills
-    const unsubBills = onSnapshot(collection(db, "bills"), (snapshot) => {
-      const billsData = snapshot.docs.map(doc => {
-        const data = doc.data();
-        return {
-          ...data,
-          id: doc.id,
-          timestamp: data.timestamp.toDate(),
-        } as Bill;
-      });
-      setBillHistory(billsData);
-    });
+    // // Listen for real-time updates to bills
+    // const unsubBills = onSnapshot(collection(db, "bills"), (snapshot) => {
+    //   const billsData = snapshot.docs.map(doc => {
+    //     const data = doc.data();
+    //     return {
+    //       ...data,
+    //       id: doc.id,
+    //       timestamp: data.timestamp.toDate(),
+    //     } as Bill;
+    //   });
+    //   setBillHistory(billsData);
+    // }, (error) => {
+    //     console.error("Firestore Error (bills): ", error);
+    //     toast({
+    //         variant: 'destructive',
+    //         title: 'Firestore Connection Error',
+    //         description: 'Could not fetch bill history. Please check your connection and Firestore security rules.',
+    //     })
+    // });
 
-    return () => {
-      unsubEmployees();
-      unsubBills();
-    };
-  }, []);
+    // return () => {
+    //   unsubEmployees();
+    //   unsubBills();
+    // };
+  }, [toast]);
 
 
   const addOrder = (order: Omit<Order, 'id' | 'status'>) => {
@@ -75,7 +89,9 @@ export default function MainLayout() {
         ...bill,
         timestamp: new Date(),
       };
-      await addDoc(collection(db, "bills"), billWithTimestamp);
+      const docRef = await addDoc(collection(db, "bills"), billWithTimestamp);
+      // Manually add to local state to reflect change immediately
+      setBillHistory(prev => [...prev, { ...billWithTimestamp, id: docRef.id }]);
       toast({ title: 'Bill Saved', description: 'The bill has been saved to the database.' });
     } catch (error) {
       console.error("Error adding bill to Firestore: ", error);
@@ -126,7 +142,9 @@ export default function MainLayout() {
 
   const addEmployee = async (employee: Omit<Employee, 'id'>) => {
     try {
-      await addDoc(collection(db, "employees"), employee);
+      const docRef = await addDoc(collection(db, "employees"), employee);
+      // Manually add to local state to reflect change immediately
+      setEmployees(prev => [...prev, { ...employee, id: docRef.id }]);
       toast({ title: 'Employee Added', description: 'New employee saved to the database.' });
     } catch (error) {
       console.error("Error adding employee: ", error);
@@ -143,6 +161,8 @@ export default function MainLayout() {
         salary: employee.salary,
         color: employee.color,
       }, { merge: true });
+       // Manually update local state
+      setEmployees(prev => prev.map(e => e.id === employee.id ? employee : e));
       toast({ title: 'Employee Updated', description: 'Employee information has been updated.' });
     } catch (error) {
       console.error("Error updating employee: ", error);
@@ -153,6 +173,8 @@ export default function MainLayout() {
   const deleteEmployee = async (employeeId: string) => {
     try {
       await deleteDoc(doc(db, "employees", employeeId));
+       // Manually update local state
+      setEmployees(prev => prev.filter(e => e.id !== employeeId));
       toast({ title: 'Employee Deleted', description: 'Employee has been removed from the database.' });
     } catch (error) {
       console.error("Error deleting employee: ", error);
