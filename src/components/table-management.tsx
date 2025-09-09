@@ -12,7 +12,7 @@ import type { Table, TableStatus, Order, OrderItem, Bill } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
-import { PlusCircle, Trash2, LayoutTemplate, Sparkles, Users, CheckCircle2, Bookmark, Armchair, ClipboardList, LogOut, UserCheck, BookmarkX, BookmarkPlus, Printer, Repeat, Edit } from 'lucide-react';
+import { PlusCircle, Trash2, LayoutTemplate, Sparkles, Users, CheckCircle2, Bookmark, Armchair, ClipboardList, LogOut, UserCheck, BookmarkX, BookmarkPlus, Printer, Repeat, Edit, SparklesIcon } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 
 const statusColors: Record<TableStatus, string> = {
@@ -53,7 +53,11 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
 
   const localUpdateTableStatus = (tableId: number, status: TableStatus) => {
     updateTableStatus([tableId], status);
-    setSelectedTable(null);
+    // After action, update selected table to reflect new status
+    const updatedTable = tables.find(t => t.id === tableId);
+    if(updatedTable) {
+        setSelectedTable({...updatedTable, status});
+    }
   };
 
   const handleDoubleClick = (table: Table) => {
@@ -158,14 +162,14 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
         return (
           <>
             <Button onClick={() => order && onEditOrder(order)} disabled={!order}><Edit className="mr-2 h-4 w-4" />Modify Order</Button>
-            <Button variant="destructive" onClick={() => localUpdateTableStatus(table.id, 'Cleaning')}><Sparkles className="mr-2 h-4 w-4" />Customer Left</Button>
+            <Button variant="destructive" onClick={() => localUpdateTableStatus(table.id, 'Cleaning')}><SparklesIcon className="mr-2 h-4 w-4" />Customer Left</Button>
           </>
         );
       case 'Reserved':
         return (
           <>
-            <Button onClick={() => localUpdateTableStatus(table.id, 'Occupied')}><Users className="mr-2 h-4 w-4" />Guest Arrived</Button>
-            <Button variant="outline" onClick={() => localUpdateTableStatus(table.id, 'Available')}><CheckCircle2 className="mr-2 h-4 w-4" />Cancel Reservation</Button>
+            <Button onClick={() => localUpdateTableStatus(table.id, 'Occupied')}><UserCheck className="mr-2 h-4 w-4" />Guest Arrived</Button>
+            <Button variant="outline" onClick={() => localUpdateTableStatus(table.id, 'Available')}><BookmarkX className="mr-2 h-4 w-4" />Cancel Reservation</Button>
           </>
         );
       case 'Cleaning':
@@ -289,18 +293,23 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
         </CardContent>
       </Card>
 
-      <Dialog open={!!selectedTable} onOpenChange={() => setSelectedTable(null)}>
+      <Dialog open={!!selectedTable} onOpenChange={(open) => { if (!open) setSelectedTable(null)}}>
         <DialogContent>
           {selectedTable && (
             <>
               <DialogHeader>
                 <DialogTitle>Table {selectedTable.id} - {selectedTable.status}</DialogTitle>
+                 <DialogDescription>
+                  Daily Turnover: {occupancyCount[selectedTable.id] || 0}
+                </DialogDescription>
               </DialogHeader>
               <div className="py-4">
-                <p>Select an action for this table.</p>
+                <p className="font-semibold mb-2">Select an action for this table:</p>
+                <div className="flex flex-wrap gap-2">
+                    {renderActions(selectedTable)}
+                </div>
               </div>
-              <DialogFooter className="gap-2">
-                {renderActions(selectedTable)}
+              <DialogFooter>
                 <DialogClose asChild>
                   <Button type="button" variant="secondary">Close</Button>
                 </DialogClose>

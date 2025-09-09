@@ -26,7 +26,6 @@ import { generateReceipt, type GenerateReceiptInput } from '@/ai/flows/dynamic-r
 import { PaymentDialog } from './payment-dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { sendEmailReceipt, SendEmailReceiptInput } from '@/ai/flows/send-email-receipt';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 const vegColor = 'bg-green-100 dark:bg-green-900/30';
 const nonVegColor = 'bg-rose-100 dark:bg-rose-900/30';
@@ -81,10 +80,15 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
   const [categoryColors, setCategoryColors] = useState<Record<string, string>>({});
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
   const [isAddItemDialogOpen, setIsAddItemDialogOpen] = useState(false);
-  const [selectedTable, setSelectedTable] = useState<string | null>(null);
+  const [selectedTableId, setSelectedTableId] = useState<number | null>(null);
   const [isTablePopoverOpen, setIsTablePopoverOpen] = useState(false);
 
   const typedMenuData: MenuCategory[] = menuData;
+
+  const currentActiveTableId = useMemo(() => {
+    if (activeOrder) return activeOrder.tableId;
+    return selectedTableId;
+  }, [activeOrder, selectedTableId]);
 
   useEffect(() => {
     const savedState = localStorage.getItem('isClickToAdd');
@@ -99,27 +103,26 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
 
   useEffect(() => {
     if (activeOrder) {
-      setSelectedTable(activeOrder.tableId.toString());
+      setSelectedTableId(activeOrder.tableId);
       setOrderItems(activeOrder.items);
     } else {
       // Don't clear if there are items, user might be building a new order
       if (orderItems.length === 0) {
-        setSelectedTable(null);
+        setSelectedTableId(null);
       }
     }
   }, [activeOrder, orderItems.length]);
 
 
-  const handleSelectTable = (tableId: string) => {
-    const table = tables.find(t => t.id.toString() === tableId);
+  const handleSelectTable = (tableId: number) => {
+    const table = tables.find(t => t.id === tableId);
     if (!table) return;
 
     if (table.status === 'Available') {
       clearOrder(false, true); // Clear everything for a new order
-      setSelectedTable(tableId);
-      setIsTablePopoverOpen(false);
+      setSelectedTableId(tableId);
     } else if (table.status === 'Occupied') {
-        const existingOrder = orders.find(o => o.tableId.toString() === tableId && o.status !== 'Completed');
+        const existingOrder = orders.find(o => o.tableId === tableId && o.status !== 'Completed');
         if (existingOrder) {
             setActiveOrder(existingOrder);
         } else {
@@ -129,21 +132,9 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
                 description: `Could not find an active order for Table ${tableId}.`,
             });
         }
-        setIsTablePopoverOpen(false);
-    } else if (table.status === 'Cleaning') {
-      updateTableStatus([table.id], 'Available');
-      toast({
-          title: 'Table Available',
-          description: `Table ${tableId} is now available for new guests.`,
-      });
-      // Keep the popover open so the user can see the status change and select the table if they wish.
-    } else if (table.status === 'Reserved') {
-        toast({
-            title: 'Table Reserved',
-            description: `Table ${tableId} is reserved. Seat guests from the Tables tab.`,
-        });
-        setIsTablePopoverOpen(false);
     }
+    // For other statuses, just select the table to show actions
+    setSelectedTableId(tableId);
   };
 
   const handleDoubleClickTable = (table: Table) => {
@@ -271,7 +262,7 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
       setOrderItems([]);
       setDiscount(0);
       setActiveOrder(null);
-      setSelectedTable(null);
+      setSelectedTableId(null);
       toast({ title: "New Bill", description: "Current order cleared." });
       return;
     }
@@ -281,11 +272,11 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
     setActiveOrder(null);
     if (delayTableClear) {
       setTimeout(() => {
-        setSelectedTable(null);
+        setSelectedTableId(null);
         toast({ title: "New Bill Ready", description: "Select a table to start a new order." });
       }, 2000);
     } else {
-      setSelectedTable(null);
+      setSelectedTableId(null);
       toast({ title: "New Bill", description: "Current order cleared." });
     }
   };
@@ -295,7 +286,7 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
       toast({ variant: 'destructive', title: 'Empty Order', description: 'Cannot send an empty order to the kitchen.' });
       return;
     }
-    if (!selectedTable) {
+    if (!currentActiveTableId) {
       toast({ variant: 'destructive', title: 'No Table Selected', description: 'Please select a table before sending to the kitchen.' });
       return;
     }
@@ -306,16 +297,16 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
         ...activeOrder,
         items: orderItems,
       });
-      toast({ title: 'Order Updated!', description: `KOT updated for Table ${selectedTable}.` });
+      toast({ title: 'Order Updated!', description: `KOT updated for Table ${currentActiveTableId}.` });
 
     } else {
       // This is a new order
       const orderPayload = {
         items: orderItems,
-        tableId: Number(selectedTable),
+        tableId: Number(currentActiveTableId),
       };
       addOrder(orderPayload);
-      toast({ title: 'Order Sent!', description: `KOT sent to the kitchen for Table ${selectedTable}.` });
+      toast({ title: 'Order Sent!', description: `KOT sent to the kitchen for Table ${currentActiveTableId}.` });
     }
   };
 
@@ -324,7 +315,7 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
       toast({ variant: "destructive", title: "Empty Order", description: "Cannot process payment for an empty order." });
       return;
     }
-    if (!selectedTable) {
+    if (!currentActiveTableId) {
       toast({ variant: 'destructive', title: 'No Table Selected', description: 'Please select a table before processing payment.' });
       return;
     }
@@ -332,21 +323,21 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
   };
   
   const handlePaymentSuccess = async () => {
-    if (!selectedTable) return;
+    if (!currentActiveTableId) return;
 
     setIsPaymentDialogOpen(false);
     toast({ title: "Payment Successful", description: `Payment of Rs.${total.toFixed(2)} confirmed.` });
     
     const billPayload: Omit<Bill, 'id' | 'timestamp'> = {
       orderItems: orderItems,
-      tableId: Number(selectedTable),
+      tableId: Number(currentActiveTableId),
       total: total,
       receiptPreview: receiptPreview,
     };
     addBill(billPayload);
 
     // Update table status to 'Cleaning'
-    updateTableStatus([parseInt(selectedTable, 10)], 'Cleaning');
+    updateTableStatus([currentActiveTableId], 'Cleaning');
     
     // Mark the order as completed
     if (activeOrder) {
@@ -383,7 +374,7 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
   };
 
   const handlePrintProvisionalBill = () => {
-    if (!selectedTable || orderItems.length === 0) {
+    if (!currentActiveTableId || orderItems.length === 0) {
       toast({
         variant: 'destructive',
         title: 'Cannot Print',
@@ -397,7 +388,7 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
       printWindow.document.write(`
         <html>
           <head>
-            <title>Provisional Bill for Table #${selectedTable}</title>
+            <title>Provisional Bill for Table #${currentActiveTableId}</title>
             <style>
               body { font-family: monospace; margin: 20px; }
               pre { white-space: pre-wrap; word-wrap: break-word; }
@@ -610,6 +601,47 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
     }
   };
 
+  const selectedTable = tables.find(t => t.id === selectedTableId);
+  const renderTableActions = () => {
+    if (!selectedTable) return null;
+
+    switch (selectedTable.status) {
+      case 'Available':
+        return (
+          <Button onClick={() => {
+            handleSelectTable(selectedTable.id)
+            setIsTablePopoverOpen(false);
+          }}>
+            <Users className="mr-2 h-4 w-4" />Create New Order
+          </Button>
+        );
+      case 'Occupied':
+        return (
+          <div className="flex gap-2">
+            <Button onClick={() => {
+              handleSelectTable(selectedTable.id)
+              setIsTablePopoverOpen(false);
+            }}>
+              <Edit className="mr-2 h-4 w-4" />Modify Order
+            </Button>
+            <Button variant="outline" onClick={handlePrintProvisionalBill}><Printer className="mr-2 h-4 w-4" /> Print Provisional Bill</Button>
+            <Button variant="destructive" onClick={() => updateTableStatus([selectedTable.id], 'Cleaning')}><SparklesIcon className="mr-2 h-4 w-4" />Mark as Cleaning</Button>
+          </div>
+        );
+      case 'Reserved':
+        return (
+          <div className="flex gap-2">
+            <Button onClick={() => updateTableStatus([selectedTable.id], 'Occupied')}><UserCheck className="mr-2 h-4 w-4" /> Seat Guests</Button>
+            <Button variant="outline" onClick={() => updateTableStatus([selectedTable.id], 'Available')}><BookmarkX className="mr-2 h-4 w-4" /> Cancel Reservation</Button>
+          </div>
+        );
+      case 'Cleaning':
+        return <Button onClick={() => updateTableStatus([selectedTable.id], 'Available')}><CheckCircle2 className="mr-2 h-4 w-4" />Mark as Available</Button>;
+      default:
+        return null;
+    }
+  }
+
   return (
     <div className="flex flex-col md:flex-row h-[calc(100vh-5rem)] gap-4 p-4">
       {/* Left Panel: Menu */}
@@ -675,65 +707,47 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
             <Popover open={isTablePopoverOpen} onOpenChange={setIsTablePopoverOpen}>
                 <PopoverTrigger asChild>
                     <Button variant="outline" className="w-full justify-start text-left font-normal">
-                    {selectedTable ? `Table ${selectedTable}` : "Select a table..."}
+                    {currentActiveTableId ? `Table ${currentActiveTableId}` : "Select a table..."}
                     <ChevronDown className="ml-auto h-4 w-4 opacity-50" />
                     </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-2" align="start">
                     <div className="grid grid-cols-5 gap-2">
                         {tables.map(table => (
-                        <DropdownMenu key={table.id}>
-                            <DropdownMenuTrigger asChild>
-                                <Button
-                                    variant="outline"
-                                    className={cn(
-                                        "flex flex-col h-20 w-20 justify-center items-center gap-1 relative",
-                                        statusColors[table.status],
-                                        selectedTable === table.id.toString() && 'ring-2 ring-offset-2 ring-ring',
-                                        table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black'
-                                    )}
-                                    onClick={() => handleSelectTable(table.id.toString())}
-                                    onDoubleClick={() => handleDoubleClickTable(table)}
-                                >
-                                    {(occupancyCount[table.id] > 0) &&
-                                    <div className="absolute bottom-1 right-1 flex items-center gap-1 bg-black/50 text-white text-xs font-bold p-1 rounded-md">
-                                        <Repeat className="h-3 w-3" />
-                                        <span>{occupancyCount[table.id]}</span>
-                                    </div>
-                                    }
-                                    <span className="text-2xl font-bold">{table.id}</span>
-                                    <div className="flex items-center gap-1 text-xs">
-                                        {React.createElement(statusIcons[table.status], { className: "h-3 w-3" })}
-                                        <span>{table.status}</span>
-                                    </div>
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent>
-                                <DropdownMenuLabel>Table {table.id} Actions</DropdownMenuLabel>
-                                <DropdownMenuSeparator />
-                                {table.status === 'Occupied' && (
-                                    <>
-                                        <DropdownMenuItem onClick={() => handleSelectTable(table.id.toString())}><Edit className="mr-2 h-4 w-4" /> Modify Order</DropdownMenuItem>
-                                        <DropdownMenuItem onClick={handlePrintProvisionalBill}><Printer className="mr-2 h-4 w-4" /> Print Provisional Bill</DropdownMenuItem>
-                                        <DropdownMenuItem onClick={() => updateTableStatus([table.id], 'Cleaning')}><SparklesIcon className="mr-2 h-4 w-4" /> Mark as Cleaning</DropdownMenuItem>
-                                    </>
+                            <Button
+                                key={table.id}
+                                variant="outline"
+                                className={cn(
+                                    "flex flex-col h-20 w-20 justify-center items-center gap-1 relative",
+                                    statusColors[table.status],
+                                    selectedTableId === table.id && 'ring-2 ring-offset-2 ring-ring',
+                                    table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black'
                                 )}
-                                {table.status === 'Cleaning' && (
-                                    <DropdownMenuItem onClick={() => updateTableStatus([table.id], 'Available')}><CheckCircle2 className="mr-2 h-4 w-4" /> Mark as Available</DropdownMenuItem>
-                                )}
-                                {table.status === 'Reserved' && (
-                                    <>
-                                        <DropdownMenuItem onClick={() => updateTableStatus([table.id], 'Occupied')}><UserCheck className="mr-2 h-4 w-4" /> Seat Guests</DropdownMenuItem>
-                                        <DropdownMenuItem onClick={() => updateTableStatus([table.id], 'Available')}><BookmarkX className="mr-2 h-4 w-4" /> Cancel Reservation</DropdownMenuItem>
-                                    </>
-                                )}
-                                <DropdownMenuItem disabled>
-                                    <Repeat className="mr-2 h-4 w-4" /> Daily Turnover: {occupancyCount[table.id] || 0}
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
+                                onClick={() => handleSelectTable(table.id)}
+                                onDoubleClick={() => handleDoubleClickTable(table)}
+                            >
+                                {(occupancyCount[table.id] > 0) &&
+                                <div className="absolute bottom-1 right-1 flex items-center gap-1 bg-black/50 text-white text-xs font-bold p-1 rounded-md">
+                                    <Repeat className="h-3 w-3" />
+                                    <span>{occupancyCount[table.id]}</span>
+                                </div>
+                                }
+                                <span className="text-2xl font-bold">{table.id}</span>
+                                <div className="flex items-center gap-1 text-xs">
+                                    {React.createElement(statusIcons[table.status], { className: "h-3 w-3" })}
+                                    <span>{table.status}</span>
+                                </div>
+                            </Button>
                         ))}
                     </div>
+                    {selectedTable && (
+                      <div className="mt-4 p-2 border-t">
+                          <h4 className="font-semibold mb-2">Actions for Table {selectedTable.id}</h4>
+                          <div className="flex flex-wrap gap-2">
+                           {renderTableActions()}
+                          </div>
+                      </div>
+                    )}
                 </PopoverContent>
             </Popover>
           </div>
