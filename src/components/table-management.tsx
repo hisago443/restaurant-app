@@ -3,16 +3,16 @@
 "use client";
 
 import * as React from 'react';
-import { useState, useMemo } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose, DialogDescription } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger, AlertDialogFooter, AlertDialogDescription } from "@/components/ui/alert-dialog";
-import type { Table, TableStatus, Order, OrderItem, Bill } from '@/lib/types';
+import type { Table, TableStatus, Order, Bill } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
-import { PlusCircle, Trash2, LayoutTemplate, Sparkles, Users, CheckCircle2, Bookmark, Armchair, ClipboardList, LogOut, UserCheck, BookmarkX, BookmarkPlus, Printer, Repeat, Edit, SparklesIcon } from 'lucide-react';
+import { PlusCircle, Trash2, LayoutTemplate, Sparkles, Users, CheckCircle2, Bookmark, Printer, Repeat, Edit, SparklesIcon, UserCheck, BookmarkX } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 
 const statusColors: Record<TableStatus, string> = {
@@ -71,13 +71,23 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
     }
   };
   
-  const handleSelectTable = (tableId: number) => {
+  const handleSelectTable = (table: Table) => {
+    // If a table is already selected, clicking it again opens the dialog
+    if (selectedTable?.id === table.id) {
+       setSelectedTable(table);
+    } else {
+        setSelectedTable(table);
+    }
+    // Logic for multi-select checkbox remains separate
+  };
+
+  const handleCheckboxChange = (tableId: number, checked: boolean) => {
     setSelectedTables(prev => 
-      prev.includes(tableId) 
-        ? prev.filter(id => id !== tableId)
-        : [...prev, tableId]
+      checked
+        ? [...prev, tableId]
+        : prev.filter(id => id !== tableId)
     );
-  }
+  };
 
   const handleSelectAllTables = (checked: boolean) => {
     if (checked) {
@@ -94,7 +104,24 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
 
   const handleStatusButtonClick = (status: TableStatus | 'All') => {
     if (status !== 'All' && selectedTables.length > 0) {
-      handleBulkUpdate(status);
+      let nextStatus: TableStatus | null = null;
+      switch (status) {
+        case 'Available':
+          nextStatus = 'Occupied';
+          break;
+        case 'Occupied':
+          nextStatus = 'Cleaning';
+          break;
+        case 'Cleaning':
+          nextStatus = 'Available';
+          break;
+        case 'Reserved':
+           nextStatus = 'Reserved'; // Reserved is a terminal state in this cycle
+           break;
+      }
+      if (nextStatus) {
+        handleBulkUpdate(nextStatus);
+      }
     } else {
       setFilter(status);
       setSelectedTables([]);
@@ -185,12 +212,13 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
         <CardHeader>
           <div className="flex justify-between items-center gap-4 flex-wrap mb-4">
             <div>
-              <CardTitle>Table Layout</CardTitle>
+              <CardTitle>Table Management</CardTitle>
+              <CardDescription>Oversee and manage all tables in your restaurant.</CardDescription>
             </div>
             <div className="flex items-center gap-4">
               <Button variant="outline" onClick={() => setIsLayoutManagerOpen(true)}>
                 <LayoutTemplate className="mr-2 h-4 w-4" /> 
-                <span className="font-bold">ADD OR REMOVE TABLE</span>
+                <span>Manage Layout</span>
               </Button>
               <Separator orientation="vertical" className="h-8" />
               <div className="flex items-center space-x-2">
@@ -200,19 +228,12 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
                   checked={selectedTables.length === filteredTables.length && filteredTables.length > 0}
                   disabled={filteredTables.length === 0}
                 />
-                <Label htmlFor="select-all">Select All</Label>
+                <Label htmlFor="select-all">Select All ({selectedTables.length})</Label>
               </div>
             </div>
           </div>
           <div className="flex items-center gap-2 flex-wrap p-4 border-t border-b">
-              <Button 
-                variant={'ghost'}
-                onClick={() => handleStatusButtonClick('All')}
-                className={cn('font-bold uppercase', filter === 'All' && 'ring-2 ring-offset-2 ring-black dark:ring-white')}
-              >
-                TOTAL TABLES ({tables.length})
-              </Button>
-              <Separator orientation="vertical" className="h-8 bg-foreground/50" />
+              <span className="text-sm font-semibold text-muted-foreground mr-2">{selectedTables.length > 0 ? 'Change selected to:' : 'Filter by:'}</span>
               {(Object.keys(statusColors) as TableStatus[]).map(status => {
                   const Icon = statusIcons[status];
                   return (
@@ -221,11 +242,11 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
                       onClick={() => handleStatusButtonClick(status)}
                       onMouseEnter={() => setHoveredStatus(status)}
                       onMouseLeave={() => setHoveredStatus(null)}
+                      variant={filter === status ? 'default' : 'outline'}
                       className={cn(
-                        status === 'Available' || status === 'Occupied' ? 'text-white' : 'text-black',
-                        statusColors[status],
                         'transition-all',
-                        filter === status && 'ring-2 ring-offset-2 ring-ring'
+                         filter !== status && statusColors[status],
+                         filter !== status && (status === 'Available' || status === 'Occupied' ? 'text-white' : 'text-black'),
                       )}
                     >
                         <Icon className="mr-2 h-4 w-4" />
@@ -233,6 +254,12 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
                     </Button>
                   );
               })}
+              <Button 
+                variant={filter === 'All' ? 'default' : 'outline'}
+                onClick={() => handleStatusButtonClick('All')}
+              >
+                All ({tables.length})
+              </Button>
           </div>
         </CardHeader>
         <CardContent className="pt-6">
@@ -243,12 +270,13 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
               <div
                 key={table.id}
                 className={cn(
-                  'aspect-square rounded-lg flex flex-col items-center justify-center cursor-pointer transition-all duration-300 shadow-lg hover:shadow-2xl relative border-2 border-black',
+                  'aspect-square rounded-lg flex flex-col items-center justify-center cursor-pointer transition-all duration-300 shadow-lg hover:shadow-2xl relative border-2',
                   statusColors[table.status],
-                  selectedTables.includes(table.id) && 'ring-4 ring-offset-2 ring-primary',
+                  selectedTables.includes(table.id) && 'ring-4 ring-offset-2 ring-primary border-primary',
+                  !selectedTables.includes(table.id) && 'border-black/50',
                   hoveredStatus === table.status && 'scale-110 z-10'
                 )}
-                onClick={() => setSelectedTable(table)}
+                onClick={() => handleSelectTable(table)}
                 onDoubleClick={() => handleDoubleClick(table)}
               >
                 <div className="absolute top-1 right-1">
@@ -271,9 +299,9 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
                 }
                 <div className="absolute top-1 left-1">
                   <Checkbox 
-                    className="bg-white/50 border-gray-500"
+                    className="bg-white/50 border-gray-500 data-[state=checked]:bg-primary"
                     checked={selectedTables.includes(table.id)}
-                    onCheckedChange={() => handleSelectTable(table.id)}
+                    onCheckedChange={(checked) => handleCheckboxChange(table.id, Boolean(checked))}
                     onClick={(e) => e.stopPropagation()}
                   />
                 </div>
@@ -285,8 +313,8 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
               </div>
             )})}
              {filteredTables.length === 0 && (
-              <div className="col-span-full text-center text-muted-foreground">
-                No tables match the current filter.
+              <div className="col-span-full text-center text-muted-foreground py-16">
+                No tables with status "{filter}".
               </div>
             )}
           </div>
@@ -380,14 +408,14 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
                         <DialogHeader>
                             <DialogTitle>Print Provisional Bill for Table {tableForPrint.id}</DialogTitle>
                         </DialogHeader>
-                        <div className="py-4 space-y-2">
+                        <div className="py-4 space-y-2 font-mono">
                            {order.items.map(item => (
                                <div key={item.name} className="flex justify-between">
                                    <span>{item.quantity}x {item.name}</span>
                                    <span>₹{(item.price * item.quantity).toFixed(2)}</span>
                                </div>
                            ))}
-                           <Separator />
+                           <Separator className="my-2" />
                            <div className="flex justify-between font-bold">
                                <span>Subtotal</span>
                                <span>₹{subtotal.toFixed(2)}</span>
