@@ -4,6 +4,7 @@ import { getFirestore } from 'firebase/firestore';
 
 const firebaseConfig = {
   projectId: "up-above-assistant",
+  databaseURL: "https://up-above-assistant.firebaseio.com",
   appId: "1:89751477177:web:f8f5db742d259c0e4a3468",
   storageBucket: "up-above-assistant.firebasestorage.app",
   apiKey: "AIzaSyA8i6e5rB5DtqzxzxRrCWel0kpnljVy-2w",
