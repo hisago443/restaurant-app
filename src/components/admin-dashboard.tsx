@@ -12,13 +12,7 @@ import ActivityLog from './activity-log';
 import InventoryManagement from './inventory-management';
 import SystemSettings from './system-settings';
 
-const topItems = [
-  { name: 'Cafe Latte', count: 125 },
-  { name: 'Cold Coffee', count: 98 },
-  { name: 'Black Coffee', count: 85 },
-  { name: 'Banana', count: 72 },
-  { name: 'Lemonade', count: 66 },
-];
+const topItems: { name: string; count: number }[] = [];
 
 // Mock data for CSV export
 const salesData = [
@@ -30,6 +24,7 @@ const salesData = [
 export default function AdminDashboard() {
 
   const handleExportCSV = () => {
+    if (salesData.length === 0) return;
     const header = Object.keys(salesData[0]).join(',');
     const rows = salesData.map(row => Object.values(row).join(',')).join('\n');
     const csvContent = `data:text/csv;charset=utf-8,${header}\n${rows}`;
@@ -52,8 +47,8 @@ export default function AdminDashboard() {
             <span className="text-green-600 font-bold">Rs.</span>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-900 dark:text-green-100">Rs.4,29,189.00</div>
-            <p className="text-xs text-green-700 dark:text-green-300">+20.1% from last month</p>
+            <div className="text-2xl font-bold text-green-900 dark:text-green-100">Rs.0.00</div>
+            <p className="text-xs text-green-700 dark:text-green-300">No sales data yet.</p>
           </CardContent>
         </Card>
         <Card className="bg-blue-100 dark:bg-blue-900/30 border-blue-200 dark:border-blue-800 shadow-lg hover:shadow-xl transition-shadow">
@@ -62,8 +57,8 @@ export default function AdminDashboard() {
             <ShoppingCart className="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-900 dark:text-blue-100">+235</div>
-            <p className="text-xs text-blue-700 dark:text-blue-300">+12.2% from yesterday</p>
+            <div className="text-2xl font-bold text-blue-900 dark:text-blue-100">0</div>
+            <p className="text-xs text-blue-700 dark:text-blue-300">No orders yet today.</p>
           </CardContent>
         </Card>
         <Card className="bg-amber-100 dark:bg-amber-900/30 border-amber-200 dark:border-amber-800 shadow-lg hover:shadow-xl transition-shadow">
@@ -72,8 +67,8 @@ export default function AdminDashboard() {
             <TrendingUp className="h-4 w-4 text-amber-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-amber-900 dark:text-amber-100">Rs.1,826.00</div>
-            <p className="text-xs text-amber-700 dark:text-amber-300">+5.3% from last week</p>
+            <div className="text-2xl font-bold text-amber-900 dark:text-amber-100">Rs.0.00</div>
+            <p className="text-xs text-amber-700 dark:text-amber-300">No orders to calculate average.</p>
           </CardContent>
         </Card>
         <Card className="bg-violet-100 dark:bg-violet-900/30 border-violet-200 dark:border-violet-800 shadow-lg hover:shadow-xl transition-shadow">
@@ -104,12 +99,20 @@ export default function AdminDashboard() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {topItems.map(item => (
-                  <TableRow key={item.name}>
-                    <TableCell className="font-medium">{item.name}</TableCell>
-                    <TableCell className="text-right">{item.count}</TableCell>
+                {topItems.length > 0 ? (
+                  topItems.map(item => (
+                    <TableRow key={item.name}>
+                      <TableCell className="font-medium">{item.name}</TableCell>
+                      <TableCell className="text-right">{item.count}</TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={2} className="text-center text-muted-foreground">
+                      No items sold yet.
+                    </TableCell>
                   </TableRow>
-                ))}
+                )}
               </TableBody>
             </Table>
           </CardContent>
