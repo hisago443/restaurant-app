@@ -705,7 +705,7 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
             
             <div className="mt-auto space-y-4">
                 <CardContent className="p-0">
-                    <div className="flex flex-wrap gap-1 justify-center">
+                    <div className="grid grid-cols-5 gap-2">
                         {tables.map(table => (
                             <Button
                                 key={table.id}
