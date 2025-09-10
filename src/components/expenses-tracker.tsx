@@ -415,10 +415,10 @@ export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
                 <Button onClick={handleSaveExpense}>
                     <PlusCircle className="mr-2 h-4 w-4" /> {editingExpense ? 'Update Expense' : 'Save Expense'}
                 </Button>
-                 <Button variant="secondary" onClick={() => openAddVendorDialog(null)}>
+                 <Button variant="outline" className="text-primary border-primary hover:bg-primary/10 hover:text-primary" onClick={() => openAddVendorDialog(null)}>
                     <Building className="mr-2 h-4 w-4" /> Add Vendor
                 </Button>
-                <Button variant="secondary" onClick={() => setIsVendorManageDialogOpen(true)}>
+                <Button variant="outline" className="text-primary border-primary hover:bg-primary/10 hover:text-primary" onClick={() => setIsVendorManageDialogOpen(true)}>
                     <List className="mr-2 h-4 w-4" /> Show Vendors
                 </Button>
             </div>
