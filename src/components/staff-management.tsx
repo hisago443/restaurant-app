@@ -68,7 +68,7 @@ function AddOrEditAdvanceDialog({
         <DialogHeader>
           <DialogTitle>{existingAdvance ? 'Edit' : 'Add'} Advance</DialogTitle>
           <DialogDescription>
-            Record a salary advance for an employee on {format(selectedDate, 'PPP')}.
+            Record an advance for an employee on {format(selectedDate, 'PPP')}.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
@@ -135,7 +135,7 @@ export default function StaffManagement({ employees }: StaffManagementProps) {
         try {
             const advanceRef = doc(db, "advances", advance.id);
             await updateDoc(advanceRef, { amount: advance.amount });
-            toast({ title: 'Advance Updated', description: 'The salary advance has been updated.' });
+            toast({ title: 'Advance Updated', description: 'The advance has been updated.' });
         } catch (error) {
             console.error("Error updating advance: ", error);
             toast({ variant: 'destructive', title: 'Update Failed', description: 'Could not update the advance.' });
@@ -145,7 +145,7 @@ export default function StaffManagement({ employees }: StaffManagementProps) {
         try {
             const { id, ...newAdvance } = advance;
             await addDoc(collection(db, "advances"), newAdvance);
-            toast({ title: 'Advance Saved', description: 'The salary advance has been recorded.' });
+            toast({ title: 'Advance Saved', description: 'The advance has been recorded.' });
         } catch (error) {
             console.error("Error adding advance: ", error);
             toast({ variant: 'destructive', title: 'Save Failed', description: 'Could not save the advance.' });
@@ -156,7 +156,7 @@ export default function StaffManagement({ employees }: StaffManagementProps) {
   const handleDeleteAdvance = async (advanceId: string) => {
     try {
         await deleteDoc(doc(db, "advances", advanceId));
-        toast({ title: 'Advance Deleted', description: 'The salary advance has been removed.' });
+        toast({ title: 'Advance Deleted', description: 'The advance has been removed.' });
     } catch (error) {
         console.error("Error deleting advance: ", error);
         toast({ variant: 'destructive', title: 'Delete Failed', description: 'Could not delete the advance.' });
@@ -239,7 +239,7 @@ export default function StaffManagement({ employees }: StaffManagementProps) {
       <Tabs defaultValue="employees">
         <TabsList className="m-2 self-center rounded-lg bg-primary/10 p-2">
           <TabsTrigger value="employees" className="px-6 py-2 text-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md">Employee List</TabsTrigger>
-          <TabsTrigger value="attendance" className="px-6 py-2 text-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md">Attendance & Salary</TabsTrigger>
+          <TabsTrigger value="attendance" className="px-6 py-2 text-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md">Attendance & Advance</TabsTrigger>
         </TabsList>
         <TabsContent value="employees">
           <Card>
@@ -323,7 +323,7 @@ export default function StaffManagement({ employees }: StaffManagementProps) {
             <Card>
               <CardHeader>
                 <CardTitle>Calendar</CardTitle>
-                <CardDescription>Select a date to view attendance and salary details.</CardDescription>
+                <CardDescription>Select a date to view attendance and advance details.</CardDescription>
               </CardHeader>
               <CardContent className="flex justify-center">
                 <Calendar
