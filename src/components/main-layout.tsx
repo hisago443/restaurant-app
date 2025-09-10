@@ -102,7 +102,7 @@ export default function MainLayout() {
     
     // Set the new table as the selected one.
     setSelectedTableId(tableId);
-  }, [selectedTableId, activeOrder, currentOrderItems]);
+  }, [selectedTableId, activeOrder, currentOrderItems.length]);
   
   useEffect(() => {
     // This effect handles the logic for switching between tables and managing pending vs. active orders.
@@ -110,21 +110,24 @@ export default function MainLayout() {
       // Find an order that has already been sent to the kitchen for the selected table.
       const existingOrder = orders.find(o => o.tableId === selectedTableId && o.status !== 'Completed');
       if (existingOrder) {
-        // Editing an existing, submitted order.
+        // This is an active, submitted order. Load its items.
         setActiveOrder(existingOrder);
         setCurrentOrderItems(existingOrder.items);
         setDiscount(0);
       } else {
         // This is a new order for the selected table, or we are returning to a pending (un-submitted) order.
         setActiveOrder(null);
-        // Load the pending items for this table if they exist, otherwise start with an empty cart.
-        setCurrentOrderItems(pendingOrders[selectedTableId] || []);
+        // If there's a pending order for this table, load it.
+        // Otherwise, keep the current items in the cart.
+        if (pendingOrders[selectedTableId]) {
+          setCurrentOrderItems(pendingOrders[selectedTableId]);
+        }
         setDiscount(0);
       }
     } else {
-        // No table is selected. This could be an unassigned order being built.
-        // We don't want to clear items if the user is building an order first.
-        // Only clear if there's an active order assigned to a table that's now unselected.
+        // No table is selected.
+        // If there's no active order, don't clear the cart. The user might be building an order first.
+        // If there was an active order, clear it as we've deselected its table.
         if (activeOrder) {
             setActiveOrder(null);
             setCurrentOrderItems([]);
