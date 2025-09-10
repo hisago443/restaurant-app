@@ -86,11 +86,13 @@ function AddOrEditVendorDialog({
   onOpenChange,
   onSave,
   existingVendor,
+  vendors,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSave: (vendor: Omit<Vendor, 'id'> & { id?: string }) => void;
   existingVendor: Vendor | null;
+  vendors: Vendor[];
 }) {
   const [name, setName] = useState('');
   const [category, setCategory] = useState('');
@@ -158,16 +160,16 @@ function AddOrEditVendorDialog({
                     <Command>
                         <CommandInput 
                             placeholder="Search or create category..."
-                            value={searchValue}
                             onValueChange={setSearchValue}
                         />
                          <CommandList>
                             <CommandEmpty>
-                                {searchValue && !filteredCategories.includes(searchValue) ? (
+                                {searchValue && !filteredCategories.find(c => c.toLowerCase() === searchValue.toLowerCase()) ? (
                                      <CommandItem
                                         onSelect={() => {
                                             setCategory(searchValue);
                                             setIsCategoryPopoverOpen(false);
+                                            setSearchValue('');
                                         }}
                                         >
                                     Create "{searchValue}"
@@ -182,6 +184,7 @@ function AddOrEditVendorDialog({
                                         onSelect={(currentValue) => {
                                             setCategory(currentValue === category ? "" : currentValue)
                                             setIsCategoryPopoverOpen(false)
+                                            setSearchValue('');
                                         }}
                                     >
                                         <Check
@@ -614,6 +617,7 @@ export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
         onOpenChange={setIsVendorAddDialogOpen}
         onSave={handleSaveVendor}
         existingVendor={editingVendor}
+        vendors={vendors}
       />
       <ManageVendorsDialog
         open={isVendorManageDialogOpen}
@@ -625,5 +629,3 @@ export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
     </div>
   );
 }
-
-    
