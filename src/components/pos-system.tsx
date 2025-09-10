@@ -18,10 +18,11 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from '@/hooks/use-toast';
-import { Search, Plus, Minus, X, LayoutGrid, List, Rows, ChevronsUpDown, Palette, Shuffle, ClipboardList, Send, CheckCircle2, Users, Bookmark, Sparkles, Repeat, Edit, UserCheck, BookmarkX, Printer, Loader2, AlignLeft, AlignCenter, AlignRight } from 'lucide-react';
+import { Search, Plus, Minus, X, LayoutGrid, List, Rows, ChevronsUpDown, Palette, Shuffle, ClipboardList, Send, CheckCircle2, Users, Bookmark, Sparkles, Repeat, Edit, UserCheck, BookmarkX, Printer, Loader2, AlignLeft, AlignCenter, AlignRight, BookOpen } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { AddItemDialog } from './add-item-dialog';
+import { ManageMenuDialog } from './manage-menu-dialog';
 
 import type { MenuCategory, MenuItem, OrderItem, Table, Order, Bill, TableStatus } from '@/lib/types';
 import menuData from '@/data/menu.json';
@@ -106,6 +107,7 @@ export default function PosSystem({
     setCategoryColors,
 }: PosSystemProps) {
   const [searchTerm, setSearchTerm] = useState('');
+  const [menu, setMenu] = useState<MenuCategory[]>(menuData as MenuCategory[]);
   const [originalOrderItems, setOriginalOrderItems] = useState<OrderItem[]>([]);
   const [isClickToAdd, setIsClickToAdd] = useState(true);
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
@@ -118,9 +120,10 @@ export default function PosSystem({
   const [isAddItemDialogOpen, setIsAddItemDialogOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [categoryAlignment, setCategoryAlignment] = useState<CategoryAlignment>('center');
+  const [isMenuManagerOpen, setIsMenuManagerOpen] = useState(false);
 
 
-  const typedMenuData: MenuCategory[] = menuData;
+  const typedMenuData: MenuCategory[] = menu;
 
   const currentActiveTableId = useMemo(() => {
     if (activeOrder) return activeOrder.tableId;
@@ -855,7 +858,7 @@ export default function PosSystem({
                   />
               </div>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 flex-wrap">
                <RadioGroup value={viewMode} onValueChange={(v) => setViewMode(v as ViewMode)} className="flex items-center">
                   <RadioGroupItem value="accordion" id="accordion-view" className="sr-only" />
                   <Label htmlFor="accordion-view" className={cn("p-1.5 rounded-md cursor-pointer transition-colors", viewMode === 'accordion' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent' )}>
@@ -899,6 +902,9 @@ export default function PosSystem({
                   {allItemsOpen ? 'Collapse' : 'Expand'}
                 </Button>
               )}
+               <Button variant="outline" size="sm" onClick={() => setIsMenuManagerOpen(true)}>
+                <BookOpen className="mr-2 h-4 w-4" /> Manage Menu
+              </Button>
               <div className="flex items-center space-x-2">
                 <Switch id="click-to-add-mode" checked={isClickToAdd} onCheckedChange={setIsClickToAdd} />
                 <Label htmlFor="click-to-add-mode">Click-to-Add</Label>
@@ -963,7 +969,7 @@ export default function PosSystem({
                             currentActiveTableId === table.id && 'ring-4 ring-offset-2 ring-ring',
                             table.status === 'Available' || table.status === 'Occupied' ? 'text-white border-black' : 'text-black border-black/50',
                           )}
-                          onClick={() => handleSelectTable(table.id)}
+                          onClick={() => setSelectedTableId(table.id)}
                       >
                         {(showOccupancy && occupancyCount[table.id] > 0) &&
                             <div className="absolute bottom-0.5 right-0.5 flex items-center gap-1 bg-black/50 text-white text-xs font-bold px-1 rounded-md">
@@ -1045,6 +1051,12 @@ export default function PosSystem({
         onOpenChange={setIsAddItemDialogOpen}
         item={selectedItem}
         onConfirm={addToOrder}
+      />
+      <ManageMenuDialog
+        isOpen={isMenuManagerOpen}
+        onOpenChange={setIsMenuManagerOpen}
+        menu={menu}
+        setMenu={setMenu}
       />
     </div>
   );
