@@ -134,7 +134,7 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
         setOriginalOrderItems([]);
       }
     }
-  }, [activeOrder]);
+  }, [activeOrder, orderItems.length]);
 
 
   const handleSelectTable = (tableId: number) => {
@@ -269,9 +269,11 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
     setOrderItems(orderItems.filter(item => item.name !== name));
   };
   
-  const clearOrder = (delayTableClear = false) => {
+  const clearOrder = (delayTableClear = false, fullReset = true) => {
     setOrderItems([]);
-    setDiscount(0);
+    if (fullReset) {
+      setDiscount(0);
+    }
     setActiveOrder(null);
     setOriginalOrderItems([]);
     // Only clear table selection if not delayed (e.g., after payment)
@@ -416,7 +418,7 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
       updateOrder({ ...activeOrder, status: 'Completed' });
     }
 
-    clearOrder(true);
+    clearOrder(true, false);
     // After a delay, clear the selected table so it doesn't persist
     setTimeout(() => {
       setSelectedTableId(null);
@@ -866,7 +868,7 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
                       {activeOrder ? 'Print Kitchen Receipt' : 'Send KOT to Kitchen'}
                   </Button>
                   <div className="grid grid-cols-2 gap-2">
-                      <Button size="lg" variant="outline" onClick={handlePrintProvisionalBill} disabled={!activeOrder && orderItems.length === 0 || !currentActiveTableId}>
+                      <Button size="lg" variant="outline" onClick={handlePrintProvisionalBill} disabled={!currentActiveTableId || orderItems.length === 0}>
                           <Printer className="mr-2 h-4 w-4" /> Print Bill
                       </Button>
                       <Button size="lg" onClick={handleProcessPayment} disabled={orderItems.length === 0 || !currentActiveTableId}>
