@@ -260,12 +260,20 @@ export default function PosSystem({
       }
       return;
     }
+
+    const previousTableId = selectedTableId;
+
+    if (previousTableId && previousTableId !== tableId && !activeOrder && currentOrderItems.length > 0) {
+      setPendingOrders(prev => ({
+        ...prev,
+        [previousTableId]: currentOrderItems,
+      }));
+    }
     
     setSelectedTableId(tableId);
     
-    // Toast for assigning an unassigned order
-    const isNewOrderUnassigned = !selectedTableId && orderItems.length > 0;
-    if (isNewOrderUnassigned) {
+    const isNewOrderUnassigned = !selectedTableId;
+    if (isNewOrderUnassigned && tableId) {
       toast({ title: `Order assigned to Table ${tableId}` });
     }
   };
@@ -920,11 +928,9 @@ export default function PosSystem({
         </ScrollArea>
         
         <div className="p-4 border-t space-y-4 bg-muted/30">
-            <div className="flex items-center justify-between">
+            <div className="space-y-2">
                 <Label className="font-semibold block">{currentActiveTableId ? "Selected Table" : "Select a Table"}</Label>
-            </div>
-            <CardContent className="p-0">
-              <div className="grid grid-cols-5 gap-1.5">
+                 <div className="grid grid-cols-5 gap-1.5">
                   {tables.map(table => (
                       <Button
                           key={table.id}
@@ -951,7 +957,7 @@ export default function PosSystem({
                       </Button>
                   ))}
               </div>
-          </CardContent>
+            </div>
 
           <div>
             <Label className="font-semibold mb-2 block">Discount</Label>
