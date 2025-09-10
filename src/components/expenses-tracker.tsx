@@ -42,7 +42,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { PlusCircle, Edit, Trash2, CalendarIcon, Building } from 'lucide-react';
@@ -158,11 +157,11 @@ function AddOrEditExpenseDialog({
   existingExpense: Expense | null;
   vendors: Vendor[];
 }) {
-  const [date, setDate] = useState<Date | undefined>(existingExpense?.date || new Date());
-  const [category, setCategory] = useState(existingExpense?.category || '');
-  const [description, setDescription] = useState(existingExpense?.description || '');
-  const [amount, setAmount] = useState(existingExpense?.amount.toString() || '');
-  const [vendorId, setVendorId] = useState<string | null | undefined>(existingExpense?.vendorId);
+  const [date, setDate] = useState<Date | undefined>(new Date());
+  const [category, setCategory] = useState('');
+  const [description, setDescription] = useState('');
+  const [amount, setAmount] = useState('');
+  const [vendorId, setVendorId] = useState<string | null | undefined>();
   
   useEffect(() => {
     if (existingExpense) {
@@ -231,11 +230,12 @@ function AddOrEditExpenseDialog({
           </div>
            <div className="space-y-2">
             <Label htmlFor="vendor">Vendor (Optional)</Label>
-            <Select onValueChange={(value) => setVendorId(value)} value={vendorId ?? undefined}>
+            <Select onValueChange={(value) => setVendorId(value === 'none' ? null : value)} value={vendorId ?? 'none'}>
               <SelectTrigger id="vendor">
                 <SelectValue placeholder="None" />
               </SelectTrigger>
               <SelectContent>
+                 <SelectItem value="none">None</SelectItem>
                  {vendors.map(v => <SelectItem key={v.id} value={v.id}>{v.name}</SelectItem>)}
               </SelectContent>
             </Select>
@@ -328,23 +328,15 @@ export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
         }
     } else {
         try {
-            await addDoc(collection(db, "vendors"), vendor);
+            const { id, ...newVendorData } = vendor;
+            await addDoc(collection(db, "vendors"), newVendorData);
             toast({ title: "Vendor added successfully" });
         } catch (error) {
             toast({ variant: "destructive", title: "Error adding vendor" });
         }
     }
   };
-
-  const handleDeleteVendor = async (vendorId: string) => {
-    try {
-        await deleteDoc(doc(db, "vendors", vendorId));
-        toast({ title: "Vendor deleted successfully" });
-    } catch (error) {
-        toast({ variant: "destructive", title: "Error deleting vendor" });
-    }
-  };
-
+  
   const openVendorDialog = (vendor: Vendor | null) => {
     setEditingVendor(vendor);
     setIsVendorDialogOpen(true);
@@ -365,9 +357,14 @@ export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
               <CardTitle>Expense Tracker</CardTitle>
               <CardDescription>Monitor and record all your business expenses.</CardDescription>
           </div>
-          <Button onClick={() => openExpenseDialog(null)}>
+          <div className="flex gap-2">
+            <Button onClick={() => openVendorDialog(null)}>
+              <Building className="mr-2 h-4 w-4" /> Add Vendor
+            </Button>
+            <Button onClick={() => openExpenseDialog(null)}>
               <PlusCircle className="mr-2 h-4 w-4" /> Add Expense
-          </Button>
+            </Button>
+          </div>
           </CardHeader>
           <CardContent>
           <Table>
