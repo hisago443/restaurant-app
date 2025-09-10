@@ -554,19 +554,31 @@ export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
               )}
               </TableBody>
           </Table>
-          <div className="grid grid-cols-3 gap-4 text-right font-bold text-lg mt-4 pr-4">
-              <div>
-                  <p className="text-sm text-muted-foreground">Today's Expenses</p>
-                  <span>Rs. {dailyExpenses.toFixed(2)}</span>
-              </div>
-              <div>
-                  <p className="text-sm text-muted-foreground">This Month's Expenses</p>
-                  <span>Rs. {monthlyExpenses.toFixed(2)}</span>
-              </div>
-              <div>
-                  <p className="text-sm text-muted-foreground">Overall Expenses</p>
-                  <span>Rs. {totalExpenses.toFixed(2)}</span>
-              </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+              <Card className="bg-blue-100 dark:bg-blue-900/30 border-blue-200 dark:border-blue-800">
+                  <CardHeader className="pb-2">
+                      <CardTitle className="text-sm font-medium text-blue-800 dark:text-blue-200">Today's Expenses</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                      <p className="text-2xl font-bold text-blue-900 dark:text-blue-100">Rs. {dailyExpenses.toFixed(2)}</p>
+                  </CardContent>
+              </Card>
+              <Card className="bg-green-100 dark:bg-green-900/30 border-green-200 dark:border-green-800">
+                  <CardHeader className="pb-2">
+                      <CardTitle className="text-sm font-medium text-green-800 dark:text-green-200">This Month's Expenses</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                      <p className="text-2xl font-bold text-green-900 dark:text-green-100">Rs. {monthlyExpenses.toFixed(2)}</p>
+                  </CardContent>
+              </Card>
+              <Card className="bg-purple-100 dark:bg-purple-900/30 border-purple-200 dark:border-purple-800">
+                  <CardHeader className="pb-2">
+                      <CardTitle className="text-sm font-medium text-purple-800 dark:text-purple-200">Overall Expenses</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                      <p className="text-2xl font-bold text-purple-900 dark:text-purple-100">Rs. {totalExpenses.toFixed(2)}</p>
+                  </CardContent>
+              </Card>
           </div>
         </CardContent>
       </Card>
