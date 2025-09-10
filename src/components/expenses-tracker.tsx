@@ -45,7 +45,7 @@ import {
 } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { PlusCircle, Edit, Trash2, CalendarIcon, Building, RotateCw, List, ChevronsUpDown } from 'lucide-react';
+import { PlusCircle, Edit, Trash2, CalendarIcon, Building, Repeat, List, ChevronsUpDown } from 'lucide-react';
 import { Calendar } from "@/components/ui/calendar";
 import { format } from 'date-fns';
 import type { Expense, Vendor } from '@/lib/types';
@@ -460,7 +460,7 @@ export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
                 </div>
             </div>
             <div className="flex justify-end gap-2">
-                {editingExpense && <Button variant="outline" onClick={resetForm}><RotateCw className="mr-2 h-4 w-4" />Cancel Edit</Button>}
+                {editingExpense && <Button variant="outline" onClick={resetForm}><Repeat className="mr-2 h-4 w-4" />Cancel Edit</Button>}
                 <Button onClick={handleSaveExpense}>
                     <PlusCircle className="mr-2 h-4 w-4" /> {editingExpense ? 'Update Expense' : 'Save Expense'}
                 </Button>
