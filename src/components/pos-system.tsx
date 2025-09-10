@@ -211,36 +211,76 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
   const subtotal = useMemo(() => orderItems.reduce((acc, item) => acc + item.price * item.quantity, 0), [orderItems]);
   const total = useMemo(() => subtotal * (1 - discount / 100), [subtotal, discount]);
 
-  // This is now an on-demand function
-  const getReceipt = useCallback(async (): Promise<string> => {
+  const getReceipt = useCallback(async (useAI = true): Promise<string> => {
     if (orderItems.length === 0) {
       return '';
     }
-    const input: GenerateReceiptInput = {
-      items: orderItems.map(item => ({ name: item.name, price: item.price, quantity: item.quantity })),
-      discount,
-      subtotal,
-      total,
-    };
-    try {
-      const result = await generateReceipt(input);
-      setReceiptPreview(result.receiptPreview); // Keep updating state for payment dialog
-      return result.receiptPreview;
-    } catch (error) {
-      console.error('Error generating receipt:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Could not generate receipt preview.",
-      });
-      return ''; // Return empty on error
+  
+    // Local, fast receipt generation
+    const pad = (str: string, len: number, char = ' ') => str.padEnd(len, char);
+    const money = (val: number) => `₹${val.toFixed(2)}`;
+  
+    let receiptLines = [];
+    receiptLines.push('*************************');
+    receiptLines.push('    Up & Above Cafe    ');
+    receiptLines.push('*************************');
+    receiptLines.push('');
+    receiptLines.push('Order Details:');
+    orderItems.forEach((item, index) => {
+        const lineTotal = item.price * item.quantity;
+        const qtyName = `${item.quantity} x ${item.name}`;
+        const priceStr = money(lineTotal);
+        const line = `${pad(`${index + 1}. ${qtyName}`, 25)} ${priceStr.padStart(10)}`;
+        receiptLines.push(line);
+    });
+    receiptLines.push('');
+    receiptLines.push('-------------------------');
+    receiptLines.push(`${pad('Subtotal:', 25)} ${money(subtotal).padStart(10)}`);
+  
+    if (discount > 0) {
+        const discountAmount = subtotal * (discount / 100);
+        receiptLines.push(`${pad(`Discount (${discount}%):`, 25)} ${money(-discountAmount).padStart(10)}`);
+        receiptLines.push('-------------------------');
     }
-  }, [orderItems, discount, subtotal, total, toast]);
-
+  
+    receiptLines.push(`${pad('Total:', 25)} ${money(total).padStart(10)}`);
+    receiptLines.push('');
+    receiptLines.push('   Thank you for dining!   ');
+    receiptLines.push('*************************');
+  
+    const localReceipt = receiptLines.join('\n');
+    setReceiptPreview(localReceipt); // Always update state with the fast version
+  
+    if (useAI) {
+      // This is the "fire and forget" part for the more nicely formatted receipt
+      // for the payment dialog, which doesn't block the UI.
+      const input: GenerateReceiptInput = {
+        items: orderItems.map(item => ({ name: item.name, price: item.price, quantity: item.quantity })),
+        discount,
+        subtotal,
+        total,
+      };
+      generateReceipt(input)
+        .then(result => {
+          setReceiptPreview(result.receiptPreview); // Update with the better version when ready
+        })
+        .catch(error => {
+          console.error('AI receipt generation failed, using local version:', error);
+          // The local version is already set, so no action needed.
+        });
+    }
+  
+    return localReceipt; // Immediately return the fast, local version
+  
+  }, [orderItems, discount, subtotal, total]);
+  
   useEffect(() => {
-    // Invalidate receipt preview if order changes
-    setReceiptPreview('');
-  }, [orderItems, discount]);
+    if (orderItems.length > 0) {
+      getReceipt(true); // Fire-and-forget AI receipt generation
+    } else {
+      setReceiptPreview(''); // Clear preview for empty order
+    }
+  }, [orderItems, discount, getReceipt]);
   
   const addToOrder = (item: MenuItem, quantity: number) => {
     const existingItem = orderItems.find(orderItem => orderItem.name === item.name);
@@ -279,14 +319,10 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
   
   const clearOrder = (fullReset = false) => {
     setOrderItems([]);
+    setOriginalOrderItems([]);
+    setActiveOrder(null);
     if (fullReset) {
       setDiscount(0);
-    }
-    setActiveOrder(null);
-    setOriginalOrderItems([]);
-    // Only clear table if it's a full reset (e.g. new order button)
-    // and not when clearing after payment, where we need the table context.
-    if (fullReset) {
       setSelectedTableId(null);
     }
   };
@@ -396,15 +432,13 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
       toast({ variant: 'destructive', title: 'No Table Selected', description: 'Please select a table before processing payment.' });
       return;
     }
-    setIsProcessing(true);
-    toast({ title: 'Generating Bill...', description: 'Please wait.' });
 
-    const currentReceipt = await getReceipt();
-
-    setIsProcessing(false);
-    if (!currentReceipt) {
-      toast({ variant: "destructive", title: "Receipt Not Ready", description: "Could not generate the receipt. Please try again." });
-      return;
+    // The receipt is already being generated in the background by the useEffect.
+    // If it's not ready for some reason, the payment dialog can show a placeholder.
+    if (!receiptPreview) {
+        toast({ title: 'Generating Bill...', description: 'Please wait a moment.' });
+        // Give it a second to catch up
+        await new Promise(resolve => setTimeout(resolve, 1000));
     }
     setIsPaymentDialogOpen(true);
   };
@@ -412,7 +446,8 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
   const handlePaymentSuccess = () => {
     if (!currentActiveTableId) return;
   
-    const finalReceipt = receiptPreview;
+    // Use the latest receipt available in the state.
+    const finalReceipt = receiptPreview; 
   
     if (!finalReceipt && orderItems.length > 0) {
         toast({ variant: "destructive", title: "Billing Error", description: "Could not generate the final bill. Please try again." });
@@ -448,22 +483,10 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
       });
       return;
     }
-    
-    setIsProcessing(true);
-    toast({ title: 'Generating Bill...', description: 'Please wait.' });
-
-    const currentReceipt = await getReceipt();
-    setIsProcessing(false);
-
-    if (!currentReceipt) {
-        toast({
-            variant: "destructive",
-            title: "Receipt Not Ready",
-            description: "Could not generate the receipt. Please try again.",
-        });
-        return;
-    }
-
+  
+    // Use the fast, local receipt generator. No waiting, no AI.
+    const currentReceipt = await getReceipt(false);
+  
     const printWindow = window.open('', '_blank');
     if (printWindow) {
       printWindow.document.write(`
@@ -832,16 +855,10 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
                               )}
                               onClick={() => handleSelectTable(table.id)}
                           >
-                              {(occupancyCount[table.id] > 0) &&
-                              <div className="absolute top-0.5 right-0.5 flex items-center gap-1 bg-black/50 text-white text-[0.6rem] font-bold p-0.5 rounded-full h-4 min-w-4 justify-center">
-                                  <Repeat className="h-2 w-2" />
-                                  <span>{occupancyCount[table.id]}</span>
-                              </div>
-                              }
                               <div className="absolute top-1 left-1">
                                 {React.createElement(statusIcons[table.status], { className: "h-3 w-3" })}
                               </div>
-                              <span className="text-5xl font-bold leading-none">{table.id}</span>
+                              <span className="text-6xl font-bold leading-none">{table.id}</span>
                               <span className="text-[0.6rem] font-semibold -mt-1">{table.status}</span>
                           </Button>
                       ))}
@@ -915,5 +932,3 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
     </div>
   );
 }
-
-    
