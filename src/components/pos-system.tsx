@@ -261,21 +261,22 @@ export default function PosSystem({
       return;
     }
     
-    // If we are selecting a new table, and there is a pending order for the PREVIOUS table, save it.
+    // If switching from a table with a pending (un-submitted) order, save it.
     if (selectedTableId && !activeOrder && orderItems.length > 0) {
-        setPendingOrders(prev => ({
-            ...prev,
-            [selectedTableId]: orderItems
-        }));
+      setPendingOrders(prev => ({
+        ...prev,
+        [selectedTableId]: orderItems
+      }));
     }
-
-    if (!selectedTableId) {
-      // This is the case where we are assigning a table to an existing unassigned order.
-      setSelectedTableId(tableId);
+  
+    // Set the new table as selected
+    setSelectedTableId(tableId);
+  
+    // Now that the new table is selected, load its order (or pending order).
+    // The main layout's useEffect will handle this.
+    const isNewOrderUnassigned = !selectedTableId && orderItems.length > 0;
+    if (isNewOrderUnassigned) {
       toast({ title: `Order assigned to Table ${tableId}` });
-    } else {
-      // This is the standard flow of selecting a table.
-      setSelectedTableId(tableId);
     }
   };
   
