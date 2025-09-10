@@ -56,11 +56,14 @@ interface ExpensesTrackerProps {
 
 const expenseCategories = [
   "Groceries",
-  "Utilities",
+  "Dairy",
+  "Chicken",
   "Rent",
+  "Electricity Bill",
   "Maintenance",
   "Marketing",
   "Salaries",
+  "Bonus",
   "Miscellaneous"
 ];
 
