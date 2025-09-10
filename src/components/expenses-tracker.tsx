@@ -411,6 +411,18 @@ export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
                     </Popover>
                 </div>
                 <div className="space-y-2">
+                    <Label htmlFor="vendor">Vendor</Label>
+                    <Select onValueChange={(value) => setVendorId(value === 'none' ? undefined : value)} value={vendorId || 'none'}>
+                      <SelectTrigger id="vendor">
+                          <SelectValue placeholder="None" />
+                      </SelectTrigger>
+                      <SelectContent>
+                          <SelectItem value="none">None</SelectItem>
+                          {vendors.map(v => <SelectItem key={v.id} value={v.id}>{v.name}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                </div>
+                <div className="space-y-2">
                     <Label htmlFor="category">Category</Label>
                     <Popover open={isCategoryPopoverOpen} onOpenChange={setIsCategoryPopoverOpen}>
                         <PopoverTrigger asChild>
@@ -447,18 +459,6 @@ export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
                             </div>
                         </PopoverContent>
                     </Popover>
-                </div>
-                 <div className="space-y-2">
-                    <Label htmlFor="vendor">Vendor</Label>
-                    <Select onValueChange={(value) => setVendorId(value === 'none' ? undefined : value)} value={vendorId || 'none'}>
-                      <SelectTrigger id="vendor">
-                          <SelectValue placeholder="None" />
-                      </SelectTrigger>
-                      <SelectContent>
-                          <SelectItem value="none">None</SelectItem>
-                          {vendors.map(v => <SelectItem key={v.id} value={v.id}>{v.name}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="description">Description (Optional)</Label>
