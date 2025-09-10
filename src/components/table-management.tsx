@@ -40,9 +40,11 @@ interface TableManagementProps {
   removeLastTable: () => void;
   occupancyCount: Record<number, number>;
   onEditOrder: (order: Order) => void;
+  showOccupancy: boolean;
+  setShowOccupancy: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-export default function TableManagement({ tables, orders, billHistory, updateTableStatus, addTable, removeLastTable, occupancyCount, onEditOrder }: TableManagementProps) {
+export default function TableManagement({ tables, orders, billHistory, updateTableStatus, addTable, removeLastTable, occupancyCount, onEditOrder, showOccupancy, setShowOccupancy }: TableManagementProps) {
   const [selectedTable, setSelectedTable] = useState<Table | null>(null);
   const [selectedTables, setSelectedTables] = useState<number[]>([]);
   const [isLayoutManagerOpen, setIsLayoutManagerOpen] = useState(false);
@@ -50,7 +52,6 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
   const [hoveredStatus, setHoveredStatus] = useState<TableStatus | null>(null);
   const [isPrintDialogOpen, setIsPrintDialogOpen] = useState(false);
   const [tableForPrint, setTableForPrint] = useState<Table | null>(null);
-  const [showOccupancy, setShowOccupancy] = useState(true);
 
   const filteredTables = tables.filter(table => filter === 'All' || table.status === filter);
   

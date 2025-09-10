@@ -77,6 +77,8 @@ interface PosSystemProps {
   showOccupancy: boolean;
   pendingOrders: Record<number, OrderItem[]>;
   setPendingOrders: React.Dispatch<React.SetStateAction<Record<number, OrderItem[]>>>;
+  categoryColors: Record<string, string>;
+  setCategoryColors: React.Dispatch<React.SetStateAction<Record<string, string>>>;
 }
 
 export default function PosSystem({ 
@@ -97,7 +99,9 @@ export default function PosSystem({
     onOrderCreated,
     showOccupancy,
     pendingOrders,
-    setPendingOrders
+    setPendingOrders,
+    categoryColors,
+    setCategoryColors,
 }: PosSystemProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [originalOrderItems, setOriginalOrderItems] = useState<OrderItem[]>([]);
@@ -108,7 +112,6 @@ export default function PosSystem({
   const [activeAccordionItems, setActiveAccordionItems] = useState<string[]>([]);
   const [viewMode, setViewMode] = useState<ViewMode>('accordion');
   const [menuItemColors, setMenuItemColors] = useState<Record<string, string>>({});
-  const [categoryColors, setCategoryColors] = useState<Record<string, string>>({});
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
   const [isAddItemDialogOpen, setIsAddItemDialogOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -123,12 +126,14 @@ export default function PosSystem({
   
   useEffect(() => {
     const defaultCategoryColors: Record<string, string> = {};
-    typedMenuData.forEach((category, index) => {
-      defaultCategoryColors[category.category] = colorPalette[index % colorPalette.length];
-    });
-    setCategoryColors(defaultCategoryColors);
+    if (Object.keys(categoryColors).length === 0) {
+        typedMenuData.forEach((category, index) => {
+            defaultCategoryColors[category.category] = colorPalette[index % colorPalette.length];
+        });
+        setCategoryColors(defaultCategoryColors);
+    }
     setActiveAccordionItems([]);
-  }, [typedMenuData]);
+  }, [typedMenuData, categoryColors, setCategoryColors]);
 
   useEffect(() => {
     try {
@@ -150,6 +155,87 @@ export default function PosSystem({
     }
   }, [isClickToAdd]);
   
+  const getLocalReceipt = useCallback(() => {
+    if (orderItems.length === 0) return '';
+  
+    const pad = (str: string, len: number, char = ' ') => str.padEnd(len, char);
+    const subtotal = orderItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
+    const total = subtotal * (1 - discount / 100);
+    const money = (val: number) => `Rs. ${val.toFixed(2)}`;
+  
+    let receiptLines = [];
+    receiptLines.push('*************************');
+    receiptLines.push('    Up & Above Cafe    ');
+    receiptLines.push('*************************');
+    receiptLines.push('');
+    receiptLines.push('Order Details:');
+    orderItems.forEach((item, index) => {
+      const lineTotal = item.price * item.quantity;
+      const qtyName = `${item.quantity} x ${item.name}`;
+      const priceStr = money(lineTotal);
+      const line = `${pad(`${index + 1}. ${qtyName}`, 25)} ${priceStr.padStart(10)}`;
+      receiptLines.push(line);
+    });
+    receiptLines.push('');
+    receiptLines.push('-------------------------');
+    receiptLines.push(`${pad('Subtotal:', 25)} ${money(subtotal).padStart(10)}`);
+  
+    if (discount > 0) {
+      const discountAmount = subtotal * (discount / 100);
+      receiptLines.push(`${pad(`Discount (${discount}%):`, 25)} ${money(-discountAmount).padStart(10)}`);
+      receiptLines.push('-------------------------');
+    }
+  
+    receiptLines.push(`${pad('Total:', 25)} ${money(total).padStart(10)}`);
+    receiptLines.push('');
+    receiptLines.push('   Thank you for dining!   ');
+    receiptLines.push('*************************');
+  
+    return receiptLines.join('\n');
+  }, [orderItems, discount]);
+  
+  const generateAIRecipt = useCallback(async () => {
+    if (orderItems.length === 0) {
+        setReceiptPreview('');
+        return;
+    }
+    const localReceipt = getLocalReceipt();
+    setReceiptPreview(localReceipt); // Set local receipt immediately
+
+    const subtotal = orderItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
+    const total = subtotal * (1 - discount / 100);
+
+    const input: GenerateReceiptInput = {
+        items: orderItems.map(item => ({ name: item.name, price: item.price, quantity: item.quantity })),
+        discount,
+        subtotal,
+        total,
+    };
+    try {
+        const result = await generateReceipt(input);
+        if (result.receiptPreview) {
+            setReceiptPreview(result.receiptPreview);
+        }
+    } catch (error) {
+        console.error('AI receipt generation failed, using local version:', error);
+        toast({
+            variant: "default",
+            title: "AI Assistant Offline",
+            description: "Displaying standard receipt format.",
+        });
+    }
+  }, [orderItems, discount, getLocalReceipt, toast]);
+
+
+  useEffect(() => {
+    if (orderItems.length > 0) {
+        const localReceipt = getLocalReceipt();
+        setReceiptPreview(localReceipt);
+    } else {
+        setReceiptPreview('');
+    }
+  }, [orderItems, discount, getLocalReceipt]);
+
   useEffect(() => {
     if (activeOrder) {
       setOriginalOrderItems([...activeOrder.items]);
@@ -160,41 +246,36 @@ export default function PosSystem({
            clearCurrentOrder(true);
        }
     }
-  }, [activeOrder, selectedTableId, pendingOrders]);
+  }, [activeOrder, selectedTableId, pendingOrders, orderItems.length, clearCurrentOrder]);
 
   const handleSelectTable = (tableId: number) => {
     const table = tables.find(t => t.id === tableId);
     if (!table) return;
-
-    // Save current pending order before switching
-    if(selectedTableId && !activeOrder) {
+  
+    if (table.status === 'Cleaning') {
+      updateTableStatus([tableId], 'Available');
+      toast({ title: `Table ${tableId} is now Available.` });
+      if (selectedTableId === tableId) {
+        setSelectedTableId(null);
+      }
+      return;
+    }
+    
+    // If we are selecting a new table, and there is a pending order for the PREVIOUS table, save it.
+    if (selectedTableId && !activeOrder) {
         setPendingOrders(prev => ({
             ...prev,
             [selectedTableId]: orderItems
         }));
     }
-  
-    if (table.status === 'Cleaning') {
-      updateTableStatus([tableId], 'Available');
-      toast({ title: `Table ${tableId} is now Available.` });
-      if (activeOrder?.tableId === tableId) {
-        clearCurrentOrder(true);
-      }
-      return;
-    }
-  
-    const existingOrder = orders.find(o => o.tableId === tableId && o.status !== 'Completed');
-  
-    if (existingOrder) {
-      setActiveOrder(existingOrder);
-      setOrderItems(existingOrder.items);
-      setSelectedTableId(existingOrder.tableId);
-      toast({ title: `Editing Order for Table ${tableId}`, description: 'Add or modify items.' });
+
+    if (orderItems.length > 0 && !selectedTableId) {
+      // This is the case where we are assigning a table to an existing unassigned order.
+      setSelectedTableId(tableId);
+      toast({ title: `Order assigned to Table ${tableId}` });
     } else {
-        clearCurrentOrder(true); 
-        setSelectedTableId(tableId);
-        setOrderItems(pendingOrders[tableId] || []);
-        toast({ title: `New Order for Table ${tableId}`, description: 'Add items to start the order.' });
+      // This is the standard flow of selecting a table.
+      setSelectedTableId(tableId);
     }
   };
   
@@ -202,7 +283,7 @@ export default function PosSystem({
     setMenuItemColors(prev => ({ ...prev, [itemName]: colorClass }));
   };
   
-  const setCategoryColor = (categoryName: string, colorClass: string) => {
+  const handleSetCategoryColor = (categoryName: string, colorClass: string) => {
     setCategoryColors(prev => ({ ...prev, [categoryName]: colorClass }));
   };
 
@@ -231,85 +312,6 @@ export default function PosSystem({
 
   const subtotal = useMemo(() => orderItems.reduce((acc, item) => acc + item.price * item.quantity, 0), [orderItems]);
   const total = useMemo(() => subtotal * (1 - discount / 100), [subtotal, discount]);
-
-  const getReceipt = useCallback(async (useAI = false): Promise<string> => {
-    if (orderItems.length === 0) {
-      return '';
-    }
-  
-    const pad = (str: string, len: number, char = ' ') => str.padEnd(len, char);
-    const money = (val: number) => `Rs. ${val.toFixed(2)}`;
-  
-    let receiptLines = [];
-    receiptLines.push('*************************');
-    receiptLines.push('    Up & Above Cafe    ');
-    receiptLines.push('*************************');
-    receiptLines.push('');
-    receiptLines.push('Order Details:');
-    orderItems.forEach((item, index) => {
-        const lineTotal = item.price * item.quantity;
-        const qtyName = `${item.quantity} x ${item.name}`;
-        const priceStr = money(lineTotal);
-        const line = `${pad(`${index + 1}. ${qtyName}`, 25)} ${priceStr.padStart(10)}`;
-        receiptLines.push(line);
-    });
-    receiptLines.push('');
-    receiptLines.push('-------------------------');
-    receiptLines.push(`${pad('Subtotal:', 25)} ${money(subtotal).padStart(10)}`);
-  
-    if (discount > 0) {
-        const discountAmount = subtotal * (discount / 100);
-        receiptLines.push(`${pad(`Discount (${discount}%):`, 25)} ${money(-discountAmount).padStart(10)}`);
-        receiptLines.push('-------------------------');
-    }
-  
-    receiptLines.push(`${pad('Total:', 25)} ${money(total).padStart(10)}`);
-    receiptLines.push('');
-    receiptLines.push('   Thank you for dining!   ');
-    receiptLines.push('*************************');
-  
-    const localReceipt = receiptLines.join('\n');
-    setReceiptPreview(localReceipt);
-  
-    if (useAI) {
-      setIsProcessing(true);
-      const input: GenerateReceiptInput = {
-        items: orderItems.map(item => ({ name: item.name, price: item.price, quantity: item.quantity })),
-        discount,
-        subtotal,
-        total,
-      };
-      try {
-        const result = await generateReceipt(input);
-        if (result.receiptPreview) {
-          setReceiptPreview(result.receiptPreview);
-          return result.receiptPreview;
-        }
-        return localReceipt;
-      } catch (error) {
-          console.error('AI receipt generation failed, using local version:', error);
-          toast({
-            variant: "default",
-            title: "AI Assistant Offline",
-            description: "Displaying standard receipt format.",
-          });
-          return localReceipt; 
-      } finally {
-        setIsProcessing(false);
-      }
-    }
-  
-    return localReceipt;
-  
-  }, [orderItems, discount, subtotal, total, toast]);
-  
-  useEffect(() => {
-    if (orderItems.length > 0) {
-      getReceipt(true);
-    } else {
-      setReceiptPreview('');
-    }
-  }, [orderItems, discount, getReceipt]);
   
   const addToOrder = (item: MenuItem, quantity: number) => {
     setOrderItems(prevItems => {
@@ -415,7 +417,7 @@ export default function PosSystem({
       return;
     }
     if (!currentActiveTableId) {
-      toast({ variant: 'destructive', title: 'No Table Selected', description: 'Please select a table before sending to the kitchen.' });
+      toast({ variant: 'destructive', title: 'No Table Assigned', description: 'Please assign a table before sending to the kitchen.' });
       return;
     }
 
@@ -491,26 +493,25 @@ export default function PosSystem({
       return;
     }
     if (!currentActiveTableId) {
-      toast({ variant: 'destructive', title: 'No Table Selected', description: 'Please select a table before processing payment.' });
+      toast({ variant: 'destructive', title: 'No Table Assigned', description: 'Please assign a table before processing payment.' });
       return;
     }
     
     setIsProcessing(true);
-    const currentReceipt = await getReceipt(false);
+    await generateAIRecipt();
     setIsProcessing(false);
 
-    if (!currentReceipt) {
+    if (!receiptPreview && orderItems.length > 0) {
         toast({ variant: 'destructive', title: 'Receipt Error', description: 'Could not generate receipt. Please try again.' });
         return;
     }
-    setReceiptPreview(currentReceipt);
     setIsPaymentDialogOpen(true);
   };
   
   const handlePaymentSuccess = () => {
     if (!currentActiveTableId) return;
   
-    const finalReceipt = receiptPreview; 
+    const finalReceipt = receiptPreview || getLocalReceipt();
   
     if (!finalReceipt && orderItems.length > 0) {
         toast({ variant: "destructive", title: "Billing Error", description: "Could not generate the final bill. Please try again." });
@@ -548,7 +549,7 @@ export default function PosSystem({
     }
   
     setIsProcessing(true);
-    const currentReceipt = await getReceipt(false); 
+    await generateAIRecipt();
     setIsProcessing(false);
   
     const printWindow = window.open('', '_blank');
@@ -563,7 +564,7 @@ export default function PosSystem({
             </style>
           </head>
           <body>
-            <pre>${currentReceipt}</pre>
+            <pre>${receiptPreview}</pre>
             <script>
               window.onload = function() {
                 window.print();
@@ -663,10 +664,10 @@ export default function PosSystem({
             <div
               key={i}
               className={cn("h-6 w-6 rounded-full cursor-pointer", colorClass)}
-              onClick={() => setCategoryColor(categoryName, colorClass)}
+              onClick={() => handleSetCategoryColor(categoryName, colorClass)}
             />
           ))}
-           <Button variant="ghost" size="sm" className="col-span-5 h-8" onClick={() => setCategoryColor(categoryName, '')}>Reset</Button>
+           <Button variant="ghost" size="sm" className="col-span-5 h-8" onClick={() => handleSetCategoryColor(categoryName, '')}>Reset</Button>
         </div>
       </PopoverContent>
     </Popover>
@@ -923,7 +924,7 @@ export default function PosSystem({
         
         <div className="p-4 border-t space-y-4 bg-muted/30">
             <div className="flex items-center justify-between">
-                <Label className="font-semibold block">Select Table</Label>
+                <Label className="font-semibold block">{currentActiveTableId ? "Selected Table" : "Select a Table"}</Label>
             </div>
             <CardContent className="p-0">
               <div className="grid grid-cols-5 gap-1.5">

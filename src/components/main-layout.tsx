@@ -34,6 +34,53 @@ export default function MainLayout() {
   const [discount, setDiscount] = useState(0);
   const [showOccupancy, setShowOccupancy] = useState(true);
   const [pendingOrders, setPendingOrders] = useState<Record<number, OrderItem[]>>({});
+  
+  const [categoryColors, setCategoryColors] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    try {
+      const savedColors = localStorage.getItem('categoryColors');
+      if (savedColors) {
+        setCategoryColors(JSON.parse(savedColors));
+      }
+    } catch (e) {
+      console.error("Could not parse 'categoryColors' from localStorage", e);
+    }
+  }, []);
+
+  useEffect(() => {
+    try {
+      if (Object.keys(categoryColors).length > 0) {
+        localStorage.setItem('categoryColors', JSON.stringify(categoryColors));
+      }
+    } catch (e) {
+      console.error("Could not save 'categoryColors' to localStorage", e);
+    }
+  }, [categoryColors]);
+  
+  // Effect to manage order state when table selection changes
+  useEffect(() => {
+    if (selectedTableId) {
+      const existingOrder = orders.find(o => o.tableId === selectedTableId && o.status !== 'Completed');
+      if (existingOrder) {
+        // Editing an existing order
+        setActiveOrder(existingOrder);
+        setCurrentOrderItems(existingOrder.items);
+        setDiscount(0); // Reset discount for existing orders, can be changed
+      } else {
+        // New order for a selected table, check for pending items
+        setActiveOrder(null);
+        setCurrentOrderItems(pendingOrders[selectedTableId] || []);
+        setDiscount(0);
+      }
+    } else {
+        // No table is selected. If there are items, it's an unassigned order.
+        // If not, it could be a fresh state or after clearing an order.
+        // We don't want to clear items if the user is building an order first.
+        setActiveOrder(null);
+    }
+  }, [selectedTableId, orders]);
+
 
   useEffect(() => {
     // Fetch initial tables with default status
@@ -110,11 +157,13 @@ export default function MainLayout() {
   }, []);
 
   const addTable = () => {
-    const newTableId = tables.length > 0 ? Math.max(...tables.map(t => t.id)) + 1 : 1;
-    const newTable: Table = { id: newTableId, status: 'Available' };
-    setTables([...tables, newTable]);
+    setTables(prevTables => {
+      const newTableId = prevTables.length > 0 ? Math.max(...prevTables.map(t => t.id)) + 1 : 1;
+      const newTable: Table = { id: newTableId, status: 'Available' };
+      return [...prevTables, newTable];
+    });
   };
-
+  
   const removeLastTable = () => {
     if (tables.length > 0) {
       setTables(prevTables => {
@@ -159,6 +208,7 @@ export default function MainLayout() {
   const onOrderCreated = useCallback((order: Order) => {
     setOrders(prev => [...prev, order]);
     setActiveOrder(order);
+    setCurrentOrderItems(order.items);
   }, []);
 
   return (
@@ -214,6 +264,8 @@ export default function MainLayout() {
                   showOccupancy={showOccupancy}
                   pendingOrders={pendingOrders}
                   setPendingOrders={setPendingOrders}
+                  categoryColors={categoryColors}
+                  setCategoryColors={setCategoryColors}
                 />
             </TabsContent>
             <TabsContent value="tables" className="m-0 p-0">
@@ -226,9 +278,9 @@ export default function MainLayout() {
                 removeLastTable={removeLastTable}
                 occupancyCount={occupancyCount}
                 onEditOrder={(order) => {
+                  setSelectedTableId(order.tableId);
                   setActiveOrder(order);
                   setCurrentOrderItems(order.items);
-                  setSelectedTableId(order.tableId);
                   setDiscount(0);
                   setActiveTab('pos');
                 }}
