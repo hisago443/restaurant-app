@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import * as React from 'react';
@@ -150,7 +149,7 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
       toast({ title: `Table ${tableId} is now Available.` });
       // If the active order was for this table, clear it from POS view
       if (activeOrder?.tableId === tableId) {
-        clearOrder(false);
+        clearOrder(true);
       }
       return;
     }
@@ -254,6 +253,7 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
     if (useAI) {
       // This is the "fire and forget" part for the more nicely formatted receipt
       // for the payment dialog, which doesn't block the UI.
+      setIsProcessing(true);
       const input: GenerateReceiptInput = {
         items: orderItems.map(item => ({ name: item.name, price: item.price, quantity: item.quantity })),
         discount,
@@ -267,7 +267,8 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
         .catch(error => {
           console.error('AI receipt generation failed, using local version:', error);
           // The local version is already set, so no action needed.
-        });
+        })
+        .finally(() => setIsProcessing(false));
     }
   
     return localReceipt; // Immediately return the fast, local version
@@ -317,7 +318,7 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
     setOrderItems(orderItems.filter(item => item.name !== name));
   };
   
-  const clearOrder = (fullReset = false) => {
+  const clearOrder = (fullReset = true) => {
     setOrderItems([]);
     setOriginalOrderItems([]);
     setActiveOrder(null);
@@ -433,13 +434,15 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
       return;
     }
 
-    // The receipt is already being generated in the background by the useEffect.
-    // If it's not ready for some reason, the payment dialog can show a placeholder.
-    if (!receiptPreview) {
-        toast({ title: 'Generating Bill...', description: 'Please wait a moment.' });
-        // Give it a second to catch up
-        await new Promise(resolve => setTimeout(resolve, 1000));
+    setIsProcessing(true);
+    const currentReceipt = await getReceipt(true);
+    setIsProcessing(false);
+
+    if (!currentReceipt) {
+        toast({ variant: 'destructive', title: 'Receipt Error', description: 'Could not generate receipt. Please try again.' });
+        return;
     }
+    setReceiptPreview(currentReceipt);
     setIsPaymentDialogOpen(true);
   };
   
@@ -455,7 +458,7 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
     }
   
     setIsPaymentDialogOpen(false);
-    toast({ title: "Payment Successful", description: `Payment of Rs.${total.toFixed(2)} confirmed.` });
+    toast({ title: "Payment Successful", description: `Rs.${total.toFixed(2)} confirmed.` });
     
     const billPayload: Omit<Bill, 'id' | 'timestamp'> = {
       orderItems: orderItems,
@@ -471,7 +474,7 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
       updateOrder({ ...activeOrder, status: 'Completed' });
     }
   
-    clearOrder(false);
+    clearOrder(true);
   };
 
   const handlePrintProvisionalBill = async () => {
@@ -855,6 +858,12 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
                               )}
                               onClick={() => handleSelectTable(table.id)}
                           >
+                            {(occupancyCount[table.id] > 0) &&
+                                <div className="absolute bottom-1 right-1 flex items-center gap-1 bg-black/50 text-white text-xs font-bold p-1 rounded-md">
+                                    <Repeat className="h-3 w-3" />
+                                    <span>{occupancyCount[table.id]}</span>
+                                </div>
+                            }
                               <div className="absolute top-1 left-1">
                                 {React.createElement(statusIcons[table.status], { className: "h-3 w-3" })}
                               </div>
@@ -932,3 +941,5 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
     </div>
   );
 }
+
+    
