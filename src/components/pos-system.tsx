@@ -18,7 +18,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from '@/hooks/use-toast';
-import { Search, Plus, Minus, X, Save, FilePlus, LayoutGrid, List, Rows, ChevronsUpDown, Palette, Shuffle, ClipboardList, Send, ChevronDown, CheckCircle2, Users, Bookmark, Sparkles, Repeat, Edit, SparklesIcon, UserCheck, BookmarkX, Printer } from 'lucide-react';
+import { Search, Plus, Minus, X, FilePlus, LayoutGrid, List, Rows, ChevronsUpDown, Palette, Shuffle, ClipboardList, Send, CheckCircle2, Users, Bookmark, Sparkles, Repeat, Edit, UserCheck, BookmarkX, Printer } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { AddItemDialog } from './add-item-dialog';
@@ -27,7 +27,6 @@ import type { MenuCategory, MenuItem, OrderItem, Table, Order, Bill, TableStatus
 import menuData from '@/data/menu.json';
 import { generateReceipt, type GenerateReceiptInput } from '@/ai/flows/dynamic-receipt-discount-reasoning';
 import { PaymentDialog } from './payment-dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const vegColor = 'bg-green-100 dark:bg-green-900/30';
 const nonVegColor = 'bg-rose-100 dark:bg-rose-900/30';
@@ -63,8 +62,6 @@ interface PosSystemProps {
   tables: Table[];
   orders: Order[];
   setOrders: React.Dispatch<React.SetStateAction<Order[]>>;
-  billHistory: Bill[];
-  setBillHistory: React.Dispatch<React.SetStateAction<Bill[]>>;
   updateTableStatus: (tableIds: number[], status: TableStatus) => void;
   occupancyCount: Record<number, number>;
   activeOrder: Order | null;
@@ -76,13 +73,14 @@ interface PosSystemProps {
   selectedTableId: number | null;
   setSelectedTableId: (id: number | null) => void;
   clearCurrentOrder: (fullReset?: boolean) => void;
+  onOrderCreated: (order: Order) => void;
+  showOccupancy: boolean;
 }
 
 export default function PosSystem({ 
     tables, 
     orders, 
     setOrders, 
-    setBillHistory, 
     updateTableStatus, 
     occupancyCount, 
     activeOrder, 
@@ -93,7 +91,9 @@ export default function PosSystem({
     setDiscount,
     selectedTableId,
     setSelectedTableId,
-    clearCurrentOrder
+    clearCurrentOrder,
+    onOrderCreated,
+    showOccupancy,
 }: PosSystemProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [originalOrderItems, setOriginalOrderItems] = useState<OrderItem[]>([]);
@@ -108,7 +108,6 @@ export default function PosSystem({
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
   const [isAddItemDialogOpen, setIsAddItemDialogOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [showOccupancy, setShowOccupancy] = useState(true);
 
 
   const typedMenuData: MenuCategory[] = menuData;
@@ -155,7 +154,7 @@ export default function PosSystem({
           clearCurrentOrder(true);
       }
     }
-  }, [activeOrder, orderItems, clearCurrentOrder]);
+  }, [activeOrder]);
 
   const handleSelectTable = (tableId: number) => {
     const table = tables.find(t => t.id === tableId);
@@ -380,11 +379,7 @@ export default function PosSystem({
       id: `K${(orders.length + 1).toString().padStart(3, '0')}`,
       status: 'In Preparation', 
     };
-    setOrders(prevOrders => {
-      const updatedOrders = [...prevOrders, newOrder];
-      setActiveOrder(newOrder); // Set the new order as active
-      return updatedOrders;
-    });
+    onOrderCreated(newOrder);
     printKot(newOrder);
     setOriginalOrderItems(newOrder.items);
   };
@@ -711,10 +706,10 @@ export default function PosSystem({
         {filteredMenu.map((category) => (
           <AccordionItem key={category.category} value={category.category} className={cn("border-b-0 rounded-lg mb-2 overflow-hidden", categoryColors[category.category])}>
             <div className="flex items-center pr-4 hover:bg-muted/50 rounded-t-lg">
-                <AccordionTrigger className='p-4 hover:no-underline flex-grow'>
-                    <div className="text-xl font-bold text-black text-center flex-grow">{category.category}</div>
-                </AccordionTrigger>
-                <CategoryColorPicker categoryName={category.category} />
+              <AccordionTrigger className='p-4 hover:no-underline flex-grow'>
+                  <div className="text-xl font-bold text-black text-center flex-grow">{category.category}</div>
+              </AccordionTrigger>
+              <CategoryColorPicker categoryName={category.category} />
             </div>
             <AccordionContent className="p-2 pt-0">
               <div className="space-y-4 pt-2">
@@ -801,7 +796,7 @@ export default function PosSystem({
 
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 h-[calc(100vh-5rem)]">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 h-full">
       <Card className="col-span-1 lg:col-span-2 flex flex-col relative m-4">
         <CardHeader>
           <div className="flex items-center justify-between gap-4 flex-wrap">
@@ -896,10 +891,6 @@ export default function PosSystem({
         <div className="p-4 border-t space-y-4 bg-muted/30">
             <div className="flex items-center justify-between">
                 <Label className="font-semibold block">Select Table</Label>
-                <div className="flex items-center space-x-2">
-                    <Switch id="show-occupancy" checked={showOccupancy} onCheckedChange={setShowOccupancy} />
-                    <Label htmlFor="show-occupancy" className="text-xs">Show Occupancy</Label>
-                </div>
             </div>
             <CardContent className="p-0">
               <div className="grid grid-cols-5 gap-1.5">
