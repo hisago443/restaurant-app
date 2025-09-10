@@ -60,12 +60,19 @@ export interface Advance {
   amount: number;
 }
 
+export interface Vendor {
+    id: string;
+    name: string;
+    category: string;
+}
+
 export interface Expense {
     id: string;
     date: Date;
     category: string;
     description: string;
     amount: number;
+    vendorId?: string | null;
 }
 
 export interface InventoryItem {
