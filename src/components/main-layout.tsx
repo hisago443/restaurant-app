@@ -58,14 +58,38 @@ export default function MainLayout() {
     }
   }, [categoryColors]);
   
+  const clearCurrentOrder = useCallback((fullReset = false) => {
+    if (selectedTableId && !activeOrder) {
+        setPendingOrders(prev => {
+            const newPending = {...prev};
+            delete newPending[selectedTableId];
+            return newPending;
+        });
+    }
+    setCurrentOrderItems([]);
+    if (fullReset) {
+      setDiscount(0);
+      setSelectedTableId(null);
+      setActiveOrder(null);
+    } else {
+       // When just clearing items, if there's no active order,
+       // it implies we're clearing a pending order for the selected table.
+       // We should also clear it from the pendingOrders state.
+       if (selectedTableId && !activeOrder) {
+         setPendingOrders(prev => {
+           const newPending = {...prev};
+           delete newPending[selectedTableId];
+           return newPending;
+         });
+       }
+    }
+  }, [selectedTableId, activeOrder]);
+  
   useEffect(() => {
     // This effect handles the logic for switching between tables and managing pending vs. active orders.
-    const newSelectedTableId = selectedTableId; // The table we are switching TO.
-    const previousSelectedTableId = activeOrder?.tableId ?? null;
-
-    if (newSelectedTableId) {
+    if (selectedTableId !== null) {
       // Find an order that has already been sent to the kitchen for the selected table.
-      const existingOrder = orders.find(o => o.tableId === newSelectedTableId && o.status !== 'Completed');
+      const existingOrder = orders.find(o => o.tableId === selectedTableId && o.status !== 'Completed');
       if (existingOrder) {
         // Editing an existing, submitted order.
         setActiveOrder(existingOrder);
@@ -75,13 +99,18 @@ export default function MainLayout() {
         // This is a new order for the selected table, or we are returning to a pending (un-submitted) order.
         setActiveOrder(null);
         // Load the pending items for this table if they exist, otherwise start with an empty cart.
-        setCurrentOrderItems(pendingOrders[newSelectedTableId] || []);
+        setCurrentOrderItems(pendingOrders[selectedTableId] || []);
         setDiscount(0);
       }
     } else {
-      // No table is selected. This could be an unassigned order being built.
-      // We don't want to clear items if the user is building an order first.
-      setActiveOrder(null);
+        // No table is selected. This could be an unassigned order being built.
+        // We don't want to clear items if the user is building an order first.
+        // Only clear if there's an active order assigned to a table that's now unselected.
+        if (activeOrder) {
+            setActiveOrder(null);
+            setCurrentOrderItems([]);
+            setDiscount(0);
+        }
     }
   }, [selectedTableId, orders, pendingOrders]);
 
@@ -193,29 +222,13 @@ export default function MainLayout() {
     setActiveTab(tab)
   }
   
-  const clearCurrentOrder = useCallback((fullReset = false) => {
-    if (selectedTableId && !activeOrder) {
-        setPendingOrders(prev => {
-            const newPending = {...prev};
-            delete newPending[selectedTableId];
-            return newPending;
-        });
-    }
-    setCurrentOrderItems([]);
-    if (fullReset) {
-      setDiscount(0);
-      setSelectedTableId(null);
-      setActiveOrder(null);
-    }
-  }, [selectedTableId, activeOrder]);
-  
   const onOrderCreated = useCallback((order: Order) => {
     setOrders(prev => [...prev, order]);
     setActiveOrder(order);
     setCurrentOrderItems(order.items);
   }, []);
   
-  const handleSelectTable = useCallback((tableId: number) => {
+  const handleSelectTable = useCallback((tableId: number | null) => {
     const previousTableId = selectedTableId;
 
     if (previousTableId && previousTableId !== tableId && !activeOrder && currentOrderItems.length > 0) {

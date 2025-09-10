@@ -71,7 +71,7 @@ interface PosSystemProps {
   discount: number;
   setDiscount: (discount: number) => void;
   selectedTableId: number | null;
-  setSelectedTableId: (id: number) => void;
+  setSelectedTableId: (id: number | null) => void;
   clearCurrentOrder: (fullReset?: boolean) => void;
   onOrderCreated: (order: Order) => void;
   showOccupancy: boolean;
@@ -248,12 +248,12 @@ export default function PosSystem({
     }
   }, [activeOrder, selectedTableId, pendingOrders, orderItems.length, clearCurrentOrder]);
 
-  const handleSelectTable = (tableId: number) => {
+  const handleSelectTable = (tableId: number | null) => {
     const table = tables.find(t => t.id === tableId);
-    if (!table) return;
+    if (!table && tableId !== null) return;
   
-    if (table.status === 'Cleaning') {
-      updateTableStatus([tableId], 'Available');
+    if (table && table.status === 'Cleaning') {
+      updateTableStatus([tableId!], 'Available');
       toast({ title: `Table ${tableId} is now Available.` });
       if (selectedTableId === tableId) {
         setSelectedTableId(null);
@@ -1001,25 +1001,6 @@ export default function PosSystem({
                       Process Payment
                   </Button>
               </div>
-              <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                      <Button size="lg" variant="destructive" disabled={isProcessing || orderItems.length === 0}>
-                          <X className="mr-2 h-4 w-4" /> Clear Order
-                      </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                      <AlertDialogHeader>
-                          <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                          <AlertDialogDescription>
-                              This will clear all items from the current order. This action cannot be undone.
-                          </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction onClick={() => clearCurrentOrder(false)}>Clear</AlertDialogAction>
-                      </AlertDialogFooter>
-                  </AlertDialogContent>
-              </AlertDialog>
           </div>
         </div>
       </Card>
