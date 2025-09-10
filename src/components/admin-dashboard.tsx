@@ -162,7 +162,7 @@ export default function AdminDashboard({ billHistory, employees }: AdminDashboar
         {/* Top Selling Items */}
         <Card className="lg:col-span-3 bg-muted/30">
           <CardHeader>
-            <CardTitle>Top Selling Items</CardTitle>
+            <CardTitle className="text-gray-800 dark:text-gray-200">Top Selling Items</CardTitle>
             <CardDescription>Today's most popular items.</CardDescription>
           </CardHeader>
           <CardContent>
