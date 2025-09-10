@@ -60,6 +60,14 @@ export interface Advance {
   amount: number;
 }
 
+export interface Expense {
+    id: string;
+    date: Date;
+    category: string;
+    description: string;
+    amount: number;
+}
+
 export interface InventoryItem {
   id: string;
   name: string;

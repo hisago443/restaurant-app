@@ -4,18 +4,19 @@
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Utensils, LayoutGrid, Soup, Users, Shield, UserCog } from 'lucide-react';
+import { Utensils, LayoutGrid, Soup, Users, Shield, Receipt } from 'lucide-react';
 import { isSameDay } from 'date-fns';
 import { collection, onSnapshot, doc, setDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
-import type { Table, TableStatus, Order, Bill, Employee, OrderItem } from '@/lib/types';
+import type { Table, TableStatus, Order, Bill, Employee, OrderItem, Expense } from '@/lib/types';
 import { Logo } from "./icons";
 import PosSystem from './pos-system';
 import TableManagement from './table-management';
 import KitchenOrders from './kitchen-orders';
 import AdminDashboard from './admin-dashboard';
 import StaffManagement from "./staff-management";
+import ExpensesTracker from './expenses-tracker';
 import { Separator } from '@/components/ui/separator';
 
 
@@ -26,6 +27,7 @@ export default function MainLayout() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [billHistory, setBillHistory] = useState<Bill[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
+  const [expenses, setExpenses] = useState<Expense[]>([]);
   const [activeOrder, setActiveOrder] = useState<Order | null>(null);
   const [currentOrderItems, setCurrentOrderItems] = useState<OrderItem[]>([]);
   const [activeTab, setActiveTab] = useState('pos');
@@ -166,9 +168,29 @@ export default function MainLayout() {
         })
     });
 
+    const unsubExpenses = onSnapshot(collection(db, "expenses"), (snapshot) => {
+      const expensesData = snapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          ...data,
+          id: doc.id,
+          date: data.date.toDate(),
+        } as Expense;
+      });
+      setExpenses(expensesData.sort((a, b) => b.date.getTime() - a.date.getTime()));
+    }, (error) => {
+        console.error("Firestore Error (expenses): ", error);
+        toast({
+            variant: 'destructive',
+            title: 'Firestore Connection Error',
+            description: 'Could not fetch expense data.',
+        })
+    });
+
     return () => {
       unsubEmployees();
       unsubBills();
+      unsubExpenses();
     };
   }, [toast]);
 
@@ -272,7 +294,11 @@ export default function MainLayout() {
              <TabsTrigger value="staff" className="px-4 py-2 text-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md flex items-center gap-2">
               <Users /> Staff
             </TabsTrigger>
-             <Separator orientation="vertical" className="h-6 mx-1" />
+            <Separator orientation="vertical" className="h-6 mx-1" />
+            <TabsTrigger value="expenses" className="px-4 py-2 text-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md flex items-center gap-2">
+              <Receipt /> Expenses
+            </TabsTrigger>
+            <Separator orientation="vertical" className="h-6 mx-1" />
             <TabsTrigger value="admin" className="px-4 py-2 text-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md flex items-center gap-2">
               <Shield /> Admin
             </TabsTrigger>
@@ -330,6 +356,9 @@ export default function MainLayout() {
               <StaffManagement 
                 employees={employees} 
               />
+            </TabsContent>
+            <TabsContent value="expenses" className="m-0 p-0">
+              <ExpensesTracker expenses={expenses} />
             </TabsContent>
             <TabsContent value="admin" className="m-0 p-0">
               <AdminDashboard 
