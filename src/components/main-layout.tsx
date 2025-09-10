@@ -254,15 +254,18 @@ export default function MainLayout() {
   const handleSelectTable = useCallback((tableId: number | null) => {
     const previousTableId = selectedTableId;
 
+    // If we are switching from one table to another, and there was a pending (un-submitted) order...
     if (previousTableId && previousTableId !== tableId && !activeOrder && currentOrderItems.length > 0) {
+      // ...save the current items as a pending order for the previous table.
       setPendingOrders(prev => ({
         ...prev,
         [previousTableId]: currentOrderItems,
       }));
     }
     
+    // Set the new table as the selected one.
     setSelectedTableId(tableId);
-  }, [selectedTableId, activeOrder, currentOrderItems, setPendingOrders]);
+  }, [selectedTableId, activeOrder, currentOrderItems]);
 
   return (
     <div className="flex flex-col h-screen bg-background">

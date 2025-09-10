@@ -264,21 +264,7 @@ export default function PosSystem({
       return;
     }
 
-    const previousTableId = selectedTableId;
-
-    if (previousTableId && previousTableId !== tableId && !activeOrder && currentOrderItems.length > 0) {
-      setPendingOrders(prev => ({
-        ...prev,
-        [previousTableId]: currentOrderItems,
-      }));
-    }
-    
     setSelectedTableId(tableId);
-    
-    const isNewOrderUnassigned = !selectedTableId;
-    if (isNewOrderUnassigned && tableId) {
-      toast({ title: `Order assigned to Table ${tableId}` });
-    }
   };
   
   const setItemColor = (itemName: string, colorClass: string) => {
@@ -972,7 +958,7 @@ export default function PosSystem({
                           key={table.id}
                           variant="outline"
                           className={cn(
-                            "h-auto py-2 flex-col justify-center items-center relative p-0 border-2 transition-transform duration-150 active:scale-95",
+                            "h-auto py-1 flex-col justify-center items-center relative p-0 border-2 transition-transform duration-150 active:scale-95",
                             statusColors[table.status],
                             currentActiveTableId === table.id && 'ring-4 ring-offset-2 ring-ring',
                             table.status === 'Available' || table.status === 'Occupied' ? 'text-white border-black' : 'text-black border-black/50',
@@ -980,16 +966,16 @@ export default function PosSystem({
                           onClick={() => handleSelectTable(table.id)}
                       >
                         {(showOccupancy && occupancyCount[table.id] > 0) &&
-                            <div className="absolute bottom-1 right-1 flex items-center gap-1 bg-black/50 text-white text-xs font-bold p-1 rounded-md">
-                                <Repeat className="h-3 w-3" />
+                            <div className="absolute bottom-0.5 right-0.5 flex items-center gap-1 bg-black/50 text-white text-xs font-bold px-1 rounded-md">
+                                <Repeat className="h-2.5 w-2.5" />
                                 <span>{occupancyCount[table.id]}</span>
                             </div>
                         }
                           <div className="absolute top-1 left-1">
                             {React.createElement(statusIcons[table.status], { className: "h-3 w-3" })}
                           </div>
-                          <span className="text-6xl font-bold leading-none">{table.id}</span>
-                          <span className="text-[0.6rem] font-semibold -mt-1">{table.status}</span>
+                          <span className="text-4xl font-bold leading-none">{table.id}</span>
+                          <span className="text-[0.6rem] font-bold">{table.status}</span>
                       </Button>
                   ))}
               </div>
