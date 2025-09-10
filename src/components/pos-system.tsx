@@ -69,10 +69,11 @@ interface PosSystemProps {
 export default function PosSystem({ tables, orders, addOrder, updateOrder, addBill, updateTableStatus, occupancyCount, activeOrder, setActiveOrder }: PosSystemProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
+  const [originalOrderItems, setOriginalOrderItems] = useState<OrderItem[]>([]);
   const [discount, setDiscount] = useState(0);
   const [isClickToAdd, setIsClickToAdd] = useState(true);
-  const [receiptPreview, setReceiptPreview] = useState('');
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
+  const [receiptPreview, setReceiptPreview] = useState('');
   const { toast } = useToast();
   const [activeAccordionItems, setActiveAccordionItems] = useState<string[]>([]);
   const [viewMode, setViewMode] = useState<ViewMode>('accordion');
@@ -114,11 +115,11 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
     if (activeOrder) {
       setSelectedTableId(activeOrder.tableId);
       setOrderItems(activeOrder.items);
+      setOriginalOrderItems(activeOrder.items);
     } else {
-      // When there is no active order, we should not clear items
-      // as the user might be building a new order.
       if (orderItems.length === 0) {
         setSelectedTableId(null);
+        setOriginalOrderItems([]);
       }
     }
   }, [activeOrder]);
@@ -270,6 +271,7 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
     setDiscount(0);
     setActiveOrder(null);
     setSelectedTableId(null);
+    setOriginalOrderItems([]);
     
     if (forceClear) {
       toast({ title: "New Bill", description: "Current order cleared." });
@@ -278,9 +280,12 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
     }
   };
 
-  const printKot = (order: Order) => {
+  const printKot = (order: Order, diffItems?: OrderItem[]) => {
     const printWindow = window.open('', '_blank');
     if (printWindow) {
+      const itemsToPrint = diffItems || order.items;
+      const isUpdate = !!diffItems;
+
       const kitchenReceipt = `
         <html>
           <head>
@@ -293,11 +298,11 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
             </style>
           </head>
           <body>
-            <h2>KOT - Table ${order.tableId}</h2>
+            <h2>${isUpdate ? 'KOT UPDATE' : 'KOT'} - Table ${order.tableId}</h2>
             <h3>Order ID: ${order.id}</h3>
             <hr>
             <ul>
-              ${order.items.map(item => `<li><span>${item.quantity} x ${item.name}</span></li>`).join('')}
+              ${itemsToPrint.map(item => `<li><span>${item.quantity > 0 && isUpdate ? '+' : ''}${item.quantity} x ${item.name}</span></li>`).join('')}
             </ul>
             <hr>
             <script>
@@ -327,14 +332,31 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
 
     if (activeOrder) {
       const updatedOrder = { ...activeOrder, items: orderItems };
-      updateOrder(updatedOrder);
-      printKot(updatedOrder);
-      toast({ title: 'Order Updated!', description: `KOT updated for Table ${currentActiveTableId}.` });
+      
+      const diffItems: OrderItem[] = [];
+      const originalItemsMap = new Map(originalOrderItems.map(item => [item.name, item.quantity]));
+
+      orderItems.forEach(currentItem => {
+        const originalQuantity = originalItemsMap.get(currentItem.name) || 0;
+        if (currentItem.quantity > originalQuantity) {
+          diffItems.push({ ...currentItem, quantity: currentItem.quantity - originalQuantity });
+        }
+      });
+      
+      if (diffItems.length > 0) {
+        updateOrder(updatedOrder);
+        printKot(updatedOrder, diffItems);
+        toast({ title: 'Order Updated!', description: `KOT update sent for Table ${currentActiveTableId}.` });
+        setOriginalOrderItems(orderItems);
+      } else {
+        toast({ title: 'No Changes', description: 'No new items were added to the order.' });
+      }
+
     } else {
       const orderPayload = {
         items: orderItems,
         tableId: Number(currentActiveTableId),
-        onOrderCreated: printKot,
+        onOrderCreated: (newOrder: Order) => printKot(newOrder),
       };
       addOrder(orderPayload);
       updateTableStatus([currentActiveTableId], 'Occupied');
@@ -705,7 +727,7 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
             
             <div className="mt-auto pt-4 space-y-4 border-t">
               <CardContent className="p-0">
-                  <div className="grid grid-cols-5 gap-2">
+                  <div className="grid grid-cols-5 gap-1.5">
                       {tables.map(table => (
                           <Button
                               key={table.id}
@@ -724,9 +746,11 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
                                   <span>{occupancyCount[table.id]}</span>
                               </div>
                               }
-                              {React.createElement(statusIcons[table.status], { className: "absolute top-1 left-1 h-3 w-3" })}
-                              <span className="text-3xl font-bold leading-none">{table.id}</span>
-                              <span className="text-[0.6rem] font-semibold">{table.status}</span>
+                              <div className="absolute top-1 left-1">
+                                {React.createElement(statusIcons[table.status], { className: "h-3 w-3" })}
+                              </div>
+                              <span className="text-4xl font-bold leading-none">{table.id}</span>
+                              <span className="text-[0.6rem] font-semibold -mt-1">{table.status}</span>
                           </Button>
                       ))}
                   </div>
@@ -816,5 +840,3 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
     </div>
   );
 }
-
-    
