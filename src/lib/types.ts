@@ -1,3 +1,4 @@
+
 import { z } from 'zod';
 
 export interface MenuItem {
@@ -57,6 +58,7 @@ export interface Attendance {
 }
 
 export interface Advance {
+  id: string;
   employeeId: string;
   date: Date;
   amount: number;
@@ -108,3 +110,5 @@ export const GenerateReportOutputSchema = z.object({
   message: z.string(),
 });
 export type GenerateReportOutput = z.infer<typeof GenerateReportOutputSchema>;
+
+    

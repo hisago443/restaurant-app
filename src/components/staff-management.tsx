@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { collection, onSnapshot, addDoc, doc, setDoc, deleteDoc } from 'firebase/firestore';
+import { collection, onSnapshot, addDoc, doc, setDoc, deleteDoc, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
@@ -22,16 +22,43 @@ import { useToast } from '@/hooks/use-toast';
 
 const colors = ['bg-blue-500', 'bg-green-500', 'bg-yellow-500', 'bg-purple-500', 'bg-pink-500', 'bg-indigo-500', 'bg-teal-500'];
 
-function AddAdvanceDialog({ open, onOpenChange, employees, onAddAdvance, selectedDate }: { open: boolean, onOpenChange: (open: boolean) => void, employees: Employee[], onAddAdvance: (advance: Omit<Advance, 'date'> & { date: Date }) => void, selectedDate: Date }) {
+function AddOrEditAdvanceDialog({
+  open,
+  onOpenChange,
+  employees,
+  onSave,
+  selectedDate,
+  existingAdvance,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  employees: Employee[];
+  onSave: (advance: Omit<Advance, 'date' | 'id'> & { date: Date; id?: string }) => void;
+  selectedDate: Date;
+  existingAdvance: Advance | null;
+}) {
   const [employeeId, setEmployeeId] = useState('');
   const [amount, setAmount] = useState('');
+  
+  useEffect(() => {
+    if (existingAdvance) {
+      setEmployeeId(existingAdvance.employeeId);
+      setAmount(String(existingAdvance.amount));
+    } else {
+      setEmployeeId('');
+      setAmount('');
+    }
+  }, [existingAdvance, open]);
 
   const handleSave = () => {
     if (employeeId && amount) {
-      onAddAdvance({ employeeId, amount: parseFloat(amount), date: selectedDate });
+      onSave({
+        id: existingAdvance?.id,
+        employeeId,
+        amount: parseFloat(amount),
+        date: selectedDate,
+      });
       onOpenChange(false);
-      setEmployeeId('');
-      setAmount('');
     }
   };
 
@@ -39,7 +66,7 @@ function AddAdvanceDialog({ open, onOpenChange, employees, onAddAdvance, selecte
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add Advance</DialogTitle>
+          <DialogTitle>{existingAdvance ? 'Edit' : 'Add'} Advance</DialogTitle>
           <DialogDescription>
             Record a salary advance for an employee on {format(selectedDate, 'PPP')}.
           </DialogDescription>
@@ -47,7 +74,7 @@ function AddAdvanceDialog({ open, onOpenChange, employees, onAddAdvance, selecte
         <div className="space-y-4 py-4">
           <div className="space-y-2">
             <Label htmlFor="employee">Employee</Label>
-            <Select onValueChange={setEmployeeId} value={employeeId}>
+            <Select onValueChange={setEmployeeId} value={employeeId} disabled={!!existingAdvance}>
               <SelectTrigger id="employee">
                 <SelectValue placeholder="Select an employee" />
               </SelectTrigger>
@@ -82,13 +109,14 @@ export default function StaffManagement({ employees }: StaffManagementProps) {
   const [isAddEmployeeDialogOpen, setIsAddEmployeeDialogOpen] = useState(false);
   const [isEditEmployeeDialogOpen, setIsEditEmployeeDialogOpen] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
-  const [isAddAdvanceDialogOpen, setIsAddAdvanceDialogOpen] = useState(false);
+  const [isAdvanceDialogOpen, setIsAdvanceDialogOpen] = useState(false);
+  const [editingAdvance, setEditingAdvance] = useState<Advance | null>(null);
   
   useEffect(() => {
     const unsub = onSnapshot(collection(db, "advances"), (snapshot) => {
         const advancesData = snapshot.docs.map(doc => {
             const data = doc.data();
-            return { ...data, date: data.date.toDate() } as Advance;
+            return { ...data, id: doc.id, date: data.date.toDate() } as Advance;
         });
         setAdvances(advancesData);
     });
@@ -101,13 +129,37 @@ export default function StaffManagement({ employees }: StaffManagementProps) {
   
   const datesWithAdvance = advances.map(a => a.date);
   
-  const handleAddAdvance = async (advance: Advance) => {
+  const handleSaveAdvance = async (advance: Advance) => {
+    if (advance.id) {
+        // Update existing advance
+        try {
+            const advanceRef = doc(db, "advances", advance.id);
+            await updateDoc(advanceRef, { amount: advance.amount });
+            toast({ title: 'Advance Updated', description: 'The salary advance has been updated.' });
+        } catch (error) {
+            console.error("Error updating advance: ", error);
+            toast({ variant: 'destructive', title: 'Update Failed', description: 'Could not update the advance.' });
+        }
+    } else {
+        // Add new advance
+        try {
+            const { id, ...newAdvance } = advance;
+            await addDoc(collection(db, "advances"), newAdvance);
+            toast({ title: 'Advance Saved', description: 'The salary advance has been recorded.' });
+        } catch (error) {
+            console.error("Error adding advance: ", error);
+            toast({ variant: 'destructive', title: 'Save Failed', description: 'Could not save the advance.' });
+        }
+    }
+  }
+
+  const handleDeleteAdvance = async (advanceId: string) => {
     try {
-      await addDoc(collection(db, "advances"), advance);
-      toast({ title: 'Advance Saved', description: 'The salary advance has been recorded.' });
+        await deleteDoc(doc(db, "advances", advanceId));
+        toast({ title: 'Advance Deleted', description: 'The salary advance has been removed.' });
     } catch (error) {
-      console.error("Error adding advance: ", error);
-      toast({ variant: 'destructive', title: 'Save Failed', description: 'Could not save the advance.' });
+        console.error("Error deleting advance: ", error);
+        toast({ variant: 'destructive', title: 'Delete Failed', description: 'Could not delete the advance.' });
     }
   }
   
@@ -172,17 +224,22 @@ export default function StaffManagement({ employees }: StaffManagementProps) {
       deleteEmployee(employeeId);
   }
   
-  const openEditDialog = (employee: Employee) => {
+  const openEditEmployeeDialog = (employee: Employee) => {
     setEditingEmployee(employee);
     setIsEditEmployeeDialogOpen(true);
+  }
+
+  const openAdvanceDialog = (advance: Advance | null) => {
+    setEditingAdvance(advance);
+    setIsAdvanceDialogOpen(true);
   }
 
   return (
     <div className="p-4 space-y-4">
       <Tabs defaultValue="employees">
-        <TabsList>
-          <TabsTrigger value="employees">Employee List</TabsTrigger>
-          <TabsTrigger value="attendance">Attendance & Salary</TabsTrigger>
+        <TabsList className="m-2 self-center rounded-lg bg-primary/10 p-2">
+          <TabsTrigger value="employees" className="px-6 py-2 text-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md">Employee List</TabsTrigger>
+          <TabsTrigger value="attendance" className="px-6 py-2 text-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md">Attendance & Salary</TabsTrigger>
         </TabsList>
         <TabsContent value="employees">
           <Card>
@@ -230,7 +287,7 @@ export default function StaffManagement({ employees }: StaffManagementProps) {
                         <TableCell className="bg-red-100 dark:bg-red-900/30 text-red-900 dark:text-red-200">{totalAdvance.toLocaleString()}</TableCell>
                         <TableCell className="bg-green-100 dark:bg-green-900/30 text-green-900 dark:text-green-200">{remainingSalary.toLocaleString()}</TableCell>
                         <TableCell className="text-right">
-                          <Button variant="ghost" size="icon" onClick={() => openEditDialog(employee)}>
+                          <Button variant="ghost" size="icon" onClick={() => openEditEmployeeDialog(employee)}>
                             <Edit className="h-4 w-4" />
                           </Button>
                           <AlertDialog>
@@ -293,7 +350,7 @@ export default function StaffManagement({ employees }: StaffManagementProps) {
                     <CardTitle>Details for {selectedDate ? format(selectedDate, 'PPP') : '...'}</CardTitle>
                     <CardDescription>Advances and other details for the selected date.</CardDescription>
                   </div>
-                  <Button onClick={() => setIsAddAdvanceDialogOpen(true)}>
+                  <Button onClick={() => openAdvanceDialog(null)}>
                     <span className="mr-2">₹</span> Add Advance
                   </Button>
                 </div>
@@ -305,12 +362,36 @@ export default function StaffManagement({ employees }: StaffManagementProps) {
                     {advancesForSelectedDate.map((advance, index) => {
                       const employee = employees.find(e => e.id === advance.employeeId);
                       return (
-                      <li key={index} className="flex justify-between items-center p-2 bg-muted rounded-md">
+                      <li key={index} className="flex justify-between items-center p-2 bg-muted rounded-md group">
                         <div className="flex items-center gap-2">
                           {employee && <span className={cn('h-2 w-2 rounded-full', employee.color)} />}
                           <span>{employee ? employee.name : 'Unknown Employee'}:</span>
+                          <span className="font-mono font-bold">₹{advance.amount.toLocaleString()}</span>
                         </div>
-                        <span className="font-mono font-bold">₹{advance.amount.toLocaleString()}</span>
+                        <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openAdvanceDialog(advance)}>
+                                <Edit className="h-4 w-4" />
+                            </Button>
+                            <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive">
+                                        <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                        <AlertDialogTitle>Delete this advance?</AlertDialogTitle>
+                                        <AlertDialogDescription>
+                                            This will delete the advance of ₹{advance.amount} for {employee?.name}. This action cannot be undone.
+                                        </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                        <AlertDialogAction onClick={() => handleDeleteAdvance(advance.id)}>Delete</AlertDialogAction>
+                                    </AlertDialogFooter>
+                                </AlertDialogContent>
+                            </AlertDialog>
+                        </div>
                       </li>
                     )})}
                   </ul>
@@ -323,12 +404,13 @@ export default function StaffManagement({ employees }: StaffManagementProps) {
         </TabsContent>
       </Tabs>
 
-      <AddAdvanceDialog 
-        open={isAddAdvanceDialogOpen}
-        onOpenChange={setIsAddAdvanceDialogOpen}
+      <AddOrEditAdvanceDialog 
+        open={isAdvanceDialogOpen}
+        onOpenChange={setIsAdvanceDialogOpen}
         employees={employees}
-        onAddAdvance={handleAddAdvance}
+        onSave={handleSaveAdvance}
         selectedDate={selectedDate || new Date()}
+        existingAdvance={editingAdvance}
       />
 
       <EmployeeDialog
