@@ -16,7 +16,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from '@/hooks/use-toast';
-import { Search, Plus, Minus, X, Save, FilePlus, LayoutGrid, List, Rows, ChevronsUpDown, Palette, Shuffle, ClipboardList, Send, ChevronDown, CheckCircle2, Users, Bookmark, Sparkles, Repeat, Printer, Edit, SparklesIcon, UserCheck, BookmarkX } from 'lucide-react';
+import { Search, Plus, Minus, X, Save, FilePlus, LayoutGrid, List, Rows, ChevronsUpDown, Palette, Shuffle, ClipboardList, Send, ChevronDown, CheckCircle2, Users, Bookmark, Sparkles, Repeat, Edit, SparklesIcon, UserCheck, BookmarkX, Printer } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { AddItemDialog } from './add-item-dialog';
@@ -26,8 +26,6 @@ import menuData from '@/data/menu.json';
 import { generateReceipt, type GenerateReceiptInput } from '@/ai/flows/dynamic-receipt-discount-reasoning';
 import { PaymentDialog } from './payment-dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from '@/components/ui/sheet';
-
 
 const vegColor = 'bg-green-100 dark:bg-green-900/30';
 const nonVegColor = 'bg-rose-100 dark:bg-rose-900/30';
@@ -83,7 +81,6 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
   const [isAddItemDialogOpen, setIsAddItemDialogOpen] = useState(false);
   const [selectedTableId, setSelectedTableId] = useState<number | null>(null);
-  const [isOrderSheetOpen, setIsOrderSheetOpen] = useState(false);
 
   const typedMenuData: MenuCategory[] = menuData;
 
@@ -92,13 +89,6 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
     return selectedTableId;
   }, [activeOrder, selectedTableId]);
   
-  useEffect(() => {
-    if(orderItems.length > 0 || activeOrder) {
-      setIsOrderSheetOpen(true);
-    } else {
-      setIsOrderSheetOpen(false);
-    }
-  }, [orderItems, activeOrder]);
 
   useEffect(() => {
     try {
@@ -676,16 +666,16 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
         </ScrollArea>
       </Card>
 
-      <Sheet open={isOrderSheetOpen} onOpenChange={setIsOrderSheetOpen}>
-        <SheetContent className="w-[400px] sm:w-[540px] flex flex-col">
-            <SheetHeader>
-              <SheetTitle>{activeOrder ? `Editing Order #${activeOrder.id}` : 'Current Order'}</SheetTitle>
-              <SheetDescription>
-                {currentActiveTableId ? `Table ${currentActiveTableId}` : "No Table Selected"}
-              </SheetDescription>
-            </SheetHeader>
-            
-            <ScrollArea className="flex-grow pr-4 -mr-6">
+      <Card className="w-[480px] flex flex-col m-4 my-4 ml-0">
+        <CardHeader>
+          <CardTitle>{activeOrder ? `Editing Order #${activeOrder.id}` : 'Current Order'}</CardTitle>
+          <CardDescription>
+            {currentActiveTableId ? `Table ${currentActiveTableId}` : "No Table Selected"}
+          </CardDescription>
+        </CardHeader>
+        
+        <div className="flex flex-col flex-grow p-4 space-y-4 overflow-hidden">
+            <ScrollArea className="flex-grow pr-4 -mr-4">
               {orderItems.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
                   <ClipboardList className="w-16 h-16 text-gray-300" />
@@ -816,8 +806,8 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
                   </AlertDialog>
               </div>
             </div>
-        </SheetContent>
-      </Sheet>
+        </div>
+      </Card>
 
       <PaymentDialog
         isOpen={isPaymentDialogOpen}
