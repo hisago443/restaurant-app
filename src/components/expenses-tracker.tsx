@@ -44,7 +44,7 @@ import {
 } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { PlusCircle, Edit, Trash2, CalendarIcon, Building, Repeat, List, ChevronsUpDown } from 'lucide-react';
+import { PlusCircle, Edit, Trash2, CalendarIcon, Building, Repeat, List, ChevronsUpDown, Check } from 'lucide-react';
 import { Calendar } from "@/components/ui/calendar";
 import { format, isSameDay, isSameMonth, isSameYear } from 'date-fns';
 import type { Expense, Vendor } from '@/lib/types';
@@ -96,6 +96,7 @@ function AddOrEditVendorDialog({
   const [category, setCategory] = useState('');
   const [phone, setPhone] = useState('');
   const [isCategoryPopoverOpen, setIsCategoryPopoverOpen] = useState(false);
+  const [searchValue, setSearchValue] = useState('');
 
   useEffect(() => {
     if (existingVendor) {
@@ -120,6 +121,10 @@ function AddOrEditVendorDialog({
       onOpenChange(false);
     }
   };
+  
+  const currentCategories = Array.from(new Set([...vendorCategories, ...vendors.map(v => v.category)]));
+  const filteredCategories = currentCategories.filter(cat => cat.toLowerCase().includes(searchValue.toLowerCase()));
+
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -150,16 +155,27 @@ function AddOrEditVendorDialog({
                     </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
-                    <Command onValueChange={setCategory}>
+                    <Command>
                         <CommandInput 
-                            placeholder="Search or create category..." 
+                            placeholder="Search or create category..."
+                            value={searchValue}
+                            onValueChange={setSearchValue}
                         />
                          <CommandList>
                             <CommandEmpty>
-                                No category found. Type to create a new one.
+                                {searchValue && !filteredCategories.includes(searchValue) ? (
+                                     <CommandItem
+                                        onSelect={() => {
+                                            setCategory(searchValue);
+                                            setIsCategoryPopoverOpen(false);
+                                        }}
+                                        >
+                                    Create "{searchValue}"
+                                    </CommandItem>
+                                ) : 'No category found.'}
                             </CommandEmpty>
                             <CommandGroup>
-                                {vendorCategories.map((cat) => (
+                                {filteredCategories.map((cat) => (
                                     <CommandItem
                                         key={cat}
                                         value={cat}
@@ -168,6 +184,12 @@ function AddOrEditVendorDialog({
                                             setIsCategoryPopoverOpen(false)
                                         }}
                                     >
+                                        <Check
+                                            className={cn(
+                                                "mr-2 h-4 w-4",
+                                                category === cat ? "opacity-100" : "opacity-0"
+                                            )}
+                                        />
                                         {cat}
                                     </CommandItem>
                                 ))}
@@ -603,3 +625,5 @@ export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
     </div>
   );
 }
+
+    
