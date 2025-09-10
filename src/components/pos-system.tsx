@@ -117,6 +117,7 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
       setOrderItems(activeOrder.items);
       setOriginalOrderItems(activeOrder.items);
     } else {
+      // Don't clear table selection if there are items but no active order yet.
       if (orderItems.length === 0) {
         setSelectedTableId(null);
         setOriginalOrderItems([]);
@@ -129,26 +130,33 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
     const table = tables.find(t => t.id === tableId);
     if (!table) return;
   
+    // If the table is marked for cleaning, clicking it makes it available.
     if (table.status === 'Cleaning') {
       updateTableStatus([tableId], 'Available');
       toast({ title: `Table ${tableId} is now Available.` });
+      // If the active order was for this table, clear it from POS view
       if (activeOrder?.tableId === tableId) {
         clearOrder(false, true);
       }
       return;
     }
   
+    // Check if there is an existing, non-completed order for this table.
     const existingOrder = orders.find(o => o.tableId === tableId && o.status !== 'Completed');
   
     if (existingOrder) {
+      // If an order exists, load it for editing.
       setActiveOrder(existingOrder);
       toast({ title: `Editing Order for Table ${tableId}`, description: 'Add or modify items.' });
     } else {
+      // If no existing order, this is a new order for this table.
       if (orderItems.length > 0 && !activeOrder) {
+        // An order is already being built, assign it to this table.
         setSelectedTableId(tableId);
         toast({ title: `Order assigned to Table ${tableId}.`, description: 'You can now send the order to the kitchen.' });
       } else {
-        clearOrder(false, true); 
+        // Start a fresh order for this table.
+        clearOrder(false, true); // Clear any stray items.
         setSelectedTableId(tableId);
         toast({ title: `New Order for Table ${tableId}`, description: 'Add items to start the order.' });
       }
@@ -198,7 +206,7 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
   const updateReceipt = useCallback(async () => {
     if (orderItems.length === 0) {
       setReceiptPreview('');
-      return;
+      return '';
     }
     const input: GenerateReceiptInput = {
       items: orderItems.map(item => ({ name: item.name, price: item.price, quantity: item.quantity })),
@@ -221,16 +229,6 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
     }
   }, [orderItems, discount, subtotal, total, toast]);
   
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      updateReceipt();
-    }, 500); // Debounce API calls
-  
-    return () => {
-      clearTimeout(handler);
-    };
-  }, [updateReceipt]);
-
   const addToOrder = (item: MenuItem, quantity: number) => {
     const existingItem = orderItems.find(orderItem => orderItem.name === item.name);
     if (existingItem) {
@@ -278,7 +276,7 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
     if (forceClear) {
       toast({ title: "New Bill", description: "Current order cleared." });
     } else if (delayTableClear) {
-      toast({ title: "New Bill Ready", description: "Select a table to start a new order." });
+      // This case is for after payment, we don't want a confusing toast.
     }
   };
 
@@ -343,8 +341,11 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
       currentItemsMap.forEach((quantity, name) => {
         const originalQuantity = originalItemsMap.get(name) || 0;
         if (quantity > originalQuantity) {
-          const itemPrice = orderItems.find(i => i.name === name)?.price || 0;
-          diffItems.push({ name, quantity: quantity - originalQuantity, price: itemPrice });
+          // Find the item details to pass to the print function
+          const itemDetails = orderItems.find(i => i.name === name);
+          if (itemDetails) {
+            diffItems.push({ ...itemDetails, quantity: quantity - originalQuantity });
+          }
         }
       });
       
@@ -352,16 +353,22 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
         updateOrder(updatedOrder);
         printKot(updatedOrder, diffItems);
         toast({ title: 'Order Updated!', description: `KOT update sent for Table ${currentActiveTableId}.` });
+        // Update the original items state to reflect the latest sent order
         setOriginalOrderItems(orderItems);
       } else {
         toast({ title: 'No Changes', description: 'No new items were added to the order.' });
       }
 
     } else {
+      // Creating a new order
       const orderPayload = {
         items: orderItems,
         tableId: Number(currentActiveTableId),
-        onOrderCreated: (newOrder: Order) => printKot(newOrder),
+        onOrderCreated: (newOrder: Order) => {
+          printKot(newOrder); // Print the full KOT for a new order
+          // After sending, the current order becomes the 'original' for future edits
+          setOriginalOrderItems(newOrder.items);
+        },
       };
       addOrder(orderPayload);
       updateTableStatus([currentActiveTableId], 'Occupied');
@@ -378,13 +385,15 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
       toast({ variant: 'destructive', title: 'No Table Selected', description: 'Please select a table before processing payment.' });
       return;
     }
-    setIsPaymentDialogOpen(true);
+    updateReceipt().then(() => {
+      setIsPaymentDialogOpen(true);
+    });
   };
   
-  const handlePaymentSuccess = async () => {
+  const handlePaymentSuccess = () => {
     if (!currentActiveTableId) return;
 
-    const finalReceipt = await updateReceipt();
+    const finalReceipt = receiptPreview; // Use the already generated receipt
     if (!finalReceipt) {
         toast({ variant: "destructive", title: "Billing Error", description: "Could not generate the final bill. Please try again." });
         return;
@@ -421,7 +430,14 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
     }
 
     const currentReceipt = await updateReceipt();
-    if (!currentReceipt) return;
+    if (!currentReceipt) {
+        toast({
+            variant: "destructive",
+            title: "Billing Error",
+            description: "Could not generate the provisional bill. Please try again.",
+        });
+        return;
+    }
 
     const printWindow = window.open('', '_blank');
     if (printWindow) {
@@ -746,7 +762,7 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
         </CardHeader>
         
         <div className="flex flex-col flex-grow p-4 pt-0 space-y-4 overflow-hidden">
-            <ScrollArea className="flex-grow basis-1/3 pr-4 -mr-4">
+            <ScrollArea className="flex-grow basis-2/5 pr-4 -mr-4">
               {orderItems.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
                   <ClipboardList className="w-16 h-16 text-gray-300" />
