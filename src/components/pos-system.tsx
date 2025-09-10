@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import * as React from 'react';
@@ -612,8 +611,8 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
   };
 
   return (
-    <div className="flex h-[calc(100vh-5rem)]">
-      <Card className="flex-1 flex flex-col relative m-4">
+    <div className="grid grid-cols-3 gap-4 h-[calc(100vh-5rem)]">
+      <Card className="col-span-2 flex flex-col relative m-4">
         <CardHeader>
           <div className="flex items-center justify-between gap-4 flex-wrap">
              <div className="flex-grow">
@@ -666,7 +665,7 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
         </ScrollArea>
       </Card>
 
-      <Card className="w-[480px] flex flex-col m-4 my-4 ml-0">
+      <Card className="col-span-1 flex flex-col m-4 ml-0">
         <CardHeader>
           <CardTitle>{activeOrder ? `Editing Order #${activeOrder.id}` : 'Current Order'}</CardTitle>
           <CardDescription>
@@ -705,13 +704,13 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
             
             <div className="mt-auto pt-4 space-y-4 border-t">
               <CardContent className="p-0">
-                  <div className="grid grid-cols-6 gap-2">
+                  <div className="grid grid-cols-5 gap-1">
                       {tables.map(table => (
                           <Button
                               key={table.id}
                               variant="outline"
                               className={cn(
-                                  "flex flex-col h-12 w-12 justify-center items-center gap-0.5 relative p-1",
+                                  "flex flex-col h-14 justify-center items-center relative p-0 border-2",
                                   statusColors[table.status],
                                   currentActiveTableId === table.id && 'ring-2 ring-offset-2 ring-ring',
                                   table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black'
@@ -719,14 +718,14 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
                               onClick={() => handleSelectTable(table.id)}
                           >
                               {(occupancyCount[table.id] > 0) &&
-                              <div className="absolute bottom-0.5 right-0.5 flex items-center gap-1 bg-black/50 text-white text-[0.6rem] font-bold p-0.5 rounded-full h-4 min-w-4 justify-center">
+                              <div className="absolute top-0.5 right-0.5 flex items-center gap-1 bg-black/50 text-white text-[0.6rem] font-bold p-0.5 rounded-full h-4 min-w-4 justify-center">
                                   <Repeat className="h-2 w-2" />
                                   <span>{occupancyCount[table.id]}</span>
                               </div>
                               }
                               {React.createElement(statusIcons[table.status], { className: "absolute top-1 left-1 h-3 w-3" })}
-                              <span className="text-lg font-bold leading-none">{table.id}</span>
-                              <span className="text-[0.5rem] font-semibold">{table.status}</span>
+                              <span className="text-3xl font-bold leading-none">{table.id}</span>
+                              <span className="text-[0.6rem] font-semibold">{table.status}</span>
                           </Button>
                       ))}
                   </div>
@@ -816,3 +815,5 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
     </div>
   );
 }
+
+    
