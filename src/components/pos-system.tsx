@@ -85,6 +85,8 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
   const [isAddItemDialogOpen, setIsAddItemDialogOpen] = useState(false);
   const [selectedTableId, setSelectedTableId] = useState<number | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+
 
   const typedMenuData: MenuCategory[] = menuData;
 
@@ -148,7 +150,7 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
       toast({ title: `Table ${tableId} is now Available.` });
       // If the active order was for this table, clear it from POS view
       if (activeOrder?.tableId === tableId) {
-        clearOrder(false, true);
+        clearOrder(false);
       }
       return;
     }
@@ -168,7 +170,7 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
         toast({ title: `Order assigned to Table ${tableId}.`, description: 'You can now send the order to the kitchen.' });
       } else {
         // Start a fresh order for this table.
-        clearOrder(false, true); // Clear any stray items.
+        clearOrder(true); // Clear any stray items and discount.
         setSelectedTableId(tableId);
         toast({ title: `New Order for Table ${tableId}`, description: 'Add items to start the order.' });
       }
@@ -209,10 +211,10 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
   const subtotal = useMemo(() => orderItems.reduce((acc, item) => acc + item.price * item.quantity, 0), [orderItems]);
   const total = useMemo(() => subtotal * (1 - discount / 100), [subtotal, discount]);
 
-  const updateReceipt = useCallback(async () => {
+  // This is now an on-demand function
+  const getReceipt = useCallback(async (): Promise<string> => {
     if (orderItems.length === 0) {
-      setReceiptPreview('');
-      return;
+      return '';
     }
     const input: GenerateReceiptInput = {
       items: orderItems.map(item => ({ name: item.name, price: item.price, quantity: item.quantity })),
@@ -222,7 +224,8 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
     };
     try {
       const result = await generateReceipt(input);
-      setReceiptPreview(result.receiptPreview);
+      setReceiptPreview(result.receiptPreview); // Keep updating state for payment dialog
+      return result.receiptPreview;
     } catch (error) {
       console.error('Error generating receipt:', error);
       toast({
@@ -230,15 +233,14 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
         title: "Error",
         description: "Could not generate receipt preview.",
       });
+      return ''; // Return empty on error
     }
   }, [orderItems, discount, subtotal, total, toast]);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-        updateReceipt();
-    }, 500); // Debounce AI call
-    return () => clearTimeout(timer);
-  }, [orderItems, discount, subtotal, total, updateReceipt]);
+    // Invalidate receipt preview if order changes
+    setReceiptPreview('');
+  }, [orderItems, discount]);
   
   const addToOrder = (item: MenuItem, quantity: number) => {
     const existingItem = orderItems.find(orderItem => orderItem.name === item.name);
@@ -275,17 +277,14 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
     setOrderItems(orderItems.filter(item => item.name !== name));
   };
   
-  const clearOrder = (delayTableClear = false, fullReset = false) => {
+  const clearOrder = (fullReset = false) => {
     setOrderItems([]);
     if (fullReset) {
       setDiscount(0);
     }
     setActiveOrder(null);
     setOriginalOrderItems([]);
-    // Only clear table selection if not delayed (e.g., after payment)
-    if (!delayTableClear) {
-      setSelectedTableId(null);
-    }
+    setSelectedTableId(null);
   };
 
   const printKot = (order: Order, diffItems?: OrderItem[]) => {
@@ -384,7 +383,7 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
     }
   };
 
-  const handleProcessPayment = () => {
+  const handleProcessPayment = async () => {
     if (orderItems.length === 0) {
       toast({ variant: "destructive", title: "Empty Order", description: "Cannot process payment for an empty order." });
       return;
@@ -393,8 +392,14 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
       toast({ variant: 'destructive', title: 'No Table Selected', description: 'Please select a table before processing payment.' });
       return;
     }
-    if (!receiptPreview) {
-      toast({ variant: "destructive", title: "Receipt Not Ready", description: "Please wait a moment for the receipt to be generated." });
+    setIsProcessing(true);
+    toast({ title: 'Generating Bill...', description: 'Please wait.' });
+
+    const currentReceipt = await getReceipt();
+
+    setIsProcessing(false);
+    if (!currentReceipt) {
+      toast({ variant: "destructive", title: "Receipt Not Ready", description: "Could not generate the receipt. Please try again." });
       return;
     }
     setIsPaymentDialogOpen(true);
@@ -427,14 +432,10 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
       updateOrder({ ...activeOrder, status: 'Completed' });
     }
   
-    clearOrder(true, false);
-    
-    setTimeout(() => {
-      setSelectedTableId(null);
-    }, 100);
+    clearOrder(false);
   };
 
-  const handlePrintProvisionalBill = () => {
+  const handlePrintProvisionalBill = async () => {
     if (!currentActiveTableId || orderItems.length === 0) {
       toast({
         variant: 'destructive',
@@ -443,12 +444,18 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
       });
       return;
     }
+    
+    setIsProcessing(true);
+    toast({ title: 'Generating Bill...', description: 'Please wait.' });
 
-    if (!receiptPreview) {
+    const currentReceipt = await getReceipt();
+    setIsProcessing(false);
+
+    if (!currentReceipt) {
         toast({
             variant: "destructive",
             title: "Receipt Not Ready",
-            description: "Please wait a moment for the receipt to generate.",
+            description: "Could not generate the receipt. Please try again.",
         });
         return;
     }
@@ -465,7 +472,7 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
             </style>
           </head>
           <body>
-            <pre>${receiptPreview}</pre>
+            <pre>${currentReceipt}</pre>
             <script>
               window.onload = function() {
                 window.print();
@@ -814,7 +821,7 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
                               key={table.id}
                               variant="outline"
                               className={cn(
-                                "h-auto py-2 flex-col justify-center items-center relative p-0 border-2 border-black transition-transform duration-150 active:scale-95 shadow-md hover:shadow-lg",
+                                "h-auto py-2 flex-col justify-center items-center relative p-0 border-2 border-black transition-transform duration-150 active:scale-95",
                                 statusColors[table.status],
                                 currentActiveTableId === table.id && 'ring-4 ring-offset-2 ring-ring',
                                 table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black'
@@ -870,16 +877,16 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
                       size="lg"
                       className={cn(activeOrder && "bg-blue-600 hover:bg-blue-700")}
                       onClick={handleSendToKitchen}
-                      disabled={orderItems.length === 0 || !currentActiveTableId}
+                      disabled={isProcessing || orderItems.length === 0 || !currentActiveTableId}
                   >
                       {activeOrder ? <Printer className="mr-2 h-4 w-4" /> : <Send className="mr-2 h-4 w-4" />}
                       {activeOrder ? 'Print Kitchen Receipt' : 'Send KOT to Kitchen'}
                   </Button>
                   <div className="grid grid-cols-2 gap-2">
-                      <Button size="lg" variant="outline" onClick={handlePrintProvisionalBill} disabled={!currentActiveTableId || orderItems.length === 0}>
+                      <Button size="lg" variant="outline" onClick={handlePrintProvisionalBill} disabled={isProcessing ||!currentActiveTableId || orderItems.length === 0}>
                           <Printer className="mr-2 h-4 w-4" /> Print Bill
                       </Button>
-                      <Button size="lg" onClick={handleProcessPayment} disabled={orderItems.length === 0 || !currentActiveTableId}>
+                      <Button size="lg" onClick={handleProcessPayment} disabled={isProcessing || orderItems.length === 0 || !currentActiveTableId}>
                           Process Payment
                       </Button>
                   </div>
