@@ -76,17 +76,21 @@ export default function MainLayout() {
   }, [toast]);
 
 
-  const addOrder = (order: Omit<Order, 'id' | 'status'>) => {
+  const addOrder = (order: Omit<Order, 'id' | 'status'> & { onOrderCreated?: (order: Order) => void }) => {
     const newOrder: Order = {
       ...order,
       id: `K${(orders.length + 1).toString().padStart(3, '0')}`,
-      status: 'Pending',
+      status: 'In Preparation', // Start in prep immediately
     };
     setOrders(prevOrders => {
       const updatedOrders = [...prevOrders, newOrder];
       const newActiveOrder = updatedOrders.find(o => o.tableId === order.tableId && o.status !== 'Completed');
       if (newActiveOrder) {
         setActiveOrder(newActiveOrder);
+      }
+      // Call the callback to trigger printing
+      if (order.onOrderCreated) {
+        order.onOrderCreated(newOrder);
       }
       return updatedOrders;
     });

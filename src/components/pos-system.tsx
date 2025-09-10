@@ -293,6 +293,43 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
     }
   };
 
+  const printKot = (order: Order) => {
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      const kitchenReceipt = `
+        <html>
+          <head>
+            <title>Kitchen Order Ticket</title>
+            <style>
+              body { font-family: monospace; margin: 20px; font-size: 14px; }
+              h2, h3 { text-align: center; margin: 5px 0; }
+              ul { list-style: none; padding: 0; }
+              li { display: flex; justify-content: space-between; margin: 5px 0; font-size: 16px; font-weight: bold; }
+            </style>
+          </head>
+          <body>
+            <h2>KOT - Table ${order.tableId}</h2>
+            <h3>Order ID: ${order.id}</h3>
+            <hr>
+            <ul>
+              ${order.items.map(item => `<li><span>${item.quantity} x ${item.name}</span></li>`).join('')}
+            </ul>
+            <hr>
+            <script>
+              window.onload = function() {
+                window.print();
+                window.close();
+              }
+            </script>
+          </body>
+        </html>
+      `;
+      printWindow.document.write(kitchenReceipt);
+      printWindow.document.close();
+    }
+  };
+
+
   const handleSendToKitchen = () => {
     if (orderItems.length === 0) {
       toast({ variant: 'destructive', title: 'Empty Order', description: 'Cannot send an empty order to the kitchen.' });
@@ -305,17 +342,21 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
 
     if (activeOrder) {
       // This is an update to an existing order
-      updateOrder({
+      const updatedOrder = {
         ...activeOrder,
         items: orderItems,
-      });
+      };
+      updateOrder(updatedOrder);
+      printKot(updatedOrder); // Also print updates
       toast({ title: 'Order Updated!', description: `KOT updated for Table ${currentActiveTableId}.` });
 
     } else {
-      // This is a new order
+      // This is a new order. The order object will be created in main-layout
+      // so we pass a callback to printKot after the order is created with an ID.
       const orderPayload = {
         items: orderItems,
         tableId: Number(currentActiveTableId),
+        onOrderCreated: printKot, // Pass the print function as a callback
       };
       addOrder(orderPayload);
       updateTableStatus([currentActiveTableId], 'Occupied');
@@ -415,7 +456,7 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
           isColorApplied && "border-black shadow-lg hover:shadow-xl",
           !currentActiveTableId && "opacity-50 cursor-not-allowed"
         )}
-        onClick={() => handleItemClick(item)}
+        onClick={() => currentActiveTableId && handleItemClick(item)}
       >
         <Popover>
           <PopoverTrigger asChild>
