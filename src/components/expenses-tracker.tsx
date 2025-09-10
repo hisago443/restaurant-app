@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { collection, addDoc, doc, updateDoc, deleteDoc, onSnapshot } from 'firebase/firestore';
+import { collection, addDoc, doc, updateDoc, deleteDoc, onSnapshot, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -44,10 +44,11 @@ import {
 } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { PlusCircle, Edit, Trash2, CalendarIcon, Building } from 'lucide-react';
+import { PlusCircle, Edit, Trash2, CalendarIcon, Building, RotateCw } from 'lucide-react';
 import { Calendar } from "@/components/ui/calendar";
 import { format } from 'date-fns';
 import type { Expense, Vendor } from '@/lib/types';
+import { Separator } from '@/components/ui/separator';
 
 interface ExpensesTrackerProps {
   expenses: Expense[];
@@ -143,129 +144,20 @@ function AddOrEditVendorDialog({
   );
 }
 
+export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
+  const { toast } = useToast();
+  const [vendors, setVendors] = useState<Vendor[]>([]);
+  const [isVendorDialogOpen, setIsVendorDialogOpen] = useState(false);
+  const [editingVendor, setEditingVendor] = useState<Vendor | null>(null);
 
-function AddOrEditExpenseDialog({
-  open,
-  onOpenChange,
-  onSave,
-  existingExpense,
-  vendors,
-}: {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onSave: (expense: Omit<Expense, 'id'> & { id?: string }) => void;
-  existingExpense: Expense | null;
-  vendors: Vendor[];
-}) {
+  // Form state
+  const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [category, setCategory] = useState('');
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
-  const [vendorId, setVendorId] = useState<string | null | undefined>();
+  const [vendorId, setVendorId] = useState<string>('none');
   
-  useEffect(() => {
-    if (existingExpense) {
-      setDate(existingExpense.date);
-      setCategory(existingExpense.category);
-      setDescription(existingExpense.description);
-      setAmount(String(existingExpense.amount));
-      setVendorId(existingExpense.vendorId || null);
-    } else {
-      setDate(new Date());
-      setCategory('');
-      setDescription('');
-      setAmount('');
-      setVendorId(null);
-    }
-  }, [existingExpense]);
-
-  const handleSave = () => {
-    if (date && category && description && amount) {
-      onSave({
-        id: existingExpense?.id,
-        date,
-        category,
-        description,
-        amount: parseFloat(amount),
-        vendorId,
-      });
-      onOpenChange(false);
-    }
-  };
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>{existingExpense ? 'Edit' : 'Add'} Expense</DialogTitle>
-          <DialogDescription>
-            Record a business expense. Fill in all the details.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="space-y-4 py-4">
-          <div className="space-y-2">
-            <Label>Date</Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant={"outline"} className="w-full justify-start text-left font-normal">
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {date ? format(date, "PPP") : <span>Pick a date</span>}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0">
-                <Calendar mode="single" selected={date} onSelect={setDate} initialFocus />
-              </PopoverContent>
-            </Popover>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="category">Category</Label>
-            <Select onValueChange={setCategory} value={category}>
-              <SelectTrigger id="category">
-                <SelectValue placeholder="Select a category" />
-              </SelectTrigger>
-              <SelectContent>
-                {expenseCategories.map(cat => <SelectItem key={cat} value={cat}>{cat}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-           <div className="space-y-2">
-            <Label htmlFor="vendor">Vendor (Optional)</Label>
-            <Select onValueChange={(value) => setVendorId(value === 'none' ? null : value)} value={vendorId ?? 'none'}>
-              <SelectTrigger id="vendor">
-                <SelectValue placeholder="None" />
-              </SelectTrigger>
-              <SelectContent>
-                 <SelectItem value="none">None</SelectItem>
-                 {vendors.map(v => <SelectItem key={v.id} value={v.id}>{v.name}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
-            <Input id="description" placeholder="e.g., Weekly vegetable purchase" value={description} onChange={e => setDescription(e.target.value)} />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="amount">Amount (₹)</Label>
-            <Input id="amount" type="number" placeholder="e.g., 5000" value={amount} onChange={e => setAmount(e.target.value)} />
-          </div>
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button onClick={handleSave}>Save Expense</Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
-  const { toast } = useToast();
-  const [vendors, setVendors] = useState<Vendor[]>([]);
-  const [isExpenseDialogOpen, setIsExpenseDialogOpen] = useState(false);
-  const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
-  const [isVendorDialogOpen, setIsVendorDialogOpen] = useState(false);
-  const [editingVendor, setEditingVendor] = useState<Vendor | null>(null);
-
   useEffect(() => {
     const unsubVendors = onSnapshot(collection(db, "vendors"), (snapshot) => {
         const data = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as Vendor));
@@ -274,21 +166,44 @@ export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
     return () => unsubVendors();
   }, []);
 
-  const handleSaveExpense = async (expense: Omit<Expense, 'id'> & { id?: string }) => {
+  const resetForm = () => {
+    setEditingExpense(null);
+    setDate(new Date());
+    setCategory('');
+    setDescription('');
+    setAmount('');
+    setVendorId('none');
+  }
+
+  const handleSetEditingExpense = (expense: Expense) => {
+    setEditingExpense(expense);
+    setDate(expense.date);
+    setCategory(expense.category);
+    setDescription(expense.description);
+    setAmount(String(expense.amount));
+    setVendorId(expense.vendorId || 'none');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  const handleSaveExpense = async () => {
+    if (!date || !category || !description || !amount) {
+      toast({ variant: "destructive", title: "Missing Fields", description: "Please fill out all required fields." });
+      return;
+    }
     const expenseData = {
-        date: expense.date,
-        category: expense.category,
-        description: expense.description,
-        amount: expense.amount,
-        vendorId: expense.vendorId || null,
+        date,
+        category,
+        description,
+        amount: parseFloat(amount),
+        vendorId: vendorId === 'none' ? null : vendorId,
     };
 
-    if (expense.id) {
+    if (editingExpense?.id) {
         try {
-            await updateDoc(doc(db, "expenses", expense.id), expenseData);
+            await updateDoc(doc(db, "expenses", editingExpense.id), expenseData);
             toast({ title: "Expense updated successfully" });
         } catch (error) {
-            toast({ variant: "destructive", title: "Error updating expense", description: "Could not update the expense in the database." });
+            toast({ variant: "destructive", title: "Error updating expense" });
             console.error("Error updating expense: ", error);
         }
     } else {
@@ -296,10 +211,11 @@ export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
             await addDoc(collection(db, "expenses"), expenseData);
             toast({ title: "Expense added successfully" });
         } catch (error) {
-            toast({ variant: "destructive", title: "Error adding expense", description: "Could not add the expense to the database." });
+            toast({ variant: "destructive", title: "Error adding expense" });
             console.error("Error adding expense: ", error);
         }
     }
+    resetForm();
   };
 
   const handleDeleteExpense = async (expenseId: string) => {
@@ -311,11 +227,6 @@ export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
         console.error("Error deleting expense: ", error);
     }
   };
-
-  const openExpenseDialog = (expense: Expense | null) => {
-    setEditingExpense(expense);
-    setIsExpenseDialogOpen(true);
-  }
 
   const handleSaveVendor = async (vendor: Omit<Vendor, 'id'> & { id?: string }) => {
     if (vendor.id) {
@@ -346,27 +257,84 @@ export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
 
   const getVendorName = (vendorId: string | undefined | null) => {
     if (!vendorId) return 'N/A';
-    return vendors.find(v => v.id === vendorId)?.name || 'Unknown Vendor';
+    return vendors.find(v => v.id === vendorId)?.name || 'Unknown';
   }
 
   return (
     <div className="p-4 space-y-4">
        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-          <div>
-              <CardTitle>Expense Tracker</CardTitle>
-              <CardDescription>Monitor and record all your business expenses.</CardDescription>
-          </div>
-          <div className="flex gap-2">
-            <Button onClick={() => openVendorDialog(null)}>
-              <Building className="mr-2 h-4 w-4" /> Add Vendor
-            </Button>
-            <Button onClick={() => openExpenseDialog(null)}>
-              <PlusCircle className="mr-2 h-4 w-4" /> Add Expense
-            </Button>
-          </div>
+          <CardHeader>
+              <CardTitle>{editingExpense ? 'Edit Expense' : 'Add New Expense'}</CardTitle>
+              <CardDescription>{editingExpense ? `Updating expense record for ${format(editingExpense.date, 'PPP')}` : 'Record a new business expense.'}</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
+                <div className="space-y-2">
+                    <Label>Date</Label>
+                    <Popover>
+                    <PopoverTrigger asChild>
+                        <Button variant={"outline"} className="w-full justify-start text-left font-normal">
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {date ? format(date, "PPP") : <span>Pick a date</span>}
+                        </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                        <Calendar mode="single" selected={date} onSelect={setDate} initialFocus />
+                    </PopoverContent>
+                    </Popover>
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="category">Category</Label>
+                    <Select onValueChange={setCategory} value={category}>
+                    <SelectTrigger id="category">
+                        <SelectValue placeholder="Select a category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {expenseCategories.map(cat => <SelectItem key={cat} value={cat}>{cat}</SelectItem>)}
+                    </SelectContent>
+                    </Select>
+                </div>
+                 <div className="space-y-2">
+                    <Label htmlFor="vendor">Vendor (Optional)</Label>
+                    <Select onValueChange={setVendorId} value={vendorId}>
+                    <SelectTrigger id="vendor">
+                        <SelectValue placeholder="None" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="none">None</SelectItem>
+                        {vendors.map(v => <SelectItem key={v.id} value={v.id}>{v.name}</SelectItem>)}
+                    </SelectContent>
+                    </Select>
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="description">Description</Label>
+                    <Input id="description" placeholder="e.g., Weekly vegetable purchase" value={description} onChange={e => setDescription(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="amount">Amount (Rs.)</Label>
+                    <Input id="amount" type="number" placeholder="e.g., 5000" value={amount} onChange={e => setAmount(e.target.value)} />
+                </div>
+            </div>
+            <div className="flex justify-end gap-2">
+                {editingExpense && <Button variant="outline" onClick={resetForm}><RotateCw className="mr-2 h-4 w-4" />Cancel Edit</Button>}
+                <Button onClick={handleSaveExpense}>
+                    <PlusCircle className="mr-2 h-4 w-4" /> {editingExpense ? 'Update Expense' : 'Save Expense'}
+                </Button>
+                 <Button variant="secondary" onClick={() => openVendorDialog(null)}>
+                    <Building className="mr-2 h-4 w-4" /> Add Vendor
+                </Button>
+            </div>
+          </CardContent>
+      </Card>
+      
+      <Separator />
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Expense History</CardTitle>
+          <CardDescription>A log of all recorded business expenses.</CardDescription>
+        </CardHeader>
+        <CardContent>
           <Table>
               <TableHeader>
               <TableRow>
@@ -374,7 +342,7 @@ export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
                   <TableHead>Category</TableHead>
                   <TableHead>Description</TableHead>
                   <TableHead>Vendor</TableHead>
-                  <TableHead className="text-right">Amount (₹)</TableHead>
+                  <TableHead className="text-right">Amount (Rs.)</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
               </TableRow>
               </TableHeader>
@@ -390,7 +358,7 @@ export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
                       {expense.amount.toFixed(2)}
                       </TableCell>
                       <TableCell className="text-right">
-                      <Button variant="ghost" size="icon" onClick={() => openExpenseDialog(expense)}>
+                      <Button variant="ghost" size="icon" onClick={() => handleSetEditingExpense(expense)}>
                           <Edit className="h-4 w-4" />
                       </Button>
                       <AlertDialog>
@@ -427,17 +395,9 @@ export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
           <div className="text-right font-bold text-lg mt-4 pr-4">
               Total Expenses: Rs. {totalExpenses.toFixed(2)}
           </div>
-          </CardContent>
+        </CardContent>
       </Card>
       
-      <AddOrEditExpenseDialog
-        open={isExpenseDialogOpen}
-        onOpenChange={setIsExpenseDialogOpen}
-        onSave={handleSaveExpense}
-        existingExpense={editingExpense}
-        vendors={vendors}
-      />
-
        <AddOrEditVendorDialog
         open={isVendorDialogOpen}
         onOpenChange={setIsVendorDialogOpen}
@@ -447,3 +407,5 @@ export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
     </div>
   );
 }
+
+    
