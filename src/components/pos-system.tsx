@@ -727,13 +727,12 @@ export default function PosSystem({ tables, orders, setOrders, setBillHistory, u
       <Accordion type="multiple" value={activeAccordionItems} onValueChange={setActiveAccordionItems} className="w-full">
         {filteredMenu.map((category) => (
           <AccordionItem key={category.category} value={category.category} className={cn("border-b-0 rounded-lg mb-2 overflow-hidden", categoryColors[category.category])}>
-             <AccordionTrigger className='p-4 hover:bg-muted/50 rounded-t-lg hover:no-underline'>
-                <div className="text-xl font-bold text-black text-center flex-grow">{category.category}</div>
-                <div className='flex items-center gap-2'>
-                    <CategoryColorPicker categoryName={category.category} />
-                    <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200" />
-                </div>
-            </AccordionTrigger>
+            <div className="flex items-center pr-4 hover:bg-muted/50 rounded-t-lg">
+                <AccordionTrigger className='p-4 hover:no-underline flex-grow'>
+                    <div className="text-xl font-bold text-black text-center flex-grow">{category.category}</div>
+                </AccordionTrigger>
+                <CategoryColorPicker categoryName={category.category} />
+            </div>
             <AccordionContent className="p-2 pt-0">
               <div className="space-y-4 pt-2">
                 {category.subCategories.map((subCategory) => (
@@ -1031,5 +1030,6 @@ export default function PosSystem({ tables, orders, setOrders, setBillHistory, u
     
 
     
+
 
 
