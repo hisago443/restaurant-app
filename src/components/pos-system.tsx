@@ -674,7 +674,7 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
           </CardDescription>
         </CardHeader>
         
-        <div className="flex flex-col flex-grow p-4 space-y-4 overflow-hidden">
+        <div className="flex flex-col flex-grow p-4 pt-0 space-y-4 overflow-hidden">
             <ScrollArea className="flex-grow pr-4 -mr-4">
               {orderItems.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
@@ -703,33 +703,33 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
               )}
             </ScrollArea>
             
-            <div className="mt-auto space-y-4">
-                <CardContent className="p-0">
-                    <div className="grid grid-cols-5 gap-2">
-                        {tables.map(table => (
-                            <Button
-                                key={table.id}
-                                variant="outline"
-                                className={cn(
-                                    "flex flex-col h-12 w-12 justify-center items-center gap-0.5 relative p-1",
-                                    statusColors[table.status],
-                                    currentActiveTableId === table.id && 'ring-2 ring-offset-2 ring-ring',
-                                    table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black'
-                                )}
-                                onClick={() => handleSelectTable(table.id)}
-                            >
-                                {(occupancyCount[table.id] > 0) &&
-                                <div className="absolute bottom-0.5 right-0.5 flex items-center gap-1 bg-black/50 text-white text-[0.6rem] font-bold p-0.5 rounded-full h-4 min-w-4 justify-center">
-                                    <Repeat className="h-2 w-2" />
-                                    <span>{occupancyCount[table.id]}</span>
-                                </div>
-                                }
-                                {React.createElement(statusIcons[table.status], { className: "absolute top-1 left-1 h-3 w-3" })}
-                                <span className="text-lg font-bold leading-none">{table.id}</span>
-                                <span className="text-[0.5rem] font-semibold">{table.status}</span>
-                            </Button>
-                        ))}
-                    </div>
+            <div className="mt-auto pt-4 space-y-4 border-t">
+              <CardContent className="p-0">
+                  <div className="grid grid-cols-6 gap-2">
+                      {tables.map(table => (
+                          <Button
+                              key={table.id}
+                              variant="outline"
+                              className={cn(
+                                  "flex flex-col h-12 w-12 justify-center items-center gap-0.5 relative p-1",
+                                  statusColors[table.status],
+                                  currentActiveTableId === table.id && 'ring-2 ring-offset-2 ring-ring',
+                                  table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black'
+                              )}
+                              onClick={() => handleSelectTable(table.id)}
+                          >
+                              {(occupancyCount[table.id] > 0) &&
+                              <div className="absolute bottom-0.5 right-0.5 flex items-center gap-1 bg-black/50 text-white text-[0.6rem] font-bold p-0.5 rounded-full h-4 min-w-4 justify-center">
+                                  <Repeat className="h-2 w-2" />
+                                  <span>{occupancyCount[table.id]}</span>
+                              </div>
+                              }
+                              {React.createElement(statusIcons[table.status], { className: "absolute top-1 left-1 h-3 w-3" })}
+                              <span className="text-lg font-bold leading-none">{table.id}</span>
+                              <span className="text-[0.5rem] font-semibold">{table.status}</span>
+                          </Button>
+                      ))}
+                  </div>
               </CardContent>
 
               <div>
@@ -743,16 +743,7 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
                   ))}
                 </RadioGroup>
               </div>
-              <Card className="bg-muted/50">
-                <CardHeader className="p-4">
-                  <CardTitle className="text-lg">Receipt Preview</CardTitle>
-                </CardHeader>
-                <CardContent className="p-4 pt-0">
-                  <pre className="text-sm font-mono whitespace-pre-wrap break-words min-h-[100px] bg-background p-2 rounded-md">
-                    {receiptPreview || 'Add items to see preview...'}
-                  </pre>
-                </CardContent>
-              </Card>
+
               <div className="space-y-2 text-lg">
                 <div className="flex justify-between">
                   <span>Subtotal:</span>
