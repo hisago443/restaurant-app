@@ -488,9 +488,11 @@ function EmployeeDialog({ open, onOpenChange, employee, onSave }: { open: boolea
                         </SelectTrigger>
                         <SelectContent>
                         <SelectItem value="Manager">Manager</SelectItem>
+                        <SelectItem value="Head Chef">Head Chef</SelectItem>
                         <SelectItem value="Chef">Chef</SelectItem>
                         <SelectItem value="Waiter">Waiter</SelectItem>
                         <SelectItem value="Cleaner">Cleaner</SelectItem>
+                        <SelectItem value="Helper">Helper</SelectItem>
                         <SelectItem value="Bar Tender">Bar Tender</SelectItem>
                         </SelectContent>
                     </Select>
