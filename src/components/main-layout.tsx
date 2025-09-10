@@ -163,6 +163,9 @@ export default function MainLayout() {
   const addEmployee = async (employee: Omit<Employee, 'id'>) => {
     try {
       const docRef = await addDoc(collection(db, "employees"), employee);
+      // Manually update local state to reflect the change immediately
+      // The onSnapshot listener will then sync, but this provides instant UI feedback.
+      setEmployees(prev => [...prev, { ...employee, id: docRef.id }]);
       toast({ title: 'Employee Added', description: 'New employee saved to the database.' });
     } catch (error) {
       console.error("Error adding employee: ", error);
