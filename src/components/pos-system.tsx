@@ -284,7 +284,11 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
     }
     setActiveOrder(null);
     setOriginalOrderItems([]);
-    setSelectedTableId(null);
+    // Only clear table if it's a full reset (e.g. new order button)
+    // and not when clearing after payment, where we need the table context.
+    if (fullReset) {
+      setSelectedTableId(null);
+    }
   };
 
   const printKot = (order: Order, diffItems?: OrderItem[]) => {
@@ -416,7 +420,7 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
     }
   
     setIsPaymentDialogOpen(false);
-    toast({ title: "Payment Successful", description: `Payment of ₹${total.toFixed(2)} confirmed.` });
+    toast({ title: "Payment Successful", description: `Payment of Rs.${total.toFixed(2)} confirmed.` });
     
     const billPayload: Omit<Bill, 'id' | 'timestamp'> = {
       orderItems: orderItems,
@@ -689,7 +693,7 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
     const newItems = orderItems.filter(item => !originalItemsSet.has(item.name));
     const existingItems = orderItems.filter(item => originalItemsSet.has(item.name));
 
-    const renderItem = (item: OrderItem, isNew: boolean) => (
+    const renderItemRow = (item: OrderItem, isNew: boolean) => (
       <div key={item.name} className={cn("flex items-center", isNew && "bg-blue-50 dark:bg-blue-900/20 p-2 rounded-md")}>
         <div className="flex-grow">
           <p className="font-medium">{item.name} {isNew && <span className="text-xs text-blue-500">(New)</span>}</p>
@@ -706,14 +710,14 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
 
     return (
       <div className="space-y-3">
-        {existingItems.map(item => renderItem(item, false))}
+        {existingItems.map(item => renderItemRow(item, false))}
         {newItems.length > 0 && existingItems.length > 0 && (
             <div className="relative py-2">
                 <Separator />
                 <span className="absolute left-1/2 -translate-x-1/2 -top-2 bg-background px-2 text-xs text-muted-foreground">New Items</span>
             </div>
         )}
-        {newItems.map(item => renderItem(item, true))}
+        {newItems.map(item => renderItemRow(item, true))}
       </div>
     );
   };
@@ -911,3 +915,5 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
     </div>
   );
 }
+
+    
