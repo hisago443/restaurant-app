@@ -56,50 +56,21 @@ interface ExpensesTrackerProps {
   expenses: Expense[];
 }
 
-const expenseCategories = [
-  "Groceries",
-  "Dairy",
-  "Chicken",
-  "Rent",
-  "Electricity Bill",
-  "Water Bill",
-  "Gas",
-  "Maintenance",
-  "Marketing",
-  "Salaries",
-  "Bonus",
-  "Miscellaneous"
-];
-
-const vendorCategories = [
-    "Food & Beverage",
-    "Cleaning Supplies",
-    "Maintenance Services",
-    "Marketing & Advertising",
-    "Office Supplies",
-    "Utilities",
-    "Other"
-];
-
 function AddOrEditVendorDialog({
   open,
   onOpenChange,
   onSave,
   existingVendor,
-  vendors,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSave: (vendor: Omit<Vendor, 'id'> & { id?: string }) => void;
   existingVendor: Vendor | null;
-  vendors: Vendor[];
 }) {
   const [name, setName] = useState('');
   const [category, setCategory] = useState('');
   const [phone, setPhone] = useState('');
-  const [isCategoryPopoverOpen, setIsCategoryPopoverOpen] = useState(false);
-  const [searchValue, setSearchValue] = useState('');
-
+  
   useEffect(() => {
     if (existingVendor) {
         setName(existingVendor.name);
@@ -123,10 +94,6 @@ function AddOrEditVendorDialog({
       onOpenChange(false);
     }
   };
-  
-  const currentCategories = Array.from(new Set([...vendorCategories, ...vendors.map(v => v.category)]));
-  const filteredCategories = currentCategories.filter(cat => cat.toLowerCase().includes(searchValue.toLowerCase()));
-
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -143,64 +110,8 @@ function AddOrEditVendorDialog({
             <Input id="vendor-name" placeholder="e.g., Local Farm Produce" value={name} onChange={e => setName(e.target.value)} />
           </div>
           <div className="space-y-2">
-            <Label>Category</Label>
-            <Popover open={isCategoryPopoverOpen} onOpenChange={setIsCategoryPopoverOpen}>
-                <PopoverTrigger asChild>
-                    <Button
-                        variant="outline"
-                        role="combobox"
-                        aria-expanded={isCategoryPopoverOpen}
-                        className="w-full justify-between"
-                    >
-                        {category || "Select or type a category..."}
-                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                    </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
-                    <Command>
-                        <CommandInput 
-                            placeholder="Search or create category..."
-                            onValueChange={setSearchValue}
-                        />
-                         <CommandList>
-                            <CommandEmpty>
-                                {searchValue && !filteredCategories.find(c => c.toLowerCase() === searchValue.toLowerCase()) ? (
-                                     <CommandItem
-                                        onSelect={() => {
-                                            setCategory(searchValue);
-                                            setIsCategoryPopoverOpen(false);
-                                            setSearchValue('');
-                                        }}
-                                        >
-                                    Create "{searchValue}"
-                                    </CommandItem>
-                                ) : 'No category found.'}
-                            </CommandEmpty>
-                            <CommandGroup>
-                                {filteredCategories.map((cat) => (
-                                    <CommandItem
-                                        key={cat}
-                                        value={cat}
-                                        onSelect={(currentValue) => {
-                                            setCategory(currentValue === category ? "" : currentValue)
-                                            setIsCategoryPopoverOpen(false)
-                                            setSearchValue('');
-                                        }}
-                                    >
-                                        <Check
-                                            className={cn(
-                                                "mr-2 h-4 w-4",
-                                                category === cat ? "opacity-100" : "opacity-0"
-                                            )}
-                                        />
-                                        {cat}
-                                    </CommandItem>
-                                ))}
-                            </CommandGroup>
-                        </CommandList>
-                    </Command>
-                </PopoverContent>
-            </Popover>
+            <Label htmlFor="vendor-category">Category</Label>
+            <Input id="vendor-category" placeholder="e.g., Food & Beverage" value={category} onChange={e => setCategory(e.target.value)} />
           </div>
            <div className="space-y-2">
             <Label htmlFor="vendor-phone">Mobile No. (Optional)</Label>
@@ -215,6 +126,7 @@ function AddOrEditVendorDialog({
     </Dialog>
   );
 }
+
 
 function ManageVendorsDialog({
   open,
@@ -617,7 +529,6 @@ export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
         onOpenChange={setIsVendorAddDialogOpen}
         onSave={handleSaveVendor}
         existingVendor={editingVendor}
-        vendors={vendors}
       />
       <ManageVendorsDialog
         open={isVendorManageDialogOpen}
