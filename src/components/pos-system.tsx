@@ -127,49 +127,41 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
   useEffect(() => {
     if (activeOrder) {
       setSelectedTableId(activeOrder.tableId);
-      setOrderItems(activeOrder.items);
-      setOriginalOrderItems(activeOrder.items);
+      setOrderItems([...activeOrder.items]);
+      setOriginalOrderItems([...activeOrder.items]);
     } else {
-      // Don't clear table selection if there are items but no active order yet.
       if (orderItems.length === 0) {
-        setSelectedTableId(null);
-        setOriginalOrderItems([]);
+          clearOrder(true);
       }
     }
-  }, [activeOrder, orderItems.length]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeOrder]);
 
 
   const handleSelectTable = (tableId: number) => {
     const table = tables.find(t => t.id === tableId);
     if (!table) return;
   
-    // If the table is marked for cleaning, clicking it makes it available.
     if (table.status === 'Cleaning') {
       updateTableStatus([tableId], 'Available');
       toast({ title: `Table ${tableId} is now Available.` });
-      // If the active order was for this table, clear it from POS view
       if (activeOrder?.tableId === tableId) {
         clearOrder(true);
       }
       return;
     }
   
-    // Check if there is an existing, non-completed order for this table.
     const existingOrder = orders.find(o => o.tableId === tableId && o.status !== 'Completed');
   
     if (existingOrder) {
-      // If an order exists, load it for editing.
       setActiveOrder(existingOrder);
       toast({ title: `Editing Order for Table ${tableId}`, description: 'Add or modify items.' });
     } else {
-      // If no existing order, this is a new order for this table.
       if (orderItems.length > 0 && !activeOrder) {
-        // An order is already being built, assign it to this table.
         setSelectedTableId(tableId);
         toast({ title: `Order assigned to Table ${tableId}.`, description: 'You can now send the order to the kitchen.' });
       } else {
-        // Start a fresh order for this table.
-        clearOrder(true); // Clear any stray items and discount.
+        clearOrder(true); 
         setSelectedTableId(tableId);
         toast({ title: `New Order for Table ${tableId}`, description: 'Add items to start the order.' });
       }
@@ -215,7 +207,6 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
       return '';
     }
   
-    // Local, fast receipt generation
     const pad = (str: string, len: number, char = ' ') => str.padEnd(len, char);
     const money = (val: number) => `₹${val.toFixed(2)}`;
   
@@ -248,11 +239,9 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
     receiptLines.push('*************************');
   
     const localReceipt = receiptLines.join('\n');
-    setReceiptPreview(localReceipt); // Always update state with the fast version
+    setReceiptPreview(localReceipt);
   
     if (useAI) {
-      // This is the "fire and forget" part for the more nicely formatted receipt
-      // for the payment dialog, which doesn't block the UI.
       setIsProcessing(true);
       const input: GenerateReceiptInput = {
         items: orderItems.map(item => ({ name: item.name, price: item.price, quantity: item.quantity })),
@@ -262,34 +251,40 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
       };
       generateReceipt(input)
         .then(result => {
-          setReceiptPreview(result.receiptPreview); // Update with the better version when ready
+          setReceiptPreview(result.receiptPreview); 
         })
         .catch(error => {
           console.error('AI receipt generation failed, using local version:', error);
-          // The local version is already set, so no action needed.
         })
         .finally(() => setIsProcessing(false));
     }
   
-    return localReceipt; // Immediately return the fast, local version
+    return localReceipt;
   
   }, [orderItems, discount, subtotal, total]);
   
   useEffect(() => {
     if (orderItems.length > 0) {
-      getReceipt(true); // Fire-and-forget AI receipt generation
+      const timer = setTimeout(() => getReceipt(true), 500); // Debounce AI call
+      return () => clearTimeout(timer);
     } else {
-      setReceiptPreview(''); // Clear preview for empty order
+      setReceiptPreview('');
     }
   }, [orderItems, discount, getReceipt]);
   
   const addToOrder = (item: MenuItem, quantity: number) => {
-    const existingItem = orderItems.find(orderItem => orderItem.name === item.name);
-    if (existingItem) {
-      updateQuantity(item.name, existingItem.quantity + quantity);
-    } else {
-      setOrderItems([...orderItems, { ...item, quantity }]);
-    }
+    setOrderItems(prevItems => {
+        const existingItem = prevItems.find(orderItem => orderItem.name === item.name);
+        if (existingItem) {
+            return prevItems.map(orderItem =>
+                orderItem.name === item.name
+                    ? { ...orderItem, quantity: orderItem.quantity + quantity }
+                    : orderItem
+            );
+        } else {
+            return [...prevItems, { ...item, quantity }];
+        }
+    });
   };
 
   const handleItemClick = (item: MenuItem) => {
@@ -318,13 +313,14 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
     setOrderItems(orderItems.filter(item => item.name !== name));
   };
   
-  const clearOrder = (fullReset = true) => {
+  const clearOrder = (fullReset = false) => {
     setOrderItems([]);
     setOriginalOrderItems([]);
     setActiveOrder(null);
     if (fullReset) {
       setDiscount(0);
       setSelectedTableId(null);
+      setReceiptPreview('');
     }
   };
 
@@ -385,11 +381,9 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
       const originalItemsMap = new Map(originalOrderItems.map(item => [item.name, item.quantity]));
       const currentItemsMap = new Map(orderItems.map(item => [item.name, item.quantity]));
 
-      // New items or increased quantity
       currentItemsMap.forEach((quantity, name) => {
         const originalQuantity = originalItemsMap.get(name) || 0;
         if (quantity > originalQuantity) {
-          // Find the item details to pass to the print function
           const itemDetails = orderItems.find(i => i.name === name);
           if (itemDetails) {
             diffItems.push({ ...itemDetails, quantity: quantity - originalQuantity });
@@ -401,20 +395,17 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
         updateOrder(updatedOrder);
         printKot(updatedOrder, diffItems);
         toast({ title: 'Order Updated!', description: `KOT update sent for Table ${currentActiveTableId}.` });
-        // Update the original items state to reflect the latest sent order
-        setOriginalOrderItems(orderItems);
+        setOriginalOrderItems([...orderItems]);
       } else {
         toast({ title: 'No Changes', description: 'No new items were added to the order.' });
       }
 
     } else {
-      // Creating a new order
       const orderPayload = {
         items: orderItems,
         tableId: Number(currentActiveTableId),
         onOrderCreated: (newOrder: Order) => {
-          printKot(newOrder); // Print the full KOT for a new order
-          // After sending, the current order becomes the 'original' for future edits
+          printKot(newOrder); 
           setOriginalOrderItems(newOrder.items);
         },
       };
@@ -435,7 +426,7 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
     }
 
     setIsProcessing(true);
-    const currentReceipt = await getReceipt(true);
+    const currentReceipt = await getReceipt(true); // Wait for AI receipt
     setIsProcessing(false);
 
     if (!currentReceipt) {
@@ -449,7 +440,6 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
   const handlePaymentSuccess = () => {
     if (!currentActiveTableId) return;
   
-    // Use the latest receipt available in the state.
     const finalReceipt = receiptPreview; 
   
     if (!finalReceipt && orderItems.length > 0) {
@@ -458,7 +448,7 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
     }
   
     setIsPaymentDialogOpen(false);
-    toast({ title: "Payment Successful", description: `Rs.${total.toFixed(2)} confirmed.` });
+    toast({ title: "Payment Successful", description: `₹${total.toFixed(2)} confirmed.` });
     
     const billPayload: Omit<Bill, 'id' | 'timestamp'> = {
       orderItems: orderItems,
@@ -487,8 +477,9 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
       return;
     }
   
-    // Use the fast, local receipt generator. No waiting, no AI.
-    const currentReceipt = await getReceipt(false);
+    setIsProcessing(true);
+    const currentReceipt = await getReceipt(false); // Use fast, local receipt
+    setIsProcessing(false);
   
     const printWindow = window.open('', '_blank');
     if (printWindow) {
@@ -716,34 +707,48 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
 
   const renderOrderItems = () => {
     const originalItemsSet = new Set(originalOrderItems.map(item => item.name));
-    const newItems = orderItems.filter(item => !originalItemsSet.has(item.name));
-    const existingItems = orderItems.filter(item => originalItemsSet.has(item.name));
+    const newItems = orderItems.filter(item => !originalItemsSet.has(item.name) || (originalOrderItems.find(orig => orig.name === item.name)?.quantity || 0) < item.quantity);
+    const existingItems = orderItems.filter(item => {
+        const originalItem = originalOrderItems.find(orig => orig.name === item.name);
+        return !!originalItem && originalItem.quantity >= item.quantity;
+    });
 
-    const renderItemRow = (item: OrderItem, isNew: boolean) => (
-      <div key={item.name} className={cn("flex items-center", isNew && "bg-blue-50 dark:bg-blue-900/20 p-2 rounded-md")}>
-        <div className="flex-grow">
-          <p className="font-medium">{item.name} {isNew && <span className="text-xs text-blue-500">(New)</span>}</p>
-          <p className="text-sm text-muted-foreground">₹{item.price.toFixed(2)}</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => updateQuantity(item.name, item.quantity - 1)}><Minus className="h-4 w-4" /></Button>
-          <span className="w-8 text-center font-bold">{item.quantity}</span>
-          <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => updateQuantity(item.name, item.quantity + 1)}><Plus className="h-4 w-4" /></Button>
-          <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => removeFromOrder(item.name)}><X className="h-4 w-4" /></Button>
-        </div>
-      </div>
-    );
+    const renderItemRow = (item: OrderItem, isNew: boolean, isUpdated: boolean) => {
+        const originalQuantity = originalOrderItems.find(orig => orig.name === item.name)?.quantity || 0;
+        const quantityChange = item.quantity - originalQuantity;
+        const itemClass = isNew ? "bg-blue-50 dark:bg-blue-900/20" : isUpdated ? "bg-yellow-50 dark:bg-yellow-900/20" : "";
+        const itemTag = isNew ? "(New)" : isUpdated ? `(+${quantityChange})` : "";
+        const tagClass = isNew ? "text-blue-500" : isUpdated ? "text-yellow-600" : "";
+
+        return (
+            <div key={item.name} className={cn("flex items-center p-2 rounded-md", itemClass)}>
+                <div className="flex-grow">
+                    <p className="font-medium">{item.name} {itemTag && <span className={cn("text-xs", tagClass)}>{itemTag}</span>}</p>
+                    <p className="text-sm text-muted-foreground">₹{item.price.toFixed(2)}</p>
+                </div>
+                <div className="flex items-center gap-2">
+                    <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => updateQuantity(item.name, item.quantity - 1)}><Minus className="h-4 w-4" /></Button>
+                    <span className="w-8 text-center font-bold">{item.quantity}</span>
+                    <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => updateQuantity(item.name, item.quantity + 1)}><Plus className="h-4 w-4" /></Button>
+                    <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => removeFromOrder(item.name)}><X className="h-4 w-4" /></Button>
+                </div>
+            </div>
+        );
+    };
 
     return (
       <div className="space-y-3">
-        {existingItems.map(item => renderItemRow(item, false))}
+        {existingItems.map(item => renderItemRow(item, false, false))}
         {newItems.length > 0 && existingItems.length > 0 && (
             <div className="relative py-2">
                 <Separator />
-                <span className="absolute left-1/2 -translate-x-1/2 -top-2 bg-background px-2 text-xs text-muted-foreground">New Items</span>
+                <span className="absolute left-1/2 -translate-x-1/2 -top-2 bg-background px-2 text-xs text-muted-foreground">New/Updated Items</span>
             </div>
         )}
-        {newItems.map(item => renderItemRow(item, true))}
+        {newItems.map(item => {
+            const isNew = !originalItemsSet.has(item.name);
+            return renderItemRow(item, isNew, !isNew);
+        })}
       </div>
     );
   };
@@ -851,10 +856,10 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
                               key={table.id}
                               variant="outline"
                               className={cn(
-                                "h-auto py-2 flex-col justify-center items-center relative p-0 border-2 border-black transition-transform duration-150 active:scale-95",
+                                "h-auto py-2 flex-col justify-center items-center relative p-0 border-2 transition-transform duration-150 active:scale-95",
                                 statusColors[table.status],
                                 currentActiveTableId === table.id && 'ring-4 ring-offset-2 ring-ring',
-                                table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black'
+                                table.status === 'Available' || table.status === 'Occupied' ? 'text-white border-black' : 'text-black border-black/50',
                               )}
                               onClick={() => handleSelectTable(table.id)}
                           >
@@ -889,17 +894,17 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
               <div className="space-y-2 text-lg">
                 <div className="flex justify-between">
                   <span>Subtotal:</span>
-                  <span className="font-bold">Rs.{subtotal.toFixed(2)}</span>
+                  <span className="font-bold">₹{subtotal.toFixed(2)}</span>
                 </div>
                 {discount > 0 && (
                   <div className="flex justify-between text-accent-foreground">
                     <span>Discount ({discount}%):</span>
-                    <span className="font-bold">-Rs.{(subtotal - total).toFixed(2)}</span>
+                    <span className="font-bold">-₹{(subtotal - total).toFixed(2)}</span>
                   </div>
                 )}
                 <div className="flex justify-between font-bold text-2xl border-t pt-2">
                   <span>Total:</span>
-                  <span>Rs.{total.toFixed(2)}</span>
+                  <span>₹{total.toFixed(2)}</span>
                 </div>
               </div>
               <div className="flex flex-col gap-2 pt-2">
@@ -910,7 +915,7 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
                       disabled={isProcessing || orderItems.length === 0 || !currentActiveTableId}
                   >
                       {activeOrder ? <Printer className="mr-2 h-4 w-4" /> : <Send className="mr-2 h-4 w-4" />}
-                      {activeOrder ? 'Print Kitchen Receipt' : 'Send KOT to Kitchen'}
+                      {activeOrder ? 'Update KOT' : 'Send KOT to Kitchen'}
                   </Button>
                   <div className="grid grid-cols-2 gap-2">
                       <Button size="lg" variant="outline" onClick={handlePrintProvisionalBill} disabled={isProcessing ||!currentActiveTableId || orderItems.length === 0}>
@@ -920,6 +925,25 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
                           Process Payment
                       </Button>
                   </div>
+                  <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                          <Button size="lg" variant="destructive" disabled={orderItems.length === 0}>
+                              <X className="mr-2 h-4 w-4" /> Clear Order
+                          </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                          <AlertDialogHeader>
+                              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                  This will clear all items from the current order. This action cannot be undone.
+                              </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => clearOrder(false)}>Clear</AlertDialogAction>
+                          </AlertDialogFooter>
+                      </AlertDialogContent>
+                  </AlertDialog>
               </div>
             </div>
         </div>
