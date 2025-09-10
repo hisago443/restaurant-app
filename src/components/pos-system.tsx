@@ -469,11 +469,12 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
       <Card
         key={item.name}
         className={cn(
-          "group rounded-lg cursor-pointer transition-all hover:scale-105 relative",
+          "group rounded-lg transition-all hover:scale-105 relative",
           finalColor,
           isColorApplied && "border-black shadow-lg hover:shadow-xl",
+          !currentActiveTableId ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'
         )}
-        onClick={() => handleItemClick(item)}
+        onClick={() => currentActiveTableId && handleItemClick(item)}
       >
         <Popover>
           <PopoverTrigger asChild>
@@ -509,7 +510,14 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
           </div>
           {!isClickToAdd && (
             <div className="flex justify-end mt-2">
-              <Button size="sm" variant="secondary" onClick={(e) => { e.stopPropagation(); handleAddButtonClick(item); }}>Add to Order</Button>
+              <Button 
+                size="sm" 
+                variant="secondary" 
+                onClick={(e) => { e.stopPropagation(); handleAddButtonClick(item); }}
+                disabled={!currentActiveTableId}
+              >
+                Add to Order
+              </Button>
             </div>
           )}
         </CardContent>
@@ -711,34 +719,32 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
             {currentActiveTableId ? `Table ${currentActiveTableId}` : "Select a table to start"}
           </CardDescription>
         </CardHeader>
-        <CardContent className="p-2">
-            <ScrollArea className="h-48">
-                 <div className="grid grid-cols-5 gap-2 p-4">
-                    {tables.map(table => (
-                        <Button
-                            key={table.id}
-                            variant="outline"
-                            className={cn(
-                                "flex flex-col h-20 w-20 justify-center items-center gap-1 relative",
-                                statusColors[table.status],
-                                selectedTableId === table.id && 'ring-2 ring-offset-2 ring-ring',
-                                table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black'
-                            )}
-                            onClick={() => handleSelectTable(table.id)}
-                        >
-                            {(occupancyCount[table.id] > 0) &&
-                            <div className="absolute bottom-1 right-1 flex items-center gap-1 bg-black/50 text-white text-xs font-bold p-1 rounded-md">
-                                <Repeat className="h-3 w-3" />
-                                <span>{occupancyCount[table.id]}</span>
-                            </div>
-                            }
-                            {React.createElement(statusIcons[table.status], { className: "absolute top-2 left-2 h-4 w-4" })}
-                            <span className="text-2xl font-bold">{table.id}</span>
-                            <span className="text-xs font-semibold">{table.status}</span>
-                        </Button>
-                    ))}
-                </div>
-            </ScrollArea>
+        <CardContent className="p-4">
+            <div className="flex flex-wrap gap-2 justify-center">
+                {tables.map(table => (
+                    <Button
+                        key={table.id}
+                        variant="outline"
+                        className={cn(
+                            "flex flex-col h-16 w-16 justify-center items-center gap-1 relative",
+                            statusColors[table.status],
+                            selectedTableId === table.id && 'ring-2 ring-offset-2 ring-ring',
+                            table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black'
+                        )}
+                        onClick={() => handleSelectTable(table.id)}
+                    >
+                        {(occupancyCount[table.id] > 0) &&
+                        <div className="absolute bottom-1 right-1 flex items-center gap-1 bg-black/50 text-white text-xs font-bold p-1 rounded-full text-[0.6rem] h-4 min-w-4 justify-center">
+                            <Repeat className="h-2 w-2" />
+                            <span>{occupancyCount[table.id]}</span>
+                        </div>
+                        }
+                        {React.createElement(statusIcons[table.status], { className: "absolute top-1.5 left-1.5 h-3.5 w-3.5" })}
+                        <span className="text-2xl font-bold">{table.id}</span>
+                        <span className="text-[0.6rem] font-semibold -mt-1">{table.status}</span>
+                    </Button>
+                ))}
+            </div>
         </CardContent>
         <ScrollArea className="flex-grow p-4 pt-0">
           {orderItems.length === 0 ? (
@@ -859,5 +865,3 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
     </div>
   );
 }
-
-    
