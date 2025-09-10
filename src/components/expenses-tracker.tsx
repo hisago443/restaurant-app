@@ -436,12 +436,12 @@ export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
           <Table>
               <TableHeader>
               <TableRow>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Category</TableHead>
-                  <TableHead>Description</TableHead>
-                  <TableHead>Vendor</TableHead>
-                  <TableHead>Vendor Mobile</TableHead>
-                  <TableHead className="text-right">Amount (Rs.)</TableHead>
+                  <TableHead className="border-r">Date</TableHead>
+                  <TableHead className="border-r">Category</TableHead>
+                  <TableHead className="border-r">Description</TableHead>
+                  <TableHead className="border-r">Vendor</TableHead>
+                  <TableHead className="border-r">Vendor Mobile</TableHead>
+                  <TableHead className="text-right border-r">Amount (Rs.)</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
               </TableRow>
               </TableHeader>
@@ -451,12 +451,12 @@ export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
                     const vendor = getVendorDetails(expense.vendorId);
                     return (
                       <TableRow key={expense.id}>
-                          <TableCell>{format(expense.date, 'PPP')}</TableCell>
-                          <TableCell>{expense.category}</TableCell>
-                          <TableCell>{expense.description}</TableCell>
-                          <TableCell>{vendor?.name || 'N/A'}</TableCell>
-                          <TableCell>{vendor?.phone || 'N/A'}</TableCell>
-                          <TableCell className="text-right font-mono">
+                          <TableCell className="border-r">{format(expense.date, 'PPP')}</TableCell>
+                          <TableCell className="border-r">{expense.category}</TableCell>
+                          <TableCell className="border-r">{expense.description}</TableCell>
+                          <TableCell className="border-r">{vendor?.name || 'N/A'}</TableCell>
+                          <TableCell className="border-r">{vendor?.phone || 'N/A'}</TableCell>
+                          <TableCell className="text-right font-mono border-r">
                           {expense.amount.toFixed(2)}
                           </TableCell>
                           <TableCell className="text-right">
