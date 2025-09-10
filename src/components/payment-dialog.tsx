@@ -79,7 +79,7 @@ export function PaymentDialog({ isOpen, onOpenChange, total, receiptPreview, onP
       customerEmail: 'upandabove.bir@gmail.com',
       receiptContent: receiptPreview,
       totalAmount: total,
-      subject: `Sale of ₹${total.toFixed(2)}`,
+      subject: `Sale of Rs. ${total.toFixed(2)}`,
     };
     sendEmailReceipt(adminEmailInput);
   }
@@ -110,7 +110,7 @@ export function PaymentDialog({ isOpen, onOpenChange, total, receiptPreview, onP
         <DialogHeader>
           <DialogTitle>Process Payment</DialogTitle>
           <DialogDescription>
-            Total Amount to be Paid: <span className="font-bold text-foreground">₹{total.toFixed(2)}</span>
+            Total Amount to be Paid: <span className="font-bold text-foreground">Rs. {total.toFixed(2)}</span>
           </DialogDescription>
         </DialogHeader>
 
@@ -154,7 +154,7 @@ export function PaymentDialog({ isOpen, onOpenChange, total, receiptPreview, onP
               {error && <p className="text-sm text-destructive text-center">{error}</p>}
               {change !== null && change >= 0 && (
                 <div className="text-center text-xl font-medium text-primary">
-                  Change Due: ₹{change.toFixed(2)}
+                  Change Due: Rs. {change.toFixed(2)}
                 </div>
               )}
             </div>
@@ -180,5 +180,3 @@ export function PaymentDialog({ isOpen, onOpenChange, total, receiptPreview, onP
     </Dialog>
   );
 }
-
-    

@@ -202,7 +202,7 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
   const subtotal = useMemo(() => orderItems.reduce((acc, item) => acc + item.price * item.quantity, 0), [orderItems]);
   const total = useMemo(() => subtotal * (1 - discount / 100), [subtotal, discount]);
 
-  const getReceipt = useCallback(async (useAI = true): Promise<string> => {
+  const getReceipt = useCallback(async (useAI = false): Promise<string> => {
     if (orderItems.length === 0) {
       return '';
     }
@@ -249,14 +249,16 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
         subtotal,
         total,
       };
-      generateReceipt(input)
-        .then(result => {
-          setReceiptPreview(result.receiptPreview); 
-        })
-        .catch(error => {
+      try {
+        const result = await generateReceipt(input);
+        setReceiptPreview(result.receiptPreview);
+        return result.receiptPreview;
+      } catch (error) {
           console.error('AI receipt generation failed, using local version:', error);
-        })
-        .finally(() => setIsProcessing(false));
+          return localReceipt; // Fallback to local receipt on error
+      } finally {
+        setIsProcessing(false);
+      }
     }
   
     return localReceipt;
@@ -265,8 +267,7 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
   
   useEffect(() => {
     if (orderItems.length > 0) {
-      const timer = setTimeout(() => getReceipt(true), 500); // Debounce AI call
-      return () => clearTimeout(timer);
+      getReceipt(true);
     } else {
       setReceiptPreview('');
     }
@@ -316,11 +317,15 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
   const clearOrder = (fullReset = false) => {
     setOrderItems([]);
     setOriginalOrderItems([]);
-    setActiveOrder(null);
     if (fullReset) {
       setDiscount(0);
       setSelectedTableId(null);
       setReceiptPreview('');
+    }
+    // Only clear active order if we are doing a full reset.
+    // This prevents activeOrder from being cleared when just clearing items.
+    if(fullReset || !activeOrder){
+      setActiveOrder(null);
     }
   };
 
@@ -381,6 +386,7 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
       const originalItemsMap = new Map(originalOrderItems.map(item => [item.name, item.quantity]));
       const currentItemsMap = new Map(orderItems.map(item => [item.name, item.quantity]));
 
+      // Newly added items
       currentItemsMap.forEach((quantity, name) => {
         const originalQuantity = originalItemsMap.get(name) || 0;
         if (quantity > originalQuantity) {
@@ -448,7 +454,7 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
     }
   
     setIsPaymentDialogOpen(false);
-    toast({ title: "Payment Successful", description: `₹${total.toFixed(2)} confirmed.` });
+    toast({ title: "Payment Successful", description: `Rs. ${total.toFixed(2)} confirmed.` });
     
     const billPayload: Omit<Bill, 'id' | 'timestamp'> = {
       orderItems: orderItems,
@@ -894,17 +900,17 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
               <div className="space-y-2 text-lg">
                 <div className="flex justify-between">
                   <span>Subtotal:</span>
-                  <span className="font-bold">₹{subtotal.toFixed(2)}</span>
+                  <span className="font-bold">Rs. {subtotal.toFixed(2)}</span>
                 </div>
                 {discount > 0 && (
                   <div className="flex justify-between text-accent-foreground">
                     <span>Discount ({discount}%):</span>
-                    <span className="font-bold">-₹{(subtotal - total).toFixed(2)}</span>
+                    <span className="font-bold">-Rs. {(subtotal - total).toFixed(2)}</span>
                   </div>
                 )}
                 <div className="flex justify-between font-bold text-2xl border-t pt-2">
                   <span>Total:</span>
-                  <span>₹{total.toFixed(2)}</span>
+                  <span>Rs. {total.toFixed(2)}</span>
                 </div>
               </div>
               <div className="flex flex-col gap-2 pt-2">
@@ -965,5 +971,3 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
     </div>
   );
 }
-
-    
