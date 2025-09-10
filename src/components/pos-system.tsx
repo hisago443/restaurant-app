@@ -36,6 +36,9 @@ const colorPalette = [
     'bg-pink-200 dark:bg-pink-800/70',
     'bg-lime-200 dark:bg-lime-800/70',
     'bg-purple-200 dark:bg-purple-800/70',
+    'bg-teal-200 dark:bg-teal-800/70',
+    'bg-orange-200 dark:bg-orange-800/70',
+    'bg-cyan-200 dark:bg-cyan-800/70',
 ];
 
 type ViewMode = 'accordion' | 'grid' | 'list';
@@ -90,6 +93,14 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
     return selectedTableId;
   }, [activeOrder, selectedTableId]);
   
+  useEffect(() => {
+    // Apply default colors to categories on initial load
+    const defaultCategoryColors: Record<string, string> = {};
+    typedMenuData.forEach((category, index) => {
+      defaultCategoryColors[category.category] = colorPalette[index % colorPalette.length];
+    });
+    setCategoryColors(defaultCategoryColors);
+  }, [typedMenuData]);
 
   useEffect(() => {
     try {
@@ -193,12 +204,6 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
       })).filter(subCategory => subCategory.items.length > 0)
     })).filter(category => category.subCategories.length > 0);
   }, [searchTerm, typedMenuData]);
-
-  useEffect(() => {
-    if (viewMode === 'accordion') {
-      setActiveAccordionItems(filteredMenu.map(c => c.category));
-    }
-  }, [filteredMenu, viewMode]);
 
   const subtotal = useMemo(() => orderItems.reduce((acc, item) => acc + item.price * item.quantity, 0), [orderItems]);
   const total = useMemo(() => subtotal * (1 - discount / 100), [subtotal, discount]);
@@ -861,7 +866,7 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
                       {activeOrder ? 'Print Kitchen Receipt' : 'Send KOT to Kitchen'}
                   </Button>
                   <div className="grid grid-cols-2 gap-2">
-                      <Button size="lg" variant="outline" onClick={handlePrintProvisionalBill} disabled={orderItems.length === 0 || !currentActiveTableId}>
+                      <Button size="lg" variant="outline" onClick={handlePrintProvisionalBill} disabled={!activeOrder && orderItems.length === 0 || !currentActiveTableId}>
                           <Printer className="mr-2 h-4 w-4" /> Print Bill
                       </Button>
                       <Button size="lg" onClick={handleProcessPayment} disabled={orderItems.length === 0 || !currentActiveTableId}>
