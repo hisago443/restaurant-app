@@ -126,10 +126,6 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
     const table = tables.find(t => t.id === tableId);
     if (!table) return;
 
-    // Always set the selected table first
-    setSelectedTableId(tableId);
-
-    // If a guest leaves, a single click on a "Cleaning" table makes it "Available"
     if (table.status === 'Cleaning') {
         updateTableStatus([tableId], 'Available');
         toast({ title: `Table ${tableId} is now Available.` });
@@ -144,12 +140,15 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
     if (existingOrder) {
         // This table is occupied and has an active order, so load it for editing.
         setActiveOrder(existingOrder);
+        setSelectedTableId(tableId);
         toast({ title: `Editing Order for Table ${tableId}`, description: 'Add or modify items.' });
-    } else {
+    } else if (table.status === 'Available') {
         // This is a new order for an available table.
         clearOrder(false, true); // Clear everything for a new order
-        updateTableStatus([tableId], 'Occupied');
+        setSelectedTableId(tableId);
         toast({ title: `New Order for Table ${tableId}`, description: 'Add items to start the order.' });
+    } else if (table.status === 'Reserved') {
+        toast({ title: `Table ${tableId} is Reserved`, description: 'Confirm guest arrival on the Tables tab.' });
     }
   };
   
@@ -228,6 +227,14 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
   }, [updateReceipt]);
 
   const addToOrder = (item: MenuItem, quantity: number) => {
+    if (!currentActiveTableId) {
+      toast({
+        variant: 'destructive',
+        title: 'No Table Selected',
+        description: 'Please select a table before adding items to the order.',
+      });
+      return;
+    }
     const existingItem = orderItems.find(orderItem => orderItem.name === item.name);
     if (existingItem) {
       updateQuantity(item.name, existingItem.quantity + quantity);
@@ -311,6 +318,7 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
         tableId: Number(currentActiveTableId),
       };
       addOrder(orderPayload);
+      updateTableStatus([currentActiveTableId], 'Occupied');
       toast({ title: 'Order Sent!', description: `KOT sent to the kitchen for Table ${currentActiveTableId}.` });
     }
   };
@@ -404,7 +412,8 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
         className={cn(
           "group rounded-lg cursor-pointer transition-all hover:scale-105 relative",
           finalColor,
-          isColorApplied && "border-black shadow-lg hover:shadow-xl"
+          isColorApplied && "border-black shadow-lg hover:shadow-xl",
+          !currentActiveTableId && "opacity-50 cursor-not-allowed"
         )}
         onClick={() => handleItemClick(item)}
       >
@@ -415,6 +424,7 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
               size="icon"
               className="absolute bottom-1 left-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
               onClick={(e) => e.stopPropagation()}
+               disabled={!currentActiveTableId}
             >
               <Palette className="h-4 w-4" />
             </Button>
@@ -442,7 +452,7 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
           </div>
           {!isClickToAdd && (
             <div className="flex justify-end mt-2">
-              <Button size="sm" variant="secondary" onClick={(e) => { e.stopPropagation(); handleAddButtonClick(item); }}>Add to Order</Button>
+              <Button size="sm" variant="secondary" onClick={(e) => { e.stopPropagation(); handleAddButtonClick(item); }}  disabled={!currentActiveTableId}>Add to Order</Button>
             </div>
           )}
         </CardContent>
@@ -583,7 +593,15 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
   return (
     <div className="flex flex-col md:flex-row h-[calc(100vh-5rem)] gap-4 p-4">
       {/* Left Panel: Menu */}
-      <Card className="flex-[3] flex flex-col">
+      <Card className="flex-[3] flex flex-col relative">
+        {!currentActiveTableId && (
+          <div className="absolute inset-0 bg-background/80 backdrop-blur-sm z-20 flex items-center justify-center">
+            <div className="text-center">
+              <p className="text-2xl font-bold text-foreground">Select a Table</p>
+              <p className="text-muted-foreground">Please select a table to start an order.</p>
+            </div>
+          </div>
+        )}
         <CardHeader>
           <div className="flex items-center justify-between gap-4 flex-wrap">
              <div className="flex-grow">
