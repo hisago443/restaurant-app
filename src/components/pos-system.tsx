@@ -212,7 +212,7 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
   const updateReceipt = useCallback(async () => {
     if (orderItems.length === 0) {
       setReceiptPreview('');
-      return '';
+      return;
     }
     const input: GenerateReceiptInput = {
       items: orderItems.map(item => ({ name: item.name, price: item.price, quantity: item.quantity })),
@@ -223,7 +223,6 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
     try {
       const result = await generateReceipt(input);
       setReceiptPreview(result.receiptPreview);
-      return result.receiptPreview;
     } catch (error) {
       console.error('Error generating receipt:', error);
       toast({
@@ -231,9 +230,15 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
         title: "Error",
         description: "Could not generate receipt preview.",
       });
-      return '';
     }
   }, [orderItems, discount, subtotal, total, toast]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+        updateReceipt();
+    }, 500); // Debounce AI call
+    return () => clearTimeout(timer);
+  }, [orderItems, discount, subtotal, total, updateReceipt]);
   
   const addToOrder = (item: MenuItem, quantity: number) => {
     const existingItem = orderItems.find(orderItem => orderItem.name === item.name);
@@ -388,15 +393,17 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
       toast({ variant: 'destructive', title: 'No Table Selected', description: 'Please select a table before processing payment.' });
       return;
     }
-    updateReceipt().then(() => {
-      setIsPaymentDialogOpen(true);
-    });
+    if (!receiptPreview) {
+      toast({ variant: "destructive", title: "Receipt Not Ready", description: "Please wait a moment for the receipt to be generated." });
+      return;
+    }
+    setIsPaymentDialogOpen(true);
   };
   
   const handlePaymentSuccess = () => {
     if (!currentActiveTableId) return;
   
-    const finalReceipt = receiptPreview; // Use the already generated receipt
+    const finalReceipt = receiptPreview;
   
     if (!finalReceipt && orderItems.length > 0) {
         toast({ variant: "destructive", title: "Billing Error", description: "Could not generate the final bill. Please try again." });
@@ -404,7 +411,7 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
     }
   
     setIsPaymentDialogOpen(false);
-    toast({ title: "Payment Successful", description: `Payment of Rs.${total.toFixed(2)} confirmed.` });
+    toast({ title: "Payment Successful", description: `Payment of ₹${total.toFixed(2)} confirmed.` });
     
     const billPayload: Omit<Bill, 'id' | 'timestamp'> = {
       orderItems: orderItems,
@@ -420,16 +427,14 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
       updateOrder({ ...activeOrder, status: 'Completed' });
     }
   
-    // This is the key change: call clearOrder with `true` to keep discount but clear items.
     clearOrder(true, false);
     
-    // After a short delay, clear the selected table so it doesn't persist for the next new order.
     setTimeout(() => {
       setSelectedTableId(null);
     }, 100);
   };
 
-  const handlePrintProvisionalBill = async () => {
+  const handlePrintProvisionalBill = () => {
     if (!currentActiveTableId || orderItems.length === 0) {
       toast({
         variant: 'destructive',
@@ -439,12 +444,11 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
       return;
     }
 
-    const currentReceipt = await updateReceipt();
-    if (!currentReceipt) {
+    if (!receiptPreview) {
         toast({
             variant: "destructive",
-            title: "Billing Error",
-            description: "Could not generate the provisional bill. Please try again.",
+            title: "Receipt Not Ready",
+            description: "Please wait a moment for the receipt to generate.",
         });
         return;
     }
@@ -461,7 +465,7 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
             </style>
           </head>
           <body>
-            <pre>${currentReceipt}</pre>
+            <pre>${receiptPreview}</pre>
             <script>
               window.onload = function() {
                 window.print();
@@ -900,5 +904,3 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
     </div>
   );
 }
-
-    
