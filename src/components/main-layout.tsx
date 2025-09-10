@@ -6,7 +6,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Coffee, LayoutGrid, Book, BarChart, Users } from 'lucide-react';
 import { isSameDay } from 'date-fns';
-import { collection, onSnapshot } from 'firebase/firestore';
+import { collection, onSnapshot, doc, setDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 import type { Table, TableStatus, Order, Bill, Employee, OrderItem } from '@/lib/types';
@@ -58,32 +58,30 @@ export default function MainLayout() {
     }
   }, [categoryColors]);
   
-  // Effect to manage order state when table selection changes
   useEffect(() => {
-    if (selectedTableId) {
-      const existingOrder = orders.find(o => o.tableId === selectedTableId && o.status !== 'Completed');
+    // This effect handles the logic for switching between tables and managing pending vs. active orders.
+    const newSelectedTableId = selectedTableId; // The table we are switching TO.
+    const previousSelectedTableId = activeOrder?.tableId ?? null;
+
+    if (newSelectedTableId) {
+      // Find an order that has already been sent to the kitchen for the selected table.
+      const existingOrder = orders.find(o => o.tableId === newSelectedTableId && o.status !== 'Completed');
       if (existingOrder) {
-        // Editing an existing order
+        // Editing an existing, submitted order.
         setActiveOrder(existingOrder);
         setCurrentOrderItems(existingOrder.items);
-        setDiscount(0); // Reset discount for existing orders, can be changed
+        setDiscount(0);
       } else {
-        // New order for a selected table, check for pending items.
-        // If we just selected a table for a new unassigned order, we don't want to clear the items.
+        // This is a new order for the selected table, or we are returning to a pending (un-submitted) order.
         setActiveOrder(null);
-        setCurrentOrderItems(prevItems => {
-            const pendingForTable = pendingOrders[selectedTableId];
-            if (pendingForTable) return pendingForTable;
-            // if there are items but no table was selected before, keep them.
-            if (prevItems.length > 0 && !activeOrder) return prevItems;
-            return [];
-        });
+        // Load the pending items for this table if they exist, otherwise start with an empty cart.
+        setCurrentOrderItems(pendingOrders[newSelectedTableId] || []);
         setDiscount(0);
       }
     } else {
-        // No table is selected. If there are items, it's an unassigned order.
-        // We don't want to clear items if the user is building an order first.
-        setActiveOrder(null);
+      // No table is selected. This could be an unassigned order being built.
+      // We don't want to clear items if the user is building an order first.
+      setActiveOrder(null);
     }
   }, [selectedTableId, orders, pendingOrders]);
 
@@ -216,6 +214,19 @@ export default function MainLayout() {
     setActiveOrder(order);
     setCurrentOrderItems(order.items);
   }, []);
+  
+  const handleSelectTable = useCallback((tableId: number) => {
+    const previousTableId = selectedTableId;
+
+    if (previousTableId && previousTableId !== tableId && !activeOrder && currentOrderItems.length > 0) {
+      setPendingOrders(prev => ({
+        ...prev,
+        [previousTableId]: currentOrderItems,
+      }));
+    }
+    
+    setSelectedTableId(tableId);
+  }, [selectedTableId, activeOrder, currentOrderItems, setPendingOrders]);
 
   return (
     <div className="flex flex-col h-screen bg-background">
@@ -264,7 +275,7 @@ export default function MainLayout() {
                   discount={discount}
                   setDiscount={setDiscount}
                   selectedTableId={selectedTableId}
-                  setSelectedTableId={setSelectedTableId}
+                  setSelectedTableId={handleSelectTable}
                   clearCurrentOrder={clearCurrentOrder}
                   onOrderCreated={onOrderCreated}
                   showOccupancy={showOccupancy}

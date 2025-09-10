@@ -71,7 +71,7 @@ interface PosSystemProps {
   discount: number;
   setDiscount: (discount: number) => void;
   selectedTableId: number | null;
-  setSelectedTableId: (id: number | null) => void;
+  setSelectedTableId: (id: number) => void;
   clearCurrentOrder: (fullReset?: boolean) => void;
   onOrderCreated: (order: Order) => void;
   showOccupancy: boolean;
@@ -261,20 +261,10 @@ export default function PosSystem({
       return;
     }
     
-    // If switching from a table with a pending (un-submitted) order, save it.
-    if (selectedTableId && !activeOrder && orderItems.length > 0) {
-      setPendingOrders(prev => ({
-        ...prev,
-        [selectedTableId]: orderItems
-      }));
-    }
-  
-    // Set the new table as selected
     setSelectedTableId(tableId);
-  
-    // Now that the new table is selected, load its order (or pending order).
-    // The main layout's useEffect will handle this.
-    const isNewOrderUnassigned = !selectedTableId && orderItems.length === 0;
+    
+    // Toast for assigning an unassigned order
+    const isNewOrderUnassigned = !selectedTableId && orderItems.length > 0;
     if (isNewOrderUnassigned) {
       toast({ title: `Order assigned to Table ${tableId}` });
     }
