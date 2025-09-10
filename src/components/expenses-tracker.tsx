@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -90,14 +91,17 @@ function AddOrEditVendorDialog({
 }) {
   const [name, setName] = useState('');
   const [category, setCategory] = useState('');
+  const [phone, setPhone] = useState('');
 
   useEffect(() => {
     if (existingVendor) {
         setName(existingVendor.name);
         setCategory(existingVendor.category);
+        setPhone(existingVendor.phone || '');
     } else {
         setName('');
         setCategory('');
+        setPhone('');
     }
   }, [existingVendor, open]);
 
@@ -107,6 +111,7 @@ function AddOrEditVendorDialog({
         id: existingVendor?.id,
         name,
         category,
+        phone,
       });
       onOpenChange(false);
     }
@@ -136,6 +141,10 @@ function AddOrEditVendorDialog({
                 {vendorCategories.map(cat => <SelectItem key={cat} value={cat}>{cat}</SelectItem>)}
               </SelectContent>
             </Select>
+          </div>
+           <div className="space-y-2">
+            <Label htmlFor="vendor-phone">Mobile No. (Optional)</Label>
+            <Input id="vendor-phone" placeholder="e.g., 9876543210" value={phone} onChange={e => setPhone(e.target.value)} />
           </div>
         </div>
         <DialogFooter>
@@ -173,6 +182,7 @@ function ManageVendorsDialog({
               <TableRow>
                 <TableHead>Name</TableHead>
                 <TableHead>Category</TableHead>
+                <TableHead>Mobile No.</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -182,6 +192,7 @@ function ManageVendorsDialog({
                   <TableRow key={vendor.id}>
                     <TableCell className="font-medium">{vendor.name}</TableCell>
                     <TableCell>{vendor.category}</TableCell>
+                    <TableCell>{vendor.phone || 'N/A'}</TableCell>
                     <TableCell className="text-right">
                        <Button variant="ghost" size="icon" onClick={() => onEditVendor(vendor)}>
                           <Edit className="h-4 w-4" />
@@ -210,7 +221,7 @@ function ManageVendorsDialog({
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={3} className="text-center">No vendors found.</TableCell>
+                  <TableCell colSpan={4} className="text-center">No vendors found.</TableCell>
                 </TableRow>
               )}
             </TableBody>
@@ -357,9 +368,9 @@ export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
   
   const totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0);
 
-  const getVendorName = (vendorId: string | undefined | null) => {
-    if (!vendorId) return 'N/A';
-    return vendors.find(v => v.id === vendorId)?.name || 'Unknown';
+  const getVendorDetails = (vendorId: string | undefined | null) => {
+    if (!vendorId) return null;
+    return vendors.find(v => v.id === vendorId) || null;
   }
 
   return (
@@ -447,50 +458,55 @@ export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
                   <TableHead>Category</TableHead>
                   <TableHead>Description</TableHead>
                   <TableHead>Vendor</TableHead>
+                  <TableHead>Vendor Mobile</TableHead>
                   <TableHead className="text-right">Amount (Rs.)</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
               </TableRow>
               </TableHeader>
               <TableBody>
               {expenses.length > 0 ? (
-                  expenses.map((expense) => (
-                  <TableRow key={expense.id}>
-                      <TableCell>{format(expense.date, 'PPP')}</TableCell>
-                      <TableCell>{expense.category}</TableCell>
-                      <TableCell>{expense.description}</TableCell>
-                      <TableCell>{getVendorName(expense.vendorId)}</TableCell>
-                      <TableCell className="text-right font-mono">
-                      {expense.amount.toFixed(2)}
-                      </TableCell>
-                      <TableCell className="text-right">
-                      <Button variant="ghost" size="icon" onClick={() => handleSetEditingExpense(expense)}>
-                          <Edit className="h-4 w-4" />
-                      </Button>
-                      <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                              <Button variant="ghost" size="icon" className="text-destructive">
-                                  <Trash2 className="h-4 w-4" />
-                              </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                              <AlertDialogHeader>
-                                  <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                      This action cannot be undone. This will permanently delete this expense record.
-                                  </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                  <AlertDialogAction onClick={() => handleDeleteExpense(expense.id)}>Delete</AlertDialogAction>
-                              </AlertDialogFooter>
-                          </AlertDialogContent>
-                      </AlertDialog>
-                      </TableCell>
-                  </TableRow>
-                  ))
+                  expenses.map((expense) => {
+                    const vendor = getVendorDetails(expense.vendorId);
+                    return (
+                      <TableRow key={expense.id}>
+                          <TableCell>{format(expense.date, 'PPP')}</TableCell>
+                          <TableCell>{expense.category}</TableCell>
+                          <TableCell>{expense.description}</TableCell>
+                          <TableCell>{vendor?.name || 'N/A'}</TableCell>
+                          <TableCell>{vendor?.phone || 'N/A'}</TableCell>
+                          <TableCell className="text-right font-mono">
+                          {expense.amount.toFixed(2)}
+                          </TableCell>
+                          <TableCell className="text-right">
+                          <Button variant="ghost" size="icon" onClick={() => handleSetEditingExpense(expense)}>
+                              <Edit className="h-4 w-4" />
+                          </Button>
+                          <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                  <Button variant="ghost" size="icon" className="text-destructive">
+                                      <Trash2 className="h-4 w-4" />
+                                  </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                      <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                          This action cannot be undone. This will permanently delete this expense record.
+                                      </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                      <AlertDialogAction onClick={() => handleDeleteExpense(expense.id)}>Delete</AlertDialogAction>
+                                  </AlertDialogFooter>
+                              </AlertDialogContent>
+                          </AlertDialog>
+                          </TableCell>
+                      </TableRow>
+                    )
+                  })
               ) : (
                   <TableRow>
-                  <TableCell colSpan={6} className="text-center text-muted-foreground">
+                  <TableCell colSpan={7} className="text-center text-muted-foreground">
                       No expenses recorded yet.
                   </TableCell>
                   </TableRow>

@@ -64,6 +64,7 @@ export interface Vendor {
     id: string;
     name: string;
     category: string;
+    phone?: string;
 }
 
 export interface Expense {
