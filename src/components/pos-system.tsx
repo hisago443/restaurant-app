@@ -262,14 +262,14 @@ export default function PosSystem({
     }
     
     // If we are selecting a new table, and there is a pending order for the PREVIOUS table, save it.
-    if (selectedTableId && !activeOrder) {
+    if (selectedTableId && !activeOrder && orderItems.length > 0) {
         setPendingOrders(prev => ({
             ...prev,
             [selectedTableId]: orderItems
         }));
     }
 
-    if (orderItems.length > 0 && !selectedTableId) {
+    if (!selectedTableId) {
       // This is the case where we are assigning a table to an existing unassigned order.
       setSelectedTableId(tableId);
       toast({ title: `Order assigned to Table ${tableId}` });
