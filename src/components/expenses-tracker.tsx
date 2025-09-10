@@ -436,13 +436,13 @@ export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
           <Table>
               <TableHeader>
               <TableRow>
-                  <TableHead className="border-r">Date</TableHead>
-                  <TableHead className="border-r">Category</TableHead>
-                  <TableHead className="border-r">Description</TableHead>
-                  <TableHead className="border-r">Vendor</TableHead>
-                  <TableHead className="border-r">Vendor Mobile</TableHead>
-                  <TableHead className="text-right border-r">Amount (Rs.)</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead className="border-r font-bold text-foreground">Date</TableHead>
+                  <TableHead className="border-r font-bold text-foreground">Category</TableHead>
+                  <TableHead className="border-r font-bold text-foreground">Description</TableHead>
+                  <TableHead className="border-r font-bold text-foreground">Vendor</TableHead>
+                  <TableHead className="border-r font-bold text-foreground">Vendor Mobile</TableHead>
+                  <TableHead className="text-right border-r font-bold text-foreground">Amount (Rs.)</TableHead>
+                  <TableHead className="text-right font-bold text-foreground">Actions</TableHead>
               </TableRow>
               </TableHeader>
               <TableBody>
