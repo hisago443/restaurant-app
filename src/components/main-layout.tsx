@@ -4,7 +4,7 @@
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Coffee, LayoutGrid, Book, BarChart, Users } from 'lucide-react';
+import { Utensils, LayoutGrid, Soup, Users, Shield, UserCog } from 'lucide-react';
 import { isSameDay } from 'date-fns';
 import { collection, onSnapshot, doc, setDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -16,6 +16,7 @@ import TableManagement from './table-management';
 import KitchenOrders from './kitchen-orders';
 import AdminDashboard from './admin-dashboard';
 import StaffManagement from "./staff-management";
+import { Separator } from '@/components/ui/separator';
 
 
 export default function MainLayout() {
@@ -255,21 +256,25 @@ export default function MainLayout() {
       </header>
       <main className="flex-1">
         <Tabs value={activeTab} onValueChange={handleTabChange} className="h-full flex flex-col">
-          <TabsList className="m-2 self-center rounded-lg bg-primary/10 p-2">
-            <TabsTrigger value="pos" className="px-6 py-2 text-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md">
-              Main
+          <TabsList className="m-2 self-center rounded-lg bg-primary/10 p-2 h-auto">
+            <TabsTrigger value="pos" className="px-4 py-2 text-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md flex items-center gap-2">
+                <Utensils /> Main
             </TabsTrigger>
-            <TabsTrigger value="tables" className="px-6 py-2 text-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md">
-              Tables
+            <Separator orientation="vertical" className="h-6 mx-1" />
+            <TabsTrigger value="tables" className="px-4 py-2 text-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md flex items-center gap-2">
+              <LayoutGrid /> Tables
             </TabsTrigger>
-            <TabsTrigger value="kitchen" className="px-6 py-2 text-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md">
-              Kitchen
+             <Separator orientation="vertical" className="h-6 mx-1" />
+            <TabsTrigger value="kitchen" className="px-4 py-2 text-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md flex items-center gap-2">
+              <Soup /> Kitchen
             </TabsTrigger>
-             <TabsTrigger value="staff" className="px-6 py-2 text-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md">
-              Staff
+            <Separator orientation="vertical" className="h-6 mx-1" />
+             <TabsTrigger value="staff" className="px-4 py-2 text-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md flex items-center gap-2">
+              <Users /> Staff
             </TabsTrigger>
-            <TabsTrigger value="admin" className="px-6 py-2 text-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md">
-              Admin
+             <Separator orientation="vertical" className="h-6 mx-1" />
+            <TabsTrigger value="admin" className="px-4 py-2 text-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md flex items-center gap-2">
+              <Shield /> Admin
             </TabsTrigger>
           </TabsList>
           
