@@ -360,7 +360,7 @@ export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
 
   return (
     <div className="p-4 space-y-4">
-       <Card>
+       <Card className="bg-muted/30">
           <CardHeader>
               <CardTitle>{editingExpense ? 'Edit Expense' : 'Add New Expense'}</CardTitle>
               <CardDescription>{editingExpense ? `Updating expense record for ${format(editingExpense.date, 'PPP')}` : 'Record a new business expense.'}</CardDescription>
@@ -427,7 +427,7 @@ export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
       
       <Separator />
 
-      <Card>
+      <Card className="bg-muted/30">
         <CardHeader>
           <CardTitle>Expense History</CardTitle>
           <CardDescription>A log of all recorded business expenses.</CardDescription>
