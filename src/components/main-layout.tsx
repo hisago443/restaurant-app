@@ -68,18 +68,24 @@ export default function MainLayout() {
         setCurrentOrderItems(existingOrder.items);
         setDiscount(0); // Reset discount for existing orders, can be changed
       } else {
-        // New order for a selected table, check for pending items
+        // New order for a selected table, check for pending items.
+        // If we just selected a table for a new unassigned order, we don't want to clear the items.
         setActiveOrder(null);
-        setCurrentOrderItems(pendingOrders[selectedTableId] || []);
+        setCurrentOrderItems(prevItems => {
+            const pendingForTable = pendingOrders[selectedTableId];
+            if (pendingForTable) return pendingForTable;
+            // if there are items but no table was selected before, keep them.
+            if (prevItems.length > 0 && !activeOrder) return prevItems;
+            return [];
+        });
         setDiscount(0);
       }
     } else {
         // No table is selected. If there are items, it's an unassigned order.
-        // If not, it could be a fresh state or after clearing an order.
         // We don't want to clear items if the user is building an order first.
         setActiveOrder(null);
     }
-  }, [selectedTableId, orders]);
+  }, [selectedTableId, orders, pendingOrders]);
 
 
   useEffect(() => {
