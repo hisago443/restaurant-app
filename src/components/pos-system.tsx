@@ -404,7 +404,7 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
     }
   
     setIsPaymentDialogOpen(false);
-    toast({ title: "Payment Successful", description: `Payment of ₹${total.toFixed(2)} confirmed.` });
+    toast({ title: "Payment Successful", description: `Payment of Rs.${total.toFixed(2)} confirmed.` });
     
     const billPayload: Omit<Bill, 'id' | 'timestamp'> = {
       orderItems: orderItems,
@@ -848,17 +848,17 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
               <div className="space-y-2 text-lg">
                 <div className="flex justify-between">
                   <span>Subtotal:</span>
-                  <span className="font-bold">₹{subtotal.toFixed(2)}</span>
+                  <span className="font-bold">Rs.{subtotal.toFixed(2)}</span>
                 </div>
                 {discount > 0 && (
                   <div className="flex justify-between text-accent-foreground">
                     <span>Discount ({discount}%):</span>
-                    <span className="font-bold">-₹{(subtotal - total).toFixed(2)}</span>
+                    <span className="font-bold">-Rs.{(subtotal - total).toFixed(2)}</span>
                   </div>
                 )}
                 <div className="flex justify-between font-bold text-2xl border-t pt-2">
                   <span>Total:</span>
-                  <span>₹{total.toFixed(2)}</span>
+                  <span>Rs.{total.toFixed(2)}</span>
                 </div>
               </div>
               <div className="flex flex-col gap-2 pt-2">
@@ -900,5 +900,3 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
     </div>
   );
 }
-
-    
