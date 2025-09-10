@@ -30,7 +30,7 @@ export default function MainLayout() {
 
   useEffect(() => {
     // Fetch initial tables with default status
-    const initialTables: Table[] = Array.from({ length: 20 }, (_, i) => ({
+    const initialTables: Table[] = Array.from({ length: 10 }, (_, i) => ({
       id: i + 1,
       status: 'Available',
     }));
