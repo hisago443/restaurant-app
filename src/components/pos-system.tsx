@@ -302,7 +302,7 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
             <h3>Order ID: ${order.id}</h3>
             <hr>
             <ul>
-              ${itemsToPrint.map(item => `<li><span>${item.quantity > 0 && isUpdate ? '+' : ''}${item.quantity} x ${item.name}</span></li>`).join('')}
+              ${itemsToPrint.map(item => `<li><span>${isUpdate && item.quantity > 0 ? '+' : ''}${item.quantity} x ${item.name}</span></li>`).join('')}
             </ul>
             <hr>
             <script>
@@ -335,11 +335,13 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
       
       const diffItems: OrderItem[] = [];
       const originalItemsMap = new Map(originalOrderItems.map(item => [item.name, item.quantity]));
+      const currentItemsMap = new Map(orderItems.map(item => [item.name, item.quantity]));
 
-      orderItems.forEach(currentItem => {
-        const originalQuantity = originalItemsMap.get(currentItem.name) || 0;
-        if (currentItem.quantity > originalQuantity) {
-          diffItems.push({ ...currentItem, quantity: currentItem.quantity - originalQuantity });
+      // New items or increased quantity
+      currentItemsMap.forEach((quantity, name) => {
+        const originalQuantity = originalItemsMap.get(name) || 0;
+        if (quantity > originalQuantity) {
+          diffItems.push({ name, quantity: quantity - originalQuantity, price: orderItems.find(i => i.name === name)!.price });
         }
       });
       
@@ -633,9 +635,44 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
     }
   };
 
+  const renderOrderItems = () => {
+    const originalItemsSet = new Set(originalOrderItems.map(item => item.name));
+    const newItems = orderItems.filter(item => !originalItemsSet.has(item.name));
+    const existingItems = orderItems.filter(item => originalItemsSet.has(item.name));
+
+    const renderItem = (item: OrderItem, isNew: boolean) => (
+      <div key={item.name} className={cn("flex items-center", isNew && "bg-blue-50 dark:bg-blue-900/20 p-2 rounded-md")}>
+        <div className="flex-grow">
+          <p className="font-medium">{item.name} {isNew && <span className="text-xs text-blue-500">(New)</span>}</p>
+          <p className="text-sm text-muted-foreground">₹{item.price.toFixed(2)}</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => updateQuantity(item.name, item.quantity - 1)}><Minus className="h-4 w-4" /></Button>
+          <span className="w-8 text-center font-bold">{item.quantity}</span>
+          <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => updateQuantity(item.name, item.quantity + 1)}><Plus className="h-4 w-4" /></Button>
+          <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => removeFromOrder(item.name)}><X className="h-4 w-4" /></Button>
+        </div>
+      </div>
+    );
+
+    return (
+      <div className="space-y-3">
+        {existingItems.map(item => renderItem(item, false))}
+        {newItems.length > 0 && existingItems.length > 0 && (
+            <div className="relative py-2">
+                <Separator />
+                <span className="absolute left-1/2 -translate-x-1/2 -top-2 bg-background px-2 text-xs text-muted-foreground">New Items</span>
+            </div>
+        )}
+        {newItems.map(item => renderItem(item, true))}
+      </div>
+    );
+  };
+
+
   return (
-    <div className="grid grid-cols-3 gap-4 h-[calc(100vh-5rem)]">
-      <Card className="col-span-2 flex flex-col relative m-4">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 h-[calc(100vh-5rem)]">
+      <Card className="col-span-1 md:col-span-2 flex flex-col relative m-4">
         <CardHeader>
           <div className="flex items-center justify-between gap-4 flex-wrap">
              <div className="flex-grow">
@@ -697,7 +734,7 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
         </CardHeader>
         
         <div className="flex flex-col flex-grow p-4 pt-0 space-y-4 overflow-hidden">
-            <ScrollArea className="flex-grow pr-4 -mr-4">
+            <ScrollArea className="flex-grow basis-1/3 pr-4 -mr-4">
               {orderItems.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
                   <ClipboardList className="w-16 h-16 text-gray-300" />
@@ -706,22 +743,24 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
                   </p>
                 </div>
               ) : (
-                <div className="space-y-3">
-                  {orderItems.map(item => (
-                    <div key={item.name} className="flex items-center">
-                      <div className="flex-grow">
-                        <p className="font-medium">{item.name}</p>
-                        <p className="text-sm text-muted-foreground">₹{item.price.toFixed(2)}</p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => updateQuantity(item.name, item.quantity - 1)}><Minus className="h-4 w-4" /></Button>
-                        <span className="w-8 text-center font-bold">{item.quantity}</span>
-                        <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => updateQuantity(item.name, item.quantity + 1)}><Plus className="h-4 w-4" /></Button>
-                        <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => removeFromOrder(item.name)}><X className="h-4 w-4" /></Button>
-                      </div>
+                activeOrder ? renderOrderItems() : (
+                    <div className="space-y-3">
+                    {orderItems.map(item => (
+                        <div key={item.name} className="flex items-center">
+                        <div className="flex-grow">
+                            <p className="font-medium">{item.name}</p>
+                            <p className="text-sm text-muted-foreground">₹{item.price.toFixed(2)}</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => updateQuantity(item.name, item.quantity - 1)}><Minus className="h-4 w-4" /></Button>
+                            <span className="w-8 text-center font-bold">{item.quantity}</span>
+                            <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => updateQuantity(item.name, item.quantity + 1)}><Plus className="h-4 w-4" /></Button>
+                            <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => removeFromOrder(item.name)}><X className="h-4 w-4" /></Button>
+                        </div>
+                        </div>
+                    ))}
                     </div>
-                  ))}
-                </div>
+                )
               )}
             </ScrollArea>
             
@@ -733,10 +772,10 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
                               key={table.id}
                               variant="outline"
                               className={cn(
-                                  "flex flex-col h-14 justify-center items-center relative p-0 border-2",
-                                  statusColors[table.status],
-                                  currentActiveTableId === table.id && 'ring-2 ring-offset-2 ring-ring',
-                                  table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black'
+                                "h-16 flex-col justify-center items-center relative p-0 border-2 transition-transform duration-150 active:scale-95",
+                                statusColors[table.status],
+                                currentActiveTableId === table.id && 'ring-4 ring-offset-2 ring-ring',
+                                table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black'
                               )}
                               onClick={() => handleSelectTable(table.id)}
                           >
@@ -749,7 +788,7 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
                               <div className="absolute top-1 left-1">
                                 {React.createElement(statusIcons[table.status], { className: "h-3 w-3" })}
                               </div>
-                              <span className="text-4xl font-bold leading-none">{table.id}</span>
+                              <span className="text-5xl font-bold leading-none">{table.id}</span>
                               <span className="text-[0.6rem] font-semibold -mt-1">{table.status}</span>
                           </Button>
                       ))}
