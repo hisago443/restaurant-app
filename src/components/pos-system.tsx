@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import * as React from 'react';
@@ -113,48 +114,50 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
       setSelectedTableId(activeOrder.tableId);
       setOrderItems(activeOrder.items);
     } else {
-      // Don't clear if there are items, user might be building a new order
+      // If we are switching away from an active order to a new blank one,
+      // we should clear the selected table, but keep items if they exist
       if (orderItems.length === 0) {
         setSelectedTableId(null);
       }
     }
-  }, [activeOrder, orderItems.length]);
+  }, [activeOrder]);
 
 
   const handleSelectTable = (tableId: number) => {
     const table = tables.find(t => t.id === tableId);
     if (!table) return;
-
+  
+    // If the clicked table is already selected, do nothing.
+    if (tableId === currentActiveTableId) return;
+  
     if (table.status === 'Cleaning') {
-        updateTableStatus([tableId], 'Available');
-        toast({ title: `Table ${tableId} is now Available.` });
-        if (activeOrder?.tableId === tableId) {
-            clearOrder(true);
-        }
-        return;
+      updateTableStatus([tableId], 'Available');
+      toast({ title: `Table ${tableId} is now Available.` });
+      // If the order being cleared was for this table, clear it
+      if (activeOrder?.tableId === tableId) {
+        clearOrder(false, true);
+      }
+      return;
     }
-
+  
     const existingOrder = orders.find(o => o.tableId === tableId && o.status !== 'Completed');
-
+  
     if (existingOrder) {
-        // This table is occupied and has an active order, so load it for editing.
-        setActiveOrder(existingOrder);
+      // Table is occupied and has an active order, load it for editing.
+      setActiveOrder(existingOrder);
+      toast({ title: `Editing Order for Table ${tableId}`, description: 'Add or modify items.' });
+    } else {
+      // This is either an available table or an occupied one without a tracked order.
+      // If there's an ongoing order being built (items in cart without table), assign it.
+      if (orderItems.length > 0 && !activeOrder) {
         setSelectedTableId(tableId);
-        toast({ title: `Editing Order for Table ${tableId}`, description: 'Add or modify items.' });
-    } else if (table.status === 'Available' || table.status === 'Occupied') {
-        // This is a new order for an available table.
-        // Or user is starting a new order on an occupied table that was cleared without billing.
-        // Don't clear if there are items, user might be building an order without a table yet.
-        if (orderItems.length > 0) {
-          setSelectedTableId(tableId);
-          toast({ title: `Order assigned to Table ${tableId}`, description: 'You can now send the order to the kitchen.' });
-        } else {
-          clearOrder(false, true); // Clear everything for a new order
-          setSelectedTableId(tableId);
-          toast({ title: `New Order for Table ${tableId}`, description: 'Add items to start the order.' });
-        }
-    } else if (table.status === 'Reserved') {
-        toast({ title: `Table ${tableId} is Reserved`, description: 'Confirm guest arrival on the Tables tab.' });
+        toast({ title: `Order assigned to Table ${tableId}.`, description: 'You can now send the order to the kitchen.' });
+      } else {
+        // Otherwise, start a fresh order for this table.
+        clearOrder(false, true); // Clear everything for a truly new order
+        setSelectedTableId(tableId);
+        toast({ title: `New Order for Table ${tableId}`, description: 'Add items to start the order.' });
+      }
     }
   };
   
@@ -233,14 +236,6 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
   }, [updateReceipt]);
 
   const addToOrder = (item: MenuItem, quantity: number) => {
-    if (!currentActiveTableId) {
-      toast({
-        variant: 'destructive',
-        title: 'No Table Selected',
-        description: 'Please select a table before adding items to the order.',
-      });
-      return;
-    }
     const existingItem = orderItems.find(orderItem => orderItem.name === item.name);
     if (existingItem) {
       updateQuantity(item.name, existingItem.quantity + quantity);
@@ -250,14 +245,6 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
   };
 
   const handleItemClick = (item: MenuItem) => {
-    if (!currentActiveTableId) {
-      toast({
-        variant: 'destructive',
-        title: 'No Table Selected',
-        description: 'Please select a table before adding items to the order.',
-      });
-      return;
-    }
     if (isClickToAdd) {
       addToOrder(item, 1);
     } else {
@@ -267,14 +254,6 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
   };
 
   const handleAddButtonClick = (item: MenuItem) => {
-    if (!currentActiveTableId) {
-      toast({
-        variant: 'destructive',
-        title: 'No Table Selected',
-        description: 'Please select a table before adding items to the order.',
-      });
-      return;
-    }
     setSelectedItem(item);
     setIsAddItemDialogOpen(true);
   };
@@ -293,21 +272,18 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
   
   const clearOrder = (delayTableClear = false, forceClear = false) => {
     // If there's nothing to clear, just exit.
-    if (!forceClear && orderItems.length === 0 && !activeOrder) return;
+    if (!forceClear && orderItems.length === 0 && !activeOrder && !selectedTableId) return;
   
     setOrderItems([]);
     setDiscount(0);
     setActiveOrder(null);
-    if (delayTableClear) {
-      setTimeout(() => {
-        setSelectedTableId(null);
-        toast({ title: "New Bill Ready", description: "Select a table to start a new order." });
-      }, 2000);
-    } else {
-      setSelectedTableId(null);
-      if (forceClear) {
-        toast({ title: "New Bill", description: "Current order cleared." });
-      }
+    setSelectedTableId(null);
+    
+    if (forceClear) {
+      toast({ title: "New Bill", description: "Current order cleared." });
+    } else if (delayTableClear) {
+      // This path is taken after payment, so we can give a different message.
+      toast({ title: "New Bill Ready", description: "Select a table to start a new order." });
     }
   };
 
@@ -469,12 +445,11 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
       <Card
         key={item.name}
         className={cn(
-          "group rounded-lg transition-all hover:scale-105 relative",
+          "group rounded-lg transition-all hover:scale-105 relative cursor-pointer",
           finalColor,
-          isColorApplied && "border-black shadow-lg hover:shadow-xl",
-          !currentActiveTableId ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'
+          isColorApplied && "border-black shadow-lg hover:shadow-xl"
         )}
-        onClick={() => currentActiveTableId && handleItemClick(item)}
+        onClick={() => handleItemClick(item)}
       >
         <Popover>
           <PopoverTrigger asChild>
@@ -514,7 +489,6 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
                 size="sm" 
                 variant="secondary" 
                 onClick={(e) => { e.stopPropagation(); handleAddButtonClick(item); }}
-                disabled={!currentActiveTableId}
               >
                 Add to Order
               </Button>
@@ -680,12 +654,12 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
                   </Label>
 
                   <RadioGroupItem value="grid" id="grid-view" className="sr-only" />
-                  <Label htmlFor="grid-view" className={cn("p-1.5 rounded-md cursor-pointer transition-colors", viewMode === 'grid' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent' )}>
+                  <Label htmlFor="grid-view" className={cn("p-1.5 rounded-md cursor-pointer transition-colors", viewMode === 'grid' ? 'bg-primary text-primary-foreground' : 'hover_bg-accent' )}>
                     <LayoutGrid className="h-5 w-5 box-content" />
                   </Label>
 
                   <RadioGroupItem value="list" id="list-view" className="sr-only" />
-                  <Label htmlFor="list-view" className={cn("p-1.5 rounded-md cursor-pointer transition-colors", viewMode === 'list' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent' )}>
+                  <Label htmlFor="list-view" className={cn("p-1.5 rounded-md cursor-pointer transition-colors", viewMode === 'list' ? 'bg-primary text-primary-foreground' : 'hover_bg-accent' )}>
                     <Rows className="h-5 w-5 box-content" />
                   </Label>
               </RadioGroup>
@@ -716,15 +690,42 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
         <CardHeader>
           <CardTitle>{activeOrder ? `Editing Order #${activeOrder.id}` : 'Current Order'}</CardTitle>
           <CardDescription>
-            {currentActiveTableId ? `Table ${currentActiveTableId}` : "Select a table to start"}
+            {currentActiveTableId ? `Table ${currentActiveTableId}` : "No Table Selected"}
           </CardDescription>
         </CardHeader>
+        <CardContent className="p-4 pt-0">
+          <div className="flex flex-wrap gap-2 justify-center">
+              {tables.map(table => (
+                  <Button
+                      key={table.id}
+                      variant="outline"
+                      className={cn(
+                          "flex flex-col h-14 w-14 justify-center items-center gap-1 relative",
+                          statusColors[table.status],
+                          currentActiveTableId === table.id && 'ring-2 ring-offset-2 ring-ring',
+                          table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black'
+                      )}
+                      onClick={() => handleSelectTable(table.id)}
+                  >
+                      {(occupancyCount[table.id] > 0) &&
+                      <div className="absolute bottom-1 right-1 flex items-center gap-1 bg-black/50 text-white text-xs font-bold p-1 rounded-full text-[0.6rem] h-4 min-w-4 justify-center">
+                          <Repeat className="h-2 w-2" />
+                          <span>{occupancyCount[table.id]}</span>
+                      </div>
+                      }
+                      {React.createElement(statusIcons[table.status], { className: "absolute top-1.5 left-1.5 h-3 w-3" })}
+                      <span className="text-xl font-bold">{table.id}</span>
+                      <span className="text-[0.5rem] font-semibold -mt-1">{table.status}</span>
+                  </Button>
+              ))}
+          </div>
+        </CardContent>
         <ScrollArea className="flex-grow p-4 pt-0">
           {orderItems.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
               <ClipboardList className="w-16 h-16 text-gray-300" />
               <p className="mt-4 text-sm font-medium">
-                {currentActiveTableId ? 'Add items to the order' : 'Select a table to begin'}
+                Add items to the order
               </p>
             </div>
           ) : (
@@ -746,33 +747,6 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
             </div>
           )}
         </ScrollArea>
-        <CardContent className="p-4 pt-0">
-            <div className="flex flex-wrap gap-2 justify-center">
-                {tables.map(table => (
-                    <Button
-                        key={table.id}
-                        variant="outline"
-                        className={cn(
-                            "flex flex-col h-16 w-16 justify-center items-center gap-1 relative",
-                            statusColors[table.status],
-                            selectedTableId === table.id && 'ring-2 ring-offset-2 ring-ring',
-                            table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black'
-                        )}
-                        onClick={() => handleSelectTable(table.id)}
-                    >
-                        {(occupancyCount[table.id] > 0) &&
-                        <div className="absolute bottom-1 right-1 flex items-center gap-1 bg-black/50 text-white text-xs font-bold p-1 rounded-full text-[0.6rem] h-4 min-w-4 justify-center">
-                            <Repeat className="h-2 w-2" />
-                            <span>{occupancyCount[table.id]}</span>
-                        </div>
-                        }
-                        {React.createElement(statusIcons[table.status], { className: "absolute top-1.5 left-1.5 h-3.5 w-3.5" })}
-                        <span className="text-2xl font-bold">{table.id}</span>
-                        <span className="text-[0.6rem] font-semibold -mt-1">{table.status}</span>
-                    </Button>
-                ))}
-            </div>
-        </CardContent>
         <div className="mt-auto p-4 space-y-4 border-t">
             <div>
               <Label className="font-semibold mb-2 block">Discount</Label>
@@ -831,7 +805,7 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
                 </div>
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
-                     <Button size="lg" variant="destructive" className="w-full" disabled={orderItems.length === 0 && !activeOrder}><FilePlus />New Bill</Button>
+                     <Button size="lg" variant="destructive" className="w-full" disabled={orderItems.length === 0 && !activeOrder && !selectedTableId}><FilePlus />New Bill</Button>
                   </AlertDialogTrigger>
                   <AlertDialogContent>
                     <AlertDialogHeader>

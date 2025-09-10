@@ -84,24 +84,25 @@ export default function MainLayout() {
     };
     setOrders(prevOrders => {
       const updatedOrders = [...prevOrders, newOrder];
-      const newActiveOrder = updatedOrders.find(o => o.tableId === order.tableId && o.status !== 'Completed');
-      if (newActiveOrder) {
-        setActiveOrder(newActiveOrder);
-      }
+      // Set the newly created order as the active one
+      setActiveOrder(newOrder);
       // Call the callback to trigger printing
       if (order.onOrderCreated) {
         order.onOrderCreated(newOrder);
       }
       return updatedOrders;
     });
-    // Also update the table status to Occupied
+    // Update the table status to Occupied
     updateTableStatus([order.tableId], 'Occupied');
   };
   
   const updateOrder = (updatedOrder: Order) => {
     setOrders(prevOrders => {
       const updatedOrders = prevOrders.map(o => (o.id === updatedOrder.id ? updatedOrder : o));
-      setActiveOrder(updatedOrder);
+      // Ensure the active order reflects the latest changes
+      if (activeOrder?.id === updatedOrder.id) {
+          setActiveOrder(updatedOrder);
+      }
       return updatedOrders;
     });
   };

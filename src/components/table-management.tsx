@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import * as React from 'react';
@@ -75,13 +76,9 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
   };
 
   const handleDoubleClick = (table: Table) => {
-    if (table.status === 'Available') {
-      updateTableStatus([table.id], 'Occupied');
-    } else if (table.status === 'Occupied') {
-      const order = orders.find(o => o.tableId === table.id && o.status !== 'Completed');
-      if (order) {
-        onEditOrder(order);
-      }
+    const order = orders.find(o => o.tableId === table.id && o.status !== 'Completed');
+    if (order) {
+      onEditOrder(order);
     }
   };
   
