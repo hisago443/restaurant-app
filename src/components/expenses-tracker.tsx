@@ -162,7 +162,7 @@ function AddOrEditExpenseDialog({
   const [category, setCategory] = useState(existingExpense?.category || '');
   const [description, setDescription] = useState(existingExpense?.description || '');
   const [amount, setAmount] = useState(existingExpense?.amount.toString() || '');
-  const [vendorId, setVendorId] = useState(existingExpense?.vendorId || '');
+  const [vendorId, setVendorId] = useState<string | null | undefined>(existingExpense?.vendorId);
   
   useEffect(() => {
     if (existingExpense) {
@@ -170,13 +170,13 @@ function AddOrEditExpenseDialog({
       setCategory(existingExpense.category);
       setDescription(existingExpense.description);
       setAmount(String(existingExpense.amount));
-      setVendorId(existingExpense.vendorId || '');
+      setVendorId(existingExpense.vendorId || null);
     } else {
       setDate(new Date());
       setCategory('');
       setDescription('');
       setAmount('');
-      setVendorId('');
+      setVendorId(null);
     }
   }, [existingExpense]);
 
@@ -231,12 +231,11 @@ function AddOrEditExpenseDialog({
           </div>
            <div className="space-y-2">
             <Label htmlFor="vendor">Vendor (Optional)</Label>
-            <Select onValueChange={setVendorId} value={vendorId}>
+            <Select onValueChange={(value) => setVendorId(value)} value={vendorId ?? ''}>
               <SelectTrigger id="vendor">
-                <SelectValue placeholder="Select a vendor" />
+                <SelectValue placeholder="None" />
               </SelectTrigger>
               <SelectContent>
-                 <SelectItem value="">None</SelectItem>
                  {vendors.map(v => <SelectItem key={v.id} value={v.id}>{v.name}</SelectItem>)}
               </SelectContent>
             </Select>
