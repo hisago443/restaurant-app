@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -63,6 +63,7 @@ export function ManageMenuDialog({
   const [newItemPrice, setNewItemPrice] = useState('');
   const [newItemType, setNewItemType] = useState<'Veg' | 'Non-Veg'>('Veg');
   const [selectedCategoryForItem, setSelectedCategoryForItem] = useState('');
+  const [editMenuSearch, setEditMenuSearch] = useState('');
 
   const handleAddCategory = () => {
     if (!newCategory) {
@@ -147,6 +148,36 @@ export function ManageMenuDialog({
     });
     toast({ title: `Item "${itemName}" removed.` });
   };
+
+  const filteredMenuForEditing = useMemo(() => {
+    if (!editMenuSearch) return menu;
+    const lowercasedTerm = editMenuSearch.toLowerCase();
+
+    return menu.map(category => {
+      if (category.category.toLowerCase().includes(lowercasedTerm)) {
+        return category;
+      }
+      const filteredSubCategories = category.subCategories
+        .map(subCategory => {
+          if (subCategory.name.toLowerCase().includes(lowercasedTerm)) {
+            return subCategory;
+          }
+          const filteredItems = subCategory.items.filter(item =>
+            item.name.toLowerCase().includes(lowercasedTerm)
+          );
+          if (filteredItems.length > 0) {
+            return { ...subCategory, items: filteredItems };
+          }
+          return null;
+        })
+        .filter(Boolean);
+
+      if (filteredSubCategories.length > 0) {
+        return { ...category, subCategories: filteredSubCategories as any };
+      }
+      return null;
+    }).filter(Boolean) as MenuCategory[];
+  }, [editMenuSearch, menu]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -241,8 +272,14 @@ export function ManageMenuDialog({
             <AccordionItem value="edit-menu">
               <AccordionTrigger className="text-lg font-semibold">Edit Menu</AccordionTrigger>
               <AccordionContent className="p-4 bg-muted/50 rounded-b-md space-y-4">
+                  <Input
+                    placeholder="Search for an item to edit..."
+                    value={editMenuSearch}
+                    onChange={(e) => setEditMenuSearch(e.target.value)}
+                    className="mb-4"
+                  />
                   <div className="space-y-3 max-h-80 overflow-y-auto">
-                      {menu.map(cat => (
+                      {filteredMenuForEditing.map(cat => (
                           <div key={cat.category} className="p-3 border rounded-md bg-background/50">
                               <h3 className="font-bold text-lg">{cat.category}</h3>
                               <div className="space-y-2 mt-2">
@@ -280,6 +317,9 @@ export function ManageMenuDialog({
                               </div>
                           </div>
                       ))}
+                      {filteredMenuForEditing.length === 0 && (
+                          <p className="text-center text-muted-foreground">No items match your search.</p>
+                      )}
                   </div>
               </AccordionContent>
             </AccordionItem>
