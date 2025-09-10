@@ -975,7 +975,7 @@ export default function PosSystem({
                             {React.createElement(statusIcons[table.status], { className: "h-3 w-3" })}
                           </div>
                           <span className="text-3xl font-bold leading-none">{table.id}</span>
-                          <span className="text-[0.6rem] font-bold">{table.status}</span>
+                          <span className="text-xs font-bold">{table.status}</span>
                       </Button>
                   ))}
               </div>
