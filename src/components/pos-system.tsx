@@ -958,7 +958,7 @@ export default function PosSystem({
                           key={table.id}
                           variant="outline"
                           className={cn(
-                            "h-auto py-1 flex-col justify-center items-center relative p-0 border-2 transition-transform duration-150 active:scale-95",
+                            "h-auto aspect-square flex-col justify-center items-center relative p-0 border-2 transition-transform duration-150 active:scale-95",
                             statusColors[table.status],
                             currentActiveTableId === table.id && 'ring-4 ring-offset-2 ring-ring',
                             table.status === 'Available' || table.status === 'Occupied' ? 'text-white border-black' : 'text-black border-black/50',
