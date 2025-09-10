@@ -1,13 +1,7 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Allow read and write access to the bills collection
-    match /bills/{billId} {
-      allow read, write: if true;
-    }
-
-    // Allow read and write access to the employees collection
-    match /employees/{employeeId} {
+    match /{document=**} {
       allow read, write: if true;
     }
   }
