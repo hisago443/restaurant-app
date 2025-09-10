@@ -18,7 +18,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from '@/hooks/use-toast';
-import { Search, Plus, Minus, X, FilePlus, LayoutGrid, List, Rows, ChevronsUpDown, Palette, Shuffle, ClipboardList, Send, CheckCircle2, Users, Bookmark, Sparkles, Repeat, Edit, UserCheck, BookmarkX, Printer } from 'lucide-react';
+import { Search, Plus, Minus, X, FilePlus, LayoutGrid, List, Rows, ChevronsUpDown, Palette, Shuffle, ClipboardList, Send, CheckCircle2, Users, Bookmark, Sparkles, Repeat, Edit, UserCheck, BookmarkX, Printer, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { AddItemDialog } from './add-item-dialog';
@@ -401,41 +401,46 @@ export default function PosSystem({
       return;
     }
 
-    if (activeOrder) {
-      const updatedOrder = { ...activeOrder, items: orderItems };
-      
-      const diffItems: OrderItem[] = [];
-      const originalItemsMap = new Map(originalOrderItems.map(item => [item.name, item.quantity]));
-      const currentItemsMap = new Map(orderItems.map(item => [item.name, item.quantity]));
+    setIsProcessing(true);
+    // Use a short timeout to allow the UI to update with the loading state
+    setTimeout(() => {
+        if (activeOrder) {
+        const updatedOrder = { ...activeOrder, items: orderItems };
+        
+        const diffItems: OrderItem[] = [];
+        const originalItemsMap = new Map(originalOrderItems.map(item => [item.name, item.quantity]));
+        const currentItemsMap = new Map(orderItems.map(item => [item.name, item.quantity]));
 
-      currentItemsMap.forEach((quantity, name) => {
-        const originalQuantity = originalItemsMap.get(name) || 0;
-        if (quantity > originalQuantity) {
-          const itemDetails = orderItems.find(i => i.name === name);
-          if (itemDetails) {
-            diffItems.push({ ...itemDetails, quantity: quantity - originalQuantity });
-          }
+        currentItemsMap.forEach((quantity, name) => {
+            const originalQuantity = originalItemsMap.get(name) || 0;
+            if (quantity > originalQuantity) {
+            const itemDetails = orderItems.find(i => i.name === name);
+            if (itemDetails) {
+                diffItems.push({ ...itemDetails, quantity: quantity - originalQuantity });
+            }
+            }
+        });
+        
+        if (diffItems.length > 0) {
+            updateOrder(updatedOrder);
+            printKot(updatedOrder, diffItems);
+            toast({ title: 'Order Updated!', description: `KOT update sent for Table ${currentActiveTableId}.` });
+            setOriginalOrderItems([...orderItems]);
+        } else {
+            toast({ title: 'No Changes', description: 'No new items were added to the order.' });
         }
-      });
-      
-      if (diffItems.length > 0) {
-        updateOrder(updatedOrder);
-        printKot(updatedOrder, diffItems);
-        toast({ title: 'Order Updated!', description: `KOT update sent for Table ${currentActiveTableId}.` });
-        setOriginalOrderItems([...orderItems]);
-      } else {
-        toast({ title: 'No Changes', description: 'No new items were added to the order.' });
-      }
 
-    } else {
-      const orderPayload = {
-        items: orderItems,
-        tableId: Number(currentActiveTableId),
-      };
-      addOrder(orderPayload);
-      updateTableStatus([currentActiveTableId], 'Occupied');
-      toast({ title: 'Order Sent!', description: `KOT sent to the kitchen for Table ${currentActiveTableId}.` });
-    }
+        } else {
+        const orderPayload = {
+            items: orderItems,
+            tableId: Number(currentActiveTableId),
+        };
+        addOrder(orderPayload);
+        updateTableStatus([currentActiveTableId], 'Occupied');
+        toast({ title: 'Order Sent!', description: `KOT sent to the kitchen for Table ${currentActiveTableId}.` });
+        }
+        setIsProcessing(false);
+    }, 50);
   };
 
   const addBill = async (bill: Omit<Bill, 'id'| 'timestamp'>) => {
@@ -464,7 +469,9 @@ export default function PosSystem({
       return;
     }
     
-    const currentReceipt = await getReceipt(false); 
+    setIsProcessing(true);
+    const currentReceipt = await getReceipt(false);
+    setIsProcessing(false);
 
     if (!currentReceipt) {
         toast({ variant: 'destructive', title: 'Receipt Error', description: 'Could not generate receipt. Please try again.' });
@@ -957,20 +964,22 @@ export default function PosSystem({
                   onClick={handleSendToKitchen}
                   disabled={isProcessing || orderItems.length === 0 || !currentActiveTableId}
               >
-                  {activeOrder ? <Printer className="mr-2 h-4 w-4" /> : <Send className="mr-2 h-4 w-4" />}
+                  {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : (activeOrder ? <Printer className="mr-2 h-4 w-4" /> : <Send className="mr-2 h-4 w-4" />)}
                   {activeOrder ? 'Update KOT' : 'Send KOT to Kitchen'}
               </Button>
               <div className="grid grid-cols-2 gap-2">
                   <Button size="lg" variant="outline" onClick={handlePrintProvisionalBill} disabled={isProcessing ||!currentActiveTableId || orderItems.length === 0}>
-                      <Printer className="mr-2 h-4 w-4" /> Print Bill
+                      {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Printer className="mr-2 h-4 w-4" />}
+                      Print Bill
                   </Button>
                   <Button size="lg" onClick={handleProcessPayment} disabled={isProcessing || orderItems.length === 0 || !currentActiveTableId}>
+                      {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                       Process Payment
                   </Button>
               </div>
               <AlertDialog>
                   <AlertDialogTrigger asChild>
-                      <Button size="lg" variant="destructive" disabled={orderItems.length === 0}>
+                      <Button size="lg" variant="destructive" disabled={isProcessing || orderItems.length === 0}>
                           <X className="mr-2 h-4 w-4" /> Clear Order
                       </Button>
                   </AlertDialogTrigger>
