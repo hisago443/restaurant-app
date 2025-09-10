@@ -172,7 +172,7 @@ export function PaymentDialog({ isOpen, onOpenChange, total, receiptPreview, onP
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={handleClose}>Cancel</Button>
-              <Button onClick={handleOnlineConfirm}>Simulate Successful Payment</Button>
+              <Button onClick={handleOnlineConfirm}>Payment Successful</Button>
             </DialogFooter>
           </TabsContent>
         </Tabs>
