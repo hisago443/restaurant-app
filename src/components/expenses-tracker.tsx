@@ -150,11 +150,9 @@ function AddOrEditVendorDialog({
                     </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
-                    <Command>
+                    <Command onValueChange={setCategory}>
                         <CommandInput 
                             placeholder="Search or create category..." 
-                            value={category}
-                            onValueChange={setCategory}
                         />
                          <CommandList>
                             <CommandEmpty>
