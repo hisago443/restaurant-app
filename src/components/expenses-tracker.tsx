@@ -62,6 +62,7 @@ const expenseCategories = [
   "Rent",
   "Electricity Bill",
   "Water Bill",
+  "Gas",
   "Maintenance",
   "Marketing",
   "Salaries",
