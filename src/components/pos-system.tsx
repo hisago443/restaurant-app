@@ -255,6 +255,11 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
         return result.receiptPreview;
       } catch (error) {
           console.error('AI receipt generation failed, using local version:', error);
+          toast({
+            variant: "default",
+            title: "AI Assistant Offline",
+            description: "Displaying standard receipt format.",
+          });
           return localReceipt; // Fallback to local receipt on error
       } finally {
         setIsProcessing(false);
@@ -263,7 +268,7 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
   
     return localReceipt;
   
-  }, [orderItems, discount, subtotal, total]);
+  }, [orderItems, discount, subtotal, total, toast]);
   
   useEffect(() => {
     if (orderItems.length > 0) {
@@ -321,10 +326,6 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
       setDiscount(0);
       setSelectedTableId(null);
       setReceiptPreview('');
-    }
-    // Only clear active order if we are doing a full reset.
-    // This prevents activeOrder from being cleared when just clearing items.
-    if(fullReset || !activeOrder){
       setActiveOrder(null);
     }
   };
@@ -386,7 +387,7 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
       const originalItemsMap = new Map(originalOrderItems.map(item => [item.name, item.quantity]));
       const currentItemsMap = new Map(orderItems.map(item => [item.name, item.quantity]));
 
-      // Newly added items
+      // Newly added or quantity increased items
       currentItemsMap.forEach((quantity, name) => {
         const originalQuantity = originalItemsMap.get(name) || 0;
         if (quantity > originalQuantity) {
@@ -430,10 +431,9 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
       toast({ variant: 'destructive', title: 'No Table Selected', description: 'Please select a table before processing payment.' });
       return;
     }
-
-    setIsProcessing(true);
-    const currentReceipt = await getReceipt(true); // Wait for AI receipt
-    setIsProcessing(false);
+    
+    // Ensure receipt is ready before opening dialog.
+    const currentReceipt = await getReceipt(false); // Use fast, local receipt
 
     if (!currentReceipt) {
         toast({ variant: 'destructive', title: 'Receipt Error', description: 'Could not generate receipt. Please try again.' });
@@ -712,16 +712,27 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
   };
 
   const renderOrderItems = () => {
-    const originalItemsSet = new Set(originalOrderItems.map(item => item.name));
-    const newItems = orderItems.filter(item => !originalItemsSet.has(item.name) || (originalOrderItems.find(orig => orig.name === item.name)?.quantity || 0) < item.quantity);
-    const existingItems = orderItems.filter(item => {
-        const originalItem = originalOrderItems.find(orig => orig.name === item.name);
-        return !!originalItem && originalItem.quantity >= item.quantity;
+    const originalItemsMap = new Map(originalOrderItems.map(item => [item.name, item.quantity]));
+    
+    const allItems = [...orderItems].sort((a, b) => {
+        const aIsNew = !originalItemsMap.has(a.name) || (originalItemsMap.get(a.name)! < a.quantity);
+        const bIsNew = !originalItemsMap.has(b.name) || (originalItemsMap.get(b.name)! < b.quantity);
+        if (aIsNew && !bIsNew) return 1;
+        if (!aIsNew && bIsNew) return -1;
+        return 0;
     });
 
-    const renderItemRow = (item: OrderItem, isNew: boolean, isUpdated: boolean) => {
-        const originalQuantity = originalOrderItems.find(orig => orig.name === item.name)?.quantity || 0;
+    const newItemsExist = allItems.some(item => {
+        const originalQuantity = originalItemsMap.get(item.name) || 0;
+        return !originalItemsMap.has(item.name) || originalQuantity < item.quantity;
+    });
+
+    const renderItemRow = (item: OrderItem) => {
+        const originalQuantity = originalItemsMap.get(item.name) || 0;
+        const isNew = !originalItemsMap.has(item.name);
+        const isUpdated = originalQuantity > 0 && item.quantity > originalQuantity;
         const quantityChange = item.quantity - originalQuantity;
+        
         const itemClass = isNew ? "bg-blue-50 dark:bg-blue-900/20" : isUpdated ? "bg-yellow-50 dark:bg-yellow-900/20" : "";
         const itemTag = isNew ? "(New)" : isUpdated ? `(+${quantityChange})` : "";
         const tagClass = isNew ? "text-blue-500" : isUpdated ? "text-yellow-600" : "";
@@ -744,17 +755,13 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
 
     return (
       <div className="space-y-3">
-        {existingItems.map(item => renderItemRow(item, false, false))}
-        {newItems.length > 0 && existingItems.length > 0 && (
-            <div className="relative py-2">
+        {allItems.map(item => renderItemRow(item))}
+        {newItemsExist && originalOrderItems.length > 0 && (
+             <div className="relative py-2">
                 <Separator />
-                <span className="absolute left-1/2 -translate-x-1/2 -top-2 bg-background px-2 text-xs text-muted-foreground">New/Updated Items</span>
+                <span className="absolute left-1/2 -translate-x-1/2 -top-2.5 bg-background px-2 text-xs text-muted-foreground">New/Updated Items</span>
             </div>
         )}
-        {newItems.map(item => {
-            const isNew = !originalItemsSet.has(item.name);
-            return renderItemRow(item, isNew, !isNew);
-        })}
       </div>
     );
   };
@@ -971,3 +978,5 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
     </div>
   );
 }
+
+    
