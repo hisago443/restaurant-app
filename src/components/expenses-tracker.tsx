@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -51,6 +50,7 @@ import { format, isSameDay, isSameMonth, isSameYear } from 'date-fns';
 import type { Expense, Vendor } from '@/lib/types';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 
 interface ExpensesTrackerProps {
   expenses: Expense[];
@@ -95,6 +95,7 @@ function AddOrEditVendorDialog({
   const [name, setName] = useState('');
   const [category, setCategory] = useState('');
   const [phone, setPhone] = useState('');
+  const [isCategoryPopoverOpen, setIsCategoryPopoverOpen] = useState(false);
 
   useEffect(() => {
     if (existingVendor) {
@@ -135,15 +136,48 @@ function AddOrEditVendorDialog({
             <Input id="vendor-name" placeholder="e.g., Local Farm Produce" value={name} onChange={e => setName(e.target.value)} />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="vendor-category">Category</Label>
-            <Select onValueChange={setCategory} value={category}>
-              <SelectTrigger id="vendor-category">
-                <SelectValue placeholder="Select a category" />
-              </SelectTrigger>
-              <SelectContent>
-                {vendorCategories.map(cat => <SelectItem key={cat} value={cat}>{cat}</SelectItem>)}
-              </SelectContent>
-            </Select>
+            <Label>Category</Label>
+            <Popover open={isCategoryPopoverOpen} onOpenChange={setIsCategoryPopoverOpen}>
+                <PopoverTrigger asChild>
+                    <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={isCategoryPopoverOpen}
+                        className="w-full justify-between"
+                    >
+                        {category || "Select or type a category..."}
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                    <Command>
+                        <CommandInput 
+                            placeholder="Search or create category..." 
+                            value={category}
+                            onValueChange={setCategory}
+                        />
+                         <CommandList>
+                            <CommandEmpty>
+                                No category found. Type to create a new one.
+                            </CommandEmpty>
+                            <CommandGroup>
+                                {vendorCategories.map((cat) => (
+                                    <CommandItem
+                                        key={cat}
+                                        value={cat}
+                                        onSelect={(currentValue) => {
+                                            setCategory(currentValue === category ? "" : currentValue)
+                                            setIsCategoryPopoverOpen(false)
+                                        }}
+                                    >
+                                        {cat}
+                                    </CommandItem>
+                                ))}
+                            </CommandGroup>
+                        </CommandList>
+                    </Command>
+                </PopoverContent>
+            </Popover>
           </div>
            <div className="space-y-2">
             <Label htmlFor="vendor-phone">Mobile No. (Optional)</Label>
