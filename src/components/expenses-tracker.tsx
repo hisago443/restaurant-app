@@ -440,7 +440,7 @@ export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
                 </div>
                  <div className="space-y-2">
                     <Label htmlFor="vendor">Vendor</Label>
-                    <Select onValueChange={(value) => setVendorId(value === 'none' ? undefined : value)} value={vendorId}>
+                    <Select onValueChange={(value) => setVendorId(value === 'none' ? undefined : value)} value={vendorId || 'none'}>
                       <SelectTrigger id="vendor">
                           <SelectValue placeholder="None" />
                       </SelectTrigger>
