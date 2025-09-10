@@ -2,7 +2,7 @@
 
 "use client";
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Coffee, LayoutGrid, Book, BarChart, Users } from 'lucide-react';
 import { isSameDay } from 'date-fns';
@@ -33,6 +33,7 @@ export default function MainLayout() {
   const [selectedTableId, setSelectedTableId] = useState<number | null>(null);
   const [discount, setDiscount] = useState(0);
   const [showOccupancy, setShowOccupancy] = useState(true);
+  const [pendingOrders, setPendingOrders] = useState<Record<number, OrderItem[]>>({});
 
   useEffect(() => {
     // Fetch initial tables with default status
@@ -104,9 +105,9 @@ export default function MainLayout() {
     ? currentDateTime.toLocaleTimeString()
     : '';
 
-  const updateTableStatus = (tableIds: number[], status: TableStatus) => {
-    setTables(tables.map(t => (tableIds.includes(t.id) ? { ...t, status } : t)));
-  };
+  const updateTableStatus = useCallback((tableIds: number[], status: TableStatus) => {
+    setTables(tables => tables.map(t => (tableIds.includes(t.id) ? { ...t, status } : t)));
+  }, []);
 
   const addTable = () => {
     const newTableId = tables.length > 0 ? Math.max(...tables.map(t => t.id)) + 1 : 1;
@@ -139,14 +140,26 @@ export default function MainLayout() {
     setActiveTab(tab)
   }
   
-  const clearCurrentOrder = (fullReset = false) => {
+  const clearCurrentOrder = useCallback((fullReset = false) => {
+    if (selectedTableId && !activeOrder) {
+        setPendingOrders(prev => {
+            const newPending = {...prev};
+            delete newPending[selectedTableId];
+            return newPending;
+        });
+    }
     setCurrentOrderItems([]);
     if (fullReset) {
       setDiscount(0);
       setSelectedTableId(null);
       setActiveOrder(null);
     }
-  };
+  }, [selectedTableId, activeOrder]);
+  
+  const onOrderCreated = useCallback((order: Order) => {
+    setOrders(prev => [...prev, order]);
+    setActiveOrder(order);
+  }, []);
 
   return (
     <div className="flex flex-col h-screen bg-background">
@@ -197,11 +210,10 @@ export default function MainLayout() {
                   selectedTableId={selectedTableId}
                   setSelectedTableId={setSelectedTableId}
                   clearCurrentOrder={clearCurrentOrder}
-                  onOrderCreated={(order) => {
-                    setOrders(prev => [...prev, order]);
-                    setActiveOrder(order);
-                  }}
+                  onOrderCreated={onOrderCreated}
                   showOccupancy={showOccupancy}
+                  pendingOrders={pendingOrders}
+                  setPendingOrders={setPendingOrders}
                 />
             </TabsContent>
             <TabsContent value="tables" className="m-0 p-0">

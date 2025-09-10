@@ -75,6 +75,8 @@ interface PosSystemProps {
   clearCurrentOrder: (fullReset?: boolean) => void;
   onOrderCreated: (order: Order) => void;
   showOccupancy: boolean;
+  pendingOrders: Record<number, OrderItem[]>;
+  setPendingOrders: React.Dispatch<React.SetStateAction<Record<number, OrderItem[]>>>;
 }
 
 export default function PosSystem({ 
@@ -94,6 +96,8 @@ export default function PosSystem({
     clearCurrentOrder,
     onOrderCreated,
     showOccupancy,
+    pendingOrders,
+    setPendingOrders
 }: PosSystemProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [originalOrderItems, setOriginalOrderItems] = useState<OrderItem[]>([]);
@@ -150,15 +154,25 @@ export default function PosSystem({
     if (activeOrder) {
       setOriginalOrderItems([...activeOrder.items]);
     } else {
-      if (orderItems.length === 0) {
-          clearCurrentOrder(true);
-      }
+       if (selectedTableId && pendingOrders[selectedTableId]) {
+         setOriginalOrderItems([]);
+       } else if (orderItems.length === 0) {
+           clearCurrentOrder(true);
+       }
     }
-  }, [activeOrder]);
+  }, [activeOrder, selectedTableId, pendingOrders]);
 
   const handleSelectTable = (tableId: number) => {
     const table = tables.find(t => t.id === tableId);
     if (!table) return;
+
+    // Save current pending order before switching
+    if(selectedTableId && !activeOrder) {
+        setPendingOrders(prev => ({
+            ...prev,
+            [selectedTableId]: orderItems
+        }));
+    }
   
     if (table.status === 'Cleaning') {
       updateTableStatus([tableId], 'Available');
@@ -177,9 +191,10 @@ export default function PosSystem({
       setSelectedTableId(existingOrder.tableId);
       toast({ title: `Editing Order for Table ${tableId}`, description: 'Add or modify items.' });
     } else {
-      clearCurrentOrder(true); 
-      setSelectedTableId(tableId);
-      toast({ title: `New Order for Table ${tableId}`, description: 'Add items to start the order.' });
+        clearCurrentOrder(true); 
+        setSelectedTableId(tableId);
+        setOrderItems(pendingOrders[tableId] || []);
+        toast({ title: `New Order for Table ${tableId}`, description: 'Add items to start the order.' });
     }
   };
   
@@ -266,8 +281,11 @@ export default function PosSystem({
       };
       try {
         const result = await generateReceipt(input);
-        setReceiptPreview(result.receiptPreview);
-        return result.receiptPreview;
+        if (result.receiptPreview) {
+          setReceiptPreview(result.receiptPreview);
+          return result.receiptPreview;
+        }
+        return localReceipt;
       } catch (error) {
           console.error('AI receipt generation failed, using local version:', error);
           toast({
@@ -437,6 +455,14 @@ export default function PosSystem({
         };
         addOrder(orderPayload);
         updateTableStatus([currentActiveTableId], 'Occupied');
+        
+        // Clear pending order for this table
+        setPendingOrders(prev => {
+            const newPending = {...prev};
+            delete newPending[currentActiveTableId];
+            return newPending;
+        });
+
         toast({ title: 'Order Sent!', description: `KOT sent to the kitchen for Table ${currentActiveTableId}.` });
         }
         setIsProcessing(false);
