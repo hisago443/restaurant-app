@@ -212,27 +212,8 @@ export default function MainLayout() {
       counts[bill.tableId] = (counts[bill.tableId] || 0) + 1;
     });
 
-    // Also count current orders not yet billed to reflect live occupancy
-    orders.forEach(order => {
-      const billedToday = todaysBills.some(b => 
-        b.tableId === order.tableId && 
-        JSON.stringify(b.orderItems) === JSON.stringify(order.items)
-      );
-      if (!billedToday) {
-        // This is a simple check. It assumes an order becomes a bill.
-        // A better check might involve order IDs if they were persisted on bills.
-        const existingCount = counts[order.tableId] || 0;
-        // Check if an active order for this table is already in counts to avoid double counting
-        const activeOrderAlreadyCounted = orders.filter(o => o.tableId === order.tableId).length > 1;
-
-        if (existingCount === 0 || !activeOrderAlreadyCounted) {
-             counts[order.tableId] = existingCount + 1;
-        }
-      }
-    });
-
     return counts;
-  }, [billHistory, orders]);
+  }, [billHistory]);
 
   return (
     <div className="flex flex-col h-screen bg-background">
