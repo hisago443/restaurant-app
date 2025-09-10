@@ -705,31 +705,31 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
             
             <div className="mt-auto space-y-4">
                 <CardContent className="p-0">
-                  <div className="flex flex-wrap gap-2 justify-center">
-                    {tables.map(table => (
-                        <Button
-                            key={table.id}
-                            variant="outline"
-                            className={cn(
-                                "flex flex-col h-14 w-14 justify-center items-center gap-1 relative",
-                                statusColors[table.status],
-                                currentActiveTableId === table.id && 'ring-2 ring-offset-2 ring-ring',
-                                table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black'
-                            )}
-                            onClick={() => handleSelectTable(table.id)}
-                        >
-                            {(occupancyCount[table.id] > 0) &&
-                            <div className="absolute bottom-1 right-1 flex items-center gap-1 bg-black/50 text-white text-xs font-bold p-1 rounded-full text-[0.6rem] h-4 min-w-4 justify-center">
-                                <Repeat className="h-2 w-2" />
-                                <span>{occupancyCount[table.id]}</span>
-                            </div>
-                            }
-                            {React.createElement(statusIcons[table.status], { className: "absolute top-1.5 left-1.5 h-3 w-3" })}
-                            <span className="text-xl font-bold">{table.id}</span>
-                            <span className="text-[0.5rem] font-semibold -mt-1">{table.status}</span>
-                        </Button>
-                    ))}
-                  </div>
+                    <div className="flex flex-wrap gap-1 justify-center">
+                        {tables.map(table => (
+                            <Button
+                                key={table.id}
+                                variant="outline"
+                                className={cn(
+                                    "flex flex-col h-12 w-12 justify-center items-center gap-0.5 relative p-1",
+                                    statusColors[table.status],
+                                    currentActiveTableId === table.id && 'ring-2 ring-offset-2 ring-ring',
+                                    table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black'
+                                )}
+                                onClick={() => handleSelectTable(table.id)}
+                            >
+                                {(occupancyCount[table.id] > 0) &&
+                                <div className="absolute bottom-0.5 right-0.5 flex items-center gap-1 bg-black/50 text-white text-[0.6rem] font-bold p-0.5 rounded-full h-4 min-w-4 justify-center">
+                                    <Repeat className="h-2 w-2" />
+                                    <span>{occupancyCount[table.id]}</span>
+                                </div>
+                                }
+                                {React.createElement(statusIcons[table.status], { className: "absolute top-1 left-1 h-3 w-3" })}
+                                <span className="text-lg font-bold leading-none">{table.id}</span>
+                                <span className="text-[0.5rem] font-semibold">{table.status}</span>
+                            </Button>
+                        ))}
+                    </div>
               </CardContent>
 
               <div>
