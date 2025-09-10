@@ -269,7 +269,7 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
     setOrderItems(orderItems.filter(item => item.name !== name));
   };
   
-  const clearOrder = (delayTableClear = false, fullReset = true) => {
+  const clearOrder = (delayTableClear = false, fullReset = false) => {
     setOrderItems([]);
     if (fullReset) {
       setDiscount(0);
@@ -598,7 +598,7 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
       return (
         <Tabs defaultValue={filteredMenu[0]?.category} className="w-full">
           <div className="flex justify-center">
-            <TabsList className="mb-4">
+            <TabsList className="mb-4 flex-wrap h-auto">
               {filteredMenu.map(category => (
                 <TabsTrigger key={category.category} value={category.category} asChild>
                     <div className="relative p-2 rounded-sm cursor-pointer flex items-center gap-2">
@@ -611,7 +611,7 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
             </TabsList>
           </div>
           {filteredMenu.map(category => (
-             <TabsContent key={category.category} value={category.category}>
+             <TabsContent key={category.category} value={category.category} className="m-0">
                <div className={cn("rounded-lg p-2 space-y-4", categoryColors[category.category])}>
                 {category.subCategories.map((subCategory) => (
                   <div key={subCategory.name}>
@@ -728,12 +728,12 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
                   </Label>
 
                   <RadioGroupItem value="grid" id="grid-view" className="sr-only" />
-                  <Label htmlFor="grid-view" className={cn("p-1.5 rounded-md cursor-pointer transition-colors", viewMode === 'grid' ? 'bg-primary text-primary-foreground' : 'hover_bg-accent' )}>
+                  <Label htmlFor="grid-view" className={cn("p-1.5 rounded-md cursor-pointer transition-colors", viewMode === 'grid' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent' )}>
                     <LayoutGrid className="h-5 w-5 box-content" />
                   </Label>
 
                   <RadioGroupItem value="list" id="list-view" className="sr-only" />
-                  <Label htmlFor="list-view" className={cn("p-1.5 rounded-md cursor-pointer transition-colors", viewMode === 'list' ? 'bg-primary text-primary-foreground' : 'hover_bg-accent' )}>
+                  <Label htmlFor="list-view" className={cn("p-1.5 rounded-md cursor-pointer transition-colors", viewMode === 'list' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent' )}>
                     <Rows className="h-5 w-5 box-content" />
                   </Label>
               </RadioGroup>
