@@ -81,7 +81,6 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
   const [isAddItemDialogOpen, setIsAddItemDialogOpen] = useState(false);
   const [selectedTableId, setSelectedTableId] = useState<number | null>(null);
-  const [isTablePopoverOpen, setIsTablePopoverOpen] = useState(false);
 
   const typedMenuData: MenuCategory[] = menuData;
 
@@ -126,53 +125,34 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
   const handleSelectTable = (tableId: number) => {
     const table = tables.find(t => t.id === tableId);
     if (!table) return;
-  
+
     // Always set the selected table first
     setSelectedTableId(tableId);
-  
-    if (table.status === 'Available') {
-      clearOrder(false, true); // Clear everything for a new order
-      updateTableStatus([tableId], 'Occupied');
-      toast({ title: `Table ${tableId} is now Occupied`, description: 'Add items to start the order.' });
-      setIsTablePopoverOpen(false); // Close popover to start adding items
-    } else if (table.status === 'Occupied') {
-      const existingOrder = orders.find(o => o.tableId === tableId && o.status !== 'Completed');
-      if (existingOrder) {
-        setActiveOrder(existingOrder);
-        toast({ title: `Editing Order for Table ${tableId}`, description: 'Add or modify items.' });
-      } else {
-        // If no KOT exists, start a new order for this occupied table
-        clearOrder(false, true);
-        toast({
-          title: `New KOT for Table ${tableId}`,
-          description: `Table is occupied. You can start a new order.`,
-        });
-      }
-      setIsTablePopoverOpen(false); // Close popover to allow adding items
-    } else {
-       // For other statuses like 'Cleaning' or 'Reserved', we just update the selection
-       // and leave the popover open to show relevant actions.
-    }
-  };
-  
-  const handleDoubleClickTable = (table: Table) => {
-    // Single click on a cleaning table makes it available
+
+    // If a guest leaves, a single click on a "Cleaning" table makes it "Available"
     if (table.status === 'Cleaning') {
-      updateTableStatus([table.id], 'Available');
-      toast({ title: `Table ${table.id} is now Available.` });
-      return;
-    }
-    // Double click on occupied table marks for cleaning
-    if (table.status === 'Occupied') {
-        updateTableStatus([table.id], 'Cleaning');
-        toast({ title: 'Customer Left', description: `Table ${table.id} is now marked for cleaning.` });
-        if (activeOrder && activeOrder.tableId === table.id) {
-            // Clear the active order from the panel since the customer has left.
+        updateTableStatus([tableId], 'Available');
+        toast({ title: `Table ${tableId} is now Available.` });
+        if (activeOrder?.tableId === tableId) {
             clearOrder(true);
         }
+        return;
+    }
+
+    const existingOrder = orders.find(o => o.tableId === tableId && o.status !== 'Completed');
+
+    if (existingOrder) {
+        // This table is occupied and has an active order, so load it for editing.
+        setActiveOrder(existingOrder);
+        toast({ title: `Editing Order for Table ${tableId}`, description: 'Add or modify items.' });
+    } else {
+        // This is a new order for an available table.
+        clearOrder(false, true); // Clear everything for a new order
+        updateTableStatus([tableId], 'Occupied');
+        toast({ title: `New Order for Table ${tableId}`, description: 'Add items to start the order.' });
     }
   };
-
+  
   const setItemColor = (itemName: string, colorClass: string) => {
     setMenuItemColors(prev => ({ ...prev, [itemName]: colorClass }));
   };
@@ -600,53 +580,6 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
     }
   };
 
-  const selectedTable = tables.find(t => t.id === selectedTableId);
-  
-  const renderTableActions = () => {
-    if (!selectedTable) return null;
-
-    const orderForTable = orders.find(o => o.tableId === selectedTable.id && o.status !== 'Completed');
-
-    switch (selectedTable.status) {
-      case 'Available':
-        return (
-          <Button onClick={() => {
-            handleSelectTable(selectedTable.id)
-          }}>
-            <Users className="mr-2 h-4 w-4" />Create New Order
-          </Button>
-        );
-      case 'Occupied':
-        return (
-          <div className="flex flex-wrap gap-2">
-            <Button onClick={() => {
-                if (orderForTable) {
-                    setActiveOrder(orderForTable);
-                    setIsTablePopoverOpen(false);
-                } else {
-                    handleSelectTable(selectedTable.id)
-                }
-            }}>
-              <Edit className="mr-2 h-4 w-4" />Update Order
-            </Button>
-            <Button variant="outline" onClick={() => { handlePrintProvisionalBill(); setIsTablePopoverOpen(false); }} disabled={!orderForTable}><Printer className="mr-2 h-4 w-4" /> Print Provisional Bill</Button>
-            <Button variant="destructive" onClick={() => { updateTableStatus([selectedTable.id], 'Cleaning'); setIsTablePopoverOpen(false); }}><SparklesIcon className="mr-2 h-4 w-4" />Mark as Cleaning</Button>
-          </div>
-        );
-      case 'Reserved':
-        return (
-          <div className="flex gap-2">
-            <Button onClick={() => { updateTableStatus([selectedTable.id], 'Occupied'); setIsTablePopoverOpen(false); }}><UserCheck className="mr-2 h-4 w-4" /> Seat Guests</Button>
-            <Button variant="outline" onClick={() => { updateTableStatus([selectedTable.id], 'Available'); setIsTablePopoverOpen(false); }}><BookmarkX className="mr-2 h-4 w-4" /> Cancel Reservation</Button>
-          </div>
-        );
-      case 'Cleaning':
-        return <Button onClick={() => { updateTableStatus([selectedTable.id], 'Available'); setIsTablePopoverOpen(false); }}><CheckCircle2 className="mr-2 h-4 w-4" />Mark as Available</Button>;
-      default:
-        return null;
-    }
-  }
-
   return (
     <div className="flex flex-col md:flex-row h-[calc(100vh-5rem)] gap-4 p-4">
       {/* Left Panel: Menu */}
@@ -707,59 +640,46 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
       <Card className="flex-[1] flex flex-col h-full">
         <CardHeader>
           <CardTitle>{activeOrder ? `Editing Order #${activeOrder.id}` : 'Current Order'}</CardTitle>
-          <div className="pt-2">
-            <Label>Select Table</Label>
-            <Popover open={isTablePopoverOpen} onOpenChange={setIsTablePopoverOpen}>
-                <PopoverTrigger asChild>
-                    <Button variant="outline" className="w-full justify-start text-left font-normal">
-                    {currentActiveTableId ? `Table ${currentActiveTableId}` : "Select a table..."}
-                    <ChevronDown className="ml-auto h-4 w-4 opacity-50" />
-                    </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-2" align="start">
-                    <div className="grid grid-cols-5 gap-2">
-                        {tables.map(table => (
-                            <Button
-                                key={table.id}
-                                variant="outline"
-                                className={cn(
-                                    "flex flex-col h-20 w-20 justify-center items-center gap-1 relative",
-                                    statusColors[table.status],
-                                    selectedTableId === table.id && 'ring-2 ring-offset-2 ring-ring',
-                                    table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black'
-                                )}
-                                onClick={() => handleSelectTable(table.id)}
-                                onDoubleClick={() => handleDoubleClickTable(table)}
-                            >
-                                {(occupancyCount[table.id] > 0) &&
-                                <div className="absolute bottom-1 right-1 flex items-center gap-1 bg-black/50 text-white text-xs font-bold p-1 rounded-md">
-                                    <Repeat className="h-3 w-3" />
-                                    <span>{occupancyCount[table.id]}</span>
-                                </div>
-                                }
-                                {React.createElement(statusIcons[table.status], { className: "absolute top-2 left-2 h-4 w-4" })}
-                                <span className="text-2xl font-bold">{table.id}</span>
-                                <span className="text-xs font-semibold">{table.status}</span>
-                            </Button>
-                        ))}
-                    </div>
-                    {selectedTableId && (
-                      <div className="mt-4 p-2 border-t">
-                          <h4 className="font-semibold mb-2">Actions for Table {selectedTableId}</h4>
-                          <div className="flex flex-wrap gap-2">
-                           {renderTableActions()}
-                          </div>
-                      </div>
-                    )}
-                </PopoverContent>
-            </Popover>
-          </div>
+          <CardDescription>
+            {currentActiveTableId ? `Table ${currentActiveTableId}` : "Select a table to start"}
+          </CardDescription>
         </CardHeader>
+        <CardContent className="p-2">
+            <ScrollArea className="h-48">
+                 <div className="grid grid-cols-5 gap-2 p-2">
+                    {tables.map(table => (
+                        <Button
+                            key={table.id}
+                            variant="outline"
+                            className={cn(
+                                "flex flex-col h-20 w-20 justify-center items-center gap-1 relative",
+                                statusColors[table.status],
+                                selectedTableId === table.id && 'ring-2 ring-offset-2 ring-ring',
+                                table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black'
+                            )}
+                            onClick={() => handleSelectTable(table.id)}
+                        >
+                            {(occupancyCount[table.id] > 0) &&
+                            <div className="absolute bottom-1 right-1 flex items-center gap-1 bg-black/50 text-white text-xs font-bold p-1 rounded-md">
+                                <Repeat className="h-3 w-3" />
+                                <span>{occupancyCount[table.id]}</span>
+                            </div>
+                            }
+                            {React.createElement(statusIcons[table.status], { className: "absolute top-2 left-2 h-4 w-4" })}
+                            <span className="text-2xl font-bold">{table.id}</span>
+                            <span className="text-xs font-semibold">{table.status}</span>
+                        </Button>
+                    ))}
+                </div>
+            </ScrollArea>
+        </CardContent>
         <ScrollArea className="flex-grow p-4 pt-0">
           {orderItems.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
               <ClipboardList className="w-16 h-16 text-gray-300" />
-              <p className="mt-4 text-sm font-medium">Add items to get started</p>
+              <p className="mt-4 text-sm font-medium">
+                {currentActiveTableId ? 'Add items to the order' : 'Select a table to begin'}
+              </p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -780,8 +700,7 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
             </div>
           )}
         </ScrollArea>
-        <div className="mt-auto p-4 space-y-4">
-            <Separator />
+        <div className="mt-auto p-4 space-y-4 border-t">
             <div>
               <Label className="font-semibold mb-2 block">Discount</Label>
               <RadioGroup value={discount.toString()} onValueChange={(val) => setDiscount(Number(val))} className="flex items-center flex-wrap gap-2">
@@ -820,15 +739,15 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
               </div>
             </div>
             <div className="flex flex-col gap-2 pt-2">
-                <Button size="lg" variant="secondary" className="w-full" onClick={handleSendToKitchen}>
+                <Button size="lg" variant="secondary" className="w-full" onClick={handleSendToKitchen} disabled={orderItems.length === 0 || !currentActiveTableId}>
                     {activeOrder ? <Edit className="mr-2 h-4 w-4" /> : <Send className="mr-2 h-4 w-4" />}
                     {activeOrder ? 'Update KOT' : 'Send KOT to Kitchen'}
                 </Button>
                 <div className="grid grid-cols-2 gap-2">
-                    <Button size="lg" variant="outline" onClick={handlePrintProvisionalBill}>
+                    <Button size="lg" variant="outline" onClick={handlePrintProvisionalBill} disabled={orderItems.length === 0 || !currentActiveTableId}>
                         <Printer className="mr-2 h-4 w-4" /> Print Bill
                     </Button>
-                    <Button size="lg" onClick={handleProcessPayment}>
+                    <Button size="lg" onClick={handleProcessPayment} disabled={orderItems.length === 0 || !currentActiveTableId}>
                         Process Payment
                     </Button>
                 </div>
@@ -868,5 +787,3 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
     </div>
   );
 }
-
-    
