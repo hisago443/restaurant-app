@@ -468,7 +468,7 @@ export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
                     <Building className="mr-2 h-4 w-4" /> Add Vendor
                 </Button>
                 <Button variant="secondary" onClick={() => setIsVendorManageDialogOpen(true)}>
-                    <List className="mr-2 h-4 w-4" /> Manage Vendors
+                    <List className="mr-2 h-4 w-4" /> Show Vendors
                 </Button>
             </div>
           </CardContent>
