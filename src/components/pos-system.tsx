@@ -719,33 +719,6 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
             {currentActiveTableId ? `Table ${currentActiveTableId}` : "Select a table to start"}
           </CardDescription>
         </CardHeader>
-        <CardContent className="p-4">
-            <div className="flex flex-wrap gap-2 justify-center">
-                {tables.map(table => (
-                    <Button
-                        key={table.id}
-                        variant="outline"
-                        className={cn(
-                            "flex flex-col h-16 w-16 justify-center items-center gap-1 relative",
-                            statusColors[table.status],
-                            selectedTableId === table.id && 'ring-2 ring-offset-2 ring-ring',
-                            table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black'
-                        )}
-                        onClick={() => handleSelectTable(table.id)}
-                    >
-                        {(occupancyCount[table.id] > 0) &&
-                        <div className="absolute bottom-1 right-1 flex items-center gap-1 bg-black/50 text-white text-xs font-bold p-1 rounded-full text-[0.6rem] h-4 min-w-4 justify-center">
-                            <Repeat className="h-2 w-2" />
-                            <span>{occupancyCount[table.id]}</span>
-                        </div>
-                        }
-                        {React.createElement(statusIcons[table.status], { className: "absolute top-1.5 left-1.5 h-3.5 w-3.5" })}
-                        <span className="text-2xl font-bold">{table.id}</span>
-                        <span className="text-[0.6rem] font-semibold -mt-1">{table.status}</span>
-                    </Button>
-                ))}
-            </div>
-        </CardContent>
         <ScrollArea className="flex-grow p-4 pt-0">
           {orderItems.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
@@ -773,6 +746,33 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
             </div>
           )}
         </ScrollArea>
+        <CardContent className="p-4 pt-0">
+            <div className="flex flex-wrap gap-2 justify-center">
+                {tables.map(table => (
+                    <Button
+                        key={table.id}
+                        variant="outline"
+                        className={cn(
+                            "flex flex-col h-16 w-16 justify-center items-center gap-1 relative",
+                            statusColors[table.status],
+                            selectedTableId === table.id && 'ring-2 ring-offset-2 ring-ring',
+                            table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black'
+                        )}
+                        onClick={() => handleSelectTable(table.id)}
+                    >
+                        {(occupancyCount[table.id] > 0) &&
+                        <div className="absolute bottom-1 right-1 flex items-center gap-1 bg-black/50 text-white text-xs font-bold p-1 rounded-full text-[0.6rem] h-4 min-w-4 justify-center">
+                            <Repeat className="h-2 w-2" />
+                            <span>{occupancyCount[table.id]}</span>
+                        </div>
+                        }
+                        {React.createElement(statusIcons[table.status], { className: "absolute top-1.5 left-1.5 h-3.5 w-3.5" })}
+                        <span className="text-2xl font-bold">{table.id}</span>
+                        <span className="text-[0.6rem] font-semibold -mt-1">{table.status}</span>
+                    </Button>
+                ))}
+            </div>
+        </CardContent>
         <div className="mt-auto p-4 space-y-4 border-t">
             <div>
               <Label className="font-semibold mb-2 block">Discount</Label>
