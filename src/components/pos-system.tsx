@@ -57,7 +57,7 @@ const statusIcons: Record<TableStatus, React.ElementType> = {
 interface PosSystemProps {
   tables: Table[];
   orders: Order[];
-  addOrder: (order: Omit<Order, 'id' | 'status'>) => void;
+  addOrder: (order: Omit<Order, 'id' | 'status'> & { onOrderCreated?: (order: Order) => void }) => void;
   updateOrder: (order: Order) => void;
   addBill: (bill: Omit<Bill, 'id' | 'timestamp'>) => void;
   updateTableStatus: (tableIds: number[], status: TableStatus) => void;
@@ -144,9 +144,15 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
         toast({ title: `Editing Order for Table ${tableId}`, description: 'Add or modify items.' });
     } else if (table.status === 'Available') {
         // This is a new order for an available table.
-        clearOrder(false, true); // Clear everything for a new order
-        setSelectedTableId(tableId);
-        toast({ title: `New Order for Table ${tableId}`, description: 'Add items to start the order.' });
+        // Don't clear if there are items, user might be building an order without a table yet.
+        if (orderItems.length > 0) {
+          setSelectedTableId(tableId);
+          toast({ title: `Order assigned to Table ${tableId}`, description: 'You can now send the order to the kitchen.' });
+        } else {
+          clearOrder(false, true); // Clear everything for a new order
+          setSelectedTableId(tableId);
+          toast({ title: `New Order for Table ${tableId}`, description: 'Add items to start the order.' });
+        }
     } else if (table.status === 'Reserved') {
         toast({ title: `Table ${tableId} is Reserved`, description: 'Confirm guest arrival on the Tables tab.' });
     }
@@ -270,15 +276,9 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
   };
   
   const clearOrder = (delayTableClear = false, forceClear = false) => {
-    if (forceClear) {
-      setOrderItems([]);
-      setDiscount(0);
-      setActiveOrder(null);
-      setSelectedTableId(null);
-      toast({ title: "New Bill", description: "Current order cleared." });
-      return;
-    }
-
+    // If there's nothing to clear, just exit.
+    if (!forceClear && orderItems.length === 0 && !activeOrder) return;
+  
     setOrderItems([]);
     setDiscount(0);
     setActiveOrder(null);
@@ -810,23 +810,7 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
                         Process Payment
                     </Button>
                 </div>
-                <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                        <Button size="lg" variant="destructive" className="w-full"><FilePlus />New Bill</Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                        <AlertDialogHeader>
-                        <AlertDialogTitle>Create a New Bill?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            This will clear the current order. Make sure to save it if needed.
-                        </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => clearOrder(false, true)}>Continue</AlertDialogAction>
-                        </AlertDialogFooter>
-                    </AlertDialogContent>
-                </AlertDialog>
+                <Button size="lg" variant="destructive" className="w-full" onClick={() => clearOrder(false, true)}><FilePlus />New Bill</Button>
             </div>
           </div>
       </Card>
@@ -846,3 +830,4 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
     </div>
   );
 }
+
