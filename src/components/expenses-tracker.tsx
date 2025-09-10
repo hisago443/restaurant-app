@@ -281,8 +281,8 @@ export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
   }
 
   const handleSaveExpense = async () => {
-    if (!date || !category || !description || !amount) {
-      toast({ variant: "destructive", title: "Missing Fields", description: "Please fill out all required fields." });
+    if (!date || !category || !amount) {
+      toast({ variant: "destructive", title: "Missing Fields", description: "Please fill out date, category and amount." });
       return;
     }
     const expenseData = {
@@ -410,7 +410,7 @@ export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
                     </Select>
                 </div>
                  <div className="space-y-2">
-                    <Label htmlFor="vendor">Vendor (Optional)</Label>
+                    <Label htmlFor="vendor">Vendor</Label>
                     <Select onValueChange={setVendorId} value={vendorId}>
                     <SelectTrigger id="vendor">
                         <SelectValue placeholder="None" />
@@ -422,7 +422,7 @@ export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
                     </Select>
                 </div>
                 <div className="space-y-2">
-                    <Label htmlFor="description">Description</Label>
+                    <Label htmlFor="description">Description (Optional)</Label>
                     <Input id="description" placeholder="e.g., Weekly vegetable purchase" value={description} onChange={e => setDescription(e.target.value)} />
                 </div>
                 <div className="space-y-2">
