@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import * as React from 'react';
@@ -704,7 +705,7 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
             
             <div className="mt-auto pt-4 space-y-4 border-t">
               <CardContent className="p-0">
-                  <div className="grid grid-cols-5 gap-1">
+                  <div className="grid grid-cols-5 gap-2">
                       {tables.map(table => (
                           <Button
                               key={table.id}
