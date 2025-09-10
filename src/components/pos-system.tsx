@@ -147,7 +147,7 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
       toast({ title: `Table ${tableId} is now Available.` });
       // If the active order was for this table, clear it from POS view
       if (activeOrder?.tableId === tableId) {
-        clearOrder(false);
+        clearOrder(false, true);
       }
       return;
     }
@@ -167,7 +167,7 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
         toast({ title: `Order assigned to Table ${tableId}.`, description: 'You can now send the order to the kitchen.' });
       } else {
         // Start a fresh order for this table.
-        clearOrder(false); // Clear any stray items.
+        clearOrder(false, true); // Clear any stray items.
         setSelectedTableId(tableId);
         toast({ title: `New Order for Table ${tableId}`, description: 'Add items to start the order.' });
       }
@@ -396,7 +396,7 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
     if (!currentActiveTableId) return;
 
     const finalReceipt = receiptPreview; // Use the already generated receipt
-    if (!finalReceipt) {
+    if (!finalReceipt && orderItems.length > 0) {
         toast({ variant: "destructive", title: "Billing Error", description: "Could not generate the final bill. Please try again." });
         return;
     }
@@ -418,7 +418,7 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
       updateOrder({ ...activeOrder, status: 'Completed' });
     }
 
-    clearOrder(true, true);
+    clearOrder(true, false);
     // After a delay, clear the selected table so it doesn't persist
     setTimeout(() => {
       setSelectedTableId(null);
@@ -806,7 +806,7 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
                               key={table.id}
                               variant="outline"
                               className={cn(
-                                "h-auto py-2 flex-col justify-center items-center relative p-0 border-2 border-black shadow-lg transition-transform duration-150 active:scale-95",
+                                "h-auto py-2 flex-col justify-center items-center relative p-0 border-2 border-black transition-transform duration-150 active:scale-95",
                                 statusColors[table.status],
                                 currentActiveTableId === table.id && 'ring-4 ring-offset-2 ring-ring',
                                 table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black'
@@ -822,7 +822,7 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
                               <div className="absolute top-1 left-1">
                                 {React.createElement(statusIcons[table.status], { className: "h-3 w-3" })}
                               </div>
-                              <span className="text-4xl font-bold leading-none">{table.id}</span>
+                              <span className="text-5xl font-bold leading-none">{table.id}</span>
                               <span className="text-[0.6rem] font-semibold -mt-1">{table.status}</span>
                           </Button>
                       ))}
