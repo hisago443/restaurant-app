@@ -96,8 +96,8 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
       if (savedState !== null) {
         setIsClickToAdd(JSON.parse(savedState));
       }
-    } catch (error) {
-      console.error("Could not parse 'isClickToAdd' from localStorage", error);
+    } catch (e) {
+      console.error("Could not parse 'isClickToAdd' from localStorage", e);
       setIsClickToAdd(true); // Default to true if parsing fails
     }
   }, []);
