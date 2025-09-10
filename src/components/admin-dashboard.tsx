@@ -2,9 +2,7 @@
 
 "use client";
 
-import { useState, useEffect } from 'react';
-import { collection, onSnapshot } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { useState, useEffect, useMemo } from 'react';
 import { BarChart, Book, Download, TrendingUp, Settings, Package, User, ShoppingCart, History, Mail } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -15,11 +13,12 @@ import ActivityLog from './activity-log';
 import InventoryManagement from './inventory-management';
 import SystemSettings from './system-settings';
 import BillHistory from './bill-history';
-import type { Bill, Employee } from '@/lib/types';
+import type { Bill, Employee, OrderItem } from '@/lib/types';
 import { generateAndSendReport } from '@/ai/flows/generate-report';
 import { useToast } from '@/hooks/use-toast';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import { isSameDay } from 'date-fns';
 
 
 const topItems: { name: string; count: number }[] = [];
@@ -34,62 +33,43 @@ const salesData = [
 interface AdminDashboardProps {
   billHistory: Bill[];
   employees: Employee[];
-  setBillHistory: React.Dispatch<React.SetStateAction<Bill[]>>;
-  setEmployees: React.Dispatch<React.SetStateAction<Employee[]>>;
 }
 
-export default function AdminDashboard({ billHistory, employees, setBillHistory, setEmployees }: AdminDashboardProps) {
+export default function AdminDashboard({ billHistory, employees }: AdminDashboardProps) {
   const { toast } = useToast();
   const [isReportLoading, setIsReportLoading] = useState(false);
   const [autoSendDaily, setAutoSendDaily] = useState(false);
   const [autoSendMonthly, setAutoSendMonthly] = useState(false);
 
-  useEffect(() => {
-    // Listen for real-time updates to employees
-    const unsubEmployees = onSnapshot(collection(db, "employees"), (snapshot) => {
-      const employeesData = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as Employee));
-      setEmployees(employeesData);
-    }, (error) => {
-        console.error("Firestore Error (employees): ", error);
-        toast({
-            variant: 'destructive',
-            title: 'Firestore Connection Error',
-            description: 'Could not fetch employee data. Please check your connection and Firestore security rules.',
-        })
-    });
+  const todaysBills = useMemo(() => billHistory.filter(bill => isSameDay(new Date(bill.timestamp), new Date())), [billHistory]);
+  
+  const totalRevenue = useMemo(() => todaysBills.reduce((sum, bill) => sum + bill.total, 0), [todaysBills]);
+  const totalOrders = useMemo(() => todaysBills.length, [todaysBills]);
+  const averageOrderValue = useMemo(() => (totalOrders > 0 ? totalRevenue / totalOrders : 0), [totalRevenue, totalOrders]);
 
-    // Listen for real-time updates to bills
-    const unsubBills = onSnapshot(collection(db, "bills"), (snapshot) => {
-      const billsData = snapshot.docs.map(doc => {
-        const data = doc.data();
-        return {
-          ...data,
-          id: doc.id,
-          timestamp: data.timestamp.toDate(),
-        } as Bill;
+  const topSellingItems = useMemo(() => {
+    const itemCounts: Record<string, number> = {};
+    todaysBills.forEach(bill => {
+      bill.orderItems.forEach((item: OrderItem) => {
+        itemCounts[item.name] = (itemCounts[item.name] || 0) + item.quantity;
       });
-      setBillHistory(billsData);
-    }, (error) => {
-        console.error("Firestore Error (bills): ", error);
-        toast({
-            variant: 'destructive',
-            title: 'Firestore Connection Error',
-            description: 'Could not fetch bill history. Please check your connection and Firestore security rules.',
-        })
     });
 
-    return () => {
-      unsubEmployees();
-      unsubBills();
-    };
-  }, [setEmployees, setBillHistory, toast]);
+    return Object.entries(itemCounts)
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5);
+  }, [todaysBills]);
 
 
   const handleExportCSV = () => {
-    if (salesData.length === 0) return;
-    const header = Object.keys(salesData[0]).join(',');
-    const rows = salesData.map(row => Object.values(row).join(',')).join('\n');
-    const csvContent = `data:text/csv;charset=utf-8,${header}\n${rows}`;
+    if (billHistory.length === 0) return;
+    const header = 'id,tableId,total,timestamp,items\n';
+    const rows = billHistory.map(bill => {
+        const items = bill.orderItems.map(item => `${item.quantity}x ${item.name}`).join('; ');
+        return `${bill.id},${bill.tableId},${bill.total},"${new Date(bill.timestamp).toISOString()}","${items}"`;
+    }).join('\n');
+    const csvContent = `data:text/csv;charset=utf-8,${header}${rows}`;
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement('a');
     link.setAttribute('href', encodedUri);
@@ -143,8 +123,8 @@ export default function AdminDashboard({ billHistory, employees, setBillHistory,
             <span className="text-green-600 font-bold">Rs.</span>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-900 dark:text-green-100">0.00</div>
-            <p className="text-xs text-green-700 dark:text-green-300">No sales data yet.</p>
+            <div className="text-2xl font-bold text-green-900 dark:text-green-100">{totalRevenue.toFixed(2)}</div>
+            <p className="text-xs text-green-700 dark:text-green-300">Today's total sales</p>
           </CardContent>
         </Card>
         <Card className="bg-blue-100 dark:bg-blue-900/30 border-blue-200 dark:border-blue-800 shadow-lg hover:shadow-xl transition-shadow">
@@ -153,8 +133,8 @@ export default function AdminDashboard({ billHistory, employees, setBillHistory,
             <ShoppingCart className="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-900 dark:text-blue-100">0</div>
-            <p className="text-xs text-blue-700 dark:text-blue-300">No orders yet today.</p>
+            <div className="text-2xl font-bold text-blue-900 dark:text-blue-100">{totalOrders}</div>
+            <p className="text-xs text-blue-700 dark:text-blue-300">Today's total orders</p>
           </CardContent>
         </Card>
         <Card className="bg-amber-100 dark:bg-amber-900/30 border-amber-200 dark:border-amber-800 shadow-lg hover:shadow-xl transition-shadow">
@@ -163,8 +143,8 @@ export default function AdminDashboard({ billHistory, employees, setBillHistory,
             <TrendingUp className="h-4 w-4 text-amber-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-amber-900 dark:text-amber-100">Rs. 0.00</div>
-            <p className="text-xs text-amber-700 dark:text-amber-300">No orders to calculate average.</p>
+            <div className="text-2xl font-bold text-amber-900 dark:text-amber-100">Rs. {averageOrderValue.toFixed(2)}</div>
+            <p className="text-xs text-amber-700 dark:text-amber-300">Average per order</p>
           </CardContent>
         </Card>
         <Card className="bg-violet-100 dark:bg-violet-900/30 border-violet-200 dark:border-violet-800 shadow-lg hover:shadow-xl transition-shadow">
@@ -173,8 +153,8 @@ export default function AdminDashboard({ billHistory, employees, setBillHistory,
             <User className="h-4 w-4 text-violet-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-violet-900 dark:text-violet-100">3</div>
-            <p className="text-xs text-violet-700 dark:text-violet-300">Currently on duty</p>
+            <div className="text-2xl font-bold text-violet-900 dark:text-violet-100">{employees.length}</div>
+            <p className="text-xs text-violet-700 dark:text-violet-300">Total employees</p>
           </CardContent>
         </Card>
       </div>
@@ -195,8 +175,8 @@ export default function AdminDashboard({ billHistory, employees, setBillHistory,
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {topItems.length > 0 ? (
-                  topItems.map(item => (
+                {topSellingItems.length > 0 ? (
+                  topSellingItems.map(item => (
                     <TableRow key={item.name}>
                       <TableCell className="font-medium">{item.name}</TableCell>
                       <TableCell className="text-right">{item.count}</TableCell>

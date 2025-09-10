@@ -78,11 +78,10 @@ function AddAdvanceDialog({ open, onOpenChange, employees, onAddAdvance, selecte
 
 interface StaffManagementProps {
   employees: Employee[];
-  setEmployees: React.Dispatch<React.SetStateAction<Employee[]>>;
 }
 
 
-export default function StaffManagement({ employees, setEmployees }: StaffManagementProps) {
+export default function StaffManagement({ employees }: StaffManagementProps) {
   const { toast } = useToast();
   const [advances, setAdvances] = useState<Advance[]>(initialAdvances);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
@@ -91,24 +90,6 @@ export default function StaffManagement({ employees, setEmployees }: StaffManage
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
   const [isAddAdvanceDialogOpen, setIsAddAdvanceDialogOpen] = useState(false);
   
-  useEffect(() => {
-    // Listen for real-time updates to employees
-    const unsubEmployees = onSnapshot(collection(db, "employees"), (snapshot) => {
-      const employeesData = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as Employee));
-      setEmployees(employeesData);
-    }, (error) => {
-        console.error("Firestore Error (employees): ", error);
-        toast({
-            variant: 'destructive',
-            title: 'Firestore Connection Error',
-            description: 'Could not fetch employee data. Please check your connection and Firestore security rules.',
-        })
-    });
-
-    return () => unsubEmployees();
-  }, [setEmployees, toast]);
-
-
   const advancesForSelectedDate = advances.filter(
     (advance) => selectedDate && isSameDay(advance.date, selectedDate)
   );
@@ -220,7 +201,7 @@ export default function StaffManagement({ employees, setEmployees }: StaffManage
 
                     return (
                       <TableRow key={employee.id}>
-                        <TableCell>{employee.id}</TableCell>
+                        <TableCell className="text-xs text-muted-foreground">{employee.id}</TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
                             <span className={cn('h-2 w-2 rounded-full', employee.color)} />

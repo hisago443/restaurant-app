@@ -6,17 +6,17 @@ import { useState, useEffect, useMemo } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Coffee, LayoutGrid, Book, BarChart, Users } from 'lucide-react';
 import { isSameDay } from 'date-fns';
-
+import { collection, onSnapshot } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { useToast } from '@/hooks/use-toast';
+import type { Table, TableStatus, Order, Bill, Employee, OrderItem } from '@/lib/types';
 import { Logo } from "./icons";
 import PosSystem from './pos-system';
 import TableManagement from './table-management';
 import KitchenOrders from './kitchen-orders';
 import AdminDashboard from './admin-dashboard';
 import StaffManagement from "./staff-management";
-import type { Table, TableStatus, Order, Bill, Employee } from '@/lib/types';
-import { useToast } from '@/hooks/use-toast';
-import { collection, onSnapshot } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+
 
 export default function MainLayout() {
   const { toast } = useToast();
@@ -26,7 +26,12 @@ export default function MainLayout() {
   const [billHistory, setBillHistory] = useState<Bill[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [activeOrder, setActiveOrder] = useState<Order | null>(null);
+  const [currentOrderItems, setCurrentOrderItems] = useState<OrderItem[]>([]);
   const [activeTab, setActiveTab] = useState('pos');
+
+  // Lifted state for POS
+  const [selectedTableId, setSelectedTableId] = useState<number | null>(null);
+  const [discount, setDiscount] = useState(0);
 
   useEffect(() => {
     // Fetch initial tables with default status
@@ -44,6 +49,46 @@ export default function MainLayout() {
     }, 1000);
     return () => clearInterval(timer);
   }, []);
+
+  // Centralized data fetching
+  useEffect(() => {
+    const unsubEmployees = onSnapshot(collection(db, "employees"), (snapshot) => {
+      const employeesData = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as Employee));
+      setEmployees(employeesData);
+    }, (error) => {
+        console.error("Firestore Error (employees): ", error);
+        toast({
+            variant: 'destructive',
+            title: 'Firestore Connection Error',
+            description: 'Could not fetch employee data.',
+        })
+    });
+
+    const unsubBills = onSnapshot(collection(db, "bills"), (snapshot) => {
+      const billsData = snapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          ...data,
+          id: doc.id,
+          timestamp: data.timestamp.toDate(),
+        } as Bill;
+      });
+      setBillHistory(billsData.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime()));
+    }, (error) => {
+        console.error("Firestore Error (bills): ", error);
+        toast({
+            variant: 'destructive',
+            title: 'Firestore Connection Error',
+            description: 'Could not fetch bill history.',
+        })
+    });
+
+    return () => {
+      unsubEmployees();
+      unsubBills();
+    };
+  }, [toast]);
+
 
   const formattedDate = currentDateTime
     ? currentDateTime.toLocaleDateString(undefined, {
@@ -80,7 +125,7 @@ export default function MainLayout() {
 
   const occupancyCount = useMemo(() => {
     const counts: Record<number, number> = {};
-    const todaysBills = billHistory.filter(bill => bill.timestamp && isSameDay(bill.timestamp, new Date()));
+    const todaysBills = billHistory.filter(bill => bill.timestamp && isSameDay(new Date(bill.timestamp), new Date()));
     
     todaysBills.forEach(bill => {
       counts[bill.tableId] = (counts[bill.tableId] || 0) + 1;
@@ -89,6 +134,22 @@ export default function MainLayout() {
     return counts;
   }, [billHistory]);
 
+  const handleTabChange = (tab: string) => {
+    if (tab !== 'pos' && activeOrder) {
+        // Don't clear order when switching away from POS
+    }
+    setActiveTab(tab)
+  }
+  
+  const clearCurrentOrder = (fullReset = false) => {
+    setCurrentOrderItems([]);
+    if (fullReset) {
+      setDiscount(0);
+      setSelectedTableId(null);
+      setActiveOrder(null);
+    }
+  };
+
   return (
     <div className="flex flex-col h-screen bg-background">
       <header className="flex items-center justify-between h-16 px-6 border-b shrink-0">
@@ -96,35 +157,27 @@ export default function MainLayout() {
           <Logo className="h-6 w-6" />
           <span className="text-lg">Up & Above Assistant</span>
         </div>
-        <div className="text-sm text-foreground text-center font-semibold bg-muted p-2 rounded-lg shadow-inner border border-black">
+        <div className="text-sm text-foreground text-center font-semibold bg-muted p-2 rounded-lg shadow-inner">
           <div>{formattedDate}</div>
           <div>{formattedTime}</div>
         </div>
       </header>
       <main className="flex-1">
-        <Tabs value={activeTab} onValueChange={(tab) => {
-          if (tab !== 'pos') setActiveOrder(null);
-          setActiveTab(tab)
-        }} className="h-full flex flex-col">
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="h-full flex flex-col">
           <TabsList className="m-2 self-center rounded-lg bg-primary/10 p-2">
             <TabsTrigger value="pos" className="px-6 py-2 text-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md">
-              <Coffee className="mr-2 h-5 w-5" />
               POS
             </TabsTrigger>
             <TabsTrigger value="tables" className="px-6 py-2 text-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md">
-              <LayoutGrid className="mr-2 h-5 w-5" />
               Tables
             </TabsTrigger>
             <TabsTrigger value="kitchen" className="px-6 py-2 text-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md">
-              <Book className="mr-2 h-5 w-5" />
               Kitchen
             </TabsTrigger>
              <TabsTrigger value="staff" className="px-6 py-2 text-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md">
-              <Users className="mr-2 h-5 w-5" />
               Staff
             </TabsTrigger>
             <TabsTrigger value="admin" className="px-6 py-2 text-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md">
-              <BarChart className="mr-2 h-5 w-5" />
               Admin
             </TabsTrigger>
           </TabsList>
@@ -141,6 +194,13 @@ export default function MainLayout() {
                   occupancyCount={occupancyCount}
                   activeOrder={activeOrder}
                   setActiveOrder={setActiveOrder}
+                  orderItems={currentOrderItems}
+                  setOrderItems={setCurrentOrderItems}
+                  discount={discount}
+                  setDiscount={setDiscount}
+                  selectedTableId={selectedTableId}
+                  setSelectedTableId={setSelectedTableId}
+                  clearCurrentOrder={clearCurrentOrder}
                 />
             </TabsContent>
             <TabsContent value="tables" className="m-0 p-0">
@@ -148,13 +208,15 @@ export default function MainLayout() {
                 tables={tables}
                 orders={orders}
                 billHistory={billHistory}
-                setBillHistory={setBillHistory}
                 updateTableStatus={updateTableStatus}
                 addTable={addTable}
                 removeLastTable={removeLastTable}
                 occupancyCount={occupancyCount}
                 onEditOrder={(order) => {
                   setActiveOrder(order);
+                  setCurrentOrderItems(order.items);
+                  setSelectedTableId(order.tableId);
+                  setDiscount(0);
                   setActiveTab('pos');
                 }}
               />
@@ -165,15 +227,12 @@ export default function MainLayout() {
             <TabsContent value="staff" className="m-0 p-0">
               <StaffManagement 
                 employees={employees} 
-                setEmployees={setEmployees}
               />
             </TabsContent>
             <TabsContent value="admin" className="m-0 p-0">
               <AdminDashboard 
                 billHistory={billHistory} 
-                setBillHistory={setBillHistory}
                 employees={employees} 
-                setEmployees={setEmployees}
               />
             </TabsContent>
           </div>

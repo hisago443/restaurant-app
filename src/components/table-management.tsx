@@ -4,8 +4,6 @@
 
 import * as React from 'react';
 import { useState, useEffect } from 'react';
-import { collection, onSnapshot } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose, DialogDescription } from '@/components/ui/dialog';
@@ -18,7 +16,6 @@ import { PlusCircle, Trash2, LayoutTemplate, Sparkles, Users, CheckCircle2, Book
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { format } from 'date-fns';
-import { useToast } from '@/hooks/use-toast';
 
 const statusColors: Record<TableStatus, string> = {
   Available: 'bg-green-400 hover:bg-green-500',
@@ -38,7 +35,6 @@ interface TableManagementProps {
   tables: Table[];
   orders: Order[];
   billHistory: Bill[];
-  setBillHistory: React.Dispatch<React.SetStateAction<Bill[]>>;
   updateTableStatus: (tableIds: number[], status: TableStatus) => void;
   addTable: () => void;
   removeLastTable: () => void;
@@ -46,8 +42,7 @@ interface TableManagementProps {
   onEditOrder: (order: Order) => void;
 }
 
-export default function TableManagement({ tables, orders, billHistory, setBillHistory, updateTableStatus, addTable, removeLastTable, occupancyCount, onEditOrder }: TableManagementProps) {
-  const { toast } = useToast();
+export default function TableManagement({ tables, orders, billHistory, updateTableStatus, addTable, removeLastTable, occupancyCount, onEditOrder }: TableManagementProps) {
   const [selectedTable, setSelectedTable] = useState<Table | null>(null);
   const [selectedTables, setSelectedTables] = useState<number[]>([]);
   const [isLayoutManagerOpen, setIsLayoutManagerOpen] = useState(false);
@@ -56,31 +51,6 @@ export default function TableManagement({ tables, orders, billHistory, setBillHi
   const [isPrintDialogOpen, setIsPrintDialogOpen] = useState(false);
   const [tableForPrint, setTableForPrint] = useState<Table | null>(null);
   const [showOccupancy, setShowOccupancy] = useState(true);
-
-  useEffect(() => {
-    // Listen for real-time updates to bills
-    const unsubBills = onSnapshot(collection(db, "bills"), (snapshot) => {
-      const billsData = snapshot.docs.map(doc => {
-        const data = doc.data();
-        return {
-          ...data,
-          id: doc.id,
-          timestamp: data.timestamp.toDate(),
-        } as Bill;
-      });
-      setBillHistory(billsData);
-    }, (error) => {
-        console.error("Firestore Error (bills): ", error);
-        toast({
-            variant: 'destructive',
-            title: 'Firestore Connection Error',
-            description: 'Could not fetch bill history. Please check your connection and Firestore security rules.',
-        })
-    });
-
-    return () => unsubBills();
-  }, [setBillHistory, toast]);
-
 
   const filteredTables = tables.filter(table => filter === 'All' || table.status === filter);
   
@@ -93,7 +63,6 @@ export default function TableManagement({ tables, orders, billHistory, setBillHi
 
   const localUpdateTableStatus = (tableId: number, status: TableStatus) => {
     updateTableStatus([tableId], status);
-    // After action, update selected table to reflect new status
     const updatedTable = tables.find(t => t.id === tableId);
     if(updatedTable) {
         setSelectedTable({...updatedTable, status});
@@ -101,18 +70,15 @@ export default function TableManagement({ tables, orders, billHistory, setBillHi
   };
 
   const handleTableClick = (table: Table) => {
-    // If table is cleaning, a single click makes it available.
     if (table.status === 'Cleaning') {
         updateTableStatus([table.id], 'Available');
         return;
     }
-    // If a table is already selected, clicking it again opens the dialog
     if (selectedTable?.id === table.id) {
        setSelectedTable(table);
     } else {
         setSelectedTable(table);
     }
-    // Logic for multi-select checkbox remains separate
   };
 
   const handleDoubleClick = (table: Table) => {
@@ -145,24 +111,7 @@ export default function TableManagement({ tables, orders, billHistory, setBillHi
 
   const handleStatusButtonClick = (status: TableStatus | 'All') => {
     if (status !== 'All' && selectedTables.length > 0) {
-      let nextStatus: TableStatus | null = null;
-      switch (status) {
-        case 'Available':
-          nextStatus = 'Occupied';
-          break;
-        case 'Occupied':
-          nextStatus = 'Cleaning';
-          break;
-        case 'Cleaning':
-          nextStatus = 'Available';
-          break;
-        case 'Reserved':
-           nextStatus = 'Reserved'; // Reserved is a terminal state in this cycle
-           break;
-      }
-      if (nextStatus) {
-        handleBulkUpdate(nextStatus);
-      }
+      handleBulkUpdate(status);
     } else {
       setFilter(status);
       setSelectedTables([]);
@@ -386,7 +335,7 @@ export default function TableManagement({ tables, orders, billHistory, setBillHi
                         <div className="space-y-2 max-h-48 overflow-y-auto border rounded-md p-2">
                             {tableBillHistory.map(bill => (
                                 <div key={bill.id} className="flex justify-between items-center text-sm p-2 bg-muted/50 rounded-md">
-                                    <span>{format(bill.timestamp, 'Pp')}</span>
+                                    <span>{format(new Date(bill.timestamp), 'Pp')}</span>
                                     <span className="font-mono font-semibold">₹{bill.total.toFixed(2)}</span>
                                 </div>
                             ))}
@@ -504,5 +453,3 @@ export default function TableManagement({ tables, orders, billHistory, setBillHi
     </div>
   );
 }
-
-    

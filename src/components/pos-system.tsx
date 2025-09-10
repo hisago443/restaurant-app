@@ -69,13 +69,34 @@ interface PosSystemProps {
   occupancyCount: Record<number, number>;
   activeOrder: Order | null;
   setActiveOrder: (order: Order | null) => void;
+  orderItems: OrderItem[];
+  setOrderItems: (items: OrderItem[]) => void;
+  discount: number;
+  setDiscount: (discount: number) => void;
+  selectedTableId: number | null;
+  setSelectedTableId: (id: number | null) => void;
+  clearCurrentOrder: (fullReset?: boolean) => void;
 }
 
-export default function PosSystem({ tables, orders, setOrders, setBillHistory, updateTableStatus, occupancyCount, activeOrder, setActiveOrder }: PosSystemProps) {
+export default function PosSystem({ 
+    tables, 
+    orders, 
+    setOrders, 
+    setBillHistory, 
+    updateTableStatus, 
+    occupancyCount, 
+    activeOrder, 
+    setActiveOrder,
+    orderItems,
+    setOrderItems,
+    discount,
+    setDiscount,
+    selectedTableId,
+    setSelectedTableId,
+    clearCurrentOrder
+}: PosSystemProps) {
   const [searchTerm, setSearchTerm] = useState('');
-  const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
   const [originalOrderItems, setOriginalOrderItems] = useState<OrderItem[]>([]);
-  const [discount, setDiscount] = useState(0);
   const [isClickToAdd, setIsClickToAdd] = useState(true);
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
   const [receiptPreview, setReceiptPreview] = useState('');
@@ -86,8 +107,8 @@ export default function PosSystem({ tables, orders, setOrders, setBillHistory, u
   const [categoryColors, setCategoryColors] = useState<Record<string, string>>({});
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
   const [isAddItemDialogOpen, setIsAddItemDialogOpen] = useState(false);
-  const [selectedTableId, setSelectedTableId] = useState<number | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [showOccupancy, setShowOccupancy] = useState(true);
 
 
   const typedMenuData: MenuCategory[] = menuData;
@@ -103,7 +124,6 @@ export default function PosSystem({ tables, orders, setOrders, setBillHistory, u
       defaultCategoryColors[category.category] = colorPalette[index % colorPalette.length];
     });
     setCategoryColors(defaultCategoryColors);
-    // Start with all categories collapsed
     setActiveAccordionItems([]);
   }, [typedMenuData]);
 
@@ -115,7 +135,7 @@ export default function PosSystem({ tables, orders, setOrders, setBillHistory, u
       }
     } catch (e) {
       console.error("Could not parse 'isClickToAdd' from localStorage", e);
-      setIsClickToAdd(true); // Default to true if parsing fails
+      setIsClickToAdd(true); 
     }
   }, []);
   
@@ -129,17 +149,13 @@ export default function PosSystem({ tables, orders, setOrders, setBillHistory, u
   
   useEffect(() => {
     if (activeOrder) {
-      setSelectedTableId(activeOrder.tableId);
-      setOrderItems([...activeOrder.items]);
       setOriginalOrderItems([...activeOrder.items]);
     } else {
       if (orderItems.length === 0) {
-          clearOrder(true);
+          clearCurrentOrder(true);
       }
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeOrder]);
-
+  }, [activeOrder, orderItems, clearCurrentOrder]);
 
   const handleSelectTable = (tableId: number) => {
     const table = tables.find(t => t.id === tableId);
@@ -149,7 +165,7 @@ export default function PosSystem({ tables, orders, setOrders, setBillHistory, u
       updateTableStatus([tableId], 'Available');
       toast({ title: `Table ${tableId} is now Available.` });
       if (activeOrder?.tableId === tableId) {
-        clearOrder(true);
+        clearCurrentOrder(true);
       }
       return;
     }
@@ -158,16 +174,13 @@ export default function PosSystem({ tables, orders, setOrders, setBillHistory, u
   
     if (existingOrder) {
       setActiveOrder(existingOrder);
+      setOrderItems(existingOrder.items);
+      setSelectedTableId(existingOrder.tableId);
       toast({ title: `Editing Order for Table ${tableId}`, description: 'Add or modify items.' });
     } else {
-      if (orderItems.length > 0 && !activeOrder) {
-        setSelectedTableId(tableId);
-        toast({ title: `Order assigned to Table ${tableId}.`, description: 'You can now send the order to the kitchen.' });
-      } else {
-        clearOrder(true); 
-        setSelectedTableId(tableId);
-        toast({ title: `New Order for Table ${tableId}`, description: 'Add items to start the order.' });
-      }
+      clearCurrentOrder(true); 
+      setSelectedTableId(tableId);
+      toast({ title: `New Order for Table ${tableId}`, description: 'Add items to start the order.' });
     }
   };
   
@@ -263,7 +276,7 @@ export default function PosSystem({ tables, orders, setOrders, setBillHistory, u
             title: "AI Assistant Offline",
             description: "Displaying standard receipt format.",
           });
-          return localReceipt; // Fallback to local receipt on error
+          return localReceipt; 
       } finally {
         setIsProcessing(false);
       }
@@ -322,17 +335,6 @@ export default function PosSystem({ tables, orders, setOrders, setBillHistory, u
     setOrderItems(orderItems.filter(item => item.name !== name));
   };
   
-  const clearOrder = (fullReset = false) => {
-    setOrderItems([]);
-    setOriginalOrderItems([]);
-    if (fullReset) {
-      setDiscount(0);
-      setSelectedTableId(null);
-      setReceiptPreview('');
-      setActiveOrder(null);
-    }
-  };
-
   const printKot = (order: Order, diffItems?: OrderItem[]) => {
     const printWindow = window.open('', '_blank');
     if (printWindow) {
@@ -372,38 +374,26 @@ export default function PosSystem({ tables, orders, setOrders, setBillHistory, u
     }
   };
 
-  const [newlyCreatedOrder, setNewlyCreatedOrder] = useState<Order | null>(null);
-
-  const addOrder = (order: Omit<Order, 'id' | 'status'> & { onOrderCreated?: (order: Order) => void }) => {
+  const addOrder = (order: Omit<Order, 'id' | 'status'>) => {
     const newOrder: Order = {
       ...order,
       id: `K${(orders.length + 1).toString().padStart(3, '0')}`,
-      status: 'In Preparation', // Start in prep immediately
+      status: 'In Preparation', 
     };
-    setOrders(prevOrders => [...prevOrders, newOrder]);
-    if (order.onOrderCreated) {
-      order.onOrderCreated(newOrder);
-    }
-    // Set the newly created order to be processed by the useEffect
-    setNewlyCreatedOrder(newOrder);
-  };
-  
-  useEffect(() => {
-    if (newlyCreatedOrder) {
-      setActiveOrder(newlyCreatedOrder);
-      setNewlyCreatedOrder(null); // Reset after processing
-    }
-  }, [newlyCreatedOrder, setActiveOrder]);
-
-  const updateOrder = (updatedOrder: Order) => {
     setOrders(prevOrders => {
-      const updatedOrders = prevOrders.map(o => (o.id === updatedOrder.id ? updatedOrder : o));
-      // Ensure the active order reflects the latest changes
-      if (activeOrder?.id === updatedOrder.id) {
-          setActiveOrder(updatedOrder);
-      }
+      const updatedOrders = [...prevOrders, newOrder];
+      setActiveOrder(newOrder); // Set the new order as active
       return updatedOrders;
     });
+    printKot(newOrder);
+    setOriginalOrderItems(newOrder.items);
+  };
+  
+  const updateOrder = (updatedOrder: Order) => {
+    setOrders(prevOrders => {
+      return prevOrders.map(o => (o.id === updatedOrder.id ? updatedOrder : o));
+    });
+    setActiveOrder(updatedOrder);
   };
 
   const handleSendToKitchen = () => {
@@ -423,7 +413,6 @@ export default function PosSystem({ tables, orders, setOrders, setBillHistory, u
       const originalItemsMap = new Map(originalOrderItems.map(item => [item.name, item.quantity]));
       const currentItemsMap = new Map(orderItems.map(item => [item.name, item.quantity]));
 
-      // Newly added or quantity increased items
       currentItemsMap.forEach((quantity, name) => {
         const originalQuantity = originalItemsMap.get(name) || 0;
         if (quantity > originalQuantity) {
@@ -447,10 +436,6 @@ export default function PosSystem({ tables, orders, setOrders, setBillHistory, u
       const orderPayload = {
         items: orderItems,
         tableId: Number(currentActiveTableId),
-        onOrderCreated: (newOrder: Order) => {
-          printKot(newOrder); 
-          setOriginalOrderItems(newOrder.items);
-        },
       };
       addOrder(orderPayload);
       updateTableStatus([currentActiveTableId], 'Occupied');
@@ -464,9 +449,8 @@ export default function PosSystem({ tables, orders, setOrders, setBillHistory, u
         ...bill,
         timestamp: new Date(),
       };
-      const docRef = await addDoc(collection(db, "bills"), billWithTimestamp);
-      // Manually add to local state to reflect change immediately
-      setBillHistory(prev => [...prev, { ...billWithTimestamp, id: docRef.id }]);
+      await addDoc(collection(db, "bills"), billWithTimestamp);
+      // Let real-time listener update state
       toast({ title: 'Bill Saved', description: 'The bill has been saved to the database.' });
     } catch (error) {
       console.error("Error adding bill to Firestore: ", error);
@@ -485,8 +469,7 @@ export default function PosSystem({ tables, orders, setOrders, setBillHistory, u
       return;
     }
     
-    // Ensure receipt is ready before opening dialog.
-    const currentReceipt = await getReceipt(false); // Use fast, local receipt
+    const currentReceipt = await getReceipt(false); 
 
     if (!currentReceipt) {
         toast({ variant: 'destructive', title: 'Receipt Error', description: 'Could not generate receipt. Please try again.' });
@@ -523,7 +506,7 @@ export default function PosSystem({ tables, orders, setOrders, setBillHistory, u
       updateOrder({ ...activeOrder, status: 'Completed' });
     }
   
-    clearOrder(true);
+    clearCurrentOrder(true);
   };
 
   const handlePrintProvisionalBill = async () => {
@@ -537,7 +520,7 @@ export default function PosSystem({ tables, orders, setOrders, setBillHistory, u
     }
   
     setIsProcessing(true);
-    const currentReceipt = await getReceipt(false); // Use fast, local receipt
+    const currentReceipt = await getReceipt(false); 
     setIsProcessing(false);
   
     const printWindow = window.open('', '_blank');
@@ -873,14 +856,14 @@ export default function PosSystem({ tables, orders, setOrders, setBillHistory, u
       </Card>
 
       <Card className="col-span-1 flex flex-col m-4 ml-0">
-        <CardHeader>
+        <div className="p-4 border-b">
           <CardTitle>{activeOrder ? `Editing Order #${activeOrder.id}` : 'Current Order'}</CardTitle>
           <CardDescription>
             {currentActiveTableId ? `Table ${currentActiveTableId}` : "No Table Selected"}
           </CardDescription>
-        </CardHeader>
+        </div>
         
-        <ScrollArea className="flex-grow p-4 pt-0">
+        <ScrollArea className="flex-grow p-4">
           {orderItems.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
               <ClipboardList className="w-16 h-16 text-gray-300" />
@@ -910,8 +893,15 @@ export default function PosSystem({ tables, orders, setOrders, setBillHistory, u
           )}
         </ScrollArea>
         
-        <div className="mt-auto p-4 border-t space-y-4 bg-background">
-          <CardContent className="p-0">
+        <div className="p-4 border-t space-y-4 bg-muted/30">
+            <div className="flex items-center justify-between">
+                <Label className="font-semibold block">Select Table</Label>
+                <div className="flex items-center space-x-2">
+                    <Switch id="show-occupancy" checked={showOccupancy} onCheckedChange={setShowOccupancy} />
+                    <Label htmlFor="show-occupancy" className="text-xs">Show Occupancy</Label>
+                </div>
+            </div>
+            <CardContent className="p-0">
               <div className="grid grid-cols-5 gap-1.5">
                   {tables.map(table => (
                       <Button
@@ -925,7 +915,7 @@ export default function PosSystem({ tables, orders, setOrders, setBillHistory, u
                           )}
                           onClick={() => handleSelectTable(table.id)}
                       >
-                        {(occupancyCount[table.id] > 0) &&
+                        {(showOccupancy && occupancyCount[table.id] > 0) &&
                             <div className="absolute bottom-1 right-1 flex items-center gap-1 bg-black/50 text-white text-xs font-bold p-1 rounded-md">
                                 <Repeat className="h-3 w-3" />
                                 <span>{occupancyCount[table.id]}</span>
@@ -1002,7 +992,7 @@ export default function PosSystem({ tables, orders, setOrders, setBillHistory, u
                       </AlertDialogHeader>
                       <AlertDialogFooter>
                           <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction onClick={() => clearOrder(false)}>Clear</AlertDialogAction>
+                          <AlertDialogAction onClick={() => clearCurrentOrder(false)}>Clear</AlertDialogAction>
                       </AlertDialogFooter>
                   </AlertDialogContent>
               </AlertDialog>
@@ -1026,10 +1016,3 @@ export default function PosSystem({ tables, orders, setOrders, setBillHistory, u
     </div>
   );
 }
-
-    
-
-    
-
-
-
