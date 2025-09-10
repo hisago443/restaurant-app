@@ -20,20 +20,15 @@ import { format, isSameDay } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 
-const initialAdvances: Advance[] = [
-  { employeeId: 'UA002', date: new Date(2024, 6, 5), amount: 2000 },
-  { employeeId: 'UA003', date: new Date(2024, 6, 15), amount: 1500 },
-];
-
 const colors = ['bg-blue-500', 'bg-green-500', 'bg-yellow-500', 'bg-purple-500', 'bg-pink-500', 'bg-indigo-500', 'bg-teal-500'];
 
-function AddAdvanceDialog({ open, onOpenChange, employees, onAddAdvance, selectedDate }: { open: boolean, onOpenChange: (open: boolean) => void, employees: Employee[], onAddAdvance: (advance: Omit<Advance, 'date'>) => void, selectedDate: Date }) {
+function AddAdvanceDialog({ open, onOpenChange, employees, onAddAdvance, selectedDate }: { open: boolean, onOpenChange: (open: boolean) => void, employees: Employee[], onAddAdvance: (advance: Omit<Advance, 'date'> & { date: Date }) => void, selectedDate: Date }) {
   const [employeeId, setEmployeeId] = useState('');
   const [amount, setAmount] = useState('');
 
   const handleSave = () => {
     if (employeeId && amount) {
-      onAddAdvance({ employeeId, amount: parseFloat(amount) });
+      onAddAdvance({ employeeId, amount: parseFloat(amount), date: selectedDate });
       onOpenChange(false);
       setEmployeeId('');
       setAmount('');
@@ -82,12 +77,23 @@ interface StaffManagementProps {
 
 export default function StaffManagement({ employees }: StaffManagementProps) {
   const { toast } = useToast();
-  const [advances, setAdvances] = useState<Advance[]>(initialAdvances);
+  const [advances, setAdvances] = useState<Advance[]>([]);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [isAddEmployeeDialogOpen, setIsAddEmployeeDialogOpen] = useState(false);
   const [isEditEmployeeDialogOpen, setIsEditEmployeeDialogOpen] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
   const [isAddAdvanceDialogOpen, setIsAddAdvanceDialogOpen] = useState(false);
+  
+  useEffect(() => {
+    const unsub = onSnapshot(collection(db, "advances"), (snapshot) => {
+        const advancesData = snapshot.docs.map(doc => {
+            const data = doc.data();
+            return { ...data, date: data.date.toDate() } as Advance;
+        });
+        setAdvances(advancesData);
+    });
+    return () => unsub();
+  }, []);
   
   const advancesForSelectedDate = advances.filter(
     (advance) => selectedDate && isSameDay(advance.date, selectedDate)
@@ -95,9 +101,13 @@ export default function StaffManagement({ employees }: StaffManagementProps) {
   
   const datesWithAdvance = advances.map(a => a.date);
   
-  const handleAddAdvance = (advance: Omit<Advance, 'date'>) => {
-    if (selectedDate) {
-      setAdvances([...advances, { ...advance, date: selectedDate }]);
+  const handleAddAdvance = async (advance: Advance) => {
+    try {
+      await addDoc(collection(db, "advances"), advance);
+      toast({ title: 'Advance Saved', description: 'The salary advance has been recorded.' });
+    } catch (error) {
+      console.error("Error adding advance: ", error);
+      toast({ variant: 'destructive', title: 'Save Failed', description: 'Could not save the advance.' });
     }
   }
   

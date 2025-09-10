@@ -274,7 +274,7 @@ export default function PosSystem({
   
     // Now that the new table is selected, load its order (or pending order).
     // The main layout's useEffect will handle this.
-    const isNewOrderUnassigned = !selectedTableId && orderItems.length > 0;
+    const isNewOrderUnassigned = !selectedTableId && orderItems.length === 0;
     if (isNewOrderUnassigned) {
       toast({ title: `Order assigned to Table ${tableId}` });
     }
@@ -776,29 +776,32 @@ export default function PosSystem({
 
   const renderOrderItems = () => {
     const originalItemsMap = new Map(originalOrderItems.map(item => [item.name, item.quantity]));
-    
-    const allItems = [...orderItems].sort((a, b) => {
-        const aIsNew = !originalItemsMap.has(a.name) || (originalItemsMap.get(a.name)! < a.quantity);
-        const bIsNew = !originalItemsMap.has(b.name) || (originalItemsMap.get(b.name)! < b.quantity);
-        if (aIsNew && !bIsNew) return 1;
-        if (!aIsNew && bIsNew) return -1;
-        return 0;
-    });
 
-    const newItemsExist = allItems.some(item => {
+    const oldItems = orderItems.filter(item => {
         const originalQuantity = originalItemsMap.get(item.name) || 0;
-        return !originalItemsMap.has(item.name) || originalQuantity < item.quantity;
+        return originalQuantity >= item.quantity;
     });
 
-    const renderItemRow = (item: OrderItem) => {
+    const newItems = orderItems.filter(item => {
+        const originalQuantity = originalItemsMap.get(item.name) || 0;
+        return originalQuantity < item.quantity;
+    });
+    
+    const newItemsExist = newItems.length > 0;
+
+    const renderItemRow = (item: OrderItem, isNewOrUpdated: boolean) => {
         const originalQuantity = originalItemsMap.get(item.name) || 0;
         const isNew = !originalItemsMap.has(item.name);
         const isUpdated = originalQuantity > 0 && item.quantity > originalQuantity;
         const quantityChange = item.quantity - originalQuantity;
         
-        const itemClass = isNew ? "bg-blue-50 dark:bg-blue-900/20" : isUpdated ? "bg-yellow-50 dark:bg-yellow-900/20" : "";
-        const itemTag = isNew ? "(New)" : isUpdated ? `(+${quantityChange})` : "";
-        const tagClass = isNew ? "text-blue-500" : isUpdated ? "text-yellow-600" : "";
+        const itemClass = isNewOrUpdated
+            ? (isNew ? "bg-blue-50 dark:bg-blue-900/20" : "bg-yellow-50 dark:bg-yellow-900/20")
+            : "";
+        const itemTag = isNewOrUpdated
+            ? (isNew ? "(New)" : `(+${quantityChange})`)
+            : "";
+        const tagClass = isNew ? "text-blue-500" : "text-yellow-600";
 
         return (
             <div key={item.name} className={cn("flex items-center p-2 rounded-md", itemClass)}>
@@ -818,13 +821,16 @@ export default function PosSystem({
 
     return (
       <div className="space-y-3">
-        {allItems.map(item => renderItemRow(item))}
+        {oldItems.map(item => renderItemRow(item, false))}
+        
         {newItemsExist && originalOrderItems.length > 0 && (
-             <div className="relative py-2">
+             <div className="relative my-3">
                 <Separator />
                 <span className="absolute left-1/2 -translate-x-1/2 -top-2.5 bg-background px-2 text-xs text-muted-foreground">New/Updated Items</span>
             </div>
         )}
+
+        {newItems.map(item => renderItemRow(item, true))}
       </div>
     );
   };
