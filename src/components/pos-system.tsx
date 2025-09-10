@@ -4,7 +4,7 @@
 
 import * as React from 'react';
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { addDoc, collection } from 'firebase/firestore';
+import { addDoc, collection, doc, getDocs, setDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -473,15 +473,20 @@ export default function PosSystem({
     }, 50);
   };
 
-  const addBill = async (bill: Omit<Bill, 'id'| 'timestamp'>) => {
+  const addBill = async (bill: Omit<Bill, 'id'>) => {
     try {
-      const billWithTimestamp = {
+      const billsCollection = collection(db, "bills");
+      const billDocs = await getDocs(billsCollection);
+      const newBillId = (billDocs.size + 1).toString().padStart(3, '0');
+      
+      const billWithId = {
         ...bill,
+        id: newBillId,
         timestamp: new Date(),
       };
-      await addDoc(collection(db, "bills"), billWithTimestamp);
-      // Let real-time listener update state
-      toast({ title: 'Bill Saved', description: 'The bill has been saved to the database.' });
+      await setDoc(doc(db, "bills", newBillId), billWithId);
+
+      toast({ title: 'Bill Saved', description: `Bill #${newBillId} has been saved.` });
     } catch (error) {
       console.error("Error adding bill to Firestore: ", error);
       toast({ variant: 'destructive', title: 'Save Failed', description: 'Could not save the bill to the database.' });

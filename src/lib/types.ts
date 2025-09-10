@@ -1,4 +1,5 @@
 
+
 import { z } from 'zod';
 
 export interface MenuItem {
@@ -50,11 +51,6 @@ export interface Employee {
   role: string;
   salary: number;
   color: string;
-}
-
-export interface Attendance {
-  date: Date;
-  status: 'Present' | 'Absent' | 'Leave';
 }
 
 export interface Advance {
