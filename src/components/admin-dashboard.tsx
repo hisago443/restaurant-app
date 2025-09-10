@@ -95,7 +95,7 @@ export default function AdminDashboard({ billHistory, employees }: AdminDashboar
         <Card className="bg-green-100 dark:bg-green-900/30 border-green-200 dark:border-green-800 shadow-lg hover:shadow-xl transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-green-800 dark:text-green-200">Total Revenue</CardTitle>
-            <span className="text-green-600 font-bold">Rs.</span>
+            <span className="text-green-600 font-bold">₹</span>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-900 dark:text-green-100">0.00</div>
@@ -118,7 +118,7 @@ export default function AdminDashboard({ billHistory, employees }: AdminDashboar
             <TrendingUp className="h-4 w-4 text-amber-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-amber-900 dark:text-amber-100">Rs.0.00</div>
+            <div className="text-2xl font-bold text-amber-900 dark:text-amber-100">₹0.00</div>
             <p className="text-xs text-amber-700 dark:text-amber-300">No orders to calculate average.</p>
           </CardContent>
         </Card>
@@ -290,3 +290,5 @@ export default function AdminDashboard({ billHistory, employees }: AdminDashboar
     </div>
   );
 }
+
+    

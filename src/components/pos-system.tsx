@@ -94,12 +94,13 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
   }, [activeOrder, selectedTableId]);
   
   useEffect(() => {
-    // Apply default colors to categories on initial load
     const defaultCategoryColors: Record<string, string> = {};
     typedMenuData.forEach((category, index) => {
       defaultCategoryColors[category.category] = colorPalette[index % colorPalette.length];
     });
     setCategoryColors(defaultCategoryColors);
+    // Start with all categories collapsed
+    setActiveAccordionItems([]);
   }, [typedMenuData]);
 
   useEffect(() => {
@@ -394,15 +395,16 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
   
   const handlePaymentSuccess = () => {
     if (!currentActiveTableId) return;
-
+  
     const finalReceipt = receiptPreview; // Use the already generated receipt
+  
     if (!finalReceipt && orderItems.length > 0) {
         toast({ variant: "destructive", title: "Billing Error", description: "Could not generate the final bill. Please try again." });
         return;
     }
-
+  
     setIsPaymentDialogOpen(false);
-    toast({ title: "Payment Successful", description: `Payment of Rs.${total.toFixed(2)} confirmed.` });
+    toast({ title: "Payment Successful", description: `Payment of ₹${total.toFixed(2)} confirmed.` });
     
     const billPayload: Omit<Bill, 'id' | 'timestamp'> = {
       orderItems: orderItems,
@@ -411,15 +413,17 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
       receiptPreview: finalReceipt,
     };
     addBill(billPayload);
-
+  
     updateTableStatus([currentActiveTableId], 'Cleaning');
     
     if (activeOrder) {
       updateOrder({ ...activeOrder, status: 'Completed' });
     }
-
+  
+    // This is the key change: call clearOrder with `true` to keep discount but clear items.
     clearOrder(true, false);
-    // After a delay, clear the selected table so it doesn't persist
+    
+    // After a short delay, clear the selected table so it doesn't persist for the next new order.
     setTimeout(() => {
       setSelectedTableId(null);
     }, 100);
@@ -572,7 +576,7 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
         <div className="space-y-6">
           {filteredMenu.map((category) => (
              <div key={category.category} className={cn("rounded-lg p-2", categoryColors[category.category])}>
-              <div className={cn("sticky top-0 bg-background/80 backdrop-blur-sm py-2 z-10 flex items-center justify-center gap-2 p-2 rounded-md")}>
+               <div className={cn("sticky top-0 bg-background/80 backdrop-blur-sm py-2 z-10 flex items-center justify-center gap-2 p-2 rounded-md")}>
                 <h2 className="text-xl font-bold text-center text-black">
                   {category.category}
                 </h2>
@@ -806,7 +810,7 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
                               key={table.id}
                               variant="outline"
                               className={cn(
-                                "h-auto py-2 flex-col justify-center items-center relative p-0 border-2 border-black transition-transform duration-150 active:scale-95",
+                                "h-auto py-2 flex-col justify-center items-center relative p-0 border-2 border-black transition-transform duration-150 active:scale-95 shadow-md hover:shadow-lg",
                                 statusColors[table.status],
                                 currentActiveTableId === table.id && 'ring-4 ring-offset-2 ring-ring',
                                 table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black'
@@ -844,17 +848,17 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
               <div className="space-y-2 text-lg">
                 <div className="flex justify-between">
                   <span>Subtotal:</span>
-                  <span className="font-bold">Rs.{subtotal.toFixed(2)}</span>
+                  <span className="font-bold">₹{subtotal.toFixed(2)}</span>
                 </div>
                 {discount > 0 && (
                   <div className="flex justify-between text-accent-foreground">
                     <span>Discount ({discount}%):</span>
-                    <span className="font-bold">-Rs.{(subtotal - total).toFixed(2)}</span>
+                    <span className="font-bold">-₹{(subtotal - total).toFixed(2)}</span>
                   </div>
                 )}
                 <div className="flex justify-between font-bold text-2xl border-t pt-2">
                   <span>Total:</span>
-                  <span>Rs.{total.toFixed(2)}</span>
+                  <span>₹{total.toFixed(2)}</span>
                 </div>
               </div>
               <div className="flex flex-col gap-2 pt-2">
@@ -896,3 +900,5 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
     </div>
   );
 }
+
+    

@@ -91,7 +91,7 @@ export default function SalesReport({ bills }: SalesReportProps) {
           <div className="grid grid-cols-3 gap-4 mb-8 text-center">
             <div>
               <p className="text-sm text-muted-foreground">Total Revenue</p>
-              <p className="text-2xl font-bold">Rs.{totalRevenue.toFixed(2)}</p>
+              <p className="text-2xl font-bold">₹{totalRevenue.toFixed(2)}</p>
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Total Orders</p>
@@ -99,7 +99,7 @@ export default function SalesReport({ bills }: SalesReportProps) {
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Average Order Value</p>
-              <p className="text-2xl font-bold">Rs.{averageOrderValue.toFixed(2)}</p>
+              <p className="text-2xl font-bold">₹{averageOrderValue.toFixed(2)}</p>
             </div>
           </div>
           <div className="h-80 w-full">
@@ -109,7 +109,7 @@ export default function SalesReport({ bills }: SalesReportProps) {
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="name" />
                     <YAxis />
-                    <Tooltip formatter={(value: number) => `Rs.${value.toFixed(2)}`} />
+                    <Tooltip formatter={(value: number) => `₹${value.toFixed(2)}`} />
                     <Legend />
                     <Bar dataKey="revenue" fill="hsl(var(--primary))" />
                     </BarChart>
@@ -125,3 +125,5 @@ export default function SalesReport({ bills }: SalesReportProps) {
     </div>
   );
 }
+
+    

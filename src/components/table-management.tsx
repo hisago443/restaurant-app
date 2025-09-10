@@ -474,3 +474,5 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
     </div>
   );
 }
+
+    

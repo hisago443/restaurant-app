@@ -74,7 +74,7 @@ export default function BillHistory({ bills }: BillHistoryProps) {
                     {format(bill.timestamp, 'PPP p')}
                   </TableCell>
                   <TableCell className="text-right font-mono">
-                    Rs.{bill.total.toFixed(2)}
+                    ₹{bill.total.toFixed(2)}
                   </TableCell>
                   <TableCell className="text-center space-x-2">
                     <Button
@@ -126,3 +126,5 @@ export default function BillHistory({ bills }: BillHistoryProps) {
     </>
   );
 }
+
+    
