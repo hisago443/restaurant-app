@@ -472,7 +472,6 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
           "group rounded-lg cursor-pointer transition-all hover:scale-105 relative",
           finalColor,
           isColorApplied && "border-black shadow-lg hover:shadow-xl",
-          !currentActiveTableId && "opacity-50 cursor-not-allowed"
         )}
         onClick={() => handleItemClick(item)}
       >
@@ -700,9 +699,7 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
           </div>
         </CardHeader>
         <ScrollArea className="flex-grow px-4">
-          <div className={cn(!currentActiveTableId && "pointer-events-none")}>
             {renderMenuContent()}
-          </div>
         </ScrollArea>
       </Card>
 
@@ -716,7 +713,7 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
         </CardHeader>
         <CardContent className="p-2">
             <ScrollArea className="h-48">
-                 <div className="grid grid-cols-5 gap-4 p-4">
+                 <div className="grid grid-cols-5 gap-2 p-4">
                     {tables.map(table => (
                         <Button
                             key={table.id}
