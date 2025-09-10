@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -22,8 +21,8 @@ import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 
 const initialAdvances: Advance[] = [
-  { employeeId: 'E002', date: new Date(2024, 6, 5), amount: 2000 },
-  { employeeId: 'E003', date: new Date(2024, 6, 15), amount: 1500 },
+  { employeeId: 'UA002', date: new Date(2024, 6, 5), amount: 2000 },
+  { employeeId: 'UA003', date: new Date(2024, 6, 15), amount: 1500 },
 ];
 
 const colors = ['bg-blue-500', 'bg-green-500', 'bg-yellow-500', 'bg-purple-500', 'bg-pink-500', 'bg-indigo-500', 'bg-teal-500'];
@@ -58,7 +57,7 @@ function AddAdvanceDialog({ open, onOpenChange, employees, onAddAdvance, selecte
                 <SelectValue placeholder="Select an employee" />
               </SelectTrigger>
               <SelectContent>
-                {employees.map(e => <SelectItem key={e.id} value={e.id}>{e.name}</SelectItem>)}
+                {employees.map(e => <SelectItem key={e.id} value={e.id}>{e.name} ({e.id})</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
@@ -101,11 +100,19 @@ export default function StaffManagement({ employees }: StaffManagementProps) {
       setAdvances([...advances, { ...advance, date: selectedDate }]);
     }
   }
+  
+  const generateNewEmployeeId = () => {
+    const existingIds = employees.map(e => parseInt(e.id.replace('UA', ''), 10)).filter(id => !isNaN(id));
+    const maxId = existingIds.length > 0 ? Math.max(...existingIds) : 0;
+    return `UA${(maxId + 1).toString().padStart(3, '0')}`;
+  }
 
   const addEmployee = async (employee: Omit<Employee, 'id'>) => {
     try {
-      await addDoc(collection(db, "employees"), employee);
-      toast({ title: 'Employee Added', description: 'New employee saved to the database.' });
+      const newId = generateNewEmployeeId();
+      const employeeRef = doc(db, "employees", newId);
+      await setDoc(employeeRef, {...employee, id: newId});
+      toast({ title: 'Employee Added', description: `${employee.name} saved with ID ${newId}.` });
     } catch (error) {
       console.error("Error adding employee: ", error);
       toast({ variant: 'destructive', title: 'Save Failed', description: 'Could not save the employee.' });
@@ -201,7 +208,7 @@ export default function StaffManagement({ employees }: StaffManagementProps) {
 
                     return (
                       <TableRow key={employee.id}>
-                        <TableCell className="text-xs text-muted-foreground">{employee.id}</TableCell>
+                        <TableCell className="font-mono text-xs text-muted-foreground">{employee.id}</TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
                             <span className={cn('h-2 w-2 rounded-full', employee.color)} />
@@ -410,3 +417,5 @@ function EmployeeDialog({ open, onOpenChange, employee, onSave }: { open: boolea
         </Dialog>
     );
 }
+
+    
