@@ -113,7 +113,18 @@ const generateReceiptFlow = ai.defineFlow(
     outputSchema: GenerateReceiptOutputSchema,
   },
   async input => {
-    const {output} = await prompt(input);
-    return output!;
+    try {
+      const {output} = await prompt(input);
+      if (!output) {
+        throw new Error('AI failed to generate a response.');
+      }
+      return output;
+    } catch (error) {
+      console.error("Error in generateReceiptFlow:", error);
+      // Re-throw a more generic error to be caught by the client
+      // The client-side logic in PosSystem will handle this by showing a toast
+      // and falling back to the local receipt format.
+      throw new Error('Failed to generate AI receipt due to a server error.');
+    }
   }
 );
