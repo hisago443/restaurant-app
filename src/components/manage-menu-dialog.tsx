@@ -139,14 +139,25 @@ export function ManageMenuDialog({
             }
             return subCat;
           }).filter(subCat => subCat.items.length > 0); // Remove subcategory if it becomes empty
+          
+          // If after removing the item, the category has no more subcategories, it will be filtered out later.
           return { ...cat, subCategories: newSubCategories };
         }
         return cat;
-      }).filter(cat => cat.subCategories.length > 0); // Remove category if it becomes empty
-
-      return newMenu;
+      });
+      // Important: We need to decide if an empty category should be removed.
+      // If a category has no subcategories, it might be better to keep it,
+      // so the user can add items to it later.
+      // However, if we filter empty subcategories, it makes sense to filter empty categories too.
+      // Let's filter categories that become completely empty (no items in any subcategory).
+      return newMenu.filter(cat => cat.subCategories.some(sub => sub.items.length > 0));
     });
     toast({ title: `Item "${itemName}" removed.` });
+  };
+
+  const handleRemoveCategory = (categoryName: string) => {
+    setMenu(prevMenu => prevMenu.filter(cat => cat.category !== categoryName));
+    toast({ title: `Category "${categoryName}" removed.` });
   };
 
   const filteredMenuForEditing = useMemo(() => {
@@ -273,7 +284,7 @@ export function ManageMenuDialog({
               <AccordionTrigger className="text-lg font-semibold">Edit Menu</AccordionTrigger>
               <AccordionContent className="p-4 bg-muted/50 rounded-b-md space-y-4">
                   <Input
-                    placeholder="Search for an item to edit..."
+                    placeholder="Search for an item or category to edit..."
                     value={editMenuSearch}
                     onChange={(e) => setEditMenuSearch(e.target.value)}
                     className="mb-4"
@@ -281,7 +292,28 @@ export function ManageMenuDialog({
                   <div className="space-y-3 max-h-80 overflow-y-auto">
                       {filteredMenuForEditing.map(cat => (
                           <div key={cat.category} className="p-3 border rounded-md bg-background/50">
-                              <h3 className="font-bold text-lg">{cat.category}</h3>
+                              <div className="flex justify-between items-center">
+                                <h3 className="font-bold text-lg">{cat.category}</h3>
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive">
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        This will permanently delete the entire category "{cat.category}" and all items within it. This action cannot be undone.
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                      <AlertDialogAction onClick={() => handleRemoveCategory(cat.category)}>Delete Category</AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
+                              </div>
                               <div className="space-y-2 mt-2">
                                 {cat.subCategories.map(subCat => (
                                     <div key={subCat.name} className="pl-4">
