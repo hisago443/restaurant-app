@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import * as React from 'react';
@@ -142,8 +141,9 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
         setActiveOrder(existingOrder);
         setSelectedTableId(tableId);
         toast({ title: `Editing Order for Table ${tableId}`, description: 'Add or modify items.' });
-    } else if (table.status === 'Available') {
+    } else if (table.status === 'Available' || table.status === 'Occupied') {
         // This is a new order for an available table.
+        // Or user is starting a new order on an occupied table that was cleared without billing.
         // Don't clear if there are items, user might be building an order without a table yet.
         if (orderItems.length > 0) {
           setSelectedTableId(tableId);
@@ -250,6 +250,14 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
   };
 
   const handleItemClick = (item: MenuItem) => {
+    if (!currentActiveTableId) {
+      toast({
+        variant: 'destructive',
+        title: 'No Table Selected',
+        description: 'Please select a table before adding items to the order.',
+      });
+      return;
+    }
     if (isClickToAdd) {
       addToOrder(item, 1);
     } else {
@@ -259,6 +267,14 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
   };
 
   const handleAddButtonClick = (item: MenuItem) => {
+    if (!currentActiveTableId) {
+      toast({
+        variant: 'destructive',
+        title: 'No Table Selected',
+        description: 'Please select a table before adding items to the order.',
+      });
+      return;
+    }
     setSelectedItem(item);
     setIsAddItemDialogOpen(true);
   };
@@ -289,7 +305,9 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
       }, 2000);
     } else {
       setSelectedTableId(null);
-      toast({ title: "New Bill", description: "Current order cleared." });
+      if (forceClear) {
+        toast({ title: "New Bill", description: "Current order cleared." });
+      }
     }
   };
 
@@ -456,7 +474,7 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
           isColorApplied && "border-black shadow-lg hover:shadow-xl",
           !currentActiveTableId && "opacity-50 cursor-not-allowed"
         )}
-        onClick={() => currentActiveTableId && handleItemClick(item)}
+        onClick={() => handleItemClick(item)}
       >
         <Popover>
           <PopoverTrigger asChild>
@@ -465,7 +483,6 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
               size="icon"
               className="absolute bottom-1 left-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
               onClick={(e) => e.stopPropagation()}
-               disabled={!currentActiveTableId}
             >
               <Palette className="h-4 w-4" />
             </Button>
@@ -493,7 +510,7 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
           </div>
           {!isClickToAdd && (
             <div className="flex justify-end mt-2">
-              <Button size="sm" variant="secondary" onClick={(e) => { e.stopPropagation(); handleAddButtonClick(item); }}  disabled={!currentActiveTableId}>Add to Order</Button>
+              <Button size="sm" variant="secondary" onClick={(e) => { e.stopPropagation(); handleAddButtonClick(item); }}>Add to Order</Button>
             </div>
           )}
         </CardContent>
@@ -564,7 +581,7 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
               {filteredMenu.map(category => (
                 <TabsTrigger key={category.category} value={category.category} asChild>
                     <div className="relative p-2 rounded-sm cursor-pointer flex items-center gap-2">
-                        <span className={cn(categoryColors[category.category] && 'text-black')}>{category.category}</span>
+                        <span className={cn('text-black')}>{category.category}</span>
                         <CategoryColorPicker categoryName={category.category} />
                         <div className={cn("absolute inset-0 -z-10 rounded-sm", categoryColors[category.category])}/>
                     </div>
@@ -635,14 +652,6 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
     <div className="flex flex-col md:flex-row h-[calc(100vh-5rem)] gap-4 p-4">
       {/* Left Panel: Menu */}
       <Card className="flex-[3] flex flex-col relative">
-        {!currentActiveTableId && (
-          <div className="absolute inset-0 bg-background/80 backdrop-blur-sm z-20 flex items-center justify-center">
-            <div className="text-center">
-              <p className="text-2xl font-bold text-foreground">Select a Table</p>
-              <p className="text-muted-foreground">Please select a table to start an order.</p>
-            </div>
-          </div>
-        )}
         <CardHeader>
           <div className="flex items-center justify-between gap-4 flex-wrap">
              <div className="flex-grow">
@@ -691,7 +700,9 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
           </div>
         </CardHeader>
         <ScrollArea className="flex-grow px-4">
-          {renderMenuContent()}
+          <div className={cn(!currentActiveTableId && "pointer-events-none")}>
+            {renderMenuContent()}
+          </div>
         </ScrollArea>
       </Card>
 
@@ -705,7 +716,7 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
         </CardHeader>
         <CardContent className="p-2">
             <ScrollArea className="h-48">
-                 <div className="grid grid-cols-5 gap-2 p-2">
+                 <div className="grid grid-cols-5 gap-4 p-4">
                     {tables.map(table => (
                         <Button
                             key={table.id}
@@ -798,9 +809,14 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
               </div>
             </div>
             <div className="flex flex-col gap-2 pt-2">
-                <Button size="lg" variant="secondary" className="w-full" onClick={handleSendToKitchen} disabled={orderItems.length === 0 || !currentActiveTableId}>
-                    {activeOrder ? <Edit className="mr-2 h-4 w-4" /> : <Send className="mr-2 h-4 w-4" />}
-                    {activeOrder ? 'Update KOT' : 'Send KOT to Kitchen'}
+                <Button 
+                    size="lg"
+                    className={cn(activeOrder && "bg-blue-600 hover:bg-blue-700")}
+                    onClick={handleSendToKitchen}
+                    disabled={orderItems.length === 0 || !currentActiveTableId}
+                >
+                    {activeOrder ? <Printer className="mr-2 h-4 w-4" /> : <Send className="mr-2 h-4 w-4" />}
+                    {activeOrder ? 'Print Kitchen Receipt' : 'Send KOT to Kitchen'}
                 </Button>
                 <div className="grid grid-cols-2 gap-2">
                     <Button size="lg" variant="outline" onClick={handlePrintProvisionalBill} disabled={orderItems.length === 0 || !currentActiveTableId}>
@@ -810,7 +826,23 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
                         Process Payment
                     </Button>
                 </div>
-                <Button size="lg" variant="destructive" className="w-full" onClick={() => clearOrder(false, true)}><FilePlus />New Bill</Button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                     <Button size="lg" variant="destructive" className="w-full" disabled={orderItems.length === 0 && !activeOrder}><FilePlus />New Bill</Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This will clear the current order. This action cannot be undone.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => clearOrder(false, true)}>Clear Bill</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
             </div>
           </div>
       </Card>
@@ -831,3 +863,4 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
   );
 }
 
+    
