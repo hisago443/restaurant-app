@@ -372,6 +372,7 @@ export default function PosSystem({ tables, orders, setOrders, setBillHistory, u
     }
   };
 
+  const [newlyCreatedOrder, setNewlyCreatedOrder] = useState<Order | null>(null);
 
   const addOrder = (order: Omit<Order, 'id' | 'status'> & { onOrderCreated?: (order: Order) => void }) => {
     const newOrder: Order = {
@@ -379,20 +380,21 @@ export default function PosSystem({ tables, orders, setOrders, setBillHistory, u
       id: `K${(orders.length + 1).toString().padStart(3, '0')}`,
       status: 'In Preparation', // Start in prep immediately
     };
-    setOrders(prevOrders => {
-      const updatedOrders = [...prevOrders, newOrder];
-      // Set the newly created order as the active one
-      setActiveOrder(newOrder);
-      // Call the callback to trigger printing
-      if (order.onOrderCreated) {
-        order.onOrderCreated(newOrder);
-      }
-      return updatedOrders;
-    });
-    // Update the table status to Occupied
-    updateTableStatus([order.tableId], 'Occupied');
+    setOrders(prevOrders => [...prevOrders, newOrder]);
+    if (order.onOrderCreated) {
+      order.onOrderCreated(newOrder);
+    }
+    // Set the newly created order to be processed by the useEffect
+    setNewlyCreatedOrder(newOrder);
   };
   
+  useEffect(() => {
+    if (newlyCreatedOrder) {
+      setActiveOrder(newlyCreatedOrder);
+      setNewlyCreatedOrder(null); // Reset after processing
+    }
+  }, [newlyCreatedOrder, setActiveOrder]);
+
   const updateOrder = (updatedOrder: Order) => {
     setOrders(prevOrders => {
       const updatedOrders = prevOrders.map(o => (o.id === updatedOrder.id ? updatedOrder : o));
@@ -601,10 +603,10 @@ export default function PosSystem({ tables, orders, setOrders, setBillHistory, u
                 <div
                   key={i}
                   className={cn("h-6 w-6 rounded-full cursor-pointer", colorClass)}
-                  onClick={() => setItemColor(item.name, colorClass)}
+                  onClick={(e) => { e.stopPropagation(); setItemColor(item.name, colorClass); }}
                 />
               ))}
-              <Button variant="ghost" size="sm" className="col-span-5 h-8" onClick={() => setItemColor(item.name, '')}>Reset</Button>
+              <Button variant="ghost" size="sm" className="col-span-5 h-8" onClick={(e) => { e.stopPropagation(); setItemColor(item.name, ''); }}>Reset</Button>
             </div>
           </PopoverContent>
         </Popover>
@@ -725,15 +727,13 @@ export default function PosSystem({ tables, orders, setOrders, setBillHistory, u
       <Accordion type="multiple" value={activeAccordionItems} onValueChange={setActiveAccordionItems} className="w-full">
         {filteredMenu.map((category) => (
           <AccordionItem key={category.category} value={category.category} className={cn("border-b-0 rounded-lg mb-2 overflow-hidden", categoryColors[category.category])}>
-            <div className="flex items-center p-4 hover:bg-muted/50 rounded-t-lg relative">
-                 <div className="text-xl font-bold text-black text-center flex-grow">{category.category}</div>
-                 <div className='flex items-center gap-2'>
+             <AccordionTrigger className='p-4 hover:bg-muted/50 rounded-t-lg hover:no-underline'>
+                <div className="text-xl font-bold text-black text-center flex-grow">{category.category}</div>
+                <div className='flex items-center gap-2'>
                     <CategoryColorPicker categoryName={category.category} />
-                    <AccordionTrigger>
-                      <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200" />
-                    </AccordionTrigger>
-                 </div>
-            </div>
+                    <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200" />
+                </div>
+            </AccordionTrigger>
             <AccordionContent className="p-2 pt-0">
               <div className="space-y-4 pt-2">
                 {category.subCategories.map((subCategory) => (
@@ -911,7 +911,7 @@ export default function PosSystem({ tables, orders, setOrders, setBillHistory, u
           )}
         </ScrollArea>
         
-        <div className="mt-auto p-4 border-t space-y-4">
+        <div className="mt-auto p-4 border-t space-y-4 bg-background">
           <CardContent className="p-0">
               <div className="grid grid-cols-5 gap-1.5">
                   {tables.map(table => (
@@ -1031,4 +1031,5 @@ export default function PosSystem({ tables, orders, setOrders, setBillHistory, u
     
 
     
+
 
