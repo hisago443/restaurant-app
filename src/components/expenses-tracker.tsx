@@ -45,11 +45,12 @@ import {
 } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { PlusCircle, Edit, Trash2, CalendarIcon, Building, RotateCw, List } from 'lucide-react';
+import { PlusCircle, Edit, Trash2, CalendarIcon, Building, RotateCw, List, ChevronsUpDown } from 'lucide-react';
 import { Calendar } from "@/components/ui/calendar";
 import { format } from 'date-fns';
 import type { Expense, Vendor } from '@/lib/types';
 import { Separator } from '@/components/ui/separator';
+import { cn } from '@/lib/utils';
 
 interface ExpensesTrackerProps {
   expenses: Expense[];
@@ -252,6 +253,7 @@ export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
   const [vendorId, setVendorId] = useState<string | undefined>(undefined);
+  const [isCategoryPopoverOpen, setIsCategoryPopoverOpen] = useState(false);
   
   useEffect(() => {
     const unsubVendors = onSnapshot(collection(db, "vendors"), (snapshot) => {
@@ -400,25 +402,52 @@ export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="category">Category</Label>
-                    <Select onValueChange={setCategory} value={category}>
-                    <SelectTrigger id="category">
-                        <SelectValue placeholder="Select a category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        {expenseCategories.map(cat => <SelectItem key={cat} value={cat}>{cat}</SelectItem>)}
-                    </SelectContent>
-                    </Select>
+                    <Popover open={isCategoryPopoverOpen} onOpenChange={setIsCategoryPopoverOpen}>
+                        <PopoverTrigger asChild>
+                            <Button
+                            variant="outline"
+                            role="combobox"
+                            aria-expanded={isCategoryPopoverOpen}
+                            className="w-full justify-between"
+                            >
+                            {category
+                                ? expenseCategories.find((cat) => cat === category)
+                                : "Select a category"}
+                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                            <div className="grid grid-cols-2 gap-2 p-2">
+                                {expenseCategories.map((cat) => (
+                                <Button
+                                    key={cat}
+                                    variant="ghost"
+                                    className={cn(
+                                    "justify-start",
+                                    category === cat && "bg-accent text-accent-foreground"
+                                    )}
+                                    onClick={() => {
+                                    setCategory(cat);
+                                    setIsCategoryPopoverOpen(false);
+                                    }}
+                                >
+                                    {cat}
+                                </Button>
+                                ))}
+                            </div>
+                        </PopoverContent>
+                    </Popover>
                 </div>
                  <div className="space-y-2">
                     <Label htmlFor="vendor">Vendor</Label>
-                    <Select onValueChange={setVendorId} value={vendorId}>
-                    <SelectTrigger id="vendor">
-                        <SelectValue placeholder="None" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="none">None</SelectItem>
-                        {vendors.map(v => <SelectItem key={v.id} value={v.id}>{v.name}</SelectItem>)}
-                    </SelectContent>
+                    <Select onValueChange={(value) => setVendorId(value === 'none' ? undefined : value)} value={vendorId}>
+                      <SelectTrigger id="vendor">
+                          <SelectValue placeholder="None" />
+                      </SelectTrigger>
+                      <SelectContent>
+                          <SelectItem value="none">None</SelectItem>
+                          {vendors.map(v => <SelectItem key={v.id} value={v.id}>{v.name}</SelectItem>)}
+                      </SelectContent>
                     </Select>
                 </div>
                 <div className="space-y-2">
