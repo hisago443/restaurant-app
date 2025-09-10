@@ -806,7 +806,7 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
                               key={table.id}
                               variant="outline"
                               className={cn(
-                                "h-auto py-2 flex-col justify-center items-center relative p-0 border-2 transition-transform duration-150 active:scale-95",
+                                "h-auto py-2 flex-col justify-center items-center relative p-0 border-2 border-black shadow-lg transition-transform duration-150 active:scale-95",
                                 statusColors[table.status],
                                 currentActiveTableId === table.id && 'ring-4 ring-offset-2 ring-ring',
                                 table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black'
