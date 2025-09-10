@@ -504,7 +504,7 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
           {filteredMenu.map((category) => (
              <div key={category.category} className={cn("rounded-lg p-2", categoryColors[category.category])}>
               <div className={cn("sticky top-0 bg-background/80 backdrop-blur-sm py-2 z-10 flex items-center justify-center gap-2 p-2 rounded-md")}>
-                <h2 className="text-xl font-bold text-center">
+                <h2 className="text-xl font-bold text-center text-black">
                   {category.category}
                 </h2>
                 <CategoryColorPicker categoryName={category.category} />
