@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -279,7 +279,17 @@ export default function StaffManagement({ employees, addEmployee, updateEmployee
       <EmployeeDialog
         key={editingEmployee?.id ?? 'add'}
         open={isAddEmployeeDialogOpen || isEditEmployeeDialogOpen}
-        onOpenChange={editingEmployee ? setIsEditEmployeeDialogOpen : setIsAddEmployeeDialogOpen}
+        onOpenChange={(open) => {
+          if (!open) {
+            setEditingEmployee(null);
+            setIsAddEmployeeDialogOpen(false);
+            setIsEditEmployeeDialogOpen(false);
+          } else if (editingEmployee) {
+            setIsEditEmployeeDialogOpen(true);
+          } else {
+            setIsAddEmployeeDialogOpen(true);
+          }
+        }}
         employee={editingEmployee}
         onSave={(employeeData) => {
             if (editingEmployee) {
@@ -299,6 +309,14 @@ function EmployeeDialog({ open, onOpenChange, employee, onSave }: { open: boolea
     const [role, setRole] = useState(employee?.role || '');
     const [salary, setSalary] = useState(employee?.salary.toString() || '');
     
+    useEffect(() => {
+        if (open) {
+            setName(employee?.name || '');
+            setRole(employee?.role || '');
+            setSalary(employee?.salary.toString() || '');
+        }
+    }, [open, employee]);
+    
     const handleSave = () => {
         const data: Omit<Employee, 'color' | 'id'> & {id?: string} = { name, role, salary: parseFloat(salary) };
         if (employee) {
@@ -307,15 +325,6 @@ function EmployeeDialog({ open, onOpenChange, employee, onSave }: { open: boolea
         onSave(data);
         onOpenChange(false);
     }
-    
-    // Reset form when dialog opens for a new employee
-    useState(() => {
-        if (!employee) {
-            setName('');
-            setRole('');
-            setSalary('');
-        }
-    });
 
     return (
          <Dialog open={open} onOpenChange={onOpenChange}>
@@ -363,5 +372,3 @@ function EmployeeDialog({ open, onOpenChange, employee, onSave }: { open: boolea
         </Dialog>
     );
 }
-
-    

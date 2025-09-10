@@ -38,7 +38,7 @@ export default function MainLayout() {
   
     // Listen for real-time updates to employees
     const unsubEmployees = onSnapshot(collection(db, "employees"), (snapshot) => {
-      const employeesData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Employee));
+      const employeesData = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as Employee));
       setEmployees(employeesData);
     }, (error) => {
         console.error("Firestore Error (employees): ", error);
@@ -304,5 +304,3 @@ export default function MainLayout() {
     </div>
   );
 }
-
-    
