@@ -136,7 +136,7 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
       toast({ title: `Table ${tableId} is now Available.` });
       // If the active order was for this table, clear it from POS view
       if (activeOrder?.tableId === tableId) {
-        clearOrder(false, true);
+        clearOrder(false);
       }
       return;
     }
@@ -156,7 +156,7 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
         toast({ title: `Order assigned to Table ${tableId}.`, description: 'You can now send the order to the kitchen.' });
       } else {
         // Start a fresh order for this table.
-        clearOrder(false, true); // Clear any stray items.
+        clearOrder(false); // Clear any stray items.
         setSelectedTableId(tableId);
         toast({ title: `New Order for Table ${tableId}`, description: 'Add items to start the order.' });
       }
@@ -264,19 +264,14 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
     setOrderItems(orderItems.filter(item => item.name !== name));
   };
   
-  const clearOrder = (delayTableClear = false, forceClear = false) => {
-    if (!forceClear && orderItems.length === 0 && !activeOrder && !selectedTableId) return;
-  
+  const clearOrder = (delayTableClear = false) => {
     setOrderItems([]);
     setDiscount(0);
     setActiveOrder(null);
-    setSelectedTableId(null);
     setOriginalOrderItems([]);
-    
-    if (forceClear) {
-      toast({ title: "New Bill", description: "Current order cleared." });
-    } else if (delayTableClear) {
-      // This case is for after payment, we don't want a confusing toast.
+    // Only clear table selection if not delayed (e.g., after payment)
+    if (!delayTableClear) {
+      setSelectedTableId(null);
     }
   };
 
@@ -417,6 +412,10 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
     }
 
     clearOrder(true);
+    // After a delay, clear the selected table so it doesn't persist
+    setTimeout(() => {
+      setSelectedTableId(null);
+    }, 100);
   };
 
   const handlePrintProvisionalBill = async () => {
@@ -869,23 +868,6 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
                           Process Payment
                       </Button>
                   </div>
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                       <Button size="lg" variant="destructive" className="w-full" disabled={orderItems.length === 0 && !activeOrder && !selectedTableId}><FilePlus />New Bill</Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          This will clear the current order. This action cannot be undone.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => clearOrder(false, true)}>Clear Bill</AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
               </div>
             </div>
         </div>

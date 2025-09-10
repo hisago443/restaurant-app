@@ -251,25 +251,25 @@ export default function MainLayout() {
           if (tab !== 'pos') setActiveOrder(null);
           setActiveTab(tab)
         }} className="h-full flex flex-col">
-          <TabsList className="m-4 self-start">
-            <TabsTrigger value="pos">
-              <Coffee className="mr-2 h-4 w-4" />
+          <TabsList className="m-2 self-center rounded-lg bg-primary/10 p-2">
+            <TabsTrigger value="pos" className="px-6 py-2 text-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md">
+              <Coffee className="mr-2 h-5 w-5" />
               POS
             </TabsTrigger>
-            <TabsTrigger value="tables">
-              <LayoutGrid className="mr-2 h-4 w-4" />
+            <TabsTrigger value="tables" className="px-6 py-2 text-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md">
+              <LayoutGrid className="mr-2 h-5 w-5" />
               Tables
             </TabsTrigger>
-            <TabsTrigger value="kitchen">
-              <Book className="mr-2 h-4 w-4" />
+            <TabsTrigger value="kitchen" className="px-6 py-2 text-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md">
+              <Book className="mr-2 h-5 w-5" />
               Kitchen
             </TabsTrigger>
-             <TabsTrigger value="staff">
-              <Users className="mr-2 h-4 w-4" />
+             <TabsTrigger value="staff" className="px-6 py-2 text-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md">
+              <Users className="mr-2 h-5 w-5" />
               Staff
             </TabsTrigger>
-            <TabsTrigger value="admin">
-              <BarChart className="mr-2 h-4 w-4" />
+            <TabsTrigger value="admin" className="px-6 py-2 text-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md">
+              <BarChart className="mr-2 h-5 w-5" />
               Admin
             </TabsTrigger>
           </TabsList>
