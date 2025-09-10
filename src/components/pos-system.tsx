@@ -418,7 +418,7 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
       updateOrder({ ...activeOrder, status: 'Completed' });
     }
 
-    clearOrder(true, false);
+    clearOrder(true, true);
     // After a delay, clear the selected table so it doesn't persist
     setTimeout(() => {
       setSelectedTableId(null);

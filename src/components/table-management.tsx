@@ -15,6 +15,7 @@ import { Label } from '@/components/ui/label';
 import { PlusCircle, Trash2, LayoutTemplate, Sparkles, Users, CheckCircle2, Bookmark, Printer, Repeat, Edit, SparklesIcon, UserCheck, BookmarkX } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
+import { format } from 'date-fns';
 
 const statusColors: Record<TableStatus, string> = {
   Available: 'bg-green-400 hover:bg-green-500',
@@ -52,6 +53,13 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
   const [showOccupancy, setShowOccupancy] = useState(true);
 
   const filteredTables = tables.filter(table => filter === 'All' || table.status === filter);
+  
+  const tableBillHistory = React.useMemo(() => {
+    if (!selectedTable) return [];
+    return billHistory
+        .filter(bill => bill.tableId === selectedTable.id)
+        .sort((a,b) => b.timestamp.getTime() - a.timestamp.getTime());
+  }, [billHistory, selectedTable]);
 
   const localUpdateTableStatus = (tableId: number, status: TableStatus) => {
     updateTableStatus([tableId], status);
@@ -332,14 +340,31 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
               <DialogHeader>
                 <DialogTitle>Table {selectedTable.id} - {selectedTable.status}</DialogTitle>
                  <DialogDescription>
-                  Daily Turnover: {occupancyCount[selectedTable.id] || 0}
+                  Daily Turnover: {occupancyCount[selectedTable.id] || 0} times
                 </DialogDescription>
               </DialogHeader>
-              <div className="py-4">
-                <p className="font-semibold mb-2">Select an action for this table:</p>
-                <div className="flex flex-wrap gap-2">
-                    {renderActions(selectedTable)}
+              <div className="py-4 space-y-4">
+                <div>
+                  <p className="font-semibold mb-2">Actions:</p>
+                  <div className="flex flex-wrap gap-2">
+                      {renderActions(selectedTable)}
+                  </div>
                 </div>
+                 <div>
+                    <h4 className="font-semibold mb-2">Billing History:</h4>
+                    {tableBillHistory.length > 0 ? (
+                        <div className="space-y-2 max-h-48 overflow-y-auto border rounded-md p-2">
+                            {tableBillHistory.map(bill => (
+                                <div key={bill.id} className="flex justify-between items-center text-sm p-2 bg-muted/50 rounded-md">
+                                    <span>{format(bill.timestamp, 'Pp')}</span>
+                                    <span className="font-mono font-semibold">₹{bill.total.toFixed(2)}</span>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <p className="text-sm text-muted-foreground">No bills recorded for this table yet.</p>
+                    )}
+                 </div>
               </div>
               <DialogFooter>
                 <DialogClose asChild>
