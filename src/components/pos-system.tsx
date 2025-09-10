@@ -26,6 +26,8 @@ import menuData from '@/data/menu.json';
 import { generateReceipt, type GenerateReceiptInput } from '@/ai/flows/dynamic-receipt-discount-reasoning';
 import { PaymentDialog } from './payment-dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from '@/components/ui/sheet';
+
 
 const vegColor = 'bg-green-100 dark:bg-green-900/30';
 const nonVegColor = 'bg-rose-100 dark:bg-rose-900/30';
@@ -81,6 +83,7 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
   const [isAddItemDialogOpen, setIsAddItemDialogOpen] = useState(false);
   const [selectedTableId, setSelectedTableId] = useState<number | null>(null);
+  const [isOrderSheetOpen, setIsOrderSheetOpen] = useState(false);
 
   const typedMenuData: MenuCategory[] = menuData;
 
@@ -88,6 +91,14 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
     if (activeOrder) return activeOrder.tableId;
     return selectedTableId;
   }, [activeOrder, selectedTableId]);
+  
+  useEffect(() => {
+    if(orderItems.length > 0 || activeOrder) {
+      setIsOrderSheetOpen(true);
+    } else {
+      setIsOrderSheetOpen(false);
+    }
+  }, [orderItems, activeOrder]);
 
   useEffect(() => {
     try {
@@ -114,8 +125,8 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
       setSelectedTableId(activeOrder.tableId);
       setOrderItems(activeOrder.items);
     } else {
-      // If we are switching away from an active order to a new blank one,
-      // we should clear the selected table, but keep items if they exist
+      // When there is no active order, we should not clear items
+      // as the user might be building a new order.
       if (orderItems.length === 0) {
         setSelectedTableId(null);
       }
@@ -127,13 +138,9 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
     const table = tables.find(t => t.id === tableId);
     if (!table) return;
   
-    // If the clicked table is already selected, do nothing.
-    if (tableId === currentActiveTableId) return;
-  
     if (table.status === 'Cleaning') {
       updateTableStatus([tableId], 'Available');
       toast({ title: `Table ${tableId} is now Available.` });
-      // If the order being cleared was for this table, clear it
       if (activeOrder?.tableId === tableId) {
         clearOrder(false, true);
       }
@@ -143,18 +150,14 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
     const existingOrder = orders.find(o => o.tableId === tableId && o.status !== 'Completed');
   
     if (existingOrder) {
-      // Table is occupied and has an active order, load it for editing.
       setActiveOrder(existingOrder);
       toast({ title: `Editing Order for Table ${tableId}`, description: 'Add or modify items.' });
     } else {
-      // This is either an available table or an occupied one without a tracked order.
-      // If there's an ongoing order being built (items in cart without table), assign it.
       if (orderItems.length > 0 && !activeOrder) {
         setSelectedTableId(tableId);
         toast({ title: `Order assigned to Table ${tableId}.`, description: 'You can now send the order to the kitchen.' });
       } else {
-        // Otherwise, start a fresh order for this table.
-        clearOrder(false, true); // Clear everything for a truly new order
+        clearOrder(false, true); 
         setSelectedTableId(tableId);
         toast({ title: `New Order for Table ${tableId}`, description: 'Add items to start the order.' });
       }
@@ -271,7 +274,6 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
   };
   
   const clearOrder = (delayTableClear = false, forceClear = false) => {
-    // If there's nothing to clear, just exit.
     if (!forceClear && orderItems.length === 0 && !activeOrder && !selectedTableId) return;
   
     setOrderItems([]);
@@ -282,7 +284,6 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
     if (forceClear) {
       toast({ title: "New Bill", description: "Current order cleared." });
     } else if (delayTableClear) {
-      // This path is taken after payment, so we can give a different message.
       toast({ title: "New Bill Ready", description: "Select a table to start a new order." });
     }
   };
@@ -335,22 +336,15 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
     }
 
     if (activeOrder) {
-      // This is an update to an existing order
-      const updatedOrder = {
-        ...activeOrder,
-        items: orderItems,
-      };
+      const updatedOrder = { ...activeOrder, items: orderItems };
       updateOrder(updatedOrder);
-      printKot(updatedOrder); // Also print updates
+      printKot(updatedOrder);
       toast({ title: 'Order Updated!', description: `KOT updated for Table ${currentActiveTableId}.` });
-
     } else {
-      // This is a new order. The order object will be created in main-layout
-      // so we pass a callback to printKot after the order is created with an ID.
       const orderPayload = {
         items: orderItems,
         tableId: Number(currentActiveTableId),
-        onOrderCreated: printKot, // Pass the print function as a callback
+        onOrderCreated: printKot,
       };
       addOrder(orderPayload);
       updateTableStatus([currentActiveTableId], 'Occupied');
@@ -384,10 +378,8 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
     };
     addBill(billPayload);
 
-    // Update table status to 'Cleaning'
     updateTableStatus([currentActiveTableId], 'Cleaning');
     
-    // Mark the order as completed
     if (activeOrder) {
       updateOrder({ ...activeOrder, status: 'Completed' });
     }
@@ -630,9 +622,8 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
   };
 
   return (
-    <div className="flex flex-col md:flex-row h-[calc(100vh-5rem)] gap-4 p-4">
-      {/* Left Panel: Menu */}
-      <Card className="flex-[3] flex flex-col relative">
+    <div className="flex h-[calc(100vh-5rem)]">
+      <Card className="flex-1 flex flex-col relative m-4">
         <CardHeader>
           <div className="flex items-center justify-between gap-4 flex-wrap">
              <div className="flex-grow">
@@ -685,147 +676,149 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
         </ScrollArea>
       </Card>
 
-      {/* Right Panel: Order Summary */}
-      <Card className="flex-[1] flex flex-col h-full">
-        <CardHeader>
-          <CardTitle>{activeOrder ? `Editing Order #${activeOrder.id}` : 'Current Order'}</CardTitle>
-          <CardDescription>
-            {currentActiveTableId ? `Table ${currentActiveTableId}` : "No Table Selected"}
-          </CardDescription>
-        </CardHeader>
-        
-        <ScrollArea className="flex-grow p-4 pt-0">
-          {orderItems.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
-              <ClipboardList className="w-16 h-16 text-gray-300" />
-              <p className="mt-4 text-sm font-medium">
-                Add items to the order
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {orderItems.map(item => (
-                <div key={item.name} className="flex items-center">
-                  <div className="flex-grow">
-                    <p className="font-medium">{item.name}</p>
-                    <p className="text-sm text-muted-foreground">₹{item.price.toFixed(2)}</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => updateQuantity(item.name, item.quantity - 1)}><Minus className="h-4 w-4" /></Button>
-                    <span className="w-8 text-center font-bold">{item.quantity}</span>
-                    <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => updateQuantity(item.name, item.quantity + 1)}><Plus className="h-4 w-4" /></Button>
-                    <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => removeFromOrder(item.name)}><X className="h-4 w-4" /></Button>
-                  </div>
+      <Sheet open={isOrderSheetOpen} onOpenChange={setIsOrderSheetOpen}>
+        <SheetContent className="w-[400px] sm:w-[540px] flex flex-col">
+            <SheetHeader>
+              <SheetTitle>{activeOrder ? `Editing Order #${activeOrder.id}` : 'Current Order'}</SheetTitle>
+              <SheetDescription>
+                {currentActiveTableId ? `Table ${currentActiveTableId}` : "No Table Selected"}
+              </SheetDescription>
+            </SheetHeader>
+            
+            <ScrollArea className="flex-grow pr-4 -mr-6">
+              {orderItems.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
+                  <ClipboardList className="w-16 h-16 text-gray-300" />
+                  <p className="mt-4 text-sm font-medium">
+                    Add items to the order
+                  </p>
                 </div>
-              ))}
-            </div>
-          )}
-        </ScrollArea>
-
-        <CardContent className="p-4 pt-0">
-            <div className="flex flex-wrap gap-2 justify-center">
-              {tables.map(table => (
-                  <Button
-                      key={table.id}
-                      variant="outline"
-                      className={cn(
-                          "flex flex-col h-14 w-14 justify-center items-center gap-1 relative",
-                          statusColors[table.status],
-                          currentActiveTableId === table.id && 'ring-2 ring-offset-2 ring-ring',
-                          table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black'
-                      )}
-                      onClick={() => handleSelectTable(table.id)}
-                  >
-                      {(occupancyCount[table.id] > 0) &&
-                      <div className="absolute bottom-1 right-1 flex items-center gap-1 bg-black/50 text-white text-xs font-bold p-1 rounded-full text-[0.6rem] h-4 min-w-4 justify-center">
-                          <Repeat className="h-2 w-2" />
-                          <span>{occupancyCount[table.id]}</span>
+              ) : (
+                <div className="space-y-3">
+                  {orderItems.map(item => (
+                    <div key={item.name} className="flex items-center">
+                      <div className="flex-grow">
+                        <p className="font-medium">{item.name}</p>
+                        <p className="text-sm text-muted-foreground">₹{item.price.toFixed(2)}</p>
                       </div>
-                      }
-                      {React.createElement(statusIcons[table.status], { className: "absolute top-1.5 left-1.5 h-3 w-3" })}
-                      <span className="text-xl font-bold">{table.id}</span>
-                      <span className="text-[0.5rem] font-semibold -mt-1">{table.status}</span>
-                  </Button>
-              ))}
-            </div>
-        </CardContent>
-        
-        <div className="mt-auto p-4 space-y-4 border-t">
-            <div>
-              <Label className="font-semibold mb-2 block">Discount</Label>
-              <RadioGroup value={discount.toString()} onValueChange={(val) => setDiscount(Number(val))} className="flex items-center flex-wrap gap-2">
-                {[0, 5, 10, 15, 20].map(d => (
-                  <div key={d} className="flex items-center space-x-2">
-                    <RadioGroupItem value={d.toString()} id={`d-${d}`} />
-                    <Label htmlFor={`d-${d}`} className="p-2 rounded-md transition-colors hover:bg-accent cursor-pointer" >{d}%</Label>
-                  </div>
-                ))}
-              </RadioGroup>
-            </div>
-            <Card className="bg-muted/50">
-              <CardHeader className="p-4">
-                <CardTitle className="text-lg">Receipt Preview</CardTitle>
-              </CardHeader>
-              <CardContent className="p-4 pt-0">
-                <pre className="text-sm font-mono whitespace-pre-wrap break-words min-h-[100px] bg-background p-2 rounded-md">
-                  {receiptPreview || 'Add items to see preview...'}
-                </pre>
-              </CardContent>
-            </Card>
-            <div className="space-y-2 text-lg">
-              <div className="flex justify-between">
-                <span>Subtotal:</span>
-                <span className="font-bold">Rs.{subtotal.toFixed(2)}</span>
-              </div>
-              {discount > 0 && (
-                <div className="flex justify-between text-accent-foreground">
-                  <span>Discount ({discount}%):</span>
-                  <span className="font-bold">-Rs.{(subtotal - total).toFixed(2)}</span>
+                      <div className="flex items-center gap-2">
+                        <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => updateQuantity(item.name, item.quantity - 1)}><Minus className="h-4 w-4" /></Button>
+                        <span className="w-8 text-center font-bold">{item.quantity}</span>
+                        <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => updateQuantity(item.name, item.quantity + 1)}><Plus className="h-4 w-4" /></Button>
+                        <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => removeFromOrder(item.name)}><X className="h-4 w-4" /></Button>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               )}
-              <div className="flex justify-between font-bold text-2xl border-t pt-2">
-                <span>Total:</span>
-                <span>Rs.{total.toFixed(2)}</span>
+            </ScrollArea>
+            
+            <div className="mt-auto space-y-4">
+                <CardContent className="p-0">
+                  <div className="flex flex-wrap gap-2 justify-center">
+                    {tables.map(table => (
+                        <Button
+                            key={table.id}
+                            variant="outline"
+                            className={cn(
+                                "flex flex-col h-14 w-14 justify-center items-center gap-1 relative",
+                                statusColors[table.status],
+                                currentActiveTableId === table.id && 'ring-2 ring-offset-2 ring-ring',
+                                table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black'
+                            )}
+                            onClick={() => handleSelectTable(table.id)}
+                        >
+                            {(occupancyCount[table.id] > 0) &&
+                            <div className="absolute bottom-1 right-1 flex items-center gap-1 bg-black/50 text-white text-xs font-bold p-1 rounded-full text-[0.6rem] h-4 min-w-4 justify-center">
+                                <Repeat className="h-2 w-2" />
+                                <span>{occupancyCount[table.id]}</span>
+                            </div>
+                            }
+                            {React.createElement(statusIcons[table.status], { className: "absolute top-1.5 left-1.5 h-3 w-3" })}
+                            <span className="text-xl font-bold">{table.id}</span>
+                            <span className="text-[0.5rem] font-semibold -mt-1">{table.status}</span>
+                        </Button>
+                    ))}
+                  </div>
+              </CardContent>
+
+              <div>
+                <Label className="font-semibold mb-2 block">Discount</Label>
+                <RadioGroup value={discount.toString()} onValueChange={(val) => setDiscount(Number(val))} className="flex items-center flex-wrap gap-2">
+                  {[0, 5, 10, 15, 20].map(d => (
+                    <div key={d} className="flex items-center space-x-2">
+                      <RadioGroupItem value={d.toString()} id={`d-${d}`} />
+                      <Label htmlFor={`d-${d}`} className="p-2 rounded-md transition-colors hover:bg-accent cursor-pointer" >{d}%</Label>
+                    </div>
+                  ))}
+                </RadioGroup>
+              </div>
+              <Card className="bg-muted/50">
+                <CardHeader className="p-4">
+                  <CardTitle className="text-lg">Receipt Preview</CardTitle>
+                </CardHeader>
+                <CardContent className="p-4 pt-0">
+                  <pre className="text-sm font-mono whitespace-pre-wrap break-words min-h-[100px] bg-background p-2 rounded-md">
+                    {receiptPreview || 'Add items to see preview...'}
+                  </pre>
+                </CardContent>
+              </Card>
+              <div className="space-y-2 text-lg">
+                <div className="flex justify-between">
+                  <span>Subtotal:</span>
+                  <span className="font-bold">Rs.{subtotal.toFixed(2)}</span>
+                </div>
+                {discount > 0 && (
+                  <div className="flex justify-between text-accent-foreground">
+                    <span>Discount ({discount}%):</span>
+                    <span className="font-bold">-Rs.{(subtotal - total).toFixed(2)}</span>
+                  </div>
+                )}
+                <div className="flex justify-between font-bold text-2xl border-t pt-2">
+                  <span>Total:</span>
+                  <span>Rs.{total.toFixed(2)}</span>
+                </div>
+              </div>
+              <div className="flex flex-col gap-2 pt-2">
+                  <Button 
+                      size="lg"
+                      className={cn(activeOrder && "bg-blue-600 hover:bg-blue-700")}
+                      onClick={handleSendToKitchen}
+                      disabled={orderItems.length === 0 || !currentActiveTableId}
+                  >
+                      {activeOrder ? <Printer className="mr-2 h-4 w-4" /> : <Send className="mr-2 h-4 w-4" />}
+                      {activeOrder ? 'Print Kitchen Receipt' : 'Send KOT to Kitchen'}
+                  </Button>
+                  <div className="grid grid-cols-2 gap-2">
+                      <Button size="lg" variant="outline" onClick={handlePrintProvisionalBill} disabled={orderItems.length === 0 || !currentActiveTableId}>
+                          <Printer className="mr-2 h-4 w-4" /> Print Bill
+                      </Button>
+                      <Button size="lg" onClick={handleProcessPayment} disabled={orderItems.length === 0 || !currentActiveTableId}>
+                          Process Payment
+                      </Button>
+                  </div>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                       <Button size="lg" variant="destructive" className="w-full" disabled={orderItems.length === 0 && !activeOrder && !selectedTableId}><FilePlus />New Bill</Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This will clear the current order. This action cannot be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => clearOrder(false, true)}>Clear Bill</AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
               </div>
             </div>
-            <div className="flex flex-col gap-2 pt-2">
-                <Button 
-                    size="lg"
-                    className={cn(activeOrder && "bg-blue-600 hover:bg-blue-700")}
-                    onClick={handleSendToKitchen}
-                    disabled={orderItems.length === 0 || !currentActiveTableId}
-                >
-                    {activeOrder ? <Printer className="mr-2 h-4 w-4" /> : <Send className="mr-2 h-4 w-4" />}
-                    {activeOrder ? 'Print Kitchen Receipt' : 'Send KOT to Kitchen'}
-                </Button>
-                <div className="grid grid-cols-2 gap-2">
-                    <Button size="lg" variant="outline" onClick={handlePrintProvisionalBill} disabled={orderItems.length === 0 || !currentActiveTableId}>
-                        <Printer className="mr-2 h-4 w-4" /> Print Bill
-                    </Button>
-                    <Button size="lg" onClick={handleProcessPayment} disabled={orderItems.length === 0 || !currentActiveTableId}>
-                        Process Payment
-                    </Button>
-                </div>
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                     <Button size="lg" variant="destructive" className="w-full" disabled={orderItems.length === 0 && !activeOrder && !selectedTableId}><FilePlus />New Bill</Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        This will clear the current order. This action cannot be undone.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction onClick={() => clearOrder(false, true)}>Clear Bill</AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-            </div>
-          </div>
-      </Card>
+        </SheetContent>
+      </Sheet>
+
       <PaymentDialog
         isOpen={isPaymentDialogOpen}
         onOpenChange={setIsPaymentDialogOpen}
