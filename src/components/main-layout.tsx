@@ -3,8 +3,6 @@
 "use client";
 
 import { useState, useEffect, useMemo } from 'react';
-import { collection, onSnapshot, addDoc, doc, setDoc, deleteDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Coffee, LayoutGrid, Book, BarChart, Users } from 'lucide-react';
 import { isSameDay } from 'date-fns';
@@ -17,6 +15,8 @@ import AdminDashboard from './admin-dashboard';
 import StaffManagement from "./staff-management";
 import type { Table, TableStatus, Order, Bill, Employee } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
+import { collection, onSnapshot } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 export default function MainLayout() {
   const { toast } = useToast();
@@ -35,114 +35,7 @@ export default function MainLayout() {
       status: 'Available',
     }));
     setTables(initialTables);
-  
-    // Listen for real-time updates to employees
-    const unsubEmployees = onSnapshot(collection(db, "employees"), (snapshot) => {
-      const employeesData = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as Employee));
-      setEmployees(employeesData);
-    }, (error) => {
-        console.error("Firestore Error (employees): ", error);
-        toast({
-            variant: 'destructive',
-            title: 'Firestore Connection Error',
-            description: 'Could not fetch employee data. Please check your connection and Firestore security rules.',
-        })
-    });
-
-    // Listen for real-time updates to bills
-    const unsubBills = onSnapshot(collection(db, "bills"), (snapshot) => {
-      const billsData = snapshot.docs.map(doc => {
-        const data = doc.data();
-        return {
-          ...data,
-          id: doc.id,
-          timestamp: data.timestamp.toDate(),
-        } as Bill;
-      });
-      setBillHistory(billsData);
-    }, (error) => {
-        console.error("Firestore Error (bills): ", error);
-        toast({
-            variant: 'destructive',
-            title: 'Firestore Connection Error',
-            description: 'Could not fetch bill history. Please check your connection and Firestore security rules.',
-        })
-    });
-
-    return () => {
-      unsubEmployees();
-      unsubBills();
-    };
-  }, [toast]);
-
-
-  const addOrder = (order: Omit<Order, 'id' | 'status'> & { onOrderCreated?: (order: Order) => void }) => {
-    const newOrder: Order = {
-      ...order,
-      id: `K${(orders.length + 1).toString().padStart(3, '0')}`,
-      status: 'In Preparation', // Start in prep immediately
-    };
-    setOrders(prevOrders => {
-      const updatedOrders = [...prevOrders, newOrder];
-      // Set the newly created order as the active one
-      setActiveOrder(newOrder);
-      // Call the callback to trigger printing
-      if (order.onOrderCreated) {
-        order.onOrderCreated(newOrder);
-      }
-      return updatedOrders;
-    });
-    // Update the table status to Occupied
-    updateTableStatus([order.tableId], 'Occupied');
-  };
-  
-  const updateOrder = (updatedOrder: Order) => {
-    setOrders(prevOrders => {
-      const updatedOrders = prevOrders.map(o => (o.id === updatedOrder.id ? updatedOrder : o));
-      // Ensure the active order reflects the latest changes
-      if (activeOrder?.id === updatedOrder.id) {
-          setActiveOrder(updatedOrder);
-      }
-      return updatedOrders;
-    });
-  };
-
-
-  const addBill = async (bill: Omit<Bill, 'id'| 'timestamp'>) => {
-    try {
-      const billWithTimestamp = {
-        ...bill,
-        timestamp: new Date(),
-      };
-      const docRef = await addDoc(collection(db, "bills"), billWithTimestamp);
-      // Manually add to local state to reflect change immediately
-      setBillHistory(prev => [...prev, { ...billWithTimestamp, id: docRef.id }]);
-      toast({ title: 'Bill Saved', description: 'The bill has been saved to the database.' });
-    } catch (error) {
-      console.error("Error adding bill to Firestore: ", error);
-      toast({ variant: 'destructive', title: 'Save Failed', description: 'Could not save the bill to the database.' });
-    }
-  };
-
-  const updateTableStatus = (tableIds: number[], status: TableStatus) => {
-    setTables(tables.map(t => (tableIds.includes(t.id) ? { ...t, status } : t)));
-  };
-
-  const addTable = () => {
-    const newTableId = tables.length > 0 ? Math.max(...tables.map(t => t.id)) + 1 : 1;
-    const newTable: Table = { id: newTableId, status: 'Available' };
-    setTables([...tables, newTable]);
-  };
-
-  const removeLastTable = () => {
-    if (tables.length > 0) {
-      setTables(prevTables => {
-        if (prevTables.length === 0) return [];
-        const tableToRemove = prevTables.reduce((last, current) => (current.id > last.id ? current : last));
-        return prevTables.filter(t => t.id !== tableToRemove.id);
-      });
-    }
-  };
+  }, []);
 
   useEffect(() => {
     setCurrentDateTime(new Date());
@@ -165,48 +58,29 @@ export default function MainLayout() {
     ? currentDateTime.toLocaleTimeString()
     : '';
 
-  const addEmployee = async (employee: Omit<Employee, 'id'>) => {
-    try {
-      const docRef = await addDoc(collection(db, "employees"), employee);
-      // Manually update local state to reflect the change immediately
-      // The onSnapshot listener will then sync, but this provides instant UI feedback.
-      setEmployees(prev => [...prev, { ...employee, id: docRef.id }]);
-      toast({ title: 'Employee Added', description: 'New employee saved to the database.' });
-    } catch (error) {
-      console.error("Error adding employee: ", error);
-      toast({ variant: 'destructive', title: 'Save Failed', description: 'Could not save the employee.' });
-    }
+  const updateTableStatus = (tableIds: number[], status: TableStatus) => {
+    setTables(tables.map(t => (tableIds.includes(t.id) ? { ...t, status } : t)));
   };
 
-  const updateEmployee = async (employee: Employee) => {
-    try {
-      const employeeRef = doc(db, "employees", employee.id);
-      await setDoc(employeeRef, {
-        name: employee.name,
-        role: employee.role,
-        salary: employee.salary,
-        color: employee.color,
-      }, { merge: true });
-      toast({ title: 'Employee Updated', description: 'Employee information has been updated.' });
-    } catch (error) {
-      console.error("Error updating employee: ", error);
-      toast({ variant: 'destructive', title: 'Update Failed', description: 'Could not update employee details.' });
-    }
+  const addTable = () => {
+    const newTableId = tables.length > 0 ? Math.max(...tables.map(t => t.id)) + 1 : 1;
+    const newTable: Table = { id: newTableId, status: 'Available' };
+    setTables([...tables, newTable]);
   };
 
-  const deleteEmployee = async (employeeId: string) => {
-    try {
-      await deleteDoc(doc(db, "employees", employeeId));
-      toast({ title: 'Employee Deleted', description: 'Employee has been removed from the database.' });
-    } catch (error) {
-      console.error("Error deleting employee: ", error);
-      toast({ variant: 'destructive', title: 'Delete Failed', description: 'Could not delete the employee.' });
+  const removeLastTable = () => {
+    if (tables.length > 0) {
+      setTables(prevTables => {
+        if (prevTables.length === 0) return [];
+        const tableToRemove = prevTables.reduce((last, current) => (current.id > last.id ? current : last));
+        return prevTables.filter(t => t.id !== tableToRemove.id);
+      });
     }
   };
 
   const occupancyCount = useMemo(() => {
     const counts: Record<number, number> = {};
-    const todaysBills = billHistory.filter(bill => isSameDay(bill.timestamp, new Date()));
+    const todaysBills = billHistory.filter(bill => bill.timestamp && isSameDay(bill.timestamp, new Date()));
     
     todaysBills.forEach(bill => {
       counts[bill.tableId] = (counts[bill.tableId] || 0) + 1;
@@ -260,9 +134,9 @@ export default function MainLayout() {
                 <PosSystem 
                   tables={tables}
                   orders={orders}
-                  addOrder={addOrder}
-                  updateOrder={updateOrder}
-                  addBill={addBill}
+                  setOrders={setOrders}
+                  billHistory={billHistory}
+                  setBillHistory={setBillHistory}
                   updateTableStatus={updateTableStatus}
                   occupancyCount={occupancyCount}
                   activeOrder={activeOrder}
@@ -274,6 +148,7 @@ export default function MainLayout() {
                 tables={tables}
                 orders={orders}
                 billHistory={billHistory}
+                setBillHistory={setBillHistory}
                 updateTableStatus={updateTableStatus}
                 addTable={addTable}
                 removeLastTable={removeLastTable}
@@ -290,13 +165,16 @@ export default function MainLayout() {
             <TabsContent value="staff" className="m-0 p-0">
               <StaffManagement 
                 employees={employees} 
-                addEmployee={addEmployee}
-                updateEmployee={updateEmployee}
-                deleteEmployee={deleteEmployee}
+                setEmployees={setEmployees}
               />
             </TabsContent>
             <TabsContent value="admin" className="m-0 p-0">
-              <AdminDashboard billHistory={billHistory} employees={employees} />
+              <AdminDashboard 
+                billHistory={billHistory} 
+                setBillHistory={setBillHistory}
+                employees={employees} 
+                setEmployees={setEmployees}
+              />
             </TabsContent>
           </div>
         </Tabs>

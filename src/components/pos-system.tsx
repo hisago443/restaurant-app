@@ -4,6 +4,8 @@
 
 import * as React from 'react';
 import { useState, useEffect, useMemo, useCallback } from 'react';
+import { addDoc, collection } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -60,16 +62,16 @@ const statusIcons: Record<TableStatus, React.ElementType> = {
 interface PosSystemProps {
   tables: Table[];
   orders: Order[];
-  addOrder: (order: Omit<Order, 'id' | 'status'> & { onOrderCreated?: (order: Order) => void }) => void;
-  updateOrder: (order: Order) => void;
-  addBill: (bill: Omit<Bill, 'id' | 'timestamp'>) => void;
+  setOrders: React.Dispatch<React.SetStateAction<Order[]>>;
+  billHistory: Bill[];
+  setBillHistory: React.Dispatch<React.SetStateAction<Bill[]>>;
   updateTableStatus: (tableIds: number[], status: TableStatus) => void;
   occupancyCount: Record<number, number>;
   activeOrder: Order | null;
   setActiveOrder: (order: Order | null) => void;
 }
 
-export default function PosSystem({ tables, orders, addOrder, updateOrder, addBill, updateTableStatus, occupancyCount, activeOrder, setActiveOrder }: PosSystemProps) {
+export default function PosSystem({ tables, orders, setOrders, setBillHistory, updateTableStatus, occupancyCount, activeOrder, setActiveOrder }: PosSystemProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
   const [originalOrderItems, setOriginalOrderItems] = useState<OrderItem[]>([]);
@@ -371,6 +373,37 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
   };
 
 
+  const addOrder = (order: Omit<Order, 'id' | 'status'> & { onOrderCreated?: (order: Order) => void }) => {
+    const newOrder: Order = {
+      ...order,
+      id: `K${(orders.length + 1).toString().padStart(3, '0')}`,
+      status: 'In Preparation', // Start in prep immediately
+    };
+    setOrders(prevOrders => {
+      const updatedOrders = [...prevOrders, newOrder];
+      // Set the newly created order as the active one
+      setActiveOrder(newOrder);
+      // Call the callback to trigger printing
+      if (order.onOrderCreated) {
+        order.onOrderCreated(newOrder);
+      }
+      return updatedOrders;
+    });
+    // Update the table status to Occupied
+    updateTableStatus([order.tableId], 'Occupied');
+  };
+  
+  const updateOrder = (updatedOrder: Order) => {
+    setOrders(prevOrders => {
+      const updatedOrders = prevOrders.map(o => (o.id === updatedOrder.id ? updatedOrder : o));
+      // Ensure the active order reflects the latest changes
+      if (activeOrder?.id === updatedOrder.id) {
+          setActiveOrder(updatedOrder);
+      }
+      return updatedOrders;
+    });
+  };
+
   const handleSendToKitchen = () => {
     if (orderItems.length === 0) {
       toast({ variant: 'destructive', title: 'Empty Order', description: 'Cannot send an empty order to the kitchen.' });
@@ -422,6 +455,23 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
       toast({ title: 'Order Sent!', description: `KOT sent to the kitchen for Table ${currentActiveTableId}.` });
     }
   };
+
+  const addBill = async (bill: Omit<Bill, 'id'| 'timestamp'>) => {
+    try {
+      const billWithTimestamp = {
+        ...bill,
+        timestamp: new Date(),
+      };
+      const docRef = await addDoc(collection(db, "bills"), billWithTimestamp);
+      // Manually add to local state to reflect change immediately
+      setBillHistory(prev => [...prev, { ...billWithTimestamp, id: docRef.id }]);
+      toast({ title: 'Bill Saved', description: 'The bill has been saved to the database.' });
+    } catch (error) {
+      console.error("Error adding bill to Firestore: ", error);
+      toast({ variant: 'destructive', title: 'Save Failed', description: 'Could not save the bill to the database.' });
+    }
+  };
+
 
   const handleProcessPayment = async () => {
     if (orderItems.length === 0) {
@@ -981,3 +1031,4 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
     
 
     
+

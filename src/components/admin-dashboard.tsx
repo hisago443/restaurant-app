@@ -1,7 +1,10 @@
 
+
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { collection, onSnapshot } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 import { BarChart, Book, Download, TrendingUp, Settings, Package, User, ShoppingCart, History, Mail } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -31,13 +34,55 @@ const salesData = [
 interface AdminDashboardProps {
   billHistory: Bill[];
   employees: Employee[];
+  setBillHistory: React.Dispatch<React.SetStateAction<Bill[]>>;
+  setEmployees: React.Dispatch<React.SetStateAction<Employee[]>>;
 }
 
-export default function AdminDashboard({ billHistory, employees }: AdminDashboardProps) {
+export default function AdminDashboard({ billHistory, employees, setBillHistory, setEmployees }: AdminDashboardProps) {
   const { toast } = useToast();
   const [isReportLoading, setIsReportLoading] = useState(false);
   const [autoSendDaily, setAutoSendDaily] = useState(false);
   const [autoSendMonthly, setAutoSendMonthly] = useState(false);
+
+  useEffect(() => {
+    // Listen for real-time updates to employees
+    const unsubEmployees = onSnapshot(collection(db, "employees"), (snapshot) => {
+      const employeesData = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as Employee));
+      setEmployees(employeesData);
+    }, (error) => {
+        console.error("Firestore Error (employees): ", error);
+        toast({
+            variant: 'destructive',
+            title: 'Firestore Connection Error',
+            description: 'Could not fetch employee data. Please check your connection and Firestore security rules.',
+        })
+    });
+
+    // Listen for real-time updates to bills
+    const unsubBills = onSnapshot(collection(db, "bills"), (snapshot) => {
+      const billsData = snapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          ...data,
+          id: doc.id,
+          timestamp: data.timestamp.toDate(),
+        } as Bill;
+      });
+      setBillHistory(billsData);
+    }, (error) => {
+        console.error("Firestore Error (bills): ", error);
+        toast({
+            variant: 'destructive',
+            title: 'Firestore Connection Error',
+            description: 'Could not fetch bill history. Please check your connection and Firestore security rules.',
+        })
+    });
+
+    return () => {
+      unsubEmployees();
+      unsubBills();
+    };
+  }, [setEmployees, setBillHistory, toast]);
 
 
   const handleExportCSV = () => {

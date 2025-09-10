@@ -1,7 +1,10 @@
 
+
 "use client";
 
 import { useState, useEffect } from 'react';
+import { collection, onSnapshot, addDoc, doc, setDoc, deleteDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -16,6 +19,7 @@ import { PlusCircle, Edit, Trash2 } from 'lucide-react';
 import type { Employee, Advance } from '@/lib/types';
 import { format, isSameDay } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
 
 const initialAdvances: Advance[] = [
   { employeeId: 'E002', date: new Date(2024, 6, 5), amount: 2000 },
@@ -74,19 +78,36 @@ function AddAdvanceDialog({ open, onOpenChange, employees, onAddAdvance, selecte
 
 interface StaffManagementProps {
   employees: Employee[];
-  addEmployee: (employee: Omit<Employee, 'id'>) => Promise<void>;
-  updateEmployee: (employee: Employee) => Promise<void>;
-  deleteEmployee: (employeeId: string) => Promise<void>;
+  setEmployees: React.Dispatch<React.SetStateAction<Employee[]>>;
 }
 
 
-export default function StaffManagement({ employees, addEmployee, updateEmployee, deleteEmployee }: StaffManagementProps) {
+export default function StaffManagement({ employees, setEmployees }: StaffManagementProps) {
+  const { toast } = useToast();
   const [advances, setAdvances] = useState<Advance[]>(initialAdvances);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [isAddEmployeeDialogOpen, setIsAddEmployeeDialogOpen] = useState(false);
   const [isEditEmployeeDialogOpen, setIsEditEmployeeDialogOpen] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
   const [isAddAdvanceDialogOpen, setIsAddAdvanceDialogOpen] = useState(false);
+  
+  useEffect(() => {
+    // Listen for real-time updates to employees
+    const unsubEmployees = onSnapshot(collection(db, "employees"), (snapshot) => {
+      const employeesData = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as Employee));
+      setEmployees(employeesData);
+    }, (error) => {
+        console.error("Firestore Error (employees): ", error);
+        toast({
+            variant: 'destructive',
+            title: 'Firestore Connection Error',
+            description: 'Could not fetch employee data. Please check your connection and Firestore security rules.',
+        })
+    });
+
+    return () => unsubEmployees();
+  }, [setEmployees, toast]);
+
 
   const advancesForSelectedDate = advances.filter(
     (advance) => selectedDate && isSameDay(advance.date, selectedDate)
@@ -100,6 +121,16 @@ export default function StaffManagement({ employees, addEmployee, updateEmployee
     }
   }
 
+  const addEmployee = async (employee: Omit<Employee, 'id'>) => {
+    try {
+      await addDoc(collection(db, "employees"), employee);
+      toast({ title: 'Employee Added', description: 'New employee saved to the database.' });
+    } catch (error) {
+      console.error("Error adding employee: ", error);
+      toast({ variant: 'destructive', title: 'Save Failed', description: 'Could not save the employee.' });
+    }
+  };
+
   const handleAddEmployee = (employee: Omit<Employee, 'id' | 'color'>) => {
     const newEmployee: Omit<Employee, 'id'> = {
       ...employee,
@@ -108,10 +139,36 @@ export default function StaffManagement({ employees, addEmployee, updateEmployee
     addEmployee(newEmployee);
   }
   
+  const updateEmployee = async (employee: Employee) => {
+    try {
+      const employeeRef = doc(db, "employees", employee.id);
+      await setDoc(employeeRef, {
+        name: employee.name,
+        role: employee.role,
+        salary: employee.salary,
+        color: employee.color,
+      }, { merge: true });
+      toast({ title: 'Employee Updated', description: 'Employee information has been updated.' });
+    } catch (error) {
+      console.error("Error updating employee: ", error);
+      toast({ variant: 'destructive', title: 'Update Failed', description: 'Could not update employee details.' });
+    }
+  };
+
   const handleEditEmployee = (employee: Employee) => {
       updateEmployee(employee);
       setEditingEmployee(null);
   }
+
+  const deleteEmployee = async (employeeId: string) => {
+    try {
+      await deleteDoc(doc(db, "employees", employeeId));
+      toast({ title: 'Employee Deleted', description: 'Employee has been removed from the database.' });
+    } catch (error) {
+      console.error("Error deleting employee: ", error);
+      toast({ variant: 'destructive', title: 'Delete Failed', description: 'Could not delete the employee.' });
+    }
+  };
 
   const handleDeleteEmployee = (employeeId: string) => {
       deleteEmployee(employeeId);

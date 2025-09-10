@@ -3,7 +3,9 @@
 "use client";
 
 import * as React from 'react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { collection, onSnapshot } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose, DialogDescription } from '@/components/ui/dialog';
@@ -16,6 +18,7 @@ import { PlusCircle, Trash2, LayoutTemplate, Sparkles, Users, CheckCircle2, Book
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { format } from 'date-fns';
+import { useToast } from '@/hooks/use-toast';
 
 const statusColors: Record<TableStatus, string> = {
   Available: 'bg-green-400 hover:bg-green-500',
@@ -35,6 +38,7 @@ interface TableManagementProps {
   tables: Table[];
   orders: Order[];
   billHistory: Bill[];
+  setBillHistory: React.Dispatch<React.SetStateAction<Bill[]>>;
   updateTableStatus: (tableIds: number[], status: TableStatus) => void;
   addTable: () => void;
   removeLastTable: () => void;
@@ -42,7 +46,8 @@ interface TableManagementProps {
   onEditOrder: (order: Order) => void;
 }
 
-export default function TableManagement({ tables, orders, billHistory, updateTableStatus, addTable, removeLastTable, occupancyCount, onEditOrder }: TableManagementProps) {
+export default function TableManagement({ tables, orders, billHistory, setBillHistory, updateTableStatus, addTable, removeLastTable, occupancyCount, onEditOrder }: TableManagementProps) {
+  const { toast } = useToast();
   const [selectedTable, setSelectedTable] = useState<Table | null>(null);
   const [selectedTables, setSelectedTables] = useState<number[]>([]);
   const [isLayoutManagerOpen, setIsLayoutManagerOpen] = useState(false);
@@ -51,6 +56,31 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
   const [isPrintDialogOpen, setIsPrintDialogOpen] = useState(false);
   const [tableForPrint, setTableForPrint] = useState<Table | null>(null);
   const [showOccupancy, setShowOccupancy] = useState(true);
+
+  useEffect(() => {
+    // Listen for real-time updates to bills
+    const unsubBills = onSnapshot(collection(db, "bills"), (snapshot) => {
+      const billsData = snapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          ...data,
+          id: doc.id,
+          timestamp: data.timestamp.toDate(),
+        } as Bill;
+      });
+      setBillHistory(billsData);
+    }, (error) => {
+        console.error("Firestore Error (bills): ", error);
+        toast({
+            variant: 'destructive',
+            title: 'Firestore Connection Error',
+            description: 'Could not fetch bill history. Please check your connection and Firestore security rules.',
+        })
+    });
+
+    return () => unsubBills();
+  }, [setBillHistory, toast]);
+
 
   const filteredTables = tables.filter(table => filter === 'All' || table.status === filter);
   
