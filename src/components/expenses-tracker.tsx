@@ -231,7 +231,7 @@ function AddOrEditExpenseDialog({
           </div>
            <div className="space-y-2">
             <Label htmlFor="vendor">Vendor (Optional)</Label>
-            <Select onValueChange={(value) => setVendorId(value)} value={vendorId ?? ''}>
+            <Select onValueChange={(value) => setVendorId(value)} value={vendorId ?? undefined}>
               <SelectTrigger id="vendor">
                 <SelectValue placeholder="None" />
               </SelectTrigger>
@@ -359,159 +359,80 @@ export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
 
   return (
     <div className="p-4 space-y-4">
-       <Tabs defaultValue="expenses">
-        <TabsList className="m-2 self-center rounded-lg bg-primary/10 p-2">
-          <TabsTrigger value="expenses" className="px-6 py-2 text-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md flex items-center gap-2">
-            <PlusCircle className="h-5 w-5" /> Expenses
-          </TabsTrigger>
-          <TabsTrigger value="vendors" className="px-6 py-2 text-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md flex items-center gap-2">
-            <Building className="h-5 w-5" /> Vendors
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="expenses">
-            <Card>
-                <CardHeader className="flex flex-row items-center justify-between">
-                <div>
-                    <CardTitle>Expense Tracker</CardTitle>
-                    <CardDescription>Monitor and record all your business expenses.</CardDescription>
-                </div>
-                <Button onClick={() => openExpenseDialog(null)}>
-                    <PlusCircle className="mr-2 h-4 w-4" /> Add Expense
-                </Button>
-                </CardHeader>
-                <CardContent>
-                <Table>
-                    <TableHeader>
-                    <TableRow>
-                        <TableHead>Date</TableHead>
-                        <TableHead>Category</TableHead>
-                        <TableHead>Description</TableHead>
-                        <TableHead>Vendor</TableHead>
-                        <TableHead className="text-right">Amount (₹)</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                    {expenses.length > 0 ? (
-                        expenses.map((expense) => (
-                        <TableRow key={expense.id}>
-                            <TableCell>{format(expense.date, 'PPP')}</TableCell>
-                            <TableCell>{expense.category}</TableCell>
-                            <TableCell>{expense.description}</TableCell>
-                            <TableCell>{getVendorName(expense.vendorId)}</TableCell>
-                            <TableCell className="text-right font-mono">
-                            {expense.amount.toFixed(2)}
-                            </TableCell>
-                            <TableCell className="text-right">
-                            <Button variant="ghost" size="icon" onClick={() => openExpenseDialog(expense)}>
-                                <Edit className="h-4 w-4" />
-                            </Button>
-                            <AlertDialog>
-                                <AlertDialogTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="text-destructive">
-                                        <Trash2 className="h-4 w-4" />
-                                    </Button>
-                                </AlertDialogTrigger>
-                                <AlertDialogContent>
-                                    <AlertDialogHeader>
-                                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                                        <AlertDialogDescription>
-                                            This action cannot be undone. This will permanently delete this expense record.
-                                        </AlertDialogDescription>
-                                    </AlertDialogHeader>
-                                    <AlertDialogFooter>
-                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                        <AlertDialogAction onClick={() => handleDeleteExpense(expense.id)}>Delete</AlertDialogAction>
-                                    </AlertDialogFooter>
-                                </AlertDialogContent>
-                            </AlertDialog>
-                            </TableCell>
-                        </TableRow>
-                        ))
-                    ) : (
-                        <TableRow>
-                        <TableCell colSpan={6} className="text-center text-muted-foreground">
-                            No expenses recorded yet.
-                        </TableCell>
-                        </TableRow>
-                    )}
-                    </TableBody>
-                </Table>
-                <div className="text-right font-bold text-lg mt-4 pr-4">
-                    Total Expenses: ₹{totalExpenses.toFixed(2)}
-                </div>
-                </CardContent>
-            </Card>
-        </TabsContent>
-        
-        <TabsContent value="vendors">
-            <Card>
-                <CardHeader className="flex flex-row items-center justify-between">
-                    <div>
-                        <CardTitle>Vendor Management</CardTitle>
-                        <CardDescription>Manage all your suppliers and service providers.</CardDescription>
-                    </div>
-                    <Button onClick={() => openVendorDialog(null)}>
-                        <PlusCircle className="mr-2 h-4 w-4" /> Add Vendor
-                    </Button>
-                </CardHeader>
-                <CardContent>
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Name</TableHead>
-                                <TableHead>Category</TableHead>
-                                <TableHead className="text-right">Actions</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {vendors.length > 0 ? (
-                                vendors.map((vendor) => (
-                                    <TableRow key={vendor.id}>
-                                        <TableCell>{vendor.name}</TableCell>
-                                        <TableCell>{vendor.category}</TableCell>
-                                        <TableCell className="text-right">
-                                            <Button variant="ghost" size="icon" onClick={() => openVendorDialog(vendor)}>
-                                                <Edit className="h-4 w-4" />
-                                            </Button>
-                                             <AlertDialog>
-                                                <AlertDialogTrigger asChild>
-                                                    <Button variant="ghost" size="icon" className="text-destructive">
-                                                        <Trash2 className="h-4 w-4" />
-                                                    </Button>
-                                                </AlertDialogTrigger>
-                                                <AlertDialogContent>
-                                                    <AlertDialogHeader>
-                                                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                                                        <AlertDialogDescription>
-                                                           This will permanently delete the vendor "{vendor.name}". This action cannot be undone.
-                                                        </AlertDialogDescription>
-                                                    </AlertDialogHeader>
-                                                    <AlertDialogFooter>
-                                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                                        <AlertDialogAction onClick={() => handleDeleteVendor(vendor.id)}>Delete</AlertDialogAction>
-                                                    </AlertDialogFooter>
-                                                </AlertDialogContent>
-                                            </AlertDialog>
-                                        </TableCell>
-                                    </TableRow>
-                                ))
-                            ) : (
-                                <TableRow>
-                                    <TableCell colSpan={3} className="text-center text-muted-foreground">
-                                        No vendors added yet.
-                                    </TableCell>
-                                </TableRow>
-                            )}
-                        </TableBody>
-                    </Table>
-                </CardContent>
-            </Card>
-        </TabsContent>
-
-      </Tabs>
-
+       <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+              <CardTitle>Expense Tracker</CardTitle>
+              <CardDescription>Monitor and record all your business expenses.</CardDescription>
+          </div>
+          <Button onClick={() => openExpenseDialog(null)}>
+              <PlusCircle className="mr-2 h-4 w-4" /> Add Expense
+          </Button>
+          </CardHeader>
+          <CardContent>
+          <Table>
+              <TableHeader>
+              <TableRow>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Category</TableHead>
+                  <TableHead>Description</TableHead>
+                  <TableHead>Vendor</TableHead>
+                  <TableHead className="text-right">Amount (₹)</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+              </TableHeader>
+              <TableBody>
+              {expenses.length > 0 ? (
+                  expenses.map((expense) => (
+                  <TableRow key={expense.id}>
+                      <TableCell>{format(expense.date, 'PPP')}</TableCell>
+                      <TableCell>{expense.category}</TableCell>
+                      <TableCell>{expense.description}</TableCell>
+                      <TableCell>{getVendorName(expense.vendorId)}</TableCell>
+                      <TableCell className="text-right font-mono">
+                      {expense.amount.toFixed(2)}
+                      </TableCell>
+                      <TableCell className="text-right">
+                      <Button variant="ghost" size="icon" onClick={() => openExpenseDialog(expense)}>
+                          <Edit className="h-4 w-4" />
+                      </Button>
+                      <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                              <Button variant="ghost" size="icon" className="text-destructive">
+                                  <Trash2 className="h-4 w-4" />
+                              </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                              <AlertDialogHeader>
+                                  <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                      This action cannot be undone. This will permanently delete this expense record.
+                                  </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => handleDeleteExpense(expense.id)}>Delete</AlertDialogAction>
+                              </AlertDialogFooter>
+                          </AlertDialogContent>
+                      </AlertDialog>
+                      </TableCell>
+                  </TableRow>
+                  ))
+              ) : (
+                  <TableRow>
+                  <TableCell colSpan={6} className="text-center text-muted-foreground">
+                      No expenses recorded yet.
+                  </TableCell>
+                  </TableRow>
+              )}
+              </TableBody>
+          </Table>
+          <div className="text-right font-bold text-lg mt-4 pr-4">
+              Total Expenses: Rs. {totalExpenses.toFixed(2)}
+          </div>
+          </CardContent>
+      </Card>
+      
       <AddOrEditExpenseDialog
         open={isExpenseDialogOpen}
         onOpenChange={setIsExpenseDialogOpen}
