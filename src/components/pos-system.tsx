@@ -209,6 +209,7 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
     try {
       const result = await generateReceipt(input);
       setReceiptPreview(result.receiptPreview);
+      return result.receiptPreview;
     } catch (error) {
       console.error('Error generating receipt:', error);
       toast({
@@ -216,6 +217,7 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
         title: "Error",
         description: "Could not generate receipt preview.",
       });
+      return '';
     }
   }, [orderItems, discount, subtotal, total, toast]);
   
@@ -284,7 +286,7 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
     const printWindow = window.open('', '_blank');
     if (printWindow) {
       const itemsToPrint = diffItems || order.items;
-      const isUpdate = !!diffItems;
+      const isUpdate = !!diffItems && diffItems.length > 0;
 
       const kitchenReceipt = `
         <html>
@@ -341,7 +343,8 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
       currentItemsMap.forEach((quantity, name) => {
         const originalQuantity = originalItemsMap.get(name) || 0;
         if (quantity > originalQuantity) {
-          diffItems.push({ name, quantity: quantity - originalQuantity, price: orderItems.find(i => i.name === name)!.price });
+          const itemPrice = orderItems.find(i => i.name === name)?.price || 0;
+          diffItems.push({ name, quantity: quantity - originalQuantity, price: itemPrice });
         }
       });
       
@@ -381,6 +384,12 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
   const handlePaymentSuccess = async () => {
     if (!currentActiveTableId) return;
 
+    const finalReceipt = await updateReceipt();
+    if (!finalReceipt) {
+        toast({ variant: "destructive", title: "Billing Error", description: "Could not generate the final bill. Please try again." });
+        return;
+    }
+
     setIsPaymentDialogOpen(false);
     toast({ title: "Payment Successful", description: `Payment of Rs.${total.toFixed(2)} confirmed.` });
     
@@ -388,7 +397,7 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
       orderItems: orderItems,
       tableId: Number(currentActiveTableId),
       total: total,
-      receiptPreview: receiptPreview,
+      receiptPreview: finalReceipt,
     };
     addBill(billPayload);
 
@@ -401,7 +410,7 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
     clearOrder(true);
   };
 
-  const handlePrintProvisionalBill = () => {
+  const handlePrintProvisionalBill = async () => {
     if (!currentActiveTableId || orderItems.length === 0) {
       toast({
         variant: 'destructive',
@@ -410,6 +419,9 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
       });
       return;
     }
+
+    const currentReceipt = await updateReceipt();
+    if (!currentReceipt) return;
 
     const printWindow = window.open('', '_blank');
     if (printWindow) {
@@ -423,7 +435,7 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
             </style>
           </head>
           <body>
-            <pre>${receiptPreview}</pre>
+            <pre>${currentReceipt}</pre>
             <script>
               window.onload = function() {
                 window.print();
@@ -671,8 +683,8 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
 
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 h-[calc(100vh-5rem)]">
-      <Card className="col-span-1 md:col-span-2 flex flex-col relative m-4">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 h-[calc(100vh-5rem)]">
+      <Card className="col-span-1 lg:col-span-2 flex flex-col relative m-4">
         <CardHeader>
           <div className="flex items-center justify-between gap-4 flex-wrap">
              <div className="flex-grow">
@@ -772,7 +784,7 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
                               key={table.id}
                               variant="outline"
                               className={cn(
-                                "h-16 flex-col justify-center items-center relative p-0 border-2 transition-transform duration-150 active:scale-95",
+                                "h-auto py-2 flex-col justify-center items-center relative p-0 border-2 transition-transform duration-150 active:scale-95",
                                 statusColors[table.status],
                                 currentActiveTableId === table.id && 'ring-4 ring-offset-2 ring-ring',
                                 table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black'
@@ -788,7 +800,7 @@ export default function PosSystem({ tables, orders, addOrder, updateOrder, addBi
                               <div className="absolute top-1 left-1">
                                 {React.createElement(statusIcons[table.status], { className: "h-3 w-3" })}
                               </div>
-                              <span className="text-5xl font-bold leading-none">{table.id}</span>
+                              <span className="text-4xl font-bold leading-none">{table.id}</span>
                               <span className="text-[0.6rem] font-semibold -mt-1">{table.status}</span>
                           </Button>
                       ))}
