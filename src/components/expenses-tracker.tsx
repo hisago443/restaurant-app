@@ -44,7 +44,7 @@ import {
 } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { PlusCircle, Edit, Trash2, CalendarIcon, Building, RotateCw } from 'lucide-react';
+import { PlusCircle, Edit, Trash2, CalendarIcon, Building, RotateCw, List } from 'lucide-react';
 import { Calendar } from "@/components/ui/calendar";
 import { format } from 'date-fns';
 import type { Expense, Vendor } from '@/lib/types';
@@ -96,7 +96,7 @@ function AddOrEditVendorDialog({
         setName('');
         setCategory('');
     }
-  }, [existingVendor]);
+  }, [existingVendor, open]);
 
   const handleSave = () => {
     if (name && category) {
@@ -144,10 +144,89 @@ function AddOrEditVendorDialog({
   );
 }
 
+function ManageVendorsDialog({
+  open,
+  onOpenChange,
+  vendors,
+  onEditVendor,
+  onDeleteVendor,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  vendors: Vendor[];
+  onEditVendor: (vendor: Vendor) => void;
+  onDeleteVendor: (vendorId: string) => void;
+}) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>Manage Vendors</DialogTitle>
+          <DialogDescription>View, edit, or delete your vendors.</DialogDescription>
+        </DialogHeader>
+        <div className="max-h-[60vh] overflow-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Category</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {vendors.length > 0 ? (
+                vendors.map((vendor) => (
+                  <TableRow key={vendor.id}>
+                    <TableCell className="font-medium">{vendor.name}</TableCell>
+                    <TableCell>{vendor.category}</TableCell>
+                    <TableCell className="text-right">
+                       <Button variant="ghost" size="icon" onClick={() => onEditVendor(vendor)}>
+                          <Edit className="h-4 w-4" />
+                      </Button>
+                      <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                              <Button variant="ghost" size="icon" className="text-destructive">
+                                  <Trash2 className="h-4 w-4" />
+                              </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                              <AlertDialogHeader>
+                                  <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                      This will permanently delete the vendor "{vendor.name}". This action cannot be undone.
+                                  </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => onDeleteVendor(vendor.id)}>Delete</AlertDialogAction>
+                              </AlertDialogFooter>
+                          </AlertDialogContent>
+                      </AlertDialog>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={3} className="text-center">No vendors found.</TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Close</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+
 export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
   const { toast } = useToast();
   const [vendors, setVendors] = useState<Vendor[]>([]);
-  const [isVendorDialogOpen, setIsVendorDialogOpen] = useState(false);
+  const [isVendorAddDialogOpen, setIsVendorAddDialogOpen] = useState(false);
+  const [isVendorManageDialogOpen, setIsVendorManageDialogOpen] = useState(false);
   const [editingVendor, setEditingVendor] = useState<Vendor | null>(null);
 
   // Form state
@@ -156,7 +235,7 @@ export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
   const [category, setCategory] = useState('');
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
-  const [vendorId, setVendorId] = useState<string>('none');
+  const [vendorId, setVendorId] = useState<string | undefined>(undefined);
   
   useEffect(() => {
     const unsubVendors = onSnapshot(collection(db, "vendors"), (snapshot) => {
@@ -172,7 +251,7 @@ export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
     setCategory('');
     setDescription('');
     setAmount('');
-    setVendorId('none');
+    setVendorId(undefined);
   }
 
   const handleSetEditingExpense = (expense: Expense) => {
@@ -181,7 +260,7 @@ export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
     setCategory(expense.category);
     setDescription(expense.description);
     setAmount(String(expense.amount));
-    setVendorId(expense.vendorId || 'none');
+    setVendorId(expense.vendorId || undefined);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
@@ -195,7 +274,7 @@ export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
         category,
         description,
         amount: parseFloat(amount),
-        vendorId: vendorId === 'none' ? null : vendorId,
+        vendorId: vendorId || null,
     };
 
     if (editingExpense?.id) {
@@ -229,8 +308,8 @@ export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
   };
 
   const handleSaveVendor = async (vendor: Omit<Vendor, 'id'> & { id?: string }) => {
-    if (vendor.id) {
-        const { id, ...vendorData } = vendor;
+    const { id, ...vendorData } = vendor;
+    if (id) {
         try {
             await updateDoc(doc(db, "vendors", id), vendorData);
             toast({ title: "Vendor updated successfully" });
@@ -239,18 +318,38 @@ export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
         }
     } else {
         try {
-            const { id, ...newVendorData } = vendor;
-            await addDoc(collection(db, "vendors"), newVendorData);
+            await addDoc(collection(db, "vendors"), vendorData);
             toast({ title: "Vendor added successfully" });
         } catch (error) {
             toast({ variant: "destructive", title: "Error adding vendor" });
         }
     }
+    setIsVendorAddDialogOpen(false); // Close dialog on save
+    if (isVendorManageDialogOpen) {
+        setIsVendorManageDialogOpen(false); // Close manage dialog if open
+        setTimeout(() => setIsVendorManageDialogOpen(true), 100); // Reopen to show update
+    }
   };
   
-  const openVendorDialog = (vendor: Vendor | null) => {
+  const handleDeleteVendor = async (vendorId: string) => {
+    try {
+        await deleteDoc(doc(db, "vendors", vendorId));
+        toast({ title: "Vendor deleted successfully" });
+    } catch (error) {
+        toast({ variant: "destructive", title: "Error deleting vendor" });
+    }
+  }
+
+  const openAddVendorDialog = (vendor: Vendor | null) => {
     setEditingVendor(vendor);
-    setIsVendorDialogOpen(true);
+    setIsVendorAddDialogOpen(true);
+  }
+
+  const openEditVendorInManager = (vendor: Vendor) => {
+    setIsVendorManageDialogOpen(false); // Close manager
+    setTimeout(() => {
+        openAddVendorDialog(vendor); // Open editor
+    }, 150)
   }
   
   const totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0);
@@ -320,8 +419,11 @@ export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
                 <Button onClick={handleSaveExpense}>
                     <PlusCircle className="mr-2 h-4 w-4" /> {editingExpense ? 'Update Expense' : 'Save Expense'}
                 </Button>
-                 <Button variant="secondary" onClick={() => openVendorDialog(null)}>
+                 <Button variant="secondary" onClick={() => openAddVendorDialog(null)}>
                     <Building className="mr-2 h-4 w-4" /> Add Vendor
+                </Button>
+                <Button variant="secondary" onClick={() => setIsVendorManageDialogOpen(true)}>
+                    <List className="mr-2 h-4 w-4" /> Manage Vendors
                 </Button>
             </div>
           </CardContent>
@@ -399,13 +501,18 @@ export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
       </Card>
       
        <AddOrEditVendorDialog
-        open={isVendorDialogOpen}
-        onOpenChange={setIsVendorDialogOpen}
+        open={isVendorAddDialogOpen}
+        onOpenChange={setIsVendorAddDialogOpen}
         onSave={handleSaveVendor}
         existingVendor={editingVendor}
       />
+      <ManageVendorsDialog
+        open={isVendorManageDialogOpen}
+        onOpenChange={setIsVendorManageDialogOpen}
+        vendors={vendors}
+        onEditVendor={openEditVendorInManager}
+        onDeleteVendor={handleDeleteVendor}
+       />
     </div>
   );
 }
-
-    
