@@ -47,7 +47,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { PlusCircle, Edit, Trash2, CalendarIcon, Building, Repeat, List, ChevronsUpDown } from 'lucide-react';
 import { Calendar } from "@/components/ui/calendar";
-import { format } from 'date-fns';
+import { format, isSameDay, isSameMonth, isSameYear } from 'date-fns';
 import type { Expense, Vendor } from '@/lib/types';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
@@ -370,6 +370,16 @@ export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
     }, 150)
   }
   
+  const now = new Date();
+
+  const dailyExpenses = expenses
+    .filter(e => isSameDay(e.date, now))
+    .reduce((sum, expense) => sum + expense.amount, 0);
+
+  const monthlyExpenses = expenses
+    .filter(e => isSameMonth(e.date, now) && isSameYear(e.date, now))
+    .reduce((sum, expense) => sum + expense.amount, 0);
+
   const totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0);
 
   const getVendorDetails = (vendorId: string | undefined | null) => {
@@ -544,8 +554,19 @@ export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
               )}
               </TableBody>
           </Table>
-          <div className="text-right font-bold text-lg mt-4 pr-4">
-              Total Expenses: Rs. {totalExpenses.toFixed(2)}
+          <div className="grid grid-cols-3 gap-4 text-right font-bold text-lg mt-4 pr-4">
+              <div>
+                  <p className="text-sm text-muted-foreground">Today's Expenses</p>
+                  <span>Rs. {dailyExpenses.toFixed(2)}</span>
+              </div>
+              <div>
+                  <p className="text-sm text-muted-foreground">This Month's Expenses</p>
+                  <span>Rs. {monthlyExpenses.toFixed(2)}</span>
+              </div>
+              <div>
+                  <p className="text-sm text-muted-foreground">Overall Expenses</p>
+                  <span>Rs. {totalExpenses.toFixed(2)}</span>
+              </div>
           </div>
         </CardContent>
       </Card>
