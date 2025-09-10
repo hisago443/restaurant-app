@@ -239,6 +239,12 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
           </div>
           <div className="flex items-center gap-2 flex-wrap p-4 border-t border-b">
               <span className="text-sm font-semibold text-muted-foreground mr-2">{selectedTables.length > 0 ? 'Change selected to:' : 'Filter by:'}</span>
+              <Button 
+                variant={filter === 'All' ? 'default' : 'outline'}
+                onClick={() => handleStatusButtonClick('All')}
+              >
+                All ({tables.length})
+              </Button>
               {(Object.keys(statusColors) as TableStatus[]).map(status => {
                   const Icon = statusIcons[status];
                   return (
@@ -259,12 +265,6 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
                     </Button>
                   );
               })}
-              <Button 
-                variant={filter === 'All' ? 'default' : 'outline'}
-                onClick={() => handleStatusButtonClick('All')}
-              >
-                All ({tables.length})
-              </Button>
           </div>
         </CardHeader>
         <CardContent className="pt-6">
