@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import { useState, useEffect, useMemo } from 'react';
@@ -161,7 +160,7 @@ export default function AdminDashboard({ billHistory, employees }: AdminDashboar
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
         {/* Top Selling Items */}
-        <Card className="lg:col-span-3">
+        <Card className="lg:col-span-3 bg-muted/30">
           <CardHeader>
             <CardTitle>Top Selling Items</CardTitle>
             <CardDescription>Today's most popular items.</CardDescription>
@@ -195,7 +194,7 @@ export default function AdminDashboard({ billHistory, employees }: AdminDashboar
         </Card>
 
         {/* Reports & Settings */}
-        <Card className="lg:col-span-4">
+        <Card className="lg:col-span-4 bg-muted/30">
           <CardHeader>
             <CardTitle>Reports & Settings</CardTitle>
             <CardDescription>Manage system data and configurations.</CardDescription>
