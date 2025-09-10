@@ -257,7 +257,7 @@ export default function MainLayout() {
         <Tabs value={activeTab} onValueChange={handleTabChange} className="h-full flex flex-col">
           <TabsList className="m-2 self-center rounded-lg bg-primary/10 p-2">
             <TabsTrigger value="pos" className="px-6 py-2 text-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md">
-              POS
+              Main
             </TabsTrigger>
             <TabsTrigger value="tables" className="px-6 py-2 text-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md">
               Tables
