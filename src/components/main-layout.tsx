@@ -32,6 +32,7 @@ export default function MainLayout() {
   // Lifted state for POS
   const [selectedTableId, setSelectedTableId] = useState<number | null>(null);
   const [discount, setDiscount] = useState(0);
+  const [showOccupancy, setShowOccupancy] = useState(true);
 
   useEffect(() => {
     // Fetch initial tables with default status
@@ -135,9 +136,6 @@ export default function MainLayout() {
   }, [billHistory]);
 
   const handleTabChange = (tab: string) => {
-    if (tab !== 'pos' && activeOrder) {
-        // Don't clear order when switching away from POS
-    }
     setActiveTab(tab)
   }
   
@@ -188,8 +186,6 @@ export default function MainLayout() {
                   tables={tables}
                   orders={orders}
                   setOrders={setOrders}
-                  billHistory={billHistory}
-                  setBillHistory={setBillHistory}
                   updateTableStatus={updateTableStatus}
                   occupancyCount={occupancyCount}
                   activeOrder={activeOrder}
@@ -201,6 +197,11 @@ export default function MainLayout() {
                   selectedTableId={selectedTableId}
                   setSelectedTableId={setSelectedTableId}
                   clearCurrentOrder={clearCurrentOrder}
+                  onOrderCreated={(order) => {
+                    setOrders(prev => [...prev, order]);
+                    setActiveOrder(order);
+                  }}
+                  showOccupancy={showOccupancy}
                 />
             </TabsContent>
             <TabsContent value="tables" className="m-0 p-0">
@@ -219,6 +220,8 @@ export default function MainLayout() {
                   setDiscount(0);
                   setActiveTab('pos');
                 }}
+                showOccupancy={showOccupancy}
+                setShowOccupancy={setShowOccupancy}
               />
             </TabsContent>
             <TabsContent value="kitchen" className="m-0 p-0 h-full">
