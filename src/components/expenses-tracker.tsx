@@ -249,11 +249,12 @@ export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
   // Form state
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   const [date, setDate] = useState<Date | undefined>(new Date());
-  const [category, setCategory] = useState('');
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
   const [vendorId, setVendorId] = useState<string | undefined>(undefined);
-  const [isCategoryPopoverOpen, setIsCategoryPopoverOpen] = useState(false);
+  
+  const selectedVendor = vendors.find(v => v.id === vendorId);
+  const expenseCategory = selectedVendor?.category || 'Miscellaneous';
   
   useEffect(() => {
     const unsubVendors = onSnapshot(collection(db, "vendors"), (snapshot) => {
@@ -266,7 +267,6 @@ export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
   const resetForm = () => {
     setEditingExpense(null);
     setDate(new Date());
-    setCategory('');
     setDescription('');
     setAmount('');
     setVendorId(undefined);
@@ -275,7 +275,6 @@ export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
   const handleSetEditingExpense = (expense: Expense) => {
     setEditingExpense(expense);
     setDate(expense.date);
-    setCategory(expense.category);
     setDescription(expense.description);
     setAmount(String(expense.amount));
     setVendorId(expense.vendorId || undefined);
@@ -283,13 +282,16 @@ export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
   }
 
   const handleSaveExpense = async () => {
-    if (!date || !category || !amount) {
-      toast({ variant: "destructive", title: "Missing Fields", description: "Please fill out date, category and amount." });
+    if (!date || !amount) {
+      toast({ variant: "destructive", title: "Missing Fields", description: "Please fill out date and amount." });
       return;
     }
+    
+    const categoryToSave = selectedVendor ? selectedVendor.category : 'Miscellaneous';
+    
     const expenseData = {
         date,
-        category,
+        category: categoryToSave,
         description,
         amount: parseFloat(amount),
         vendorId: vendorId || null,
@@ -423,42 +425,12 @@ export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
                     </Select>
                 </div>
                 <div className="space-y-2">
-                    <Label htmlFor="category">Category</Label>
-                    <Popover open={isCategoryPopoverOpen} onOpenChange={setIsCategoryPopoverOpen}>
-                        <PopoverTrigger asChild>
-                            <Button
-                            variant="outline"
-                            role="combobox"
-                            aria-expanded={isCategoryPopoverOpen}
-                            className="w-full justify-between"
-                            >
-                            {category
-                                ? expenseCategories.find((cat) => cat === category)
-                                : "Select a category"}
-                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                            </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
-                            <div className="grid grid-cols-2 gap-2 p-2">
-                                {expenseCategories.map((cat) => (
-                                <Button
-                                    key={cat}
-                                    variant="ghost"
-                                    className={cn(
-                                    "justify-start",
-                                    category === cat && "bg-accent text-accent-foreground"
-                                    )}
-                                    onClick={() => {
-                                    setCategory(cat);
-                                    setIsCategoryPopoverOpen(false);
-                                    }}
-                                >
-                                    {cat}
-                                </Button>
-                                ))}
-                            </div>
-                        </PopoverContent>
-                    </Popover>
+                    <Label>Vendor Category</Label>
+                    <Input
+                        value={expenseCategory}
+                        readOnly
+                        className="bg-muted"
+                    />
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="description">Description (Optional)</Label>
