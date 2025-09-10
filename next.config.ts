@@ -25,8 +25,6 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  // Stop bundling external packages used by server components
-  serverExternalPackages: ['@react-email/components'],
 };
 
 export default nextConfig;
