@@ -26,9 +26,20 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { useToast } from '@/hooks/use-toast';
 import type { MenuCategory, MenuItem } from '@/lib/types';
-import { PlusCircle } from 'lucide-react';
+import { PlusCircle, Trash2 } from 'lucide-react';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 
@@ -116,6 +127,27 @@ export function ManageMenuDialog({
     toast({ title: `Item "${newItemName}" added to ${newItemType}.` });
   };
   
+  const handleRemoveItem = (categoryName: string, subCategoryName: string, itemName: string) => {
+    setMenu(prevMenu => {
+      const newMenu = prevMenu.map(cat => {
+        if (cat.category === categoryName) {
+          const newSubCategories = cat.subCategories.map(subCat => {
+            if (subCat.name === subCategoryName) {
+              const newItems = subCat.items.filter(item => item.name !== itemName);
+              return { ...subCat, items: newItems };
+            }
+            return subCat;
+          }).filter(subCat => subCat.items.length > 0); // Remove subcategory if it becomes empty
+          return { ...cat, subCategories: newSubCategories };
+        }
+        return cat;
+      }).filter(cat => cat.subCategories.length > 0); // Remove category if it becomes empty
+
+      return newMenu;
+    });
+    toast({ title: `Item "${itemName}" removed.` });
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl">
@@ -202,6 +234,53 @@ export function ManageMenuDialog({
                     </div>
                     <Button onClick={handleAddItem}><PlusCircle className="mr-2 h-4 w-4"/>Add Item</Button>
                 </div>
+              </AccordionContent>
+            </AccordionItem>
+
+             {/* Edit/Remove Menu */}
+            <AccordionItem value="edit-menu">
+              <AccordionTrigger className="text-lg font-semibold">Edit Menu</AccordionTrigger>
+              <AccordionContent className="p-4 bg-muted/50 rounded-b-md space-y-4">
+                  <div className="space-y-3 max-h-80 overflow-y-auto">
+                      {menu.map(cat => (
+                          <div key={cat.category} className="p-3 border rounded-md bg-background/50">
+                              <h3 className="font-bold text-lg">{cat.category}</h3>
+                              <div className="space-y-2 mt-2">
+                                {cat.subCategories.map(subCat => (
+                                    <div key={subCat.name} className="pl-4">
+                                        <h4 className="font-semibold text-muted-foreground">{subCat.name}</h4>
+                                        <ul className="mt-1 space-y-1">
+                                            {subCat.items.map(item => (
+                                                <li key={item.name} className="flex justify-between items-center group p-1 rounded-md hover:bg-muted">
+                                                    <span>{item.name} - <span className="font-mono">₹{item.price}</span></span>
+                                                     <AlertDialog>
+                                                        <AlertDialogTrigger asChild>
+                                                            <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive opacity-0 group-hover:opacity-100 transition-opacity">
+                                                                <Trash2 className="h-4 w-4" />
+                                                            </Button>
+                                                        </AlertDialogTrigger>
+                                                        <AlertDialogContent>
+                                                            <AlertDialogHeader>
+                                                                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                                                <AlertDialogDescription>
+                                                                    This will permanently delete the item "{item.name}". This action cannot be undone.
+                                                                </AlertDialogDescription>
+                                                            </AlertDialogHeader>
+                                                            <AlertDialogFooter>
+                                                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                                <AlertDialogAction onClick={() => handleRemoveItem(cat.category, subCat.name, item.name)}>Delete</AlertDialogAction>
+                                                            </AlertDialogFooter>
+                                                        </AlertDialogContent>
+                                                    </AlertDialog>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                ))}
+                              </div>
+                          </div>
+                      ))}
+                  </div>
               </AccordionContent>
             </AccordionItem>
           </Accordion>
