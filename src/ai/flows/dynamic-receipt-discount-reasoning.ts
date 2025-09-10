@@ -116,15 +116,14 @@ const generateReceiptFlow = ai.defineFlow(
     try {
       const {output} = await prompt(input);
       if (!output) {
-        throw new Error('AI failed to generate a response.');
+        // This case handles if the AI returns a null/undefined response.
+        return { receiptPreview: '' };
       }
       return output;
     } catch (error) {
-      console.error("Error in generateReceiptFlow:", error);
-      // Re-throw a more generic error to be caught by the client
-      // The client-side logic in PosSystem will handle this by showing a toast
-      // and falling back to the local receipt format.
-      throw new Error('Failed to generate AI receipt due to a server error.');
+      console.error("AI receipt generation failed, falling back to local format. Error:", error);
+      // Return an empty preview so the client-side knows to use its local fallback.
+      return { receiptPreview: '' };
     }
   }
 );
