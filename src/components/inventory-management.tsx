@@ -213,7 +213,8 @@ export default function InventoryManagement({ inventory }: InventoryManagementPr
                         value={(item.stock / item.capacity) * 100}
                         className="w-full h-3"
                       />
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1">
+                        <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => handleStockChange(item.id, item.stock - 5)}>-5</Button>
                         <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => handleStockChange(item.id, item.stock - 1)}>
                             <Minus className="h-4 w-4" />
                         </Button>
@@ -227,7 +228,8 @@ export default function InventoryManagement({ inventory }: InventoryManagementPr
                         <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => handleStockChange(item.id, item.stock + 1)}>
                             <Plus className="h-4 w-4" />
                         </Button>
-                        <div className="text-sm text-muted-foreground">/ {item.capacity} {item.unit}</div>
+                        <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => handleStockChange(item.id, item.stock + 5)}>+5</Button>
+                        <div className="text-sm text-muted-foreground ml-2">/ {item.capacity} {item.unit}</div>
                       </div>
                     </div>
                   </TableCell>
