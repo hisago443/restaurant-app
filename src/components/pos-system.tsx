@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import * as React from 'react';
@@ -678,7 +679,7 @@ export default function PosSystem({
       return (
         <div className="space-y-6">
           {filteredMenu.map((category) => (
-             <div key={category.category} className={cn("rounded-lg p-2")}>
+             <div key={category.category}>
                <div className="sticky top-0 bg-background/80 backdrop-blur-sm py-2 z-10 flex items-center justify-between gap-2 p-2">
                 <h2 className="text-xl font-bold flex-grow text-left">
                   {category.category}
@@ -705,22 +706,22 @@ export default function PosSystem({
       return (
         <Tabs defaultValue={filteredMenu[0]?.category} className="w-full">
           <div className="flex justify-center">
-            <TabsList className="mb-4 flex-wrap h-auto">
+            <TabsList className="mb-4 flex-wrap h-auto bg-transparent border-b rounded-none p-0">
               {filteredMenu.map(category => (
-                <div key={category.category} className={cn("relative p-0.5 rounded-md cursor-pointer", categoryColors[category.category] ? colorPalette[categoryColors[category.category]]?.light : '')}>
-                  <TabsTrigger value={category.category} className="flex-grow justify-between gap-2 w-full pr-8 !bg-transparent text-black">
-                     <span className="flex-grow text-left">{category.category}</span>
-                     <div className="absolute right-1 top-1/2 -translate-y-1/2">
+                <div key={category.category} className="relative">
+                    <TabsTrigger value={category.category} className="text-black !bg-transparent rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none">
+                        <span className="flex-grow text-left text-lg">{category.category}</span>
+                    </TabsTrigger>
+                    <div className="absolute right-0 top-1/2 -translate-y-1/2">
                         <CategoryColorPicker categoryName={category.category} />
-                     </div>
-                  </TabsTrigger>
+                    </div>
                 </div>
               ))}
             </TabsList>
           </div>
           {filteredMenu.map(category => (
-             <TabsContent key={category.category} value={category.category} className="m-0">
-               <div className={cn("rounded-lg p-2 space-y-4")}>
+             <TabsContent key={category.category} value={category.category} className={cn("m-0 rounded-lg p-2", categoryColors[category.category] ? colorPalette[categoryColors[category.category]]?.light : '')}>
+               <div className="space-y-4">
                 {category.subCategories.map((subCategory) => (
                   <div key={subCategory.name}>
                     <h3 className="text-md font-semibold mb-2 text-muted-foreground pl-2">{subCategory.name}</h3>
