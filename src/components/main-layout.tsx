@@ -309,37 +309,38 @@ export default function MainLayout() {
           <div>{formattedTime}</div>
         </div>
       </header>
-      <main className="flex-1">
+       <DndProvider backend={HTML5Backend}>
         <Tabs value={activeTab} onValueChange={handleTabChange} className="h-full flex flex-col">
-          <TabsList className="m-2 self-center p-0 h-auto bg-transparent">
-            <TabsTrigger value="pos" className="px-4 py-2 text-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md flex items-center gap-2">
-                <Utensils /> Main
-            </TabsTrigger>
-            <Separator orientation="vertical" className="h-6 mx-1" />
-            <TabsTrigger value="tables" className="px-4 py-2 text-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md flex items-center gap-2">
-              <LayoutGrid /> Tables
-            </TabsTrigger>
-             <Separator orientation="vertical" className="h-6 mx-1" />
-            <TabsTrigger value="kitchen" className="px-4 py-2 text-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md flex items-center gap-2">
-              <Soup /> Kitchen
-            </TabsTrigger>
-            <Separator orientation="vertical" className="h-6 mx-1" />
-             <TabsTrigger value="staff" className="px-4 py-2 text-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md flex items-center gap-2">
-              <Users /> Staff
-            </TabsTrigger>
-            <Separator orientation="vertical" className="h-6 mx-1" />
-            <TabsTrigger value="expenses" className="px-4 py-2 text-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md flex items-center gap-2">
-              <Receipt /> Expenses
-            </TabsTrigger>
-            <Separator orientation="vertical" className="h-6 mx-1" />
-            <TabsTrigger value="admin" className="px-4 py-2 text-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md flex items-center gap-2">
-              <Shield /> Admin
-            </TabsTrigger>
-          </TabsList>
+          <div className="flex justify-center border-b bg-muted/30">
+            <TabsList className="m-2 p-0 h-auto bg-transparent">
+              <TabsTrigger value="pos" className="px-4 py-2 text-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md flex items-center gap-2">
+                  <Utensils /> Main
+              </TabsTrigger>
+              <Separator orientation="vertical" className="h-6 mx-1" />
+              <TabsTrigger value="tables" className="px-4 py-2 text-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md flex items-center gap-2">
+                <LayoutGrid /> Tables
+              </TabsTrigger>
+              <Separator orientation="vertical" className="h-6 mx-1" />
+              <TabsTrigger value="kitchen" className="px-4 py-2 text-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md flex items-center gap-2">
+                <Soup /> Kitchen
+              </TabsTrigger>
+              <Separator orientation="vertical" className="h-6 mx-1" />
+              <TabsTrigger value="staff" className="px-4 py-2 text-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md flex items-center gap-2">
+                <Users /> Staff
+              </TabsTrigger>
+              <Separator orientation="vertical" className="h-6 mx-1" />
+              <TabsTrigger value="expenses" className="px-4 py-2 text-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md flex items-center gap-2">
+                <Receipt /> Expenses
+              </TabsTrigger>
+              <Separator orientation="vertical" className="h-6 mx-1" />
+              <TabsTrigger value="admin" className="px-4 py-2 text-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md flex items-center gap-2">
+                <Shield /> Admin
+              </TabsTrigger>
+            </TabsList>
+          </div>
           
-          <div className="flex-grow overflow-auto">
+          <main className="flex-grow overflow-auto">
             <TabsContent value="pos" className="m-0 p-0 h-full">
-              <DndProvider backend={HTML5Backend}>
                 <PosSystem 
                   tables={tables}
                   orders={orders}
@@ -364,7 +365,6 @@ export default function MainLayout() {
                   onViewTableDetails={handleViewTableDetails}
                   onEditOrder={handleEditOrderFromShortcut}
                 />
-              </DndProvider>
             </TabsContent>
             <TabsContent value="tables" className="m-0 p-0">
               <TableManagement 
@@ -406,9 +406,9 @@ export default function MainLayout() {
                 expenses={expenses}
               />
             </TabsContent>
-          </div>
+          </main>
         </Tabs>
-      </main>
+      </DndProvider>
     </div>
   );
 }
