@@ -245,7 +245,7 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
         <div className="relative h-full w-full flex items-center justify-center">
             <DayContent {...props} />
             {uniqueEmployeeIds.size > 0 && (
-                <div className="absolute bottom-1.5 flex items-center justify-center space-x-1">
+                <div className="absolute bottom-0.5 flex items-center justify-center space-x-1">
                     {Array.from(uniqueEmployeeIds).slice(0, 5).map(employeeId => {
                         const employee = employees.find(e => e.id === employeeId);
                         if (!employee) return null;
@@ -279,8 +279,8 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
 
 
   return (
-    <div className="p-4 space-y-4 h-[calc(100vh-8rem)]">
-       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
+    <div className="p-4 space-y-4">
+       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
         {/* Left Column */}
         <div className="flex flex-col gap-6">
             <Card className="flex flex-col items-center justify-center p-2 bg-muted/30">
@@ -315,7 +315,7 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
                  </div>
             </Card>
 
-             <Card className="bg-muted/30 flex-grow">
+             <Card className="bg-muted/30">
                 <CardHeader>
                     <div className="flex justify-between items-center">
                         <div>
@@ -328,7 +328,7 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
                     </div>
                 </CardHeader>
                 <CardContent>
-                    <ScrollArea className="h-48">
+                    <div className="max-h-64 overflow-y-auto">
                       {advancesForSelectedDate.length > 0 ? (
                         <div className="space-y-2 pr-4">
                             {advancesForSelectedDate.map(advance => {
@@ -353,133 +353,156 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
                             )})}
                         </div>
                       ) : (
-                        <div className="h-full flex items-center justify-center">
+                        <div className="h-full flex items-center justify-center py-10">
                             <p className="text-muted-foreground">No advances given on this date.</p>
                         </div>
                       )}
-                    </ScrollArea>
+                    </div>
                 </CardContent>
             </Card>
         </div>
 
         {/* Right Column */}
-        <Card className="bg-muted/30 flex flex-col h-full">
-            <CardHeader>
-                <div className='flex justify-between items-center'>
-                    <div>
-                        <CardTitle>Staff & Attendance</CardTitle>
-                        <CardDescription>Manage staff and their attendance for {format(selectedDate, 'PPP')}</CardDescription>
+        <div className="flex flex-col gap-6">
+            <Card className="bg-muted/30">
+                <CardHeader>
+                    <CardTitle>Staff Attendance</CardTitle>
+                    <CardDescription>Manage attendance for {format(selectedDate, 'PPP')}</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <div className="space-y-2 max-h-80 overflow-y-auto">
+                        {employees.map(employee => {
+                            const attendanceRecord = attendanceForSelectedDate.find(a => a.employeeId === employee.id);
+                            return (
+                                <div key={employee.id} className="p-3 bg-background/50 rounded-lg border">
+                                    <div className="flex justify-between items-center">
+                                        <div className="flex items-center gap-2 font-medium">
+                                            <span className={cn('h-2.5 w-2.5 rounded-full', employee.color)} />
+                                            {employee.name}
+                                        </div>
+                                        <div className="flex items-center gap-1.5">
+                                             {(Object.keys(attendanceStatusConfig) as AttendanceStatus[]).map(status => {
+                                                const isSelected = attendanceRecord?.status === status;
+                                                return (
+                                                    <TooltipProvider key={status}>
+                                                        <Tooltip>
+                                                            <TooltipTrigger asChild>
+                                                                <Button 
+                                                                    key={status}
+                                                                    variant={isSelected ? 'default' : 'outline'}
+                                                                    size="icon"
+                                                                    onClick={() => handleMarkAttendance(employee.id, status)}
+                                                                    className={cn("h-9 w-9", isSelected && attendanceStatusConfig[status].className)}
+                                                                >
+                                                                    {React.createElement(attendanceStatusConfig[status].icon, {className: "h-5 w-5"})}
+                                                                </Button>
+                                                            </TooltipTrigger>
+                                                            <TooltipContent>
+                                                                <p>{attendanceStatusConfig[status].label}</p>
+                                                            </TooltipContent>
+                                                        </Tooltip>
+                                                    </TooltipProvider>
+                                                )
+                                            })}
+                                            <TooltipProvider>
+                                                <Tooltip>
+                                                    <TooltipTrigger asChild>
+                                                        <Button variant="ghost" size="icon" onClick={() => openNotesDialog(employee.id)}>
+                                                            <Pencil className="h-4 w-4" />
+                                                        </Button>
+                                                    </TooltipTrigger>
+                                                    <TooltipContent>Add/Edit Note</TooltipContent>
+                                                </Tooltip>
+                                            </TooltipProvider>
+                                        </div>
+                                    </div>
+                                </div>
+                            )
+                        })}
                     </div>
-                    <Button onClick={() => openEmployeeDialog(null)}><PlusCircle className="mr-2 h-4 w-4" /> Add Employee</Button>
-                </div>
-            </CardHeader>
-            <CardContent className="flex-grow flex flex-col">
-            <ScrollArea className="flex-grow">
-            <Table>
-                <TableHeader>
-                    <TableRow>
-                        <TableHead>Employee</TableHead>
-                        <TableHead>Salary / Remaining</TableHead>
-                        <TableHead className="text-center">Attendance</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                {employees.map((employee) => {
-                    const totalAdvance = (advancesByEmployee[employee.id] || []).reduce((sum, a) => sum + a.amount, 0);
-                    const remainingSalary = employee.salary - totalAdvance;
-                    const attendanceRecord = attendanceForSelectedDate.find(a => a.employeeId === employee.id);
+                </CardContent>
+            </Card>
 
-                    return (
-                    <TableRow key={employee.id}>
-                        <TableCell>
-                        <div className="flex items-center gap-2 font-medium">
-                            <span className={cn('h-2 w-2 rounded-full', employee.color)} />
-                            {employee.name}
+            <Card className="bg-muted/30">
+                <CardHeader>
+                    <div className='flex justify-between items-center'>
+                        <div>
+                            <CardTitle>Employees & Advances</CardTitle>
+                            <CardDescription>Manage staff salary and advance information.</CardDescription>
                         </div>
-                         <span className="text-xs text-muted-foreground">{employee.role}</span>
-                        </TableCell>
-                        <TableCell>
-                            <div className='font-mono text-sm'>₹{employee.salary.toLocaleString()}</div>
-                            <div className='font-mono text-xs text-green-600 dark:text-green-400'>₹{remainingSalary.toLocaleString()} Left</div>
-                        </TableCell>
-                        <TableCell className="text-center">
-                            <div className="flex items-center justify-center gap-1.5">
-                                {(Object.keys(attendanceStatusConfig) as AttendanceStatus[]).map(status => {
-                                const isSelected = attendanceRecord?.status === status;
+                        <Button onClick={() => openEmployeeDialog(null)}><PlusCircle className="mr-2 h-4 w-4" /> Add Employee</Button>
+                    </div>
+                </CardHeader>
+                <CardContent>
+                    <div className="max-h-[26rem] overflow-y-auto">
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Employee</TableHead>
+                                    <TableHead>Salary / Remaining</TableHead>
+                                    <TableHead className="text-right">Actions</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                            {employees.map((employee) => {
+                                const totalAdvance = (advancesByEmployee[employee.id] || []).reduce((sum, a) => sum + a.amount, 0);
+                                const remainingSalary = employee.salary - totalAdvance;
                                 return (
-                                    <TooltipProvider key={status}>
-                                        <Tooltip>
-                                            <TooltipTrigger asChild>
-                                                <Button 
-                                                    key={status}
-                                                    variant={isSelected ? 'default' : 'outline'}
-                                                    size="icon"
-                                                    onClick={() => handleMarkAttendance(employee.id, status)}
-                                                    className={cn("h-9 w-9", isSelected && attendanceStatusConfig[status].className)}
-                                                >
-                                                    {React.createElement(attendanceStatusConfig[status].icon, {className: "h-5 w-5"})}
-                                                </Button>
-                                            </TooltipTrigger>
-                                            <TooltipContent>
-                                                <p>{attendanceStatusConfig[status].label}</p>
-                                            </TooltipContent>
-                                        </Tooltip>
-                                    </TooltipProvider>
-                                )
-                                })}
-                            </div>
-                        </TableCell>
-                        <TableCell className="text-right">
-                            <TooltipProvider>
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <Button variant="ghost" size="icon" onClick={() => openNotesDialog(employee.id)}>
-                                            <Pencil className="h-4 w-4" />
-                                        </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent>Add/Edit Note</TooltipContent>
-                                </Tooltip>
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <Button variant="ghost" size="icon" onClick={() => openEmployeeDialog(employee)}>
-                                            <Edit className="h-4 w-4" />
-                                        </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent>Edit Employee</TooltipContent>
-                                </Tooltip>
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <AlertDialog>
-                                            <AlertDialogTrigger asChild>
-                                                <Button variant="ghost" size="icon" className="text-destructive">
-                                                    <Trash2 className="h-4 w-4" />
-                                                </Button>
-                                            </AlertDialogTrigger>
-                                            <AlertDialogContent>
-                                                <AlertDialogHeader>
-                                                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                                                    <AlertDialogDescription>This will permanently delete {employee.name}'s record.</AlertDialogDescription>
-                                                </AlertDialogHeader>
-                                                <AlertDialogFooter>
-                                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                                    <AlertDialogAction onClick={() => handleDeleteEmployee(employee.id)}>Delete</AlertDialogAction>
-                                                </AlertDialogFooter>
-                                            </AlertDialogContent>
-                                        </AlertDialog>
-                                    </TooltipTrigger>
-                                    <TooltipContent>Delete Employee</TooltipContent>
-                                </Tooltip>
-                            </TooltipProvider>
-                        </TableCell>
-                    </TableRow>
-                    );
-                })}
-                </TableBody>
-            </Table>
-            </ScrollArea>
-            </CardContent>
-        </Card>
+                                <TableRow key={employee.id}>
+                                    <TableCell>
+                                        <div className="flex items-center gap-2 font-medium">
+                                            <span className={cn('h-2 w-2 rounded-full', employee.color)} />
+                                            {employee.name}
+                                        </div>
+                                        <span className="text-xs text-muted-foreground">{employee.role}</span>
+                                    </TableCell>
+                                    <TableCell>
+                                        <div className='font-mono text-sm'>₹{employee.salary.toLocaleString()}</div>
+                                        <div className='font-mono text-xs text-green-600 dark:text-green-400'>₹{remainingSalary.toLocaleString()} Left</div>
+                                    </TableCell>
+                                    <TableCell className="text-right">
+                                        <TooltipProvider>
+                                            <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                    <Button variant="ghost" size="icon" onClick={() => openEmployeeDialog(employee)}>
+                                                        <Edit className="h-4 w-4" />
+                                                    </Button>
+                                                </TooltipTrigger>
+                                                <TooltipContent>Edit Employee</TooltipContent>
+                                            </Tooltip>
+                                            <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                    <AlertDialog>
+                                                        <AlertDialogTrigger asChild>
+                                                            <Button variant="ghost" size="icon" className="text-destructive">
+                                                                <Trash2 className="h-4 w-4" />
+                                                            </Button>
+                                                        </AlertDialogTrigger>
+                                                        <AlertDialogContent>
+                                                            <AlertDialogHeader>
+                                                                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                                                <AlertDialogDescription>This will permanently delete {employee.name}'s record.</AlertDialogDescription>
+                                                            </AlertDialogHeader>
+                                                            <AlertDialogFooter>
+                                                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                                <AlertDialogAction onClick={() => handleDeleteEmployee(employee.id)}>Delete</AlertDialogAction>
+                                                            </AlertDialogFooter>
+                                                        </AlertDialogContent>
+                                                    </AlertDialog>
+                                                </TooltipTrigger>
+                                                <TooltipContent>Delete Employee</TooltipContent>
+                                            </Tooltip>
+                                        </TooltipProvider>
+                                    </TableCell>
+                                </TableRow>
+                                );
+                            })}
+                            </TableBody>
+                        </Table>
+                    </div>
+                </CardContent>
+            </Card>
+        </div>
       </div>
       
       <AddOrEditAdvanceDialog 
@@ -718,3 +741,6 @@ function EmployeeDialog({ open, onOpenChange, employee, onSave }: { open: boolea
 
 
 
+
+
+    
