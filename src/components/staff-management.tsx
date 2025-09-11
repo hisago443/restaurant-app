@@ -287,7 +287,7 @@ export default function StaffManagement({ employees }: StaffManagementProps) {
                 />
               </CardContent>
             </Card>
-            <Card className="lg:col-span-2 bg-muted/30">
+            <Card className="lg:col-span-2 bg-violet-50 dark:bg-violet-900/20">
               <CardHeader>
                 <div className="flex justify-between items-start">
                   <div>
