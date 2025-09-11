@@ -380,15 +380,11 @@ export default function StaffManagement({ employees }: StaffManagementProps) {
                     <div className="space-y-2">
                         {employees.map(employee => {
                             const attendanceRecord = attendanceForSelectedDate.find(a => a.employeeId === employee.id);
-                             const totalAdvance = (advancesByEmployee[employee.id] || []).reduce((sum, a) => sum + a.amount, 0);
                             return (
                             <div key={employee.id} className="flex justify-between items-center p-2 bg-background/50 rounded-lg group">
                                 <div className="flex items-center gap-2 font-medium">
                                     <span className={cn('h-2.5 w-2.5 rounded-full', employee.color)} />
-                                    <div>
-                                      {employee.name}
-                                      <p className="text-xs font-mono text-muted-foreground">Total Adv: Rs. {totalAdvance.toLocaleString()}</p>
-                                    </div>
+                                    {employee.name}
                                 </div>
                                 <div className="flex items-center gap-1.5">
                                     {(Object.keys(attendanceStatusConfig) as AttendanceStatus[]).map(status => {
@@ -434,13 +430,16 @@ export default function StaffManagement({ employees }: StaffManagementProps) {
                     {advancesForSelectedDate.length > 0 ? (
                         advancesForSelectedDate.map(advance => {
                             const employee = employees.find(e => e.id === advance.employeeId);
+                            const totalAdvance = (advancesByEmployee[advance.employeeId] || []).reduce((sum, a) => sum + a.amount, 0);
                             return (
                                 <div key={advance.id} className="flex justify-between items-center p-3 bg-background/50 rounded-lg group">
                                     <div className="flex items-center gap-2">
                                         <span className={cn('h-2.5 w-2.5 rounded-full', employee?.color)} />
                                         <div>
                                             <p className="font-semibold">{employee?.name || 'Unknown Employee'}</p>
-                                            <p className="text-sm text-muted-foreground font-mono">Rs. {advance.amount.toLocaleString()}</p>
+                                            <p className="text-sm text-muted-foreground font-mono">
+                                                Today: Rs. {advance.amount.toLocaleString()} / Total: Rs. {totalAdvance.toLocaleString()}
+                                            </p>
                                         </div>
                                     </div>
                                 </div>
@@ -602,5 +601,6 @@ function NotesDialog({
     
 
     
+
 
 
