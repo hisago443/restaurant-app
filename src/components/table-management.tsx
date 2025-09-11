@@ -17,12 +17,22 @@ import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { format } from 'date-fns';
 
-const statusColors: Record<TableStatus, string> = {
-  Available: 'bg-green-400 hover:bg-green-500',
-  Occupied: 'bg-red-400 hover:bg-red-500',
-  Reserved: 'bg-blue-400 hover:bg-blue-500',
-  Cleaning: 'bg-amber-300 hover:bg-amber-400',
+const statusBaseColors: Record<TableStatus, string> = {
+  Available: 'green',
+  Occupied: 'red',
+  Reserved: 'blue',
+  Cleaning: 'amber',
 };
+
+const getDynamicColor = (status: TableStatus, turnover: number) => {
+  const baseShade = status === 'Cleaning' ? 300 : 400;
+  const shade = Math.min(900, baseShade + turnover * 100);
+  const color = statusBaseColors[status];
+  
+  const hoverShade = Math.min(900, shade + 100);
+  return `bg-${color}-${shade} hover:bg-${color}-${hoverShade}`;
+};
+
 
 const statusIcons: Record<TableStatus, React.ElementType> = {
   Available: CheckCircle2,
@@ -242,8 +252,10 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
               >
                 All ({tables.length})
               </Button>
-              {(Object.keys(statusColors) as TableStatus[]).map(status => {
+              {(Object.keys(statusBaseColors) as TableStatus[]).map(status => {
                   const Icon = statusIcons[status];
+                  const statusColor = status === 'Cleaning' ? `bg-amber-300` : `bg-${statusBaseColors[status]}-400`;
+                  const hoverColor = status === 'Cleaning' ? `hover:bg-amber-400` : `hover:bg-${statusBaseColors[status]}-500`;
                   return (
                     <Button
                       key={status}
@@ -253,7 +265,7 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
                       variant={filter === status ? 'default' : 'outline'}
                       className={cn(
                         'transition-all',
-                         filter !== status && statusColors[status],
+                         filter !== status && `${statusColor} ${hoverColor}`,
                          filter !== status && (status === 'Available' || status === 'Occupied' ? 'text-white' : 'text-black'),
                       )}
                     >
@@ -268,12 +280,13 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
           <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-10 gap-4">
             {filteredTables.map(table => {
               const Icon = statusIcons[table.status];
+              const turnover = occupancyCount[table.id] || 0;
               return (
               <div
                 key={table.id}
                 className={cn(
                   'aspect-square rounded-lg flex flex-col items-center justify-center cursor-pointer transition-all duration-300 shadow-lg hover:shadow-2xl relative border-2',
-                  statusColors[table.status],
+                  getDynamicColor(table.status, turnover),
                   selectedTables.includes(table.id) && 'ring-4 ring-offset-2 ring-primary border-primary',
                   !selectedTables.includes(table.id) && 'border-black/50',
                   hoveredStatus === table.status && 'scale-110 z-10'
@@ -293,10 +306,10 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
                         </Button>
                     )}
                 </div>
-                 {(showOccupancy && occupancyCount[table.id] > 0) &&
+                 {showOccupancy && turnover > 0 &&
                     <div className="absolute bottom-1 right-1 flex items-center gap-1 bg-black/50 text-white text-xs font-bold p-1 rounded-md">
                         <Repeat className="h-3 w-3" />
-                        <span>{occupancyCount[table.id]}</span>
+                        <span>{turnover}</span>
                     </div>
                 }
                 <div className="absolute top-1 left-1">
@@ -464,3 +477,4 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
     </div>
   );
 }
+

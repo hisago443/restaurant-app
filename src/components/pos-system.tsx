@@ -4,7 +4,7 @@
 
 import * as React from 'react';
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { addDoc, collection, doc, getDocs, setDoc } from 'firebase/firestore';
+import { addDoc, collection, doc, getDocs, setDoc, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -29,6 +29,7 @@ import type { MenuCategory, MenuItem, OrderItem, Table, Order, Bill, TableStatus
 import menuData from '@/data/menu.json';
 import { generateReceipt, type GenerateReceiptInput } from '@/ai/flows/dynamic-receipt-discount-reasoning';
 import { PaymentDialog } from './payment-dialog';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogClose, DialogDescription } from './ui/dialog';
 
 const vegColor = 'bg-green-100 dark:bg-green-900/30';
 const nonVegColor = 'bg-rose-100 dark:bg-rose-900/30';
@@ -46,13 +47,42 @@ const colorNames = Object.keys(colorPalette);
 
 type ViewMode = 'accordion' | 'grid' | 'list';
 
-
-const statusColors: Record<TableStatus, string> = {
-  Available: 'bg-green-400 hover:bg-green-500',
-  Occupied: 'bg-red-400 hover:bg-red-500',
-  Reserved: 'bg-blue-400 hover:bg-blue-500',
-  Cleaning: 'bg-amber-300 hover:bg-amber-400',
+const statusBaseColors: Record<TableStatus, string> = {
+  Available: 'green',
+  Occupied: 'red',
+  Reserved: 'blue',
+  Cleaning: 'amber',
 };
+
+const getDynamicColor = (status: TableStatus, turnover: number) => {
+  const baseShade = status === 'Cleaning' ? 300 : 400;
+  const shade = Math.min(900, baseShade + turnover * 100);
+  const color = statusBaseColors[status];
+  
+  const hoverShade = Math.min(900, shade + 100);
+
+  // Note: TailwindCSS needs to see the full class name, so we can't use template literals with variables
+  // for the color names. We need to map them out. This is a workaround.
+  const colorClasses: Record<string, Record<number, string>> = {
+    green: { 400: 'bg-green-400', 500: 'bg-green-500', 600: 'bg-green-600', 700: 'bg-green-700', 800: 'bg-green-800', 900: 'bg-green-900' },
+    red: { 400: 'bg-red-400', 500: 'bg-red-500', 600: 'bg-red-600', 700: 'bg-red-700', 800: 'bg-red-800', 900: 'bg-red-900' },
+    blue: { 400: 'bg-blue-400', 500: 'bg-blue-500', 600: 'bg-blue-600', 700: 'bg-blue-700', 800: 'bg-blue-800', 900: 'bg-blue-900' },
+    amber: { 300: 'bg-amber-300', 400: 'bg-amber-400', 500: 'bg-amber-500', 600: 'bg-amber-600', 700: 'bg-amber-700', 800: 'bg-amber-800', 900: 'bg-amber-900' },
+  };
+  const hoverColorClasses: Record<string, Record<number, string>> = {
+    green: { 500: 'hover:bg-green-500', 600: 'hover:bg-green-600', 700: 'hover:bg-green-700', 800: 'hover:bg-green-800', 900: 'hover:bg-green-900' },
+    red: { 500: 'hover:bg-red-500', 600: 'hover:bg-red-600', 700: 'hover:bg-red-700', 800: 'hover:bg-red-800', 900: 'hover:bg-red-900' },
+    blue: { 500: 'hover:bg-blue-500', 600: 'hover:bg-blue-600', 700: 'hover:bg-blue-700', 800: 'hover:bg-blue-800', 900: 'hover:bg-blue-900' },
+    amber: { 400: 'hover:bg-amber-400', 500: 'hover:bg-amber-500', 600: 'hover:bg-amber-600', 700: 'hover:bg-amber-700', 800: 'hover:bg-amber-800', 900: 'hover:bg-amber-900' },
+  };
+
+  const bgColorClass = colorClasses[color]?.[shade] || `bg-${color}-400`;
+  const hoverBgColorClass = hoverColorClasses[color]?.[hoverShade] || `hover:bg-${color}-500`;
+
+  return `${bgColorClass} ${hoverBgColorClass}`;
+};
+
+
 
 const statusIcons: Record<TableStatus, React.ElementType> = {
   Available: CheckCircle2,
@@ -124,6 +154,9 @@ export default function PosSystem({
   const [isAddItemDialogOpen, setIsAddItemDialogOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isMenuManagerOpen, setIsMenuManagerOpen] = useState(false);
+  const [isReserveDialogOpen, setIsReserveDialogOpen] = useState(false);
+  const [reservationDetails, setReservationDetails] = useState({ name: '', time: '' });
+  const [tableToReserve, setTableToReserve] = useState<number | null>(null);
 
 
   const typedMenuData: MenuCategory[] = menu;
@@ -577,6 +610,43 @@ export default function PosSystem({
     }
   };
 
+  const handleReserveTable = async () => {
+    if (!tableToReserve) return;
+  
+    const tableRef = doc(db, 'tables', String(tableToReserve));
+    try {
+      await updateDoc(tableRef, {
+        status: 'Reserved',
+        reservationDetails: reservationDetails,
+      });
+      updateTableStatus([tableToReserve], 'Reserved');
+      toast({ title: `Table ${tableToReserve} reserved for ${reservationDetails.name || 'guest'}` });
+    } catch (e) {
+       // If doc doesn't exist, create it.
+       try {
+        await setDoc(tableRef, {
+            id: tableToReserve,
+            status: 'Reserved',
+            reservationDetails: reservationDetails,
+        });
+        updateTableStatus([tableToReserve], 'Reserved');
+        toast({ title: `Table ${tableToReserve} reserved for ${reservationDetails.name || 'guest'}` });
+       } catch (error) {
+         console.error("Error reserving table:", error);
+         toast({ variant: 'destructive', title: 'Reservation Failed' });
+       }
+    }
+  
+    setIsReserveDialogOpen(false);
+    setReservationDetails({ name: '', time: '' });
+    setTableToReserve(null);
+  };
+  
+  const openReservationDialog = (tableId: number) => {
+    setTableToReserve(tableId);
+    setIsReserveDialogOpen(true);
+  };
+
 
   const renderMenuItem = (item: MenuItem, subCategoryName: string, categoryName: string) => {
     const isNonVeg = subCategoryName.toLowerCase().includes('non-veg');
@@ -585,7 +655,7 @@ export default function PosSystem({
     const categoryColorName = categoryColors[categoryName];
 
     const finalColorName = itemColorName || categoryColorName;
-    const finalLightColor = finalColorName ? colorPalette[finalColorName]?.light : (isNonVeg ? nonVegColor : vegColor);
+    const finalLightColor = finalColorName ? colorPalette[finalColorName]?.light : (isNonVeg ? nonVegColor : '');
     const finalDarkColor = finalColorName ? colorPalette[finalColorName]?.dark : '';
 
     return (
@@ -711,39 +781,45 @@ export default function PosSystem({
       );
     }
     if (viewMode === 'grid') {
-      return (
-        <Tabs defaultValue={filteredMenu[0]?.category} className="w-full">
-          <div className="flex justify-center">
-            <TabsList className="mb-4 flex-wrap h-auto bg-transparent border-b rounded-none p-0">
-              {filteredMenu.map(category => (
-                 <div key={category.category} className="relative group p-1">
-                    <TabsTrigger value={category.category} className={cn("rounded-none border-b-2 border-transparent data-[state=active]:shadow-none px-4 py-2 cursor-pointer", categoryColors[category.category] ? colorPalette[categoryColors[category.category]]?.light : 'bg-muted/30' )}>
-                       <span className="flex-grow text-left text-lg text-black">{category.category}</span>
+        return (
+          <Tabs defaultValue={filteredMenu[0]?.category} className="w-full">
+            <div className="flex justify-center">
+              <TabsList className="mb-4 flex-wrap h-auto bg-transparent border-b rounded-none p-0">
+                {filteredMenu.map(category => (
+                  <div key={category.category} className="relative group p-1">
+                    <TabsTrigger value={category.category} className="rounded-none border-b-2 border-transparent data-[state=active]:shadow-none px-4 py-2 cursor-pointer">
+                      <span className="flex-grow text-left text-lg text-black">{category.category}</span>
                     </TabsTrigger>
-                    <div className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div
+                      className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                      }}
+                    >
                       <CategoryColorPicker categoryName={category.category} />
-                    </div>
-                </div>
-              ))}
-            </TabsList>
-          </div>
-          {filteredMenu.map(category => (
-             <TabsContent key={category.category} value={category.category} className="m-0 rounded-lg p-2">
-               <div className="space-y-4">
-                {category.subCategories.map((subCategory) => (
-                  <div key={subCategory.name}>
-                    <h3 className="text-md font-semibold mb-2 text-muted-foreground pl-2">{subCategory.name}</h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-                      {subCategory.items.map((item) => renderMenuItem(item, subCategory.name, category.category))}
                     </div>
                   </div>
                 ))}
-              </div>
-            </TabsContent>
-          ))}
-        </Tabs>
-      );
-    }
+              </TabsList>
+            </div>
+            {filteredMenu.map(category => (
+              <TabsContent key={category.category} value={category.category} className={cn("m-0 rounded-lg p-2", categoryColors[category.category] ? colorPalette[categoryColors[category.category]]?.light : '')}>
+                <div className="space-y-4">
+                  {category.subCategories.map((subCategory) => (
+                    <div key={subCategory.name}>
+                      <h3 className="text-md font-semibold mb-2 text-muted-foreground pl-2">{subCategory.name}</h3>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                        {subCategory.items.map((item) => renderMenuItem(item, subCategory.name, category.category))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </TabsContent>
+            ))}
+          </Tabs>
+        );
+      }
     // Accordion view is default
     return (
        <div className="flex justify-center">
@@ -903,7 +979,7 @@ export default function PosSystem({
                 <Users className="mr-2 h-4 w-4" />
                 <span>Create Order</span>
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => updateTableStatus([table.id], 'Reserved')}>
+              <DropdownMenuItem onClick={() => openReservationDialog(table.id)}>
                 <Bookmark className="mr-2 h-4 w-4" />
                 <span>Reserve Table</span>
               </DropdownMenuItem>
@@ -1063,7 +1139,7 @@ export default function PosSystem({
                           variant="outline"
                           className={cn(
                             "h-14 w-full flex-col justify-center items-center relative p-1 border-2 transition-transform duration-150 active:scale-95 group",
-                            statusColors[table.status],
+                            getDynamicColor(table.status, occupancyCount[table.id] || 0),
                             currentActiveTableId === table.id && 'ring-4 ring-offset-2 ring-ring',
                             table.status === 'Available' || table.status === 'Occupied' ? 'text-white border-black' : 'text-black border-black/50',
                           )}
@@ -1151,6 +1227,28 @@ export default function PosSystem({
         menu={menu}
         setMenu={setMenu}
       />
+      <Dialog open={isReserveDialogOpen} onOpenChange={setIsReserveDialogOpen}>
+        <DialogContent>
+            <DialogHeader>
+                <DialogTitle>Reserve Table {tableToReserve}</DialogTitle>
+                <DialogDescription>Enter guest details (optional).</DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+                <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="guest-name" className="text-right">Name</Label>
+                    <Input id="guest-name" value={reservationDetails.name} onChange={(e) => setReservationDetails({...reservationDetails, name: e.target.value})} className="col-span-3" />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="reservation-time" className="text-right">Time</Label>
+                    <Input id="reservation-time" type="time" value={reservationDetails.time} onChange={(e) => setReservationDetails({...reservationDetails, time: e.target.value})} className="col-span-3" />
+                </div>
+            </div>
+            <DialogFooter>
+                <Button variant="outline" onClick={() => setIsReserveDialogOpen(false)}>Cancel</Button>
+                <Button onClick={handleReserveTable}>Reserve</Button>
+            </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -1158,5 +1256,7 @@ export default function PosSystem({
     
 
     
+
+
 
 
