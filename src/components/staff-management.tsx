@@ -24,8 +24,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from './ui/scroll-area';
 import { Separator } from './ui/separator';
-
-const colors = ['bg-blue-500', 'bg-green-500', 'bg-yellow-500', 'bg-purple-500', 'bg-pink-500', 'bg-indigo-500', 'bg-teal-500'];
+import { Checkbox } from './ui/checkbox';
 
 const attendanceStatusConfig: Record<AttendanceStatus, { icon: React.ElementType, color: string, label: string, className: string }> = {
   'Present': { icon: UserCheck, color: 'green', label: 'Present', className: 'bg-green-500 hover:bg-green-600 text-white' },
@@ -48,6 +47,9 @@ export default function StaffManagement({ employees }: StaffManagementProps) {
   
   const [editingAdvance, setEditingAdvance] = useState<Advance | null>(null);
   const [editingAttendance, setEditingAttendance] = useState<Attendance | null>(null);
+
+  const [showAdvancesOnCalendar, setShowAdvancesOnCalendar] = useState(false);
+  const [showAbsencesOnCalendar, setShowAbsencesOnCalendar] = useState(false);
 
   useEffect(() => {
     const unsubAdvances = onSnapshot(collection(db, "advances"), (snapshot) => {
@@ -74,8 +76,17 @@ export default function StaffManagement({ employees }: StaffManagementProps) {
     (att) => isSameDay(att.date, selectedDate)
   ), [attendance, selectedDate]);
 
-  const datesWithAdvance = useMemo(() => advances.map(a => startOfDay(a.date)), [advances]);
-  const datesWithAttendance = useMemo(() => attendance.map(a => startOfDay(a.date)), [attendance]);
+  const datesWithAdvance = useMemo(() => {
+    if (!showAdvancesOnCalendar) return [];
+    return advances.map(a => startOfDay(a.date));
+  }, [advances, showAdvancesOnCalendar]);
+  
+  const datesWithAbsence = useMemo(() => {
+    if (!showAbsencesOnCalendar) return [];
+    return attendance
+      .filter(a => a.status === 'Absent')
+      .map(a => startOfDay(a.date));
+  }, [attendance, showAbsencesOnCalendar]);
   
   const handleSaveAdvance = async (advance: Omit<Advance, 'id'> & {id?: string}) => {
     const { id, ...advanceData } = advance;
@@ -210,9 +221,9 @@ export default function StaffManagement({ employees }: StaffManagementProps) {
                                 </div>
                                 </TableCell>
                                 <TableCell>{employee.role}</TableCell>
-                                <TableCell className="bg-yellow-100 dark:bg-yellow-900/30 text-yellow-900 dark:text-yellow-200">{employee.salary.toLocaleString()}</TableCell>
-                                <TableCell className="bg-red-100 dark:bg-red-900/30 text-red-900 dark:text-red-200">{totalAdvance.toLocaleString()}</TableCell>
-                                <TableCell className="bg-green-100 dark:bg-green-900/30 text-green-900 dark:text-green-200">{remainingSalary.toLocaleString()}</TableCell>
+                                <TableCell className="font-mono bg-yellow-100 dark:bg-yellow-900/30 text-yellow-900 dark:text-yellow-200">{employee.salary.toLocaleString()}</TableCell>
+                                <TableCell className="font-mono bg-red-100 dark:bg-red-900/30 text-red-900 dark:text-red-200">{totalAdvance.toLocaleString()}</TableCell>
+                                <TableCell className="font-mono bg-green-100 dark:bg-green-900/30 text-green-900 dark:text-green-200">{remainingSalary.toLocaleString()}</TableCell>
                             </TableRow>
                             );
                         })}
@@ -270,7 +281,7 @@ export default function StaffManagement({ employees }: StaffManagementProps) {
                 <CardTitle>Calendar</CardTitle>
                 <CardDescription>Select a date to manage records.</CardDescription>
               </CardHeader>
-              <CardContent className="flex justify-center">
+              <CardContent className="flex flex-col items-center">
                 <Calendar
                   mode="single"
                   selected={selectedDate}
@@ -278,13 +289,27 @@ export default function StaffManagement({ employees }: StaffManagementProps) {
                   className="rounded-md border"
                   modifiers={{
                     advance: datesWithAdvance,
-                    attendance: datesWithAttendance,
+                    absent: datesWithAbsence,
                   }}
                   modifiersStyles={{
                     advance: { border: '2px solid hsl(var(--primary))' },
-                    attendance: { textDecoration: 'underline' },
+                    absent: { 
+                        backgroundColor: 'hsl(var(--destructive) / 0.2)',
+                        color: 'hsl(var(--destructive))',
+                     },
                   }}
                 />
+                 <div className="space-y-2 mt-4 p-4 border rounded-md w-full">
+                    <h4 className="font-semibold text-sm mb-2">Calendar Highlights:</h4>
+                    <div className="flex items-center space-x-2">
+                        <Checkbox id="show-advances" checked={showAdvancesOnCalendar} onCheckedChange={(checked) => setShowAdvancesOnCalendar(Boolean(checked))} />
+                        <Label htmlFor="show-advances">Show Advances Given</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                        <Checkbox id="show-absences" checked={showAbsencesOnCalendar} onCheckedChange={(checked) => setShowAbsencesOnCalendar(Boolean(checked))} />
+                        <Label htmlFor="show-absences">Show Absent Days</Label>
+                    </div>
+                 </div>
               </CardContent>
             </Card>
             <Card className="lg:col-span-2 bg-violet-50 dark:bg-violet-900/20">
