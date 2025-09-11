@@ -1040,215 +1040,221 @@ export default function PosSystem({
 
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 h-full">
-      <Card className="col-span-1 lg:col-span-2 flex flex-col relative m-4">
-        <CardHeader>
-          <div className="flex items-start justify-between gap-4 flex-wrap">
-             <div className="flex-grow grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-4 gap-4 h-full p-4">
+      {/* Menu Panel */}
+      <div className="md:col-span-2 xl:col-span-3 flex flex-col h-full">
+        <Card className="flex flex-col flex-grow">
+          <CardHeader>
+            <div className="flex items-start justify-between gap-4 flex-wrap">
+              <div className="flex-grow grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                    <Input
-                        placeholder="Search menu items..."
-                        className="pl-10"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                    />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                  <Input
+                    placeholder="Search menu items..."
+                    className="pl-10"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
                 </div>
                 <div className="relative">
-                    <QrCodeIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                    <Input
-                        placeholder="Enter item code..."
-                        className="pl-10"
-                        value={itemCodeInput}
-                        onChange={(e) => setItemCodeInput(e.target.value)}
-                        onKeyDown={handleCodeEntry}
-                    />
+                  <QrCodeIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                  <Input
+                    placeholder="Enter item code..."
+                    className="pl-10"
+                    value={itemCodeInput}
+                    onChange={(e) => setItemCodeInput(e.target.value)}
+                    onKeyDown={handleCodeEntry}
+                  />
                 </div>
-            </div>
-            <div className="flex items-center gap-2 flex-wrap">
-               <RadioGroup value={viewMode} onValueChange={(v) => setViewMode(v as ViewMode)} className="flex items-center">
-                  <RadioGroupItem value="accordion" id="accordion-view" className="sr-only" />
-                  <Label htmlFor="accordion-view" className={cn("p-1.5 rounded-md cursor-pointer transition-colors", viewMode === 'accordion' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent' )}>
-                    <List className="h-5 w-5 box-content" />
-                  </Label>
+              </div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <RadioGroup value={viewMode} onValueChange={(v) => setViewMode(v as ViewMode)} className="flex items-center">
+                    <RadioGroupItem value="accordion" id="accordion-view" className="sr-only" />
+                    <Label htmlFor="accordion-view" className={cn("p-1.5 rounded-md cursor-pointer transition-colors", viewMode === 'accordion' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent' )}>
+                      <List className="h-5 w-5 box-content" />
+                    </Label>
 
-                  <RadioGroupItem value="grid" id="grid-view" className="sr-only" />
-                  <Label htmlFor="grid-view" className={cn("p-1.5 rounded-md cursor-pointer transition-colors", viewMode === 'grid' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent' )}>
-                    <LayoutGrid className="h-5 w-5 box-content" />
-                  </Label>
+                    <RadioGroupItem value="grid" id="grid-view" className="sr-only" />
+                    <Label htmlFor="grid-view" className={cn("p-1.5 rounded-md cursor-pointer transition-colors", viewMode === 'grid' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent' )}>
+                      <LayoutGrid className="h-5 w-5 box-content" />
+                    </Label>
 
-                  <RadioGroupItem value="list" id="list-view" className="sr-only" />
-                  <Label htmlFor="list-view" className={cn("p-1.5 rounded-md cursor-pointer transition-colors", viewMode === 'list' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent' )}>
-                    <Rows className="h-5 w-5 box-content" />
-                  </Label>
-              </RadioGroup>
-              <Separator orientation="vertical" className="h-8" />
-              <Button variant="outline" size="sm" onClick={handleShuffleColors}>
-                <Shuffle className="mr-2 h-4 w-4" /> Colors
-              </Button>
-               {viewMode === 'accordion' && (
-                <Button variant="outline" size="sm" onClick={toggleAccordion}>
-                  <ChevronsUpDown className="mr-2 h-4 w-4" />
-                  {allItemsOpen ? 'Collapse' : 'Expand'}
+                    <RadioGroupItem value="list" id="list-view" className="sr-only" />
+                    <Label htmlFor="list-view" className={cn("p-1.5 rounded-md cursor-pointer transition-colors", viewMode === 'list' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent' )}>
+                      <Rows className="h-5 w-5 box-content" />
+                    </Label>
+                </RadioGroup>
+                <Separator orientation="vertical" className="h-8" />
+                <Button variant="outline" size="sm" onClick={handleShuffleColors}>
+                  <Shuffle className="mr-2 h-4 w-4" /> Colors
                 </Button>
+                {viewMode === 'accordion' && (
+                  <Button variant="outline" size="sm" onClick={toggleAccordion}>
+                    <ChevronsUpDown className="mr-2 h-4 w-4" />
+                    {allItemsOpen ? 'Collapse' : 'Expand'}
+                  </Button>
+                )}
+                <Button variant="outline" size="sm" onClick={() => setIsMenuManagerOpen(true)}>
+                  <BookOpen className="mr-2 h-4 w-4" /> Manage Menu
+                </Button>
+                <div className="flex items-center space-x-2">
+                  <Switch id="click-to-add-mode" checked={isClickToAdd} onCheckedChange={setIsClickToAdd} />
+                  <Label htmlFor="click-to-add-mode">Click-to-Add</Label>
+                </div>
+              </div>
+            </div>
+          </CardHeader>
+          <ScrollArea className="flex-grow px-4">
+              {renderMenuContent()}
+          </ScrollArea>
+        </Card>
+      </div>
+
+      {/* Order Panel */}
+      <div className="md:col-span-1 xl:col-span-1 flex flex-col h-full">
+        <Card className="flex flex-col flex-grow">
+          <div className="p-4 border-b flex justify-between items-center">
+              <div>
+                  <CardTitle>{activeOrder ? `Editing Order #${activeOrder.id}` : 'Current Order'}</CardTitle>
+                  <CardDescription>
+                      {currentActiveTableId ? `Table ${currentActiveTableId}` : "No Table Selected"}
+                  </CardDescription>
+              </div>
+              {orderItems.length > 0 && (
+                  <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                          <Button variant="destructive" size="sm">
+                              <TrashIcon className="mr-2 h-4 w-4" />
+                              Clear All
+                          </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                          <AlertDialogHeader>
+                              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                  This will remove all items from the current order. This action cannot be undone.
+                              </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => clearCurrentOrder(false)}>Clear All</AlertDialogAction>
+                          </AlertDialogFooter>
+                      </AlertDialogContent>
+                  </AlertDialog>
               )}
-               <Button variant="outline" size="sm" onClick={() => setIsMenuManagerOpen(true)}>
-                <BookOpen className="mr-2 h-4 w-4" /> Manage Menu
-              </Button>
-              <div className="flex items-center space-x-2">
-                <Switch id="click-to-add-mode" checked={isClickToAdd} onCheckedChange={setIsClickToAdd} />
-                <Label htmlFor="click-to-add-mode">Click-to-Add</Label>
-              </div>
-            </div>
           </div>
-        </CardHeader>
-        <ScrollArea className="flex-grow px-4">
-            {renderMenuContent()}
-        </ScrollArea>
-      </Card>
-
-      <Card className="col-span-1 flex flex-col m-4 ml-0">
-        <div className="p-4 border-b flex justify-between items-center">
-            <div>
-                <CardTitle>{activeOrder ? `Editing Order #${activeOrder.id}` : 'Current Order'}</CardTitle>
-                <CardDescription>
-                    {currentActiveTableId ? `Table ${currentActiveTableId}` : "No Table Selected"}
-                </CardDescription>
-            </div>
-            {orderItems.length > 0 && (
-                <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                        <Button variant="destructive" size="sm">
-                            <TrashIcon className="mr-2 h-4 w-4" />
-                            Clear All
-                        </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                        <AlertDialogHeader>
-                            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                                This will remove all items from the current order. This action cannot be undone.
-                            </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => clearCurrentOrder(false)}>Clear All</AlertDialogAction>
-                        </AlertDialogFooter>
-                    </AlertDialogContent>
-                </AlertDialog>
-            )}
-        </div>
-        
-        <ScrollArea className="flex-grow p-4">
-          {orderItems.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
-              <ClipboardList className="w-16 h-16 text-gray-300" />
-              <p className="mt-4 text-sm font-medium">
-                Add items to the order
-              </p>
-            </div>
-          ) : (
-            activeOrder ? renderOrderItems() : (
-                <div className="space-y-3">
-                {orderItems.map(item => (
-                    <div key={item.name} className="flex items-center">
-                    <div className="flex-grow">
-                        <p className="font-medium">{item.name}</p>
-                        <p className="text-sm text-muted-foreground">₹{item.price.toFixed(2)}</p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => updateQuantity(item.name, item.quantity - 1)}><Minus className="h-4 w-4" /></Button>
-                        <span className="w-8 text-center font-bold">{item.quantity}</span>
-                        <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => updateQuantity(item.name, item.quantity + 1)}><Plus className="h-4 w-4" /></Button>
-                        <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => removeFromOrder(item.name)}><X className="h-4 w-4" /></Button>
-                    </div>
-                    </div>
-                ))}
-                </div>
-            )
-          )}
-        </ScrollArea>
-        
-        <div className="p-4 border-t space-y-4 bg-muted/30">
-            <div className="space-y-2">
-                <Label className="font-semibold block">Select Table</Label>
-                 <div className="grid grid-cols-5 gap-1.5">
-                  {tables.map(table => {
-                    const isSelected = currentActiveTableId === table.id;
-                    return (
-                      <div
-                          key={table.id}
-                          className={cn(
-                            "h-14 w-full flex-col justify-center items-center relative p-1 border-2 transition-transform duration-150 active:scale-95 group flex rounded-md cursor-pointer",
-                            getDynamicColor(table.status, occupancyCount[table.id] || 0),
-                            isSelected && 'ring-4 ring-offset-2 ring-ring',
-                            table.status === 'Available' || table.status === 'Occupied' ? 'text-white border-black' : 'text-black border-black/50',
-                          )}
-                          onClick={() => handleSelectTable(table.id)}
-                      >
-                         {renderTableActions(table)}
-                          <div className="absolute top-1 left-1">
-                            {React.createElement(statusIcons[table.status], { className: "h-3 w-3" })}
-                          </div>
-                          <span className="text-3xl font-bold leading-none">{table.id}</span>
-                          <span className="text-xs font-bold">{table.status}</span>
+          
+          <ScrollArea className="flex-grow p-4">
+            {orderItems.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
+                <ClipboardList className="w-16 h-16 text-gray-300" />
+                <p className="mt-4 text-sm font-medium">
+                  Add items to the order
+                </p>
+              </div>
+            ) : (
+              activeOrder ? renderOrderItems() : (
+                  <div className="space-y-3">
+                  {orderItems.map(item => (
+                      <div key={item.name} className="flex items-center">
+                      <div className="flex-grow">
+                          <p className="font-medium">{item.name}</p>
+                          <p className="text-sm text-muted-foreground">₹{item.price.toFixed(2)}</p>
                       </div>
-                    )
-                  })}
-              </div>
-            </div>
-
-          <div>
-            <Label className="font-semibold mb-2 block">Discount</Label>
-            <RadioGroup value={discount.toString()} onValueChange={(val) => setDiscount(Number(val))} className="flex items-center flex-wrap gap-2">
-              {[0, 5, 10, 15, 20].map(d => (
-                <div key={d} className="flex items-center space-x-2">
-                  <RadioGroupItem value={d.toString()} id={`d-${d}`} />
-                  <Label htmlFor={`d-${d}`} className="p-2 rounded-md transition-colors hover:bg-accent cursor-pointer" >{d}%</Label>
-                </div>
-              ))}
-            </RadioGroup>
-          </div>
-
-          <div className="space-y-2 text-lg">
-            <div className="flex justify-between">
-              <span>Subtotal:</span>
-              <span className="font-bold">Rs. {subtotal.toFixed(2)}</span>
-            </div>
-            {discount > 0 && (
-              <div className="flex justify-between text-accent-foreground">
-                <span>Discount ({discount}%):</span>
-                <span className="font-bold">-Rs. {(subtotal - total).toFixed(2)}</span>
-              </div>
+                      <div className="flex items-center gap-2">
+                          <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => updateQuantity(item.name, item.quantity - 1)}><Minus className="h-4 w-4" /></Button>
+                          <span className="w-8 text-center font-bold">{item.quantity}</span>
+                          <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => updateQuantity(item.name, item.quantity + 1)}><Plus className="h-4 w-4" /></Button>
+                          <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => removeFromOrder(item.name)}><X className="h-4 w-4" /></Button>
+                      </div>
+                      </div>
+                  ))}
+                  </div>
+              )
             )}
-            <div className="flex justify-between font-bold text-2xl border-t pt-2 mt-2 bg-primary/20 p-2 rounded-md">
-              <span>Total:</span>
-              <span>Rs. {total.toFixed(2)}</span>
+          </ScrollArea>
+          
+          <div className="p-4 border-t space-y-4 bg-muted/30">
+              <div className="space-y-2">
+                  <Label className="font-semibold block">Select Table</Label>
+                   <div className="grid grid-cols-5 gap-1.5">
+                    {tables.map(table => {
+                      const isSelected = currentActiveTableId === table.id;
+                      return (
+                        <div
+                            key={table.id}
+                            className={cn(
+                              "h-14 w-full flex-col justify-center items-center relative p-1 border-2 transition-transform duration-150 active:scale-95 group flex rounded-md cursor-pointer",
+                              getDynamicColor(table.status, occupancyCount[table.id] || 0),
+                              isSelected && 'ring-4 ring-offset-2 ring-ring',
+                              table.status === 'Available' || table.status === 'Occupied' ? 'text-white border-black' : 'text-black border-black/50',
+                            )}
+                            onClick={() => handleSelectTable(table.id)}
+                        >
+                           {renderTableActions(table)}
+                            <div className="absolute top-1 left-1">
+                              {React.createElement(statusIcons[table.status], { className: "h-3 w-3" })}
+                            </div>
+                            <span className="text-3xl font-bold leading-none">{table.id}</span>
+                            <span className="text-xs font-bold">{table.status}</span>
+                        </div>
+                      )
+                    })}
+                </div>
+              </div>
+
+            <div>
+              <Label className="font-semibold mb-2 block">Discount</Label>
+              <RadioGroup value={discount.toString()} onValueChange={(val) => setDiscount(Number(val))} className="flex items-center flex-wrap gap-2">
+                {[0, 5, 10, 15, 20].map(d => (
+                  <div key={d} className="flex items-center space-x-2">
+                    <RadioGroupItem value={d.toString()} id={`d-${d}`} />
+                    <Label htmlFor={`d-${d}`} className="p-2 rounded-md transition-colors hover:bg-accent cursor-pointer" >{d}%</Label>
+                  </div>
+                ))}
+              </RadioGroup>
+            </div>
+
+            <div className="space-y-2 text-lg">
+              <div className="flex justify-between">
+                <span>Subtotal:</span>
+                <span className="font-bold">Rs. {subtotal.toFixed(2)}</span>
+              </div>
+              {discount > 0 && (
+                <div className="flex justify-between text-accent-foreground">
+                  <span>Discount ({discount}%):</span>
+                  <span className="font-bold">-Rs. {(subtotal - total).toFixed(2)}</span>
+                </div>
+              )}
+              <div className="flex justify-between font-bold text-2xl border-t pt-2 mt-2 bg-primary/20 p-2 rounded-md">
+                <span>Total:</span>
+                <span>Rs. {total.toFixed(2)}</span>
+              </div>
+            </div>
+            <div className="flex flex-col gap-2 pt-2">
+                <Button 
+                    size="lg"
+                    className={cn("h-12 text-base", activeOrder && "bg-blue-600 hover:bg-blue-700")}
+                    onClick={handleSendToKitchen}
+                    disabled={isProcessing || orderItems.length === 0 || !currentActiveTableId}
+                >
+                    {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : (activeOrder ? <Printer className="mr-2 h-4 w-4" /> : <Send className="mr-2 h-4 w-4" />)}
+                    {activeOrder ? 'Update KOT' : 'Send KOT to Kitchen'}
+                </Button>
+                <div className="grid grid-cols-2 gap-2">
+                    <Button size="lg" variant="outline" className="h-12 text-base" onClick={handlePrintProvisionalBill} disabled={isProcessing ||!currentActiveTableId || orderItems.length === 0}>
+                        {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Printer className="mr-2 h-4 w-4" />}
+                        Print Bill
+                    </Button>
+                    <Button size="lg" className="h-12 text-base" onClick={handleProcessPayment} disabled={isProcessing || orderItems.length === 0 || !currentActiveTableId}>
+                        {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                        Process Payment
+                    </Button>
+                </div>
             </div>
           </div>
-          <div className="flex flex-col gap-2 pt-2">
-              <Button 
-                  size="lg"
-                  className={cn("h-12 text-base", activeOrder && "bg-blue-600 hover:bg-blue-700")}
-                  onClick={handleSendToKitchen}
-                  disabled={isProcessing || orderItems.length === 0 || !currentActiveTableId}
-              >
-                  {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : (activeOrder ? <Printer className="mr-2 h-4 w-4" /> : <Send className="mr-2 h-4 w-4" />)}
-                  {activeOrder ? 'Update KOT' : 'Send KOT to Kitchen'}
-              </Button>
-              <div className="grid grid-cols-2 gap-2">
-                  <Button size="lg" variant="outline" className="h-12 text-base" onClick={handlePrintProvisionalBill} disabled={isProcessing ||!currentActiveTableId || orderItems.length === 0}>
-                      {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Printer className="mr-2 h-4 w-4" />}
-                      Print Bill
-                  </Button>
-                  <Button size="lg" className="h-12 text-base" onClick={handleProcessPayment} disabled={isProcessing || orderItems.length === 0 || !currentActiveTableId}>
-                      {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                      Process Payment
-                  </Button>
-              </div>
-          </div>
-        </div>
-      </Card>
+        </Card>
+      </div>
 
       <PaymentDialog
         isOpen={isPaymentDialogOpen}
