@@ -408,11 +408,11 @@ function OrderPanel({
                         {activeOrder ? 'Update KOT' : 'Send KOT to Kitchen'}
                     </Button>
                     <div className="grid grid-cols-2 gap-2">
-                        <Button size="lg" variant="outline" className="h-12 text-base" onClick={handlePrintProvisionalBill} disabled={isProcessing ||!currentActiveTableId || orderItems.length === 0}>
+                        <Button size="lg" variant="outline" className="h-12 text-base" onClick={handlePrintProvisionalBill} disabled={!currentActiveTableId || orderItems.length === 0}>
                             {isProcessing && receiptPreview ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Printer className="mr-2 h-4 w-4" />}
                             Print Bill
                         </Button>
-                        <Button size="lg" className="h-12 text-base" onClick={handleProcessPayment} disabled={isProcessing || orderItems.length === 0 || !currentActiveTableId}>
+                        <Button size="lg" className="h-12 text-base" onClick={handleProcessPayment} disabled={orderItems.length === 0 || !currentActiveTableId}>
                             {isProcessing && !receiptPreview ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                             Process Payment
                         </Button>
@@ -618,16 +618,6 @@ export default function PosSystem({
      // If there's an unassigned order and an available table is clicked
     if (!activeOrder && orderItems.length > 0 && table?.status === 'Available') {
         setSelectedTableId(tableId);
-        setPendingOrders(prev => {
-            const newItems = [...orderItems];
-            if(tableId) {
-                const newPending = {...prev};
-                newPending[tableId] = newItems;
-                delete newPending[0]; 
-                return newPending;
-            }
-            return prev;
-        });
     } else {
         setSelectedTableId(tableId);
     }
@@ -697,18 +687,6 @@ export default function PosSystem({
           title: "Item Added",
           description: `1 x ${item.name} added to the current order.`
       });
-      if(!selectedTableId) {
-        setPendingOrders(prev => {
-          const newItems = [...(prev[0] || [])];
-          const existingItemIndex = newItems.findIndex(i => i.name === item.name);
-          if (existingItemIndex > -1) {
-            newItems[existingItemIndex].quantity += 1;
-          } else {
-            newItems.push({ ...item, quantity: 1 });
-          }
-          return { ...prev, 0: newItems };
-        });
-      }
   }
 
   const handleAddButtonClick = (item: MenuItem) => {
@@ -886,17 +864,15 @@ export default function PosSystem({
                     toast({ title: 'Order Started', description: `Started order for Table ${tableId} with ${item.name}.` });
                 }, 0);
             } else {
-                 if (orderItems.length > 0 && !selectedTableId) {
-                     // This means there's an unassigned order. Assign it to this table.
+                if (orderItems.length > 0 && !selectedTableId) {
                      handleSelectTable(tableId);
-                     addToOrder(item, 1);
-                 } else {
+                } else {
                      toast({
                         variant: 'destructive',
                         title: 'Switching Tables?',
                         description: 'Clear the current order before starting a new one on a different table.',
                     });
-                 }
+                }
             }
         }
     };
@@ -968,10 +944,11 @@ export default function PosSystem({
     updateTableStatus([currentActiveTableId], 'Cleaning');
     
     if (activeOrder) {
-      updateOrder({ ...activeOrder, status: 'Completed' });
+      setOrders(prevOrders => prevOrders.map(o => o.id === activeOrder.id ? {...o, status: 'Completed'} : o));
     }
   
     clearCurrentOrder(true);
+    setDiscount(0);
   };
 
   const handlePrintProvisionalBill = async () => {
@@ -1361,171 +1338,170 @@ export default function PosSystem({
   
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-4 gap-4 h-full p-4">
-      {/* Menu Panel */}
-      <div className="md:col-span-2 xl:col-span-3 flex flex-col h-full">
-        <Card className="flex flex-col flex-grow">
-          <CardHeader>
-            <div className="flex items-start justify-between gap-4 flex-wrap">
-              <div className="flex-grow grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                  <Input
-                    placeholder="Search menu items..."
-                    className="pl-10"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
+    <DndProvider backend={HTML5Backend}>
+      <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-4 gap-4 h-full p-4">
+        {/* Menu Panel */}
+        <div className="md:col-span-2 xl:col-span-3 flex flex-col h-full">
+          <Card className="flex flex-col flex-grow">
+            <CardHeader>
+              <div className="flex items-start justify-between gap-4 flex-wrap">
+                <div className="flex-grow grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                    <Input
+                      placeholder="Search menu items..."
+                      className="pl-10"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                  </div>
+                  <div className="relative">
+                    <QrCodeIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                    <Input
+                      placeholder="Enter item code..."
+                      className="pl-10"
+                      value={itemCodeInput}
+                      onChange={(e) => setItemCodeInput(e.target.value)}
+                      onKeyDown={handleCodeEntry}
+                    />
+                  </div>
                 </div>
-                <div className="relative">
-                  <QrCodeIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                  <Input
-                    placeholder="Enter item code..."
-                    className="pl-10"
-                    value={itemCodeInput}
-                    onChange={(e) => setItemCodeInput(e.target.value)}
-                    onKeyDown={handleCodeEntry}
-                  />
-                </div>
-              </div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <RadioGroup value={viewMode} onValueChange={(v) => setViewMode(v as ViewMode)} className="flex items-center">
-                    <RadioGroupItem value="accordion" id="accordion-view" className="sr-only" />
-                    <Label htmlFor="accordion-view" className={cn("p-1.5 rounded-md cursor-pointer transition-colors", viewMode === 'accordion' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent' )}>
-                      <List className="h-5 w-5 box-content" />
-                    </Label>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <RadioGroup value={viewMode} onValueChange={(v) => setViewMode(v as ViewMode)} className="flex items-center">
+                      <RadioGroupItem value="accordion" id="accordion-view" className="sr-only" />
+                      <Label htmlFor="accordion-view" className={cn("p-1.5 rounded-md cursor-pointer transition-colors", viewMode === 'accordion' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent' )}>
+                        <List className="h-5 w-5 box-content" />
+                      </Label>
 
-                    <RadioGroupItem value="grid" id="grid-view" className="sr-only" />
-                    <Label htmlFor="grid-view" className={cn("p-1.5 rounded-md cursor-pointer transition-colors", viewMode === 'grid' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent' )}>
-                      <LayoutGrid className="h-5 w-5 box-content" />
-                    </Label>
+                      <RadioGroupItem value="grid" id="grid-view" className="sr-only" />
+                      <Label htmlFor="grid-view" className={cn("p-1.5 rounded-md cursor-pointer transition-colors", viewMode === 'grid' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent' )}>
+                        <LayoutGrid className="h-5 w-5 box-content" />
+                      </Label>
 
-                    <RadioGroupItem value="list" id="list-view" className="sr-only" />
-                    <Label htmlFor="list-view" className={cn("p-1.5 rounded-md cursor-pointer transition-colors", viewMode === 'list' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent' )}>
-                      <Rows className="h-5 w-5 box-content" />
-                    </Label>
-                </RadioGroup>
-                <Separator orientation="vertical" className="h-8" />
-                <Button variant="outline" size="sm" onClick={handleShuffleColors}>
-                  <Shuffle className="mr-2 h-4 w-4" /> Colors
-                </Button>
-                {viewMode === 'accordion' && (
-                  <Button variant="outline" size="sm" onClick={toggleAccordion}>
-                    <ChevronsUpDown className="mr-2 h-4 w-4" />
-                    {allItemsOpen ? 'Collapse' : 'Expand'}
+                      <RadioGroupItem value="list" id="list-view" className="sr-only" />
+                      <Label htmlFor="list-view" className={cn("p-1.5 rounded-md cursor-pointer transition-colors", viewMode === 'list' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent' )}>
+                        <Rows className="h-5 w-5 box-content" />
+                      </Label>
+                  </RadioGroup>
+                  <Separator orientation="vertical" className="h-8" />
+                  <Button variant="outline" size="sm" onClick={handleShuffleColors}>
+                    <Shuffle className="mr-2 h-4 w-4" /> Colors
                   </Button>
-                )}
-                <Button variant="outline" size="sm" onClick={() => setIsMenuManagerOpen(true)}>
-                  <BookOpen className="mr-2 h-4 w-4" /> Manage Menu
-                </Button>
-                 <RadioGroup
-                  value={interactionMode}
-                  onValueChange={(v) => setInteractionMode(v as InteractionMode)}
-                  className="flex items-center space-x-1 p-1 rounded-lg border bg-background"
-                >
-                  <RadioGroupItem value="click" id="click-mode" className="sr-only" />
-                  <Label
-                    htmlFor="click-mode"
-                    className={cn(
-                      "flex items-center gap-1 cursor-pointer rounded-md px-3 py-1.5 text-sm",
-                      interactionMode === 'click' ? 'bg-secondary' : 'hover:bg-secondary/50'
-                    )}
+                  {viewMode === 'accordion' && (
+                    <Button variant="outline" size="sm" onClick={toggleAccordion}>
+                      <ChevronsUpDown className="mr-2 h-4 w-4" />
+                      {allItemsOpen ? 'Collapse' : 'Expand'}
+                    </Button>
+                  )}
+                  <Button variant="outline" size="sm" onClick={() => setIsMenuManagerOpen(true)}>
+                    <BookOpen className="mr-2 h-4 w-4" /> Manage Menu
+                  </Button>
+                  <RadioGroup
+                    value={interactionMode}
+                    onValueChange={(v) => setInteractionMode(v as InteractionMode)}
+                    className="flex items-center space-x-1 p-1 rounded-lg border bg-background"
                   >
-                    <MousePointerClick size={14} /> Click to Add
-                  </Label>
+                    <RadioGroupItem value="click" id="click-mode" className="sr-only" />
+                    <Label
+                      htmlFor="click-mode"
+                      className={cn(
+                        "flex items-center gap-1 cursor-pointer rounded-md px-3 py-1.5 text-sm",
+                        interactionMode === 'click' ? 'bg-secondary' : 'hover:bg-secondary/50'
+                      )}
+                    >
+                      <MousePointerClick size={14} /> Click to Add
+                    </Label>
 
-                  <RadioGroupItem value="drag" id="drag-mode" className="sr-only" />
-                  <Label
-                    htmlFor="drag-mode"
-                    className={cn(
-                      "flex items-center gap-1 cursor-pointer rounded-md px-3 py-1.5 text-sm",
-                      interactionMode === 'drag' ? 'bg-secondary' : 'hover:bg-secondary/50'
-                    )}
-                  >
-                    <Move size={14} /> Drag & Drop
-                  </Label>
-                </RadioGroup>
+                    <RadioGroupItem value="drag" id="drag-mode" className="sr-only" />
+                    <Label
+                      htmlFor="drag-mode"
+                      className={cn(
+                        "flex items-center gap-1 cursor-pointer rounded-md px-3 py-1.5 text-sm",
+                        interactionMode === 'drag' ? 'bg-secondary' : 'hover:bg-secondary/50'
+                      )}
+                    >
+                      <Move size={14} /> Drag & Drop
+                    </Label>
+                  </RadioGroup>
+                </div>
               </div>
-            </div>
-          </CardHeader>
-          <ScrollArea className="flex-grow px-4">
-              {renderMenuContent()}
-          </ScrollArea>
-        </Card>
-      </div>
+            </CardHeader>
+            <ScrollArea className="flex-grow px-4">
+                {renderMenuContent()}
+            </ScrollArea>
+          </Card>
+        </div>
 
-      {/* Order Panel */}
-      <div className="md:col-span-1 xl:col-span-1 flex flex-col h-full">
-        <DndProvider backend={HTML5Backend}>
-          <OrderPanel
-              orderItems={orderItems}
-              originalOrderItems={originalOrderItems}
-              handleDropOnOrder={handleDropOnOrder}
-              updateQuantity={updateQuantity}
-              removeFromOrder={removeFromOrder}
-              activeOrder={activeOrder}
-              currentActiveTableId={currentActiveTableId}
-              clearCurrentOrder={clearCurrentOrder}
-              subtotal={subtotal}
-              total={total}
-              discount={discount}
-              setDiscount={setDiscount}
-              isProcessing={isProcessing}
-              tables={tables}
-              occupancyCount={occupancyCount}
-              handleSelectTable={handleSelectTable}
-              onDropItemOnTable={handleDropItemOnTable}
-              renderTableActions={renderTableActions}
-              handleSendToKitchen={handleSendToKitchen}
-              handlePrintProvisionalBill={handlePrintProvisionalBill}
-              handleProcessPayment={handleProcessPayment}
-              receiptPreview={receiptPreview}
-          />
-        </DndProvider>
-      </div>
+        {/* Order Panel */}
+        <div className="md:col-span-1 xl:col-span-1 flex flex-col h-full">
+            <OrderPanel
+                orderItems={orderItems}
+                originalOrderItems={originalOrderItems}
+                handleDropOnOrder={handleDropOnOrder}
+                updateQuantity={updateQuantity}
+                removeFromOrder={removeFromOrder}
+                activeOrder={activeOrder}
+                currentActiveTableId={currentActiveTableId}
+                clearCurrentOrder={clearCurrentOrder}
+                subtotal={subtotal}
+                total={total}
+                discount={discount}
+                setDiscount={setDiscount}
+                isProcessing={isProcessing}
+                tables={tables}
+                occupancyCount={occupancyCount}
+                handleSelectTable={handleSelectTable}
+                onDropItemOnTable={handleDropItemOnTable}
+                renderTableActions={renderTableActions}
+                handleSendToKitchen={handleSendToKitchen}
+                handlePrintProvisionalBill={handlePrintProvisionalBill}
+                handleProcessPayment={handleProcessPayment}
+                receiptPreview={receiptPreview}
+            />
+        </div>
 
-      <PaymentDialog
-        isOpen={isPaymentDialogOpen}
-        onOpenChange={setIsPaymentDialogOpen}
-        total={total}
-        receiptPreview={receiptPreview}
-        onPaymentSuccess={handlePaymentSuccess}
-      />
-      <AddItemDialog
-        isOpen={isAddItemDialogOpen}
-        onOpenChange={setIsAddItemDialogOpen}
-        item={selectedItem}
-        onConfirm={addToOrder}
-      />
-      <ManageMenuDialog
-        isOpen={isMenuManagerOpen}
-        onOpenChange={setIsMenuManagerOpen}
-        menu={menu}
-        setMenu={setMenu}
-      />
-      <Dialog open={isReserveDialogOpen} onOpenChange={setIsReserveDialogOpen}>
-        <DialogContent>
-            <DialogHeader>
-                <DialogTitle>Reserve Table {tableToReserve}</DialogTitle>
-                <DialogDescription>Enter guest details (optional).</DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-                <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="guest-name" className="text-right">Name</Label>
-                    <Input id="guest-name" value={reservationDetails.name} onChange={(e) => setReservationDetails({...reservationDetails, name: e.target.value})} className="col-span-3" />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="reservation-time" className="text-right">Time</Label>
-                    <Input id="reservation-time" type="time" value={reservationDetails.time} onChange={(e) => setReservationDetails({...reservationDetails, time: e.target.value})} className="col-span-3" />
-                </div>
-            </div>
-            <DialogFooter>
-                <Button variant="outline" onClick={() => setIsReserveDialogOpen(false)}>Cancel</Button>
-                <Button onClick={handleReserveTable}>Reserve</Button>
-            </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </div>
+        <PaymentDialog
+          isOpen={isPaymentDialogOpen}
+          onOpenChange={setIsPaymentDialogOpen}
+          total={total}
+          receiptPreview={receiptPreview}
+          onPaymentSuccess={handlePaymentSuccess}
+        />
+        <AddItemDialog
+          isOpen={isAddItemDialogOpen}
+          onOpenChange={setIsAddItemDialogOpen}
+          item={selectedItem}
+          onConfirm={addToOrder}
+        />
+        <ManageMenuDialog
+          isOpen={isMenuManagerOpen}
+          onOpenChange={setIsMenuManagerOpen}
+          menu={menu}
+          setMenu={setMenu}
+        />
+        <Dialog open={isReserveDialogOpen} onOpenChange={setIsReserveDialogOpen}>
+          <DialogContent>
+              <DialogHeader>
+                  <DialogTitle>Reserve Table {tableToReserve}</DialogTitle>
+                  <DialogDescription>Enter guest details (optional).</DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                  <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="guest-name" className="text-right">Name</Label>
+                      <Input id="guest-name" value={reservationDetails.name} onChange={(e) => setReservationDetails({...reservationDetails, name: e.target.value})} className="col-span-3" />
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="reservation-time" className="text-right">Time</Label>
+                      <Input id="reservation-time" type="time" value={reservationDetails.time} onChange={(e) => setReservationDetails({...reservationDetails, time: e.target.value})} className="col-span-3" />
+                  </div>
+              </div>
+              <DialogFooter>
+                  <Button variant="outline" onClick={() => setIsReserveDialogOpen(false)}>Cancel</Button>
+                  <Button onClick={handleReserveTable}>Reserve</Button>
+              </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
+    </DndProvider>
   );
 }
-
