@@ -673,7 +673,7 @@ export default function PosSystem({
         <div className="space-y-6">
           {filteredMenu.map((category) => (
              <div key={category.category} className={cn("rounded-lg p-2", categoryColors[category.category])}>
-               <div className="sticky top-0 bg-background/80 backdrop-blur-sm py-2 z-10 flex items-center gap-2 p-2 rounded-md">
+               <div className="sticky top-0 bg-background/80 backdrop-blur-sm py-2 z-10 flex items-center justify-between gap-2 p-2 rounded-md">
                 <h2 className="text-xl font-bold text-black flex-grow">
                   {category.category}
                 </h2>
@@ -702,7 +702,7 @@ export default function PosSystem({
             <TabsList className="mb-4 flex-wrap h-auto">
               {filteredMenu.map(category => (
                 <TabsTrigger key={category.category} value={category.category} asChild>
-                    <div className="relative p-2 rounded-sm cursor-pointer flex items-center gap-2">
+                    <div className="relative p-2 rounded-sm cursor-pointer flex items-center justify-between gap-2 flex-grow">
                         <span className={cn('text-black')}>{category.category}</span>
                         <CategoryColorPicker categoryName={category.category} />
                         <div className={cn("absolute inset-0 -z-10 rounded-sm", categoryColors[category.category])}/>
@@ -733,7 +733,7 @@ export default function PosSystem({
       <Accordion type="multiple" value={activeAccordionItems} onValueChange={setActiveAccordionItems} className="w-full">
         {filteredMenu.map((category) => (
           <AccordionItem key={category.category} value={category.category} className={cn("border-b-0 rounded-lg mb-2 overflow-hidden", categoryColors[category.category])}>
-            <div className="flex items-center pr-4 hover:bg-muted/50 rounded-t-lg">
+            <div className="flex items-center pr-4 rounded-t-lg">
               <AccordionTrigger className='p-4 hover:no-underline flex-grow'>
                   <div className="text-xl font-bold text-black flex-grow text-left">{category.category}</div>
               </AccordionTrigger>
