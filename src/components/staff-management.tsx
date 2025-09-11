@@ -198,7 +198,7 @@ export default function StaffManagement({ employees }: StaffManagementProps) {
         <div className="relative h-full w-full flex items-center justify-center">
             <DayContent {...props} />
             {uniqueEmployeeIds.size > 0 && (
-                <div className="absolute bottom-1 flex items-center justify-center space-x-1">
+                <div className="absolute bottom-1.5 flex items-center justify-center space-x-1">
                     {Array.from(uniqueEmployeeIds).map(employeeId => {
                         const employee = employees.find(e => e.id === employeeId);
                         if (!employee) return null;
@@ -209,7 +209,7 @@ export default function StaffManagement({ employees }: StaffManagementProps) {
                             <div 
                                 key={employeeId} 
                                 className={cn(
-                                    "h-2 w-2 rounded-full",
+                                    "h-2.5 w-2.5 rounded-full",
                                     employee.color,
                                     wasAbsent && "ring-2 ring-offset-1 ring-destructive"
                                 )}
@@ -353,6 +353,20 @@ export default function StaffManagement({ employees }: StaffManagementProps) {
                  </div>
             </Card>
             <div className="space-y-6">
+               <Card className="bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 shadow-md">
+                <CardHeader>
+                    <CardTitle className="text-green-800 dark:text-green-200">Add Salary Advance</CardTitle>
+                    <CardDescription className="text-green-700 dark:text-green-300">
+                        Log an advance for any employee for the selected date: {format(selectedDate, 'PPP')}
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <Button size="lg" className="w-full h-12 text-base" onClick={() => openAdvanceDialog(null)}>
+                        <PlusCircle className="mr-2 h-5 w-5" /> Add Salary Advance
+                    </Button>
+                </CardContent>
+              </Card>
+
                <Card className="bg-violet-50 dark:bg-violet-900/20">
                 <CardHeader>
                     <div className="flex justify-between items-start">
@@ -360,9 +374,6 @@ export default function StaffManagement({ employees }: StaffManagementProps) {
                         <CardTitle>Staff Attendance</CardTitle>
                         <CardDescription>Manage for {format(selectedDate, 'PPP')}</CardDescription>
                     </div>
-                    <Button onClick={() => openAdvanceDialog(null)}>
-                        <span className="mr-2">Rs.</span> Add Advance
-                    </Button>
                     </div>
                 </CardHeader>
                 <CardContent>
@@ -387,9 +398,9 @@ export default function StaffManagement({ employees }: StaffManagementProps) {
                                             key={status}
                                             variant={isSelected ? 'default' : 'outline'}
                                             onClick={() => handleMarkAttendance(employee.id, status)}
-                                            className={cn("h-10 w-24 flex items-center justify-center gap-2", isSelected && attendanceStatusConfig[status].className)}
+                                            className={cn("h-16 w-24 flex flex-col items-center justify-center gap-1 text-xs", isSelected && attendanceStatusConfig[status].className)}
                                         >
-                                            {React.createElement(attendanceStatusConfig[status].icon, {className: "h-4 w-4"})}
+                                            {React.createElement(attendanceStatusConfig[status].icon, {className: "h-5 w-5"})}
                                             <span>{attendanceStatusConfig[status].label}</span>
                                         </Button>
                                       )
@@ -585,3 +596,4 @@ function NotesDialog({
     
 
     
+
