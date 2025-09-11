@@ -425,7 +425,7 @@ export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
         <CardContent>
           <Table>
               <TableHeader>
-              <TableRow>
+              <TableRow className="border-b-2 border-black dark:border-white">
                   <TableHead className="border-r font-bold text-foreground">Date</TableHead>
                   <TableHead className="border-r font-bold text-foreground">Category</TableHead>
                   <TableHead className="border-r font-bold text-foreground">Description</TableHead>
