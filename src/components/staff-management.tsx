@@ -84,7 +84,7 @@ function AddOrEditAdvanceDialog({
             </Select>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="amount">Amount (₹)</Label>
+            <Label htmlFor="amount">Amount (Rs.)</Label>
             <Input id="amount" type="number" placeholder="e.g., 2000" value={amount} onChange={e => setAmount(e.target.value)} />
           </div>
         </div>
@@ -259,9 +259,9 @@ export default function StaffManagement({ employees }: StaffManagementProps) {
                     <TableHead>ID</TableHead>
                     <TableHead>Name</TableHead>
                     <TableHead>Role</TableHead>
-                    <TableHead>Salary (₹)</TableHead>
-                    <TableHead>Advance (₹)</TableHead>
-                    <TableHead>Remaining Salary (₹)</TableHead>
+                    <TableHead>Salary (Rs.)</TableHead>
+                    <TableHead>Advance (Rs.)</TableHead>
+                    <TableHead>Remaining Salary (Rs.)</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -351,7 +351,7 @@ export default function StaffManagement({ employees }: StaffManagementProps) {
                     <CardDescription>Advances and other details for the selected date.</CardDescription>
                   </div>
                   <Button onClick={() => openAdvanceDialog(null)}>
-                    <span className="mr-2">₹</span> Add Advance
+                    <span className="mr-2">Rs.</span> Add Advance
                   </Button>
                 </div>
               </CardHeader>
@@ -366,7 +366,7 @@ export default function StaffManagement({ employees }: StaffManagementProps) {
                         <div className="flex items-center gap-2">
                           {employee && <span className={cn('h-2 w-2 rounded-full', employee.color)} />}
                           <span>{employee ? employee.name : 'Unknown Employee'}:</span>
-                          <span className="font-mono font-bold">₹{advance.amount.toLocaleString()}</span>
+                          <span className="font-mono font-bold">Rs. {advance.amount.toLocaleString()}</span>
                         </div>
                         <div className="opacity-0 group-hover:opacity-100 transition-opacity">
                             <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openAdvanceDialog(advance)}>
@@ -382,7 +382,7 @@ export default function StaffManagement({ employees }: StaffManagementProps) {
                                     <AlertDialogHeader>
                                         <AlertDialogTitle>Delete this advance?</AlertDialogTitle>
                                         <AlertDialogDescription>
-                                            This will delete the advance of ₹{advance.amount} for {employee?.name}. This action cannot be undone.
+                                            This will delete the advance of Rs. {advance.amount} for {employee?.name}. This action cannot be undone.
                                         </AlertDialogDescription>
                                     </AlertDialogHeader>
                                     <AlertDialogFooter>
@@ -511,5 +511,7 @@ function EmployeeDialog({ open, onOpenChange, employee, onSave }: { open: boolea
         </Dialog>
     );
 }
+
+    
 
     
