@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
@@ -104,13 +103,14 @@ export default function MainLayout() {
     
     // Set the new table as the selected one.
     setSelectedTableId(tableId);
-  }, [selectedTableId, activeOrder, currentOrderItems.length]);
+  }, [selectedTableId, activeOrder, currentOrderItems]);
   
   useEffect(() => {
     // This effect handles the logic for switching between tables and managing pending vs. active orders.
     if (selectedTableId !== null) {
       // Find an order that has already been sent to the kitchen for the selected table.
       const existingOrder = orders.find(o => o.tableId === selectedTableId && o.status !== 'Completed');
+      
       if (existingOrder) {
         // This is an active, submitted order. Load its items.
         setActiveOrder(existingOrder);
@@ -119,16 +119,12 @@ export default function MainLayout() {
       } else {
         // This is a new order for the selected table, or we are returning to a pending (un-submitted) order.
         setActiveOrder(null);
-        // If there's a pending order for this table, load it.
-        // Otherwise, keep the current items in the cart.
-        if (pendingOrders[selectedTableId]) {
-          setCurrentOrderItems(pendingOrders[selectedTableId]);
-        }
+        // If there's a pending order for this table, load it. Otherwise, clear items.
+        setCurrentOrderItems(pendingOrders[selectedTableId] || []);
         setDiscount(0);
       }
     } else {
         // No table is selected.
-        // If there's no active order, don't clear the cart. The user might be building an order first.
         // If there was an active order, clear it as we've deselected its table.
         if (activeOrder) {
             setActiveOrder(null);
@@ -136,7 +132,7 @@ export default function MainLayout() {
             setDiscount(0);
         }
     }
-  }, [selectedTableId, orders, pendingOrders]);
+}, [selectedTableId, orders]);
 
 
   useEffect(() => {
@@ -412,3 +408,5 @@ export default function MainLayout() {
     </div>
   );
 }
+
+    
