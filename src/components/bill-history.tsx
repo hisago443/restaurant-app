@@ -15,12 +15,15 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Eye, Printer, Trash2 } from 'lucide-react';
+import { Eye, Printer, Trash2, Calendar as CalendarIcon, X } from 'lucide-react';
 import type { Bill } from '@/lib/types';
-import { format, isSameMonth, isSameYear } from 'date-fns';
+import { format, isSameDay, isSameMonth, isSameYear } from 'date-fns';
 import { db } from '@/lib/firebase';
 import { doc, deleteDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { cn } from '@/lib/utils';
 
 interface BillHistoryProps {
   bills: Bill[];
@@ -33,9 +36,15 @@ export default function BillHistory({ bills, onClearAll }: BillHistoryProps) {
   const { toast } = useToast();
   const [selectedBill, setSelectedBill] = useState<Bill | null>(null);
   const [filter, setFilter] = useState<FilterType>('all');
+  const [date, setDate] = useState<Date | undefined>();
 
   const filteredBills = useMemo(() => {
     const now = new Date();
+    
+    if (date) {
+        return bills.filter(bill => isSameDay(bill.timestamp, date));
+    }
+
     switch (filter) {
       case 'month':
         return bills.filter(bill => isSameMonth(bill.timestamp, now) && isSameYear(bill.timestamp, now));
@@ -45,7 +54,7 @@ export default function BillHistory({ bills, onClearAll }: BillHistoryProps) {
       default:
         return bills;
     }
-  }, [bills, filter]);
+  }, [bills, filter, date]);
 
   const handlePrintBill = (bill: Bill) => {
     const printWindow = window.open('', '_blank');
@@ -91,16 +100,53 @@ export default function BillHistory({ bills, onClearAll }: BillHistoryProps) {
     }
   };
 
+  const handleDateSelect = (selectedDate: Date | undefined) => {
+    setDate(selectedDate);
+    // When a date is picked, we might want to clear the tab filter to avoid confusion
+    // but for now, we'll let the date filter take precedence.
+  }
+
   return (
     <>
-      <div className="flex justify-between items-center w-full mb-4">
-        <Tabs value={filter} onValueChange={(value) => setFilter(value as FilterType)} className="w-auto">
-          <TabsList>
-            <TabsTrigger value="all">All</TabsTrigger>
-            <TabsTrigger value="month">This Month</TabsTrigger>
-            <TabsTrigger value="year">This Year</TabsTrigger>
-          </TabsList>
-        </Tabs>
+      <div className="flex justify-between items-center w-full mb-4 flex-wrap gap-4">
+        <div className='flex items-center gap-2 flex-wrap'>
+          <Tabs value={filter} onValueChange={(value) => { setDate(undefined); setFilter(value as FilterType); }} className="w-auto">
+            <TabsList>
+              <TabsTrigger value="all">All</TabsTrigger>
+              <TabsTrigger value="month">This Month</TabsTrigger>
+              <TabsTrigger value="year">This Year</TabsTrigger>
+            </TabsList>
+          </Tabs>
+
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant={"outline"}
+                className={cn(
+                  "w-[280px] justify-start text-left font-normal",
+                  !date && "text-muted-foreground"
+                )}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {date ? format(date, "PPP") : <span>Filter by date...</span>}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0">
+              <Calendar
+                mode="single"
+                selected={date}
+                onSelect={handleDateSelect}
+                initialFocus
+              />
+            </PopoverContent>
+          </Popover>
+          {date && (
+            <Button variant="ghost" onClick={() => setDate(undefined)} className="h-10 px-3">
+              <X className="h-4 w-4 mr-2"/>
+              Clear
+            </Button>
+          )}
+        </div>
         {onClearAll && (
             <AlertDialog>
               <AlertDialogTrigger asChild>
@@ -215,5 +261,3 @@ export default function BillHistory({ bills, onClearAll }: BillHistoryProps) {
     </>
   );
 }
-
-    
