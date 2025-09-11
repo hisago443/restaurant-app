@@ -288,121 +288,121 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
         </TabsList>
         <TabsContent value="attendance">
            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-4">
-            <Card className="flex flex-col p-0">
-                <Calendar
-                    mode="single"
-                    selected={selectedDate}
-                    onSelect={(date) => setSelectedDate(date || new Date())}
-                    className="rounded-t-lg border-b bg-background"
-                    components={{ DayContent: CustomDay }}
-                    modifiers={{
-                      advance: datesWithAdvance,
-                      absent: datesWithAbsence,
-                    }}
-                    modifiersStyles={{
-                      advance: { border: '2px solid hsl(var(--primary))' },
-                      absent: { 
-                        backgroundColor: 'hsl(var(--destructive) / 0.2)',
-                        color: 'hsl(var(--destructive))',
-                      },
-                    }}
-                />
-                <div className="p-4 space-y-2">
-                    <div className="flex items-center space-x-2">
-                        <Checkbox id="show-advances" checked={showAdvancesOnCalendar} onCheckedChange={(checked) => setShowAdvancesOnCalendar(Boolean(checked))} />
-                        <Label htmlFor="show-advances">Show Advance Dates</Label>
-                    </div>
-                      <div className="flex items-center space-x-2">
-                        <Checkbox id="show-absences" checked={showAbsencesOnCalendar} onCheckedChange={(checked) => setShowAbsencesOnCalendar(Boolean(checked))} />
-                        <Label htmlFor="show-absences">Show Absent Dates</Label>
-                    </div>
-                </div>
-            </Card>
             <div className="space-y-4">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Staff Attendance for {format(selectedDate, 'PPP')}</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                      {employees.map(employee => {
-                          const attendanceRecord = attendanceForSelectedDate.find(a => a.employeeId === employee.id);
-                          return (
-                              <div key={employee.id} className="flex items-center gap-4 p-2 border rounded-lg bg-muted/30">
-                                  <div className="flex-grow flex items-center gap-3 p-2 rounded-md bg-background cursor-pointer hover:bg-accent transition-colors">
-                                      <span className={cn("h-3 w-3 rounded-full", employee.color)} />
-                                      <span className="font-semibold text-lg">{employee.name}</span>
-                                  </div>
-                                  <div className="flex items-center gap-2">
-                                      {(Object.keys(attendanceStatusConfig) as AttendanceStatus[]).map(status => {
-                                          const isSelected = attendanceRecord?.status === status;
-                                          const config = attendanceStatusConfig[status];
-                                          return (
-                                              <Button 
-                                                  key={status}
-                                                  variant={isSelected ? 'default' : 'outline'}
-                                                  onClick={() => handleMarkAttendance(employee.id, status)}
-                                                  className={cn("h-10", isSelected && config.className)}
-                                              >
-                                                  {React.createElement(config.icon, {className: "mr-2 h-5 w-5"})}
-                                                  {config.label}
-                                              </Button>
-                                          )
-                                      })}
-                                      <TooltipProvider>
-                                          <Tooltip>
-                                          <TooltipTrigger asChild>
-                                              <Button variant="ghost" size="icon" onClick={() => openNotesDialog(employee.id)}>
-                                              <Pencil className="h-4 w-4" />
-                                              </Button>
-                                          </TooltipTrigger>
-                                          <TooltipContent>Add/Edit Note</TooltipContent>
-                                          </Tooltip>
-                                      </TooltipProvider>
-                                  </div>
-                              </div>
-                          )
-                      })}
-                  </CardContent>
-                </Card>
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Advances for {format(selectedDate, 'PPP')}</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                        <Button size="lg" className="w-full h-16 text-lg" onClick={() => openAdvanceDialog(null)}>
-                          <Banknote className="mr-4 h-8 w-8" /> Add Salary Advance
-                        </Button>
-                        <div className="max-h-32 overflow-y-auto pt-2">
-                            {advancesForSelectedDate.length > 0 ? (
-                                <div className="space-y-2">
-                                    {advancesForSelectedDate.map(advance => {
-                                        const employee = employees.find(e => e.id === advance.employeeId);
-                                        return (
-                                        <div key={advance.id} className="flex justify-between items-center p-2 bg-muted/50 rounded-lg group">
-                                            <div className='flex items-center gap-2'>
-                                                <span className={cn("h-2.5 w-2.5 rounded-full", employee?.color)} />
-                                                <div>
-                                                    <p className="font-medium">{employee?.name}</p>
-                                                </div>
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <p className="font-mono font-semibold text-red-600 dark:text-red-400 text-lg">₹{advance.amount.toLocaleString()}</p>
-                                                <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100" onClick={() => openAdvanceDialog(advance)}>
-                                                    <Edit className="h-4 w-4"/>
-                                                </Button>
+              <Card className="flex flex-col p-0 border-black shadow-lg">
+                  <Calendar
+                      mode="single"
+                      selected={selectedDate}
+                      onSelect={(date) => setSelectedDate(date || new Date())}
+                      className="rounded-t-lg border-b bg-background"
+                      components={{ DayContent: CustomDay }}
+                      modifiers={{
+                        advance: datesWithAdvance,
+                        absent: datesWithAbsence,
+                      }}
+                      modifiersStyles={{
+                        advance: { border: '2px solid hsl(var(--primary))' },
+                        absent: { 
+                          backgroundColor: 'hsl(var(--destructive) / 0.2)',
+                          color: 'hsl(var(--destructive))',
+                        },
+                      }}
+                  />
+                  <div className="p-4 space-y-2">
+                      <div className="flex items-center space-x-2">
+                          <Checkbox id="show-advances" checked={showAdvancesOnCalendar} onCheckedChange={(checked) => setShowAdvancesOnCalendar(Boolean(checked))} />
+                          <Label htmlFor="show-advances">Show Advance Dates</Label>
+                      </div>
+                        <div className="flex items-center space-x-2">
+                          <Checkbox id="show-absences" checked={showAbsencesOnCalendar} onCheckedChange={(checked) => setShowAbsencesOnCalendar(Boolean(checked))} />
+                          <Label htmlFor="show-absences">Show Absent Dates</Label>
+                      </div>
+                  </div>
+              </Card>
+              <Card>
+                <CardHeader>
+                    <CardTitle>Advances for {format(selectedDate, 'PPP')}</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                    <Button size="lg" className="w-full h-16 text-lg" onClick={() => openAdvanceDialog(null)}>
+                      <Banknote className="mr-4 h-8 w-8" /> Add Salary Advance
+                    </Button>
+                    <div className="max-h-32 overflow-y-auto pt-2">
+                        {advancesForSelectedDate.length > 0 ? (
+                            <div className="space-y-2">
+                                {advancesForSelectedDate.map(advance => {
+                                    const employee = employees.find(e => e.id === advance.employeeId);
+                                    return (
+                                    <div key={advance.id} className="flex justify-between items-center p-2 bg-muted/50 rounded-lg group">
+                                        <div className='flex items-center gap-2'>
+                                            <span className={cn("h-2.5 w-2.5 rounded-full", employee?.color)} />
+                                            <div>
+                                                <p className="font-medium">{employee?.name}</p>
                                             </div>
                                         </div>
-                                    )})}
-                                </div>
-                            ) : (
-                                <div className="h-full flex items-center justify-center py-4">
-                                    <p className="text-muted-foreground text-sm">No advances on this date.</p>
-                                </div>
-                            )}
-                        </div>
-                    </CardContent>
-                </Card>
+                                        <div className="flex items-center gap-2">
+                                            <p className="font-mono font-semibold text-red-600 dark:text-red-400 text-lg">₹{advance.amount.toLocaleString()}</p>
+                                            <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100" onClick={() => openAdvanceDialog(advance)}>
+                                                <Edit className="h-4 w-4"/>
+                                            </Button>
+                                        </div>
+                                    </div>
+                                )})}
+                            </div>
+                        ) : (
+                            <div className="h-full flex items-center justify-center py-4">
+                                <p className="text-muted-foreground text-sm">No advances on this date.</p>
+                            </div>
+                        )}
+                    </div>
+                </CardContent>
+              </Card>
             </div>
+            <Card>
+              <CardHeader>
+                <CardTitle>Staff Attendance for {format(selectedDate, 'PPP')}</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                  {employees.map(employee => {
+                      const attendanceRecord = attendanceForSelectedDate.find(a => a.employeeId === employee.id);
+                      return (
+                          <div key={employee.id} className="flex items-center gap-4 p-2 border rounded-lg bg-muted/30">
+                              <div className="flex-grow flex items-center gap-3 p-2 rounded-md bg-background cursor-pointer hover:bg-accent transition-colors">
+                                  <span className={cn("h-3 w-3 rounded-full", employee.color)} />
+                                  <span className="font-semibold text-lg">{employee.name}</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                  {(Object.keys(attendanceStatusConfig) as AttendanceStatus[]).map(status => {
+                                      const isSelected = attendanceRecord?.status === status;
+                                      const config = attendanceStatusConfig[status];
+                                      return (
+                                          <Button 
+                                              key={status}
+                                              variant={isSelected ? 'default' : 'outline'}
+                                              onClick={() => handleMarkAttendance(employee.id, status)}
+                                              className={cn("h-10", isSelected && config.className)}
+                                          >
+                                              {React.createElement(config.icon, {className: "mr-2 h-5 w-5"})}
+                                              {config.label}
+                                          </Button>
+                                      )
+                                  })}
+                                  <TooltipProvider>
+                                      <Tooltip>
+                                      <TooltipTrigger asChild>
+                                          <Button variant="ghost" size="icon" onClick={() => openNotesDialog(employee.id)}>
+                                          <Pencil className="h-4 w-4" />
+                                          </Button>
+                                      </TooltipTrigger>
+                                      <TooltipContent>Add/Edit Note</TooltipContent>
+                                      </Tooltip>
+                                  </TooltipProvider>
+                              </div>
+                          </div>
+                      )
+                  })}
+              </CardContent>
+            </Card>
           </div>
         </TabsContent>
         <TabsContent value="employees">
