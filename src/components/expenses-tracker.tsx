@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -442,7 +443,6 @@ export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
                   <TableHead className="border-r font-bold text-foreground">Vendor</TableHead>
                   <TableHead className="border-r font-bold text-foreground">Vendor Mobile</TableHead>
                   <TableHead className="text-right border-r font-bold text-foreground">Amount (Rs.)</TableHead>
-                  <TableHead className="text-right font-bold text-foreground">Actions</TableHead>
               </TableRow>
               </TableHeader>
               <TableBody>
@@ -456,39 +456,15 @@ export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
                           <TableCell className="border-r">{expense.description}</TableCell>
                           <TableCell className="border-r">{vendor?.name || 'N/A'}</TableCell>
                           <TableCell className="border-r">{vendor?.phone || 'N/A'}</TableCell>
-                          <TableCell className="text-right font-mono border-r">
+                          <TableCell className="text-right font-mono border-r text-red-600 dark:text-red-400">
                           {expense.amount.toFixed(2)}
-                          </TableCell>
-                          <TableCell className="text-right">
-                          <Button variant="ghost" size="icon" onClick={() => handleSetEditingExpense(expense)}>
-                              <Edit className="h-4 w-4" />
-                          </Button>
-                          <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                  <Button variant="ghost" size="icon" className="text-destructive">
-                                      <Trash2 className="h-4 w-4" />
-                                  </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                  <AlertDialogHeader>
-                                      <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                                      <AlertDialogDescription>
-                                          This action cannot be undone. This will permanently delete this expense record.
-                                      </AlertDialogDescription>
-                                  </AlertDialogHeader>
-                                  <AlertDialogFooter>
-                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                      <AlertDialogAction onClick={() => handleDeleteExpense(expense.id)}>Delete</AlertDialogAction>
-                                  </AlertDialogFooter>
-                              </AlertDialogContent>
-                          </AlertDialog>
                           </TableCell>
                       </TableRow>
                     )
                   })
               ) : (
                   <TableRow>
-                  <TableCell colSpan={7} className="text-center text-muted-foreground">
+                  <TableCell colSpan={6} className="text-center text-muted-foreground">
                       No expenses recorded yet.
                   </TableCell>
                   </TableRow>

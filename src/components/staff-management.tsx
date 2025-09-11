@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -444,13 +445,13 @@ function EmployeeDialog({ open, onOpenChange, employee, onSave }: { open: boolea
     
     const [name, setName] = useState(employee?.name || '');
     const [role, setRole] = useState(employee?.role || '');
-    const [salary, setSalary] = useState(employee?.salary.toString() || '');
+    const [salary, setSalary] = useState(employee?.salary?.toString() || '');
     
     useEffect(() => {
         if (open) {
             setName(employee?.name || '');
             setRole(employee?.role || '');
-            setSalary(employee?.salary.toString() || '');
+            setSalary(employee?.salary?.toString() || '');
         }
     }, [open, employee]);
     
