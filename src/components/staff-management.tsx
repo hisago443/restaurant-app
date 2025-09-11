@@ -452,15 +452,15 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
                         <TableRow key={employee.id}>
                           <TableCell className="font-mono text-sm border-r font-bold">{employee.id}</TableCell>
                           <TableCell className="border-r font-bold">
-                            <div className="flex items-center gap-2 font-medium">
+                            <div className="flex items-center gap-2 font-bold">
                               <span className={cn('h-2 w-2 rounded-full', employee.color)} />
                               {employee.name}
                             </div>
                           </TableCell>
                           <TableCell className="border-r font-bold">{employee.role}</TableCell>
-                          <TableCell className="font-mono text-sm bg-blue-100 text-black border-r font-bold">₹{employee.salary.toLocaleString()}</TableCell>
-                          <TableCell className="font-mono text-sm bg-red-100 text-black border-r font-bold">₹{totalAdvance.toLocaleString()}</TableCell>
-                          <TableCell className="font-mono text-sm bg-green-100 text-black font-bold">₹{remainingSalary.toLocaleString()}</TableCell>
+                          <TableCell className="text-sm bg-blue-100 text-black border-r font-bold">₹{employee.salary.toLocaleString()}</TableCell>
+                          <TableCell className="text-sm bg-red-100 text-black border-r font-bold">₹{totalAdvance.toLocaleString()}</TableCell>
+                          <TableCell className="text-sm bg-green-100 text-black font-bold">₹{remainingSalary.toLocaleString()}</TableCell>
                         </TableRow>
                       );
                     })}

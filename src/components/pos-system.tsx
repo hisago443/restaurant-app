@@ -63,7 +63,7 @@ const getDynamicColor = (status: TableStatus, turnover: number) => {
   const hoverShade = Math.min(900, shade + 100);
 
   // Note: TailwindCSS needs to see the full class name, so we can't use template literals with variables
-  // for the color names. We need to map them out. This is a workaround.
+  // for the color names. This is a workaround.
   const colorClasses: Record<string, Record<number, string>> = {
     green: { 400: 'bg-green-400', 500: 'bg-green-500', 600: 'bg-green-600', 700: 'bg-green-700', 800: 'bg-green-800', 900: 'bg-green-900' },
     red: { 400: 'bg-red-400', 500: 'bg-red-500', 600: 'bg-red-600', 700: 'bg-red-700', 800: 'bg-red-800', 900: 'bg-red-900' },
@@ -456,7 +456,7 @@ export default function PosSystem({
   const [receiptPreview, setReceiptPreview] = useState('');
   const { toast } = useToast();
   const [activeAccordionItems, setActiveAccordionItems] = useState<string[]>([]);
-  const [viewMode, setViewMode] = useState<ViewMode>('grid');
+  const [viewMode, setViewMode] = useState<ViewMode>('accordion');
   const [menuItemColors, setMenuItemColors] = useState<Record<string, string>>({});
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
   const [isAddItemDialogOpen, setIsAddItemDialogOpen] = useState(false);
@@ -1197,44 +1197,33 @@ export default function PosSystem({
       }
     // Accordion view is default
     return (
-       <div className="flex justify-center">
-        <Tabs defaultValue={filteredMenu[0]?.category} className="w-full">
-            <div className="flex justify-center">
-              <TabsList className="mb-4 flex-wrap h-auto bg-transparent border-b rounded-none p-0">
-                {filteredMenu.map(category => (
-                  <div key={category.category} className="relative group p-1">
-                    <TabsTrigger value={category.category} className="rounded-none border-b-2 border-transparent data-[state=active]:shadow-none px-4 py-2 cursor-pointer">
-                      <span className="flex-grow text-left text-lg text-black">{category.category}</span>
-                    </TabsTrigger>
-                    <div
-                      className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                      }}
-                    >
-                      <CategoryColorPicker categoryName={category.category} />
-                    </div>
-                  </div>
-                ))}
-              </TabsList>
-            </div>
+       <Accordion
+            type="multiple"
+            value={activeAccordionItems}
+            onValueChange={setActiveAccordionItems}
+            className="w-full space-y-2"
+        >
             {filteredMenu.map(category => (
-              <TabsContent key={category.category} value={category.category} className={cn("m-0 rounded-lg p-2", categoryColors[category.category] ? colorPalette[categoryColors[category.category]]?.light : '')}>
-                <div className="space-y-4">
-                  {category.subCategories.map((subCategory) => (
-                    <div key={subCategory.name}>
-                      <h3 className="text-md font-semibold mb-2 text-muted-foreground pl-2">{subCategory.name}</h3>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-                        {subCategory.items.map((item) => renderMenuItem(item, subCategory.name, category.category))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </TabsContent>
+                <AccordionItem key={category.category} value={category.category} className="border-b-0">
+                    <AccordionTrigger className={cn("p-3 rounded-md text-lg font-bold hover:no-underline", categoryColors[category.category] ? colorPalette[categoryColors[category.category]]?.light : 'bg-muted')}>
+                        <div className="flex items-center gap-2">
+                           <span className={cn("flex-grow text-left text-black")}>{category.category}</span>
+                           <CategoryColorPicker categoryName={category.category}/>
+                        </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="p-2 space-y-2">
+                        {category.subCategories.map(subCategory => (
+                            <div key={subCategory.name}>
+                                <h3 className="text-md font-semibold mb-2 text-muted-foreground pl-2">{subCategory.name}</h3>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                                    {subCategory.items.map(item => renderMenuItem(item, subCategory.name, category.category))}
+                                </div>
+                            </div>
+                        ))}
+                    </AccordionContent>
+                </AccordionItem>
             ))}
-          </Tabs>
-       </div>
+        </Accordion>
     );
   };
   
