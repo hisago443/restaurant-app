@@ -194,10 +194,10 @@ export default function StaffManagement({ employees }: StaffManagementProps) {
     const uniqueEmployeeIds = new Set(events.map(e => e.employeeId));
 
     return (
-        <div className="relative h-full w-full flex flex-col items-center justify-center">
+        <div className="relative h-full w-full flex items-center justify-center">
             <DayContent {...props} />
             {uniqueEmployeeIds.size > 0 && (
-                <div className="absolute bottom-1 flex items-center justify-center space-x-0.5">
+                <div className="absolute bottom-1.5 flex items-center justify-center space-x-1">
                     {Array.from(uniqueEmployeeIds).map(employeeId => {
                         const employee = employees.find(e => e.id === employeeId);
                         if (!employee) return null;
@@ -208,9 +208,9 @@ export default function StaffManagement({ employees }: StaffManagementProps) {
                             <div 
                                 key={employeeId} 
                                 className={cn(
-                                    "h-1.5 w-1.5 rounded-full",
+                                    "h-2 w-2 rounded-full",
                                     employee.color,
-                                    wasAbsent && "ring-1 ring-offset-1 ring-destructive"
+                                    wasAbsent && "ring-2 ring-offset-1 ring-destructive"
                                 )}
                                 title={employee.name}
                             />
@@ -304,28 +304,6 @@ export default function StaffManagement({ employees }: StaffManagementProps) {
                                                             <span className="text-muted-foreground ml-2">on {format(advance.date, 'PPP')}</span>
                                                         </div>
                                                         <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                                                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openAdvanceDialog(advance)}>
-                                                                <Edit className="h-4 w-4" />
-                                                            </Button>
-                                                            <AlertDialog>
-                                                                <AlertDialogTrigger asChild>
-                                                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive">
-                                                                        <Trash2 className="h-4 w-4" />
-                                                                    </Button>
-                                                                </AlertDialogTrigger>
-                                                                <AlertDialogContent>
-                                                                    <AlertDialogHeader>
-                                                                        <AlertDialogTitle>Delete this advance?</AlertDialogTitle>
-                                                                        <AlertDialogDescription>
-                                                                            This will delete the advance of Rs. {advance.amount} for {employee?.name}. This action cannot be undone.
-                                                                        </AlertDialogDescription>
-                                                                    </AlertDialogHeader>
-                                                                    <AlertDialogFooter>
-                                                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                                                        <AlertDialogAction onClick={() => handleDeleteAdvance(advance.id)}>Delete</AlertDialogAction>
-                                                                    </AlertDialogFooter>
-                                                                </AlertDialogContent>
-                                                            </AlertDialog>
                                                         </div>
                                                     </li>
                                                 ))}
@@ -344,12 +322,7 @@ export default function StaffManagement({ employees }: StaffManagementProps) {
         </TabsContent>
         <TabsContent value="attendance">
           <div className="grid md:grid-cols-2 gap-6">
-            <Card className="bg-violet-50 dark:bg-violet-900/20">
-              <CardHeader>
-                <CardTitle>Calendar</CardTitle>
-                <CardDescription>Select a date to manage records.</CardDescription>
-              </CardHeader>
-              <CardContent className="flex flex-col items-center">
+            <Card className="flex flex-col items-center justify-center p-2 bg-violet-50 dark:bg-violet-900/20">
                 <Calendar
                   mode="single"
                   selected={selectedDate}
@@ -379,7 +352,6 @@ export default function StaffManagement({ employees }: StaffManagementProps) {
                         <Label htmlFor="show-absences">Show Absent Days</Label>
                     </div>
                  </div>
-              </CardContent>
             </Card>
             <div className="space-y-6">
                <Card className="bg-violet-50 dark:bg-violet-900/20">
@@ -448,30 +420,6 @@ export default function StaffManagement({ employees }: StaffManagementProps) {
                                             <p className="font-semibold">{employee?.name || 'Unknown Employee'}</p>
                                             <p className="text-sm text-muted-foreground font-mono">Rs. {advance.amount.toLocaleString()}</p>
                                         </div>
-                                    </div>
-                                    <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openAdvanceDialog(advance)}>
-                                            <Edit className="h-4 w-4" />
-                                        </Button>
-                                        <AlertDialog>
-                                            <AlertDialogTrigger asChild>
-                                                <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive">
-                                                    <Trash2 className="h-4 w-4" />
-                                                </Button>
-                                            </AlertDialogTrigger>
-                                            <AlertDialogContent>
-                                                <AlertDialogHeader>
-                                                    <AlertDialogTitle>Delete this advance?</AlertDialogTitle>
-                                                    <AlertDialogDescription>
-                                                        This will delete the advance of Rs. {advance.amount} for {employee?.name}. This action cannot be undone.
-                                                    </AlertDialogDescription>
-                                                </AlertDialogHeader>
-                                                <AlertDialogFooter>
-                                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                                    <AlertDialogAction onClick={() => handleDeleteAdvance(advance.id)}>Delete</AlertDialogAction>
-                                                </AlertDialogFooter>
-                                            </AlertDialogContent>
-                                        </AlertDialog>
                                     </div>
                                 </div>
                             );
