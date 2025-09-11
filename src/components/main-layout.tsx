@@ -6,7 +6,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Utensils, LayoutGrid, Soup, Users, Shield, Receipt, Package, History } from 'lucide-react';
 import { isSameDay } from 'date-fns';
-import { collection, onSnapshot, doc, setDoc } from 'firebase/firestore';
+import { collection, onSnapshot, doc, setDoc, getDocs, writeBatch } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 import type { Table, TableStatus, Order, Bill, Employee, OrderItem, Expense, InventoryItem } from '@/lib/types';
@@ -159,6 +159,29 @@ export default function MainLayout() {
 
   // Centralized data fetching
   useEffect(() => {
+    const seedInventory = async () => {
+      const inventoryCollection = collection(db, "inventory");
+      const snapshot = await getDocs(inventoryCollection);
+      if (snapshot.empty) {
+        const defaultItems = [
+          { name: 'Coffee Beans', category: 'Beverages', stock: 10, capacity: 20, unit: 'kg' },
+          { name: 'Milk', category: 'Dairy', stock: 25, capacity: 50, unit: 'liters' },
+          { name: 'Sugar', category: 'Pantry', stock: 40, capacity: 50, unit: 'kg' },
+          { name: 'All-Purpose Flour', category: 'Pantry', stock: 15, capacity: 25, unit: 'kg' },
+          { name: 'Pizza Base', category: 'Bakery', stock: 50, capacity: 100, unit: 'units' },
+        ];
+        const batch = writeBatch(db);
+        defaultItems.forEach(item => {
+          const docRef = doc(collection(db, "inventory")); // Automatically generate ID
+          batch.set(docRef, item);
+        });
+        await batch.commit();
+        console.log("Default inventory seeded.");
+      }
+    };
+    
+    seedInventory();
+
     const unsubEmployees = onSnapshot(collection(db, "employees"), (snapshot) => {
       const employeesData = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as Employee));
       setEmployees(employeesData);
