@@ -45,6 +45,12 @@ const colorPalette: Record<string, {light: string, dark: string}> = {
 };
 const colorNames = Object.keys(colorPalette);
 
+const itemStatusColors: Record<string, { light: string, dark: string, name: string }> = {
+    low: { light: 'bg-yellow-100 dark:bg-yellow-900/40', dark: 'bg-yellow-200 dark:bg-yellow-800/70', name: 'Running Low' },
+    out: { light: 'bg-red-100 dark:bg-red-900/40', dark: 'bg-red-200 dark:bg-red-800/70', name: 'Out of Stock' },
+};
+const itemStatusNames = Object.keys(itemStatusColors);
+
 
 type ViewMode = 'accordion' | 'grid' | 'list';
 
@@ -451,13 +457,13 @@ export default function PosSystem({
   const [itemCodeInput, setItemCodeInput] = useState('');
   const [menu, setMenu] = useState<MenuCategory[]>(menuData as MenuCategory[]);
   const [originalOrderItems, setOriginalOrderItems] = useState<OrderItem[]>([]);
-  const [clickToAdd, setClickToAdd] = useState(false);
+  const [easyMode, setEasyMode] = useState(false);
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
   const [receiptPreview, setReceiptPreview] = useState('');
   const { toast } = useToast();
   const [activeAccordionItems, setActiveAccordionItems] = useState<string[]>([]);
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
-  const [menuItemColors, setMenuItemColors] = useState<Record<string, string>>({});
+  const [menuItemStatus, setMenuItemStatus] = useState<Record<string, string>>({});
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
   const [isAddItemDialogOpen, setIsAddItemDialogOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -492,23 +498,23 @@ export default function PosSystem({
 
   useEffect(() => {
     try {
-      const savedMode = localStorage.getItem('clickToAdd');
+      const savedMode = localStorage.getItem('easyMode');
       if (savedMode) {
-        setClickToAdd(JSON.parse(savedMode));
+        setEasyMode(JSON.parse(savedMode));
       }
     } catch (e) {
-      console.error("Could not parse 'clickToAdd' from localStorage", e);
-      setClickToAdd(false);
+      console.error("Could not parse 'easyMode' from localStorage", e);
+      setEasyMode(false);
     }
   }, []);
   
   useEffect(() => {
     try {
-      localStorage.setItem('clickToAdd', JSON.stringify(clickToAdd));
+      localStorage.setItem('easyMode', JSON.stringify(easyMode));
     } catch (e) {
-      console.error("Could not save 'clickToAdd' to localStorage", e);
+      console.error("Could not save 'easyMode' to localStorage", e);
     }
-  }, [clickToAdd]);
+  }, [easyMode]);
   
   const getLocalReceipt = useCallback(() => {
     if (orderItems.length === 0) return '';
@@ -623,8 +629,8 @@ export default function PosSystem({
     }
   };
   
-  const setItemColor = (itemName: string, colorName: string) => {
-    setMenuItemColors(prev => ({ ...prev, [itemName]: colorName }));
+  const setItemStatus = (itemName: string, status: string) => {
+    setMenuItemStatus(prev => ({ ...prev, [itemName]: status }));
   };
   
   const handleSetCategoryColor = (categoryName: string, colorName:string) => {
@@ -673,13 +679,13 @@ export default function PosSystem({
   }, [setOrderItems]);
 
   const handleItemClick = (item: MenuItem) => {
-    if (clickToAdd) {
+    if (easyMode) {
       addToOrder(item, 1);
     }
   };
   
   const handleDropOnOrder = (item: MenuItem) => {
-      if (clickToAdd) {
+      if (easyMode) {
         addToOrder(item, 1);
         toast({
             title: "Item Added",
@@ -847,7 +853,7 @@ export default function PosSystem({
   };
   
     const handleDropItemOnTable = (tableId: number, item: MenuItem) => {
-        if (!clickToAdd) return; // Only allow drop if clickToAdd is on
+        if (!easyMode) return; 
 
         const tableIsSelected = selectedTableId === tableId;
         const isNewOrder = !activeOrder && orderItems.length === 0;
@@ -1033,19 +1039,18 @@ export default function PosSystem({
   const renderMenuItem = (item: MenuItem, subCategoryName: string, categoryName: string) => {
     const isNonVeg = subCategoryName.toLowerCase().includes('non-veg');
     
-    const itemColorName = menuItemColors[item.name];
+    const itemStatus = menuItemStatus[item.name];
     const categoryColorName = categoryColors[categoryName];
 
-    const finalColorName = itemColorName || categoryColorName;
-    const finalItemColor = finalColorName ? colorPalette[finalColorName]?.dark : (isNonVeg ? nonVegColor : 'bg-green-100 dark:bg-green-900/30');
+    const finalColorName = itemStatus ? itemStatusColors[itemStatus]?.dark : (categoryColorName ? colorPalette[categoryColorName]?.dark : (isNonVeg ? nonVegColor : 'bg-green-100 dark:bg-green-900/30'));
 
     const menuItemCard = (
       <Card
         key={item.name}
         className={cn(
           "group rounded-lg transition-all hover:shadow-md relative overflow-hidden",
-          finalItemColor,
-          clickToAdd ? 'cursor-pointer hover:scale-105' : ''
+          finalColorName,
+          easyMode ? 'cursor-pointer hover:scale-105' : ''
         )}
         onClick={() => handleItemClick(item)}
       >
@@ -1062,15 +1067,14 @@ export default function PosSystem({
             </div>
           </PopoverTrigger>
           <PopoverContent className="w-auto p-2" onClick={(e) => e.stopPropagation()}>
-            <div className="grid grid-cols-5 gap-1">
-              {colorNames.map((name) => (
-                <div
-                  key={name}
-                  className={cn("h-6 w-6 rounded-full cursor-pointer", colorPalette[name].light)}
-                  onClick={(e) => { e.stopPropagation(); setItemColor(item.name, name); }}
-                />
-              ))}
-              <Button variant="ghost" size="sm" className="col-span-5 h-8" onClick={(e) => { e.stopPropagation(); setItemColor(item.name, ''); }}>Reset</Button>
+            <div className="flex flex-col gap-1">
+                {itemStatusNames.map((name) => (
+                    <Button key={name} variant="outline" className="w-full justify-start gap-2" onClick={(e) => { e.stopPropagation(); setItemStatus(item.name, name); }}>
+                        <span className={cn("h-3 w-3 rounded-sm", itemStatusColors[name].light)} />
+                        {itemStatusColors[name].name}
+                    </Button>
+                ))}
+              <Button variant="ghost" size="sm" className="col-span-2 h-8" onClick={(e) => { e.stopPropagation(); setItemStatus(item.name, ''); }}>Reset</Button>
             </div>
           </PopoverContent>
         </Popover>
@@ -1088,7 +1092,7 @@ export default function PosSystem({
           </div>
         </CardContent>
 
-        {!clickToAdd && (
+        {!easyMode && (
             <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                 <Button
                     size="sm"
@@ -1106,7 +1110,7 @@ export default function PosSystem({
     );
 
     return (
-        <DraggableMenuItem key={item.name} item={item} canDrag={clickToAdd}>
+        <DraggableMenuItem key={item.name} item={item} canDrag={easyMode}>
             {menuItemCard}
         </DraggableMenuItem>
     );
@@ -1115,7 +1119,7 @@ export default function PosSystem({
   const CategoryColorPicker = ({ categoryName }: { categoryName: string }) => (
     <Popover>
       <PopoverTrigger asChild>
-        <div onClick={(e) => e.stopPropagation()}>
+         <div onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
           <Button
             variant="ghost"
             size="icon"
@@ -1223,9 +1227,7 @@ export default function PosSystem({
                     <AccordionTrigger className={cn("p-3 rounded-md text-lg font-bold hover:no-underline", categoryColors[category.category] ? colorPalette[categoryColors[category.category]]?.dark : 'bg-muted')}>
                         <div className="flex items-center justify-between w-full">
                            <span className={cn("flex-grow text-left text-black")}>{category.category}</span>
-                           <div onClick={(e) => e.stopPropagation()}>
-                            <CategoryColorPicker categoryName={category.category}/>
-                           </div>
+                           <CategoryColorPicker categoryName={category.category}/>
                         </div>
                     </AccordionTrigger>
                     <AccordionContent className="p-2 space-y-2">
@@ -1349,6 +1351,11 @@ export default function PosSystem({
           <Card className="flex flex-col flex-grow">
             <CardHeader>
               <div className="flex items-start justify-between gap-4 flex-wrap">
+                 <div className="flex items-center gap-2">
+                    <Button variant="outline" size="sm" onClick={() => setIsMenuManagerOpen(true)}>
+                        <BookOpen className="mr-2 h-4 w-4" /> Manage Menu
+                    </Button>
+                </div>
                 <div className="flex-grow grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
@@ -1397,12 +1404,9 @@ export default function PosSystem({
                       {allItemsOpen ? 'Collapse' : 'Expand'}
                     </Button>
                   )}
-                  <Button variant="outline" size="sm" onClick={() => setIsMenuManagerOpen(true)}>
-                    <BookOpen className="mr-2 h-4 w-4" /> Manage Menu
-                  </Button>
                    <div className="flex items-center space-x-2">
-                        <Switch id="click-to-add-switch" checked={clickToAdd} onCheckedChange={setClickToAdd} />
-                        <Label htmlFor="click-to-add-switch" className="flex items-center gap-2 cursor-pointer">
+                        <Switch id="easy-mode-switch" checked={easyMode} onCheckedChange={setEasyMode} />
+                        <Label htmlFor="easy-mode-switch" className="flex items-center gap-2 cursor-pointer">
                             <MousePointerClick className="h-4 w-4" />
                             Easy Mode
                         </Label>
@@ -1489,3 +1493,5 @@ export default function PosSystem({
     </DndProvider>
   );
 }
+
+    
