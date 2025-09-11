@@ -709,8 +709,8 @@ export default function PosSystem({
           <div className="flex justify-center">
             <TabsList className="mb-4 flex-wrap h-auto">
               {filteredMenu.map(category => (
-                 <div key={category.category} className={cn("relative p-0.5 rounded-sm cursor-pointer data-[state=active]:ring-2 ring-primary", categoryColors[category.category] ? colorPalette[categoryColors[category.category]]?.light : '')}>
-                    <TabsTrigger value={category.category} className="flex-grow justify-between gap-2 w-full pr-8 data-[state=active]:bg-background/70">
+                 <div key={category.category} className={cn("relative p-0.5 rounded-sm cursor-pointer", categoryColors[category.category] ? colorPalette[categoryColors[category.category]]?.light : '')}>
+                    <TabsTrigger value={category.category} className="flex-grow justify-between gap-2 w-full pr-8">
                        <span className={cn('text-black flex-grow text-left')}>{category.category}</span>
                     </TabsTrigger>
                      <div className="absolute right-1 top-1/2 -translate-y-1/2">
