@@ -313,7 +313,7 @@ export default function MainLayout() {
       </header>
        <DndProvider backend={HTML5Backend}>
         <Tabs value={activeTab} onValueChange={handleTabChange} className="h-full flex flex-col">
-          <div className="flex justify-center border-b bg-muted/30">
+          <div className="flex justify-center border-b bg-blue-50 dark:bg-blue-900/20">
             <TabsList className="m-2 p-0 h-auto bg-transparent">
               <TabsTrigger value="pos" className="px-4 py-2 text-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md flex items-center gap-2">
                   <Utensils /> Main
@@ -324,11 +324,7 @@ export default function MainLayout() {
               </TabsTrigger>
               <Separator orientation="vertical" className="h-6 mx-1" />
               <TabsTrigger value="kitchen" className="px-4 py-2 text-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md flex items-center gap-2">
-                <Soup /> Kitchen
-              </TabsTrigger>
-              <Separator orientation="vertical" className="h-6 mx-1" />
-              <TabsTrigger value="inventory" className="px-4 py-2 text-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md flex items-center gap-2">
-                <Package /> Inventory
+                <Soup /> Kitchen & Inventory
               </TabsTrigger>
               <Separator orientation="vertical" className="h-6 mx-1" />
               <TabsTrigger value="staff" className="px-4 py-2 text-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md flex items-center gap-2">
