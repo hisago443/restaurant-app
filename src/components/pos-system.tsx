@@ -21,7 +21,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Search, Plus, Minus, X, LayoutGrid, List, Rows, ChevronsUpDown, Palette, Shuffle, ClipboardList, Send, CheckCircle2, Users, Bookmark, Sparkles, Repeat, Edit, UserCheck, BookmarkX, Printer, Loader2, BookOpen, Trash2 as TrashIcon, MoreVertical, View, Pencil } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuLabel } from '@/components/ui/dropdown-menu';
 import { AddItemDialog } from './add-item-dialog';
 import { ManageMenuDialog } from './manage-menu-dialog';
 
@@ -659,7 +659,10 @@ export default function PosSystem({
           variant="ghost"
           size="icon"
           className="h-6 w-6"
-          onClick={(e) => e.stopPropagation()}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+          }}
         >
           <Palette className="h-4 w-4" />
         </Button>
@@ -713,37 +716,19 @@ export default function PosSystem({
           <div className="flex justify-center">
             <TabsList className="mb-4 flex-wrap h-auto bg-transparent border-b rounded-none p-0">
               {filteredMenu.map(category => (
-                <div key={category.category} className="relative group p-1">
-                  <TabsTrigger asChild value={category.category} className='!bg-transparent rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none px-4 py-2 cursor-pointer'>
-                    <div className={cn("rounded-md px-4 py-2 cursor-pointer", categoryColors[category.category] ? colorPalette[categoryColors[category.category]]?.light : 'bg-muted/30' )}>
+                 <div key={category.category} className="relative group p-1">
+                    <TabsTrigger value={category.category} className={cn("rounded-none border-b-2 border-transparent data-[state=active]:shadow-none px-4 py-2 cursor-pointer", categoryColors[category.category] ? colorPalette[categoryColors[category.category]]?.light : 'bg-muted/30' )}>
                        <span className="flex-grow text-left text-lg text-black">{category.category}</span>
+                    </TabsTrigger>
+                    <div className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <CategoryColorPicker categoryName={category.category} />
                     </div>
-                  </TabsTrigger>
-                  <div className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Popover>
-                          <PopoverTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-6 w-6" onClick={(e) => e.stopPropagation()}><Palette className="h-4 w-4" /></Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-2" onClick={e => e.stopPropagation()}>
-                              <div className="grid grid-cols-5 gap-1">
-                              {colorNames.map((name) => (
-                                  <div
-                                  key={name}
-                                  className={cn("h-6 w-6 rounded-full cursor-pointer", colorPalette[name].light)}
-                                  onClick={(e) => { e.stopPropagation(); handleSetCategoryColor(category.category, name); }}
-                                  />
-                              ))}
-                              <Button variant="ghost" size="sm" className="col-span-5 h-8" onClick={(e) => { e.stopPropagation(); handleSetCategoryColor(category.category, ''); }}>Reset</Button>
-                              </div>
-                          </PopoverContent>
-                      </Popover>
-                  </div>
                 </div>
               ))}
             </TabsList>
           </div>
           {filteredMenu.map(category => (
-             <TabsContent key={category.category} value={category.category} className={cn("m-0 rounded-lg p-2")}>
+             <TabsContent key={category.category} value={category.category} className="m-0 rounded-lg p-2">
                <div className="space-y-4">
                 {category.subCategories.map((subCategory) => (
                   <div key={subCategory.name}>
@@ -874,13 +859,22 @@ export default function PosSystem({
           <Button
             variant="ghost"
             size="icon"
-            className="absolute top-0.5 right-0.5 h-7 w-7 bg-black/20 hover:bg-black/40 text-white"
+            className="absolute top-0.5 right-0.5 h-7 w-7 bg-black/20 hover:bg-black/40 text-white opacity-0 group-hover:opacity-100 transition-opacity"
             onClick={handleActionClick}
           >
             <MoreVertical className="h-4 w-4" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent onClick={handleActionClick} className="w-56">
+          {(showOccupancy && occupancyCount[table.id] > 0) && (
+              <>
+                <DropdownMenuLabel className="flex items-center gap-2 text-muted-foreground">
+                    <Repeat className="h-4 w-4" />
+                    <span>Turnover: {occupancyCount[table.id]} times</span>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+              </>
+          )}
           <DropdownMenuItem onClick={() => onViewTableDetails(table.id)}>
             <View className="mr-2 h-4 w-4" />
             <span>View Details</span>
@@ -1068,7 +1062,7 @@ export default function PosSystem({
                           key={table.id}
                           variant="outline"
                           className={cn(
-                            "h-14 w-full flex-col justify-center items-center relative p-1 border-2 transition-transform duration-150 active:scale-95",
+                            "h-14 w-full flex-col justify-center items-center relative p-1 border-2 transition-transform duration-150 active:scale-95 group",
                             statusColors[table.status],
                             currentActiveTableId === table.id && 'ring-4 ring-offset-2 ring-ring',
                             table.status === 'Available' || table.status === 'Occupied' ? 'text-white border-black' : 'text-black border-black/50',
@@ -1076,12 +1070,6 @@ export default function PosSystem({
                           onClick={() => handleSelectTable(table.id)}
                       >
                          {renderTableActions(table)}
-                        {(showOccupancy && occupancyCount[table.id] > 0) &&
-                            <div className="absolute bottom-0.5 right-0.5 flex items-center gap-1 bg-black/50 text-white text-xs font-bold px-1 rounded-md">
-                                <Repeat className="h-2.5 w-2.5" />
-                                <span>{occupancyCount[table.id]}</span>
-                            </div>
-                        }
                           <div className="absolute top-1 left-1">
                             {React.createElement(statusIcons[table.status], { className: "h-3 w-3" })}
                           </div>
@@ -1170,4 +1158,5 @@ export default function PosSystem({
     
 
     
+
 
