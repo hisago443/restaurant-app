@@ -1118,31 +1118,27 @@ export default function PosSystem({
 
   const CategoryColorPicker = ({ categoryName }: { categoryName: string }) => (
     <Popover>
-      <PopoverTrigger asChild>
-         <div onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-6 w-6"
-          >
-            <Palette className="h-4 w-4" />
-          </Button>
-        </div>
-      </PopoverTrigger>
-      <PopoverContent className="w-auto p-2" onClick={(e) => e.stopPropagation()}>
-        <div className="grid grid-cols-5 gap-1">
-          {colorNames.map((name) => (
-            <div
-              key={name}
-              className={cn("h-6 w-6 rounded-full cursor-pointer", colorPalette[name].light)}
-              onClick={(e) => { e.stopPropagation(); handleSetCategoryColor(categoryName, name); }}
-            />
-          ))}
-           <Button variant="ghost" size="sm" className="col-span-5 h-8" onClick={(e) => { e.stopPropagation(); handleSetCategoryColor(categoryName, ''); }}>Reset</Button>
-        </div>
-      </PopoverContent>
+        <PopoverTrigger asChild>
+            <div onClick={(e) => e.stopPropagation()}>
+                <Button variant="ghost" size="icon" className="h-6 w-6">
+                    <Palette className="h-4 w-4" />
+                </Button>
+            </div>
+        </PopoverTrigger>
+        <PopoverContent className="w-auto p-2" onClick={(e) => e.stopPropagation()}>
+            <div className="grid grid-cols-5 gap-1">
+                {colorNames.map((name) => (
+                    <div
+                        key={name}
+                        className={cn("h-6 w-6 rounded-full cursor-pointer", colorPalette[name].light)}
+                        onClick={(e) => { e.stopPropagation(); handleSetCategoryColor(categoryName, name); }}
+                    />
+                ))}
+                <Button variant="ghost" size="sm" className="col-span-5 h-8" onClick={(e) => { e.stopPropagation(); handleSetCategoryColor(categoryName, ''); }}>Reset</Button>
+            </div>
+        </PopoverContent>
     </Popover>
-  );
+);
 
   const renderMenuContent = () => {
     if (viewMode === 'list') {
@@ -1227,7 +1223,27 @@ export default function PosSystem({
                     <AccordionTrigger className={cn("p-3 rounded-md text-lg font-bold hover:no-underline", categoryColors[category.category] ? colorPalette[categoryColors[category.category]]?.dark : 'bg-muted')}>
                         <div className="flex items-center justify-between w-full">
                            <span className={cn("flex-grow text-left text-black")}>{category.category}</span>
-                           <CategoryColorPicker categoryName={category.category}/>
+                            <Popover>
+                                <PopoverTrigger asChild>
+                                    <div onClick={(e) => e.stopPropagation()}>
+                                        <Button variant="ghost" size="icon" className="h-6 w-6">
+                                            <Palette className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-2" onClick={(e) => e.stopPropagation()}>
+                                    <div className="grid grid-cols-5 gap-1">
+                                        {colorNames.map((name) => (
+                                            <div
+                                                key={name}
+                                                className={cn("h-6 w-6 rounded-full cursor-pointer", colorPalette[name].light)}
+                                                onClick={(e) => { e.stopPropagation(); handleSetCategoryColor(category.category, name); }}
+                                            />
+                                        ))}
+                                        <Button variant="ghost" size="sm" className="col-span-5 h-8" onClick={(e) => { e.stopPropagation(); handleSetCategoryColor(category.category, ''); }}>Reset</Button>
+                                    </div>
+                                </PopoverContent>
+                            </Popover>
                         </div>
                     </AccordionTrigger>
                     <AccordionContent className="p-2 space-y-2">
