@@ -710,7 +710,7 @@ export default function PosSystem({
             <TabsList className="mb-4 flex-wrap h-auto">
               {filteredMenu.map(category => (
                  <div key={category.category} className={cn("relative p-0.5 rounded-sm cursor-pointer", categoryColors[category.category] ? colorPalette[categoryColors[category.category]]?.light : '')}>
-                    <TabsTrigger value={category.category} className="flex-grow justify-between gap-2 w-full pr-8">
+                    <TabsTrigger value={category.category} className="flex-grow justify-between gap-2 w-full pr-8 data-[state=active]:bg-transparent data-[state=active]:shadow-none">
                        <span className={cn('text-black flex-grow text-left')}>{category.category}</span>
                     </TabsTrigger>
                      <div className="absolute right-1 top-1/2 -translate-y-1/2">
@@ -741,7 +741,7 @@ export default function PosSystem({
     return (
       <Accordion type="multiple" value={activeAccordionItems} onValueChange={setActiveAccordionItems} className="w-full">
         {filteredMenu.map((category) => (
-          <AccordionItem key={category.category} value={category.category} className={cn("border-b-0 rounded-lg mb-2 overflow-hidden", categoryColors[category.category] ? colorPalette[categoryColors[category.category]]?.light : '')}>
+          <AccordionItem key={category.category} value={category.category} className={cn("border-b-0 rounded-lg mb-2 overflow-hidden", categoryColors[category.category] ? colorPalette[categoryColors[category.category]]?.light : 'bg-muted/30')}>
             <div className="flex items-center pr-4">
               <AccordionTrigger className='p-4 hover:no-underline flex-grow'>
                   <div className="text-xl font-bold text-black flex-grow text-left">{category.category}</div>
