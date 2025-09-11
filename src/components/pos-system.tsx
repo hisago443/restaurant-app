@@ -402,7 +402,7 @@ function OrderPanel({
                         onClick={handleSendToKitchen}
                         disabled={isProcessing || orderItems.length === 0 || !currentActiveTableId}
                     >
-                        {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : (activeOrder ? <Printer className="mr-2 h-4 w-4" /> : <Send className="mr-2 h-4 w-4" />)}
+                        {isProcessing && (activeOrder ? 'Updating KOT...' : 'Sending KOT...').includes('Sending') ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : (activeOrder ? <Printer className="mr-2 h-4 w-4" /> : <Send className="mr-2 h-4 w-4" />)}
                         {activeOrder ? 'Update KOT' : 'Send KOT to Kitchen'}
                     </Button>
                     <div className="grid grid-cols-2 gap-2">
@@ -618,7 +618,7 @@ export default function PosSystem({
         setSelectedTableId(tableId);
         setPendingOrders(prev => {
             const newPending = {...prev};
-            newPending[tableId!] = orderItems;
+            if(tableId) newPending[tableId] = orderItems;
             delete newPending[0]; 
             return newPending;
         });
@@ -853,7 +853,7 @@ export default function PosSystem({
         // Clear pending order for this table
         setPendingOrders(prev => {
             const newPending = {...prev};
-            delete newPending[currentActiveTableId!];
+            if (currentActiveTableId) delete newPending[currentActiveTableId];
             return newPending;
         });
 
@@ -1506,3 +1506,5 @@ export default function PosSystem({
     </DndProvider>
   );
 }
+
+    
