@@ -21,7 +21,7 @@ import { Label } from '@/components/ui/label';
 import { isSameDay, format } from 'date-fns';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger, AlertDialogDescription } from "@/components/ui/alert-dialog";
 import { db } from '@/lib/firebase';
-import { doc, deleteDoc } from 'firebase/firestore';
+import { doc, deleteDoc, getDocs, collection, writeBatch } from 'firebase/firestore';
 
 
 const topItems: { name: string; count: number }[] = [];
@@ -126,6 +126,30 @@ export default function AdminDashboard({ billHistory, employees, expenses }: Adm
         console.error("Error deleting expense: ", error);
     }
   };
+  
+    const handleClearAllBills = async () => {
+    try {
+      const billsCollection = collection(db, "bills");
+      const billsSnapshot = await getDocs(billsCollection);
+      const batch = writeBatch(db);
+      billsSnapshot.docs.forEach((doc) => {
+        batch.delete(doc.ref);
+      });
+      await batch.commit();
+      toast({
+        title: "All Bills Cleared",
+        description: "The entire bill history has been successfully deleted.",
+      });
+    } catch (error) {
+      console.error("Error clearing all bills:", error);
+      toast({
+        variant: "destructive",
+        title: "Clearing Failed",
+        description: "There was an error clearing the bill history. Please try again.",
+      });
+    }
+  };
+
 
   return (
     <div className="p-4 space-y-4">
@@ -243,7 +267,7 @@ export default function AdminDashboard({ billHistory, employees, expenses }: Adm
                   <DialogDescription>A log of all completed transactions.</DialogDescription>
                 </DialogHeader>
                 <div className="pt-4">
-                  <BillHistory bills={billHistory} />
+                  <BillHistory bills={billHistory} onClearAll={handleClearAllBills} />
                 </div>
               </DialogContent>
             </Dialog>
@@ -296,7 +320,10 @@ export default function AdminDashboard({ billHistory, employees, expenses }: Adm
                               <TableCell>{expense.category}</TableCell>
                               <TableCell>{expense.description}</TableCell>
                               <TableCell className="text-right font-mono text-red-600 dark:text-red-400">Rs. {expense.amount.toFixed(2)}</TableCell>
-                              <TableCell className="text-center">
+                              <TableCell className="text-center space-x-1">
+                                <Button variant="ghost" size="icon">
+                                  <Edit className="h-4 w-4" />
+                                </Button>
                                 <AlertDialog>
                                   <AlertDialogTrigger asChild>
                                     <Button variant="ghost" size="icon" className="text-destructive">

@@ -24,11 +24,12 @@ import { useToast } from '@/hooks/use-toast';
 
 interface BillHistoryProps {
   bills: Bill[];
+  onClearAll?: () => void;
 }
 
 type FilterType = 'all' | 'month' | 'year';
 
-export default function BillHistory({ bills }: BillHistoryProps) {
+export default function BillHistory({ bills, onClearAll }: BillHistoryProps) {
   const { toast } = useToast();
   const [selectedBill, setSelectedBill] = useState<Bill | null>(null);
   const [filter, setFilter] = useState<FilterType>('all');
@@ -92,13 +93,36 @@ export default function BillHistory({ bills }: BillHistoryProps) {
 
   return (
     <>
-      <Tabs value={filter} onValueChange={(value) => setFilter(value as FilterType)} className="w-full mb-4">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="all">All</TabsTrigger>
-          <TabsTrigger value="month">This Month</TabsTrigger>
-          <TabsTrigger value="year">This Year</TabsTrigger>
-        </TabsList>
-      </Tabs>
+      <div className="flex justify-between items-center w-full mb-4">
+        <Tabs value={filter} onValueChange={(value) => setFilter(value as FilterType)} className="w-auto">
+          <TabsList>
+            <TabsTrigger value="all">All</TabsTrigger>
+            <TabsTrigger value="month">This Month</TabsTrigger>
+            <TabsTrigger value="year">This Year</TabsTrigger>
+          </TabsList>
+        </Tabs>
+        {onClearAll && (
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive" disabled={bills.length === 0}>
+                  <Trash2 className="mr-2 h-4 w-4" /> Clear All Bills
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This will permanently delete the entire bill history. This action cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={onClearAll}>Delete All</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+        )}
+      </div>
       <ScrollArea className="h-[60vh]">
         <Table>
           <TableHeader>
@@ -191,5 +215,3 @@ export default function BillHistory({ bills }: BillHistoryProps) {
     </>
   );
 }
-
-    
