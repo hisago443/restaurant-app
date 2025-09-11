@@ -17,6 +17,8 @@ import AdminDashboard from './admin-dashboard';
 import StaffManagement from "./staff-management";
 import ExpensesTracker from './expenses-tracker';
 import { Separator } from '@/components/ui/separator';
+import { DndProvider } from 'react-dnd';
+import { HTML5Backend } from 'react-dnd-html5-backend';
 
 
 export default function MainLayout() {
@@ -337,6 +339,7 @@ export default function MainLayout() {
           
           <div className="flex-grow overflow-auto">
             <TabsContent value="pos" className="m-0 p-0 h-full">
+              <DndProvider backend={HTML5Backend}>
                 <PosSystem 
                   tables={tables}
                   orders={orders}
@@ -361,6 +364,7 @@ export default function MainLayout() {
                   onViewTableDetails={handleViewTableDetails}
                   onEditOrder={handleEditOrderFromShortcut}
                 />
+              </DndProvider>
             </TabsContent>
             <TabsContent value="tables" className="m-0 p-0">
               <TableManagement 
