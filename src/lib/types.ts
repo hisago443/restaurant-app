@@ -94,6 +94,7 @@ export interface Expense {
 export interface InventoryItem {
   id: string;
   name: string;
+  category: string;
   stock: number;
   capacity: number;
   unit: string;

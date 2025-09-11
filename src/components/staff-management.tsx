@@ -276,7 +276,7 @@ export default function StaffManagement({ employees }: StaffManagementProps) {
         </TabsContent>
         <TabsContent value="attendance">
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <Card className="lg:col-span-1">
+            <Card className="lg:col-span-1 bg-violet-50 dark:bg-violet-900/20">
               <CardHeader>
                 <CardTitle>Calendar</CardTitle>
                 <CardDescription>Select a date to manage records.</CardDescription>
@@ -286,7 +286,7 @@ export default function StaffManagement({ employees }: StaffManagementProps) {
                   mode="single"
                   selected={selectedDate}
                   onSelect={(date) => setSelectedDate(date || new Date())}
-                  className="rounded-md border"
+                  className="rounded-md border bg-background"
                   modifiers={{
                     advance: datesWithAdvance,
                     absent: datesWithAbsence,
@@ -299,7 +299,7 @@ export default function StaffManagement({ employees }: StaffManagementProps) {
                      },
                   }}
                 />
-                 <div className="space-y-2 mt-4 p-4 border rounded-md w-full">
+                 <div className="space-y-2 mt-4 p-4 border rounded-md w-full bg-background/50">
                     <h4 className="font-semibold text-sm mb-2">Calendar Highlights:</h4>
                     <div className="flex items-center space-x-2">
                         <Checkbox id="show-advances" checked={showAdvancesOnCalendar} onCheckedChange={(checked) => setShowAdvancesOnCalendar(Boolean(checked))} />

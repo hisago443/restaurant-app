@@ -4,12 +4,12 @@
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Utensils, LayoutGrid, Soup, Users, Shield, Receipt, Package } from 'lucide-react';
+import { Utensils, LayoutGrid, Soup, Users, Shield, Receipt, Package, History } from 'lucide-react';
 import { isSameDay } from 'date-fns';
 import { collection, onSnapshot, doc, setDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
-import type { Table, TableStatus, Order, Bill, Employee, OrderItem, Expense } from '@/lib/types';
+import type { Table, TableStatus, Order, Bill, Employee, OrderItem, Expense, InventoryItem } from '@/lib/types';
 import { Logo } from "./icons";
 import PosSystem from './pos-system';
 import TableManagement from './table-management';
@@ -31,6 +31,7 @@ export default function MainLayout() {
   const [billHistory, setBillHistory] = useState<Bill[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [inventory, setInventory] = useState<InventoryItem[]>([]);
   const [activeOrder, setActiveOrder] = useState<Order | null>(null);
   const [currentOrderItems, setCurrentOrderItems] = useState<OrderItem[]>([]);
   const [activeTab, setActiveTab] = useState('pos');
@@ -208,10 +209,23 @@ export default function MainLayout() {
         })
     });
 
+    const unsubInventory = onSnapshot(collection(db, "inventory"), (snapshot) => {
+        const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as InventoryItem));
+        setInventory(data);
+    }, (error) => {
+        console.error("Firestore Error (inventory): ", error);
+        toast({
+            variant: 'destructive',
+            title: 'Firestore Connection Error',
+            description: 'Could not fetch inventory data.',
+        });
+    });
+
     return () => {
       unsubEmployees();
       unsubBills();
       unsubExpenses();
+      unsubInventory();
     };
   }, [toast]);
 
@@ -391,10 +405,20 @@ export default function MainLayout() {
               />
             </TabsContent>
             <TabsContent value="kitchen" className="m-0 p-0 h-full">
-              <KitchenOrders orders={orders} setOrders={setOrders} />
-            </TabsContent>
-             <TabsContent value="inventory" className="m-0 p-0 h-full">
-              <InventoryManagement />
+              <Tabs defaultValue="orders" className="h-full flex flex-col">
+                <div className="flex justify-center border-b">
+                    <TabsList className="m-2">
+                        <TabsTrigger value="orders">Kitchen Orders</TabsTrigger>
+                        <TabsTrigger value="inventory">Inventory</TabsTrigger>
+                    </TabsList>
+                </div>
+                <TabsContent value="orders" className="flex-grow">
+                    <KitchenOrders orders={orders} setOrders={setOrders} />
+                </TabsContent>
+                <TabsContent value="inventory" className="flex-grow">
+                    <InventoryManagement inventory={inventory} />
+                </TabsContent>
+              </Tabs>
             </TabsContent>
             <TabsContent value="staff" className="m-0 p-0">
               <StaffManagement 

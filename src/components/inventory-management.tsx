@@ -1,99 +1,241 @@
 "use client"
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { db } from '@/lib/firebase';
+import { collection, doc, addDoc, updateDoc, deleteDoc, onSnapshot } from 'firebase/firestore';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Label } from '@/components/ui/label';
+import { PlusCircle, Edit, Trash2 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import type { InventoryItem } from '@/lib/types';
 
-const initialInventory = [
-  { id: 'I001', name: 'Coffee Beans', stock: 50, capacity: 100, unit: 'kg' },
-  { id: 'I002', name: 'Milk', stock: 20, capacity: 50, unit: 'liters' },
-  { id: 'I003', name: 'All-Purpose Flour', stock: 30, capacity: 50, unit: 'kg' },
-  { id: 'I004', name: 'Chicken Breast', stock: 15, capacity: 40, unit: 'kg' },
-  { id: 'I005', name: 'Tomatoes', stock: 25, capacity: 30, unit: 'kg' },
-];
+interface InventoryManagementProps {
+  inventory: InventoryItem[];
+}
 
-function InventoryRow({ item, onStockChange, onSetStock }: { item: typeof initialInventory[0], onStockChange: (id: string, amount: number) => void, onSetStock: (id: string, amount: number) => void }) {
-  const [customValue, setCustomValue] = useState<string>("");
+function AddOrEditItemDialog({
+  open,
+  onOpenChange,
+  onSave,
+  existingItem,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSave: (item: Omit<InventoryItem, 'id'> & { id?: string }) => void;
+  existingItem: InventoryItem | null;
+}) {
+  const [name, setName] = useState('');
+  const [category, setCategory] = useState('');
+  const [stock, setStock] = useState('');
+  const [capacity, setCapacity] = useState('');
+  const [unit, setUnit] = useState('');
 
-  const handleSetStock = () => {
-    const value = parseInt(customValue, 10);
-    if (!isNaN(value)) {
-      onSetStock(item.id, value);
-      setCustomValue("");
+  useEffect(() => {
+    if (existingItem) {
+      setName(existingItem.name);
+      setCategory(existingItem.category || '');
+      setStock(String(existingItem.stock));
+      setCapacity(String(existingItem.capacity));
+      setUnit(existingItem.unit);
+    } else {
+      setName('');
+      setCategory('');
+      setStock('');
+      setCapacity('');
+      setUnit('');
+    }
+  }, [existingItem, open]);
+
+  const handleSave = () => {
+    if (name && stock && capacity && unit) {
+      onSave({
+        id: existingItem?.id,
+        name,
+        category,
+        stock: parseFloat(stock),
+        capacity: parseFloat(capacity),
+        unit,
+      });
+      onOpenChange(false);
     }
   };
 
   return (
-    <TableRow>
-      <TableCell className="font-medium">{item.name}</TableCell>
-      <TableCell>
-        <div className="flex items-center gap-2">
-          <Progress
-            value={(item.stock / item.capacity) * 100}
-            className="w-40 h-3"
-          />
-          <span>{item.stock} / {item.capacity} {item.unit}</span>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{existingItem ? 'Edit' : 'Add'} Inventory Item</DialogTitle>
+          <DialogDescription>Manage your stock items.</DialogDescription>
+        </DialogHeader>
+        <div className="grid grid-cols-2 gap-4 py-4">
+          <div className="space-y-2">
+            <Label htmlFor="item-name">Item Name</Label>
+            <Input id="item-name" value={name} onChange={e => setName(e.target.value)} placeholder="e.g., Coffee Beans" />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="item-category">Category</Label>
+            <Input id="item-category" value={category} onChange={e => setCategory(e.target.value)} placeholder="e.g., Beverages" />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="item-stock">Current Stock</Label>
+            <Input id="item-stock" type="number" value={stock} onChange={e => setStock(e.target.value)} placeholder="e.g., 50" />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="item-capacity">Total Capacity</Label>
+            <Input id="item-capacity" type="number" value={capacity} onChange={e => setCapacity(e.target.value)} placeholder="e.g., 100" />
+          </div>
+          <div className="col-span-2 space-y-2">
+            <Label htmlFor="item-unit">Unit</Label>
+            <Input id="item-unit" value={unit} onChange={e => setUnit(e.target.value)} placeholder="e.g., kg, liters, units" />
+          </div>
         </div>
-      </TableCell>
-      <TableCell className="text-center">
-        <div className="flex items-center justify-center gap-2">
-            <Button size="sm" variant="outline" onClick={() => onStockChange(item.id, -5)}>-5</Button>
-            <Button size="sm" variant="outline" onClick={() => onStockChange(item.id, -1)}>-1</Button>
-            <Button size="sm" variant="outline" onClick={() => onStockChange(item.id, 1)}>+1</Button>
-            <Button size="sm" variant="secondary" onClick={() => onStockChange(item.id, 5)}>+5</Button>
-            <div className="flex w-full max-w-xs items-center space-x-2">
-              <Input
-                type="number"
-                placeholder="Set stock"
-                value={customValue}
-                onChange={(e) => setCustomValue(e.target.value)}
-                className="h-9 w-24"
-              />
-              <Button size="sm" onClick={handleSetStock}>Set</Button>
-            </div>
-        </div>
-      </TableCell>
-    </TableRow>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button onClick={handleSave}>Save Item</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
+export default function InventoryManagement({ inventory }: InventoryManagementProps) {
+  const { toast } = useToast();
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
 
-export default function InventoryManagement() {
-  const [inventory, setInventory] = useState(initialInventory);
+  const handleSaveItem = async (itemData: Omit<InventoryItem, 'id'> & { id?: string }) => {
+    const { id, ...data } = itemData;
+    if (id) {
+      try {
+        await updateDoc(doc(db, "inventory", id), data);
+        toast({ title: "Item updated successfully" });
+      } catch (error) {
+        toast({ variant: "destructive", title: "Error updating item" });
+      }
+    } else {
+      try {
+        await addDoc(collection(db, "inventory"), data);
+        toast({ title: "Item added successfully" });
+      } catch (error) {
+        toast({ variant: "destructive", title: "Error adding item" });
+      }
+    }
+  };
 
-  const handleStockChange = (id: string, amount: number) => {
-    setInventory(inventory.map(item =>
-      item.id === id ? { ...item, stock: Math.max(0, Math.min(item.capacity, item.stock + amount)) } : item
-    ));
+  const handleDeleteItem = async (itemId: string) => {
+    try {
+      await deleteDoc(doc(db, "inventory", itemId));
+      toast({ title: "Item deleted successfully" });
+    } catch (error) {
+      toast({ variant: "destructive", title: "Error deleting item" });
+    }
+  };
+
+  const handleOpenDialog = (item: InventoryItem | null) => {
+    setEditingItem(item);
+    setIsDialogOpen(true);
   };
   
-  const handleSetStock = (id: string, amount: number) => {
-     setInventory(inventory.map(item =>
-      item.id === id ? { ...item, stock: Math.max(0, Math.min(item.capacity, amount)) } : item
-    ));
+  const handleStockChange = async (id: string, newStock: number) => {
+    const item = inventory.find(i => i.id === id);
+    if (!item) return;
+    
+    const stock = Math.max(0, Math.min(item.capacity, newStock));
+
+    try {
+        await updateDoc(doc(db, "inventory", id), { stock });
+    } catch (e) {
+        toast({ variant: 'destructive', title: 'Error updating stock' });
+    }
   }
 
   return (
-    <Card className="border-none shadow-none">
+    <div className="p-4">
+    <Card>
+      <CardHeader>
+        <div className="flex justify-between items-center">
+          <div>
+            <CardTitle>Inventory Management</CardTitle>
+            <CardDescription>Track and manage your stock levels.</CardDescription>
+          </div>
+          <Button onClick={() => handleOpenDialog(null)}>
+            <PlusCircle className="mr-2 h-4 w-4" /> Add Item
+          </Button>
+        </div>
+      </CardHeader>
       <CardContent>
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead>Item</TableHead>
+              <TableHead>Category</TableHead>
               <TableHead>Stock Level</TableHead>
-              <TableHead className="text-center">Actions</TableHead>
+              <TableHead>Adjust Stock</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {inventory.map((item) => (
-              <InventoryRow key={item.id} item={item} onStockChange={handleStockChange} onSetStock={handleSetStock} />
+              <TableRow key={item.id}>
+                <TableCell className="font-medium">{item.name}</TableCell>
+                <TableCell>{item.category}</TableCell>
+                <TableCell>
+                  <div className="flex items-center gap-2">
+                    <Progress
+                      value={(item.stock / item.capacity) * 100}
+                      className="w-40 h-3"
+                    />
+                    <span>{item.stock} / {item.capacity} {item.unit}</span>
+                  </div>
+                </TableCell>
+                <TableCell>
+                    <div className="flex items-center gap-1">
+                        <Button size="sm" variant="outline" onClick={() => handleStockChange(item.id, item.stock - 1)}>-1</Button>
+                        <Button size="sm" variant="outline" onClick={() => handleStockChange(item.id, item.stock + 1)}>+1</Button>
+                        <Button size="sm" variant="secondary" onClick={() => handleStockChange(item.id, item.capacity)}>Fill</Button>
+                    </div>
+                </TableCell>
+                <TableCell className="text-right">
+                  <Button variant="ghost" size="icon" onClick={() => handleOpenDialog(item)}>
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="ghost" size="icon" className="text-destructive">
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                        <AlertDialogDescription>This will permanently delete the item "{item.name}".</AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => handleDeleteItem(item.id)}>Delete</AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </TableCell>
+              </TableRow>
             ))}
           </TableBody>
         </Table>
       </CardContent>
     </Card>
+
+    <AddOrEditItemDialog
+      open={isDialogOpen}
+      onOpenChange={setIsDialogOpen}
+      onSave={handleSaveItem}
+      existingItem={editingItem}
+    />
+    </div>
   );
 }
