@@ -12,7 +12,7 @@ import type { Table, TableStatus, Order, Bill } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
-import { PlusCircle, Trash2, LayoutTemplate, Sparkles, Users, CheckCircle2, Bookmark, Printer, Repeat, Edit, SparklesIcon, UserCheck, BookmarkX } from 'lucide-react';
+import { PlusCircle, Trash2, LayoutTemplate, Sparkles, Users, CheckCircle2, Bookmark, Printer, Repeat, Edit, SparklesIcon, UserCheck, BookmarkX, Eye } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { format } from 'date-fns';
@@ -78,6 +78,7 @@ interface TableManagementProps {
 
 export default function TableManagement({ tables, orders, billHistory, updateTableStatus, addTable, removeLastTable, occupancyCount, onEditOrder, showOccupancy, setShowOccupancy, initialSelectedTableId, onCreateOrder }: TableManagementProps) {
   const [selectedTable, setSelectedTable] = useState<Table | null>(null);
+  const [selectedBill, setSelectedBill] = useState<Bill | null>(null);
   const [selectedTables, setSelectedTables] = useState<number[]>([]);
   const [isLayoutManagerOpen, setIsLayoutManagerOpen] = useState(false);
   const [filter, setFilter] = useState<TableStatus | 'All'>('All');
@@ -381,9 +382,14 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
                     {tableBillHistory.length > 0 ? (
                         <div className="space-y-2 max-h-48 overflow-y-auto border rounded-md p-2">
                             {tableBillHistory.map(bill => (
-                                <div key={bill.id} className="flex justify-between items-center text-sm p-2 bg-muted/50 rounded-md">
-                                    <span>{format(new Date(bill.timestamp), 'Pp')}</span>
-                                    <span className="font-mono font-semibold">₹{bill.total.toFixed(2)}</span>
+                                <div key={bill.id} className="flex justify-between items-center text-sm p-2 bg-muted/50 rounded-md group">
+                                    <div>
+                                      <span>{format(new Date(bill.timestamp), 'Pp')}</span>
+                                      <span className="font-mono font-semibold ml-4">₹{bill.total.toFixed(2)}</span>
+                                    </div>
+                                    <Button variant="ghost" size="icon" className="h-7 w-7 opacity-0 group-hover:opacity-100" onClick={() => setSelectedBill(bill)}>
+                                      <Eye className="h-4 w-4" />
+                                    </Button>
                                 </div>
                             ))}
                         </div>
@@ -495,6 +501,20 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
                     </>
                 )
             })()}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!selectedBill} onOpenChange={() => setSelectedBill(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Receipt for Bill #{selectedBill?.id}</DialogTitle>
+            <DialogDescription>
+              Table: {selectedBill?.tableId} | Date: {selectedBill ? format(selectedBill.timestamp, 'PPP p') : ''}
+            </DialogDescription>
+          </DialogHeader>
+          <pre className="mt-4 text-sm font-mono whitespace-pre-wrap break-words bg-muted p-4 rounded-md max-h-[50vh] overflow-auto">
+            {selectedBill?.receiptPreview}
+          </pre>
         </DialogContent>
       </Dialog>
     </div>
