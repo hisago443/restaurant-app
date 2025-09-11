@@ -282,9 +282,9 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
   return (
     <div className="p-4 space-y-4">
       <Tabs defaultValue="attendance" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 bg-primary p-1 h-auto text-primary-foreground rounded-lg">
-          <TabsTrigger value="attendance" className="py-2 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-md text-lg">Attendance &amp; Advance</TabsTrigger>
-          <TabsTrigger value="employees" className="py-2 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-md text-lg">Employee List</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-2 bg-primary/20 p-1 h-auto text-primary-foreground rounded-lg">
+          <TabsTrigger value="attendance" className="py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md text-lg">Attendance &amp; Advance</TabsTrigger>
+          <TabsTrigger value="employees" className="py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md text-lg">Employee List</TabsTrigger>
         </TabsList>
         <TabsContent value="attendance">
            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-4">
@@ -694,6 +694,3 @@ function EmployeeDialog({ open, onOpenChange, employee, onSave }: { open: boolea
         </Dialog>
     );
 }
-    
-
-    
