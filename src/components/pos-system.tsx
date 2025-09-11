@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import * as React from 'react';
@@ -172,6 +171,254 @@ function TableDropTarget({ table, occupancyCount, handleSelectTable, children, o
     );
 }
 
+function OrderPanel({
+    orderItems,
+    originalOrderItems,
+    handleDropOnOrder,
+    updateQuantity,
+    removeFromOrder,
+    activeOrder,
+    currentActiveTableId,
+    clearCurrentOrder,
+    subtotal,
+    total,
+    discount,
+    setDiscount,
+    isProcessing,
+    tables,
+    occupancyCount,
+    handleSelectTable,
+    onDropItemOnTable,
+    renderTableActions,
+    handleSendToKitchen,
+    handlePrintProvisionalBill,
+    handleProcessPayment
+}: {
+    orderItems: OrderItem[];
+    originalOrderItems: OrderItem[];
+    handleDropOnOrder: (item: MenuItem) => void;
+    updateQuantity: (name: string, quantity: number) => void;
+    removeFromOrder: (name: string) => void;
+    activeOrder: Order | null;
+    currentActiveTableId: number | null;
+    clearCurrentOrder: (fullReset?: boolean) => void;
+    subtotal: number;
+    total: number;
+    discount: number;
+    setDiscount: (discount: number) => void;
+    isProcessing: boolean;
+    tables: Table[];
+    occupancyCount: Record<number, number>;
+    handleSelectTable: (id: number) => void;
+    onDropItemOnTable: (tableId: number, item: MenuItem) => void;
+    renderTableActions: (table: Table) => React.ReactNode;
+    handleSendToKitchen: () => void;
+    handlePrintProvisionalBill: () => Promise<void>;
+    handleProcessPayment: () => Promise<void>;
+}) {
+    const [{ isOver, canDrop }, drop] = useDrop(() => ({
+        accept: ItemTypes.MENU_ITEM,
+        drop: (item: MenuItem) => handleDropOnOrder(item),
+        collect: (monitor) => ({
+            isOver: !!monitor.isOver(),
+            canDrop: !!monitor.canDrop(),
+        }),
+    }));
+
+    const renderOrderItems = () => {
+        const originalItemsMap = new Map(originalOrderItems.map(item => [item.name, item.quantity]));
+
+        const oldItems = orderItems.filter(item => {
+            const originalQuantity = originalItemsMap.get(item.name) || 0;
+            return originalQuantity >= item.quantity;
+        });
+
+        const newItems = orderItems.filter(item => {
+            const originalQuantity = originalItemsMap.get(item.name) || 0;
+            return originalQuantity < item.quantity;
+        });
+        
+        const newItemsExist = newItems.length > 0;
+
+        const renderItemRow = (item: OrderItem, isNewOrUpdated: boolean) => {
+            const originalQuantity = originalItemsMap.get(item.name) || 0;
+            const isNew = !originalItemsMap.has(item.name);
+            const isUpdated = originalQuantity > 0 && item.quantity > originalQuantity;
+            const quantityChange = item.quantity - originalQuantity;
+            
+            const itemClass = isNewOrUpdated
+                ? (isNew ? "bg-blue-50 dark:bg-blue-900/20" : "bg-yellow-50 dark:bg-yellow-900/20")
+                : "";
+            const itemTag = isNewOrUpdated
+                ? (isNew ? "(New)" : `(+${quantityChange})`)
+                : "";
+            const tagClass = isNew ? "text-blue-500" : "text-yellow-600";
+
+            return (
+                 <div key={item.name} className={cn("flex items-center p-2 rounded-md", itemClass)}>
+                    <div className="flex-grow">
+                        <p className="font-medium">{item.name} {itemTag && <span className={cn("text-xs", tagClass)}>{itemTag}</span>}</p>
+                        <p className="text-sm text-muted-foreground">₹{item.price.toFixed(2)}</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => updateQuantity(item.name, item.quantity - 1)}><Minus className="h-4 w-4" /></Button>
+                        <span className="w-8 text-center font-bold">{item.quantity}</span>
+                        <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => updateQuantity(item.name, item.quantity + 1)}><Plus className="h-4 w-4" /></Button>
+                        <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => removeFromOrder(item.name)}><X className="h-4 w-4" /></Button>
+                    </div>
+                </div>
+            );
+        };
+
+        return (
+          <div className="space-y-3">
+            {oldItems.map(item => renderItemRow(item, false))}
+            
+            {newItemsExist && originalOrderItems.length > 0 && (
+                 <div className="relative my-3">
+                    <Separator />
+                    <span className="absolute left-1/2 -translate-x-1/2 -top-2.5 bg-background px-2 text-xs text-muted-foreground">New/Updated Items</span>
+                </div>
+            )}
+
+            {newItems.map(item => renderItemRow(item, true))}
+          </div>
+        );
+    };
+
+    return (
+        <Card ref={drop} className={cn("flex flex-col flex-grow transition-colors", isOver && canDrop && 'bg-primary/20')}>
+            <div className="p-4 border-b flex justify-between items-center">
+                <div>
+                    <CardTitle>{activeOrder ? `Editing Order #${activeOrder.id}` : 'Current Order'}</CardTitle>
+                    <CardDescription>
+                        {currentActiveTableId ? `Table ${currentActiveTableId}` : "No Table Selected"}
+                    </CardDescription>
+                </div>
+                {orderItems.length > 0 && (
+                    <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                            <Button variant="destructive" size="sm">
+                                <TrashIcon className="mr-2 h-4 w-4" />
+                                Clear All
+                            </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                            <AlertDialogHeader>
+                                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                    This will remove all items from the current order. This action cannot be undone.
+                                </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => clearCurrentOrder(false)}>Clear All</AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
+                )}
+            </div>
+          
+            <ScrollArea className="flex-grow p-4">
+                {orderItems.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
+                        <ClipboardList className="w-16 h-16 text-gray-300" />
+                        <p className="mt-4 text-sm font-medium text-center">
+                            Click on items to add them or drag & drop here.
+                        </p>
+                    </div>
+                ) : (
+                    activeOrder ? renderOrderItems() : (
+                        <div className="space-y-3">
+                            {orderItems.map(item => (
+                                <div key={item.name} className="flex items-center">
+                                    <div className="flex-grow">
+                                        <p className="font-medium">{item.name}</p>
+                                        <p className="text-sm text-muted-foreground">₹{item.price.toFixed(2)}</p>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => updateQuantity(item.name, item.quantity - 1)}><Minus className="h-4 w-4" /></Button>
+                                        <span className="w-8 text-center font-bold">{item.quantity}</span>
+                                        <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => updateQuantity(item.name, item.quantity + 1)}><Plus className="h-4 w-4" /></Button>
+                                        <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => removeFromOrder(item.name)}><X className="h-4 w-4" /></Button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )
+                )}
+            </ScrollArea>
+          
+            <div className="p-4 border-t space-y-4 bg-muted/30">
+                <div className="space-y-2">
+                    <Label className="font-semibold block flex items-center gap-1.5"><Move size={14} /> Drag & Drop onto a Table</Label>
+                    <div className="grid grid-cols-5 gap-1.5">
+                        {tables.map(table => (
+                            <TableDropTarget key={table.id} table={table} occupancyCount={occupancyCount} handleSelectTable={handleSelectTable} onDropItem={onDropItemOnTable}>
+                                {renderTableActions(table)}
+                                <div className="absolute top-1 left-1">
+                                    {React.createElement(statusIcons[table.status], { className: "h-3 w-3" })}
+                                </div>
+                                <span className="text-3xl font-bold leading-none">{table.id}</span>
+                                <span className="text-xs font-bold">{table.status}</span>
+                            </TableDropTarget>
+                        ))}
+                    </div>
+                </div>
+
+                <div>
+                    <Label className="font-semibold mb-2 block">Discount</Label>
+                    <RadioGroup value={discount.toString()} onValueChange={(val) => setDiscount(Number(val))} className="flex items-center flex-wrap gap-2">
+                        {[0, 5, 10, 15, 20].map(d => (
+                            <div key={d} className="flex items-center space-x-2">
+                                <RadioGroupItem value={d.toString()} id={`d-${d}`} />
+                                <Label htmlFor={`d-${d}`} className="p-2 rounded-md transition-colors hover:bg-accent cursor-pointer" >{d}%</Label>
+                            </div>
+                        ))}
+                    </RadioGroup>
+                </div>
+
+                <div className="space-y-2 text-lg">
+                    <div className="flex justify-between">
+                        <span>Subtotal:</span>
+                        <span className="font-bold">Rs. {subtotal.toFixed(2)}</span>
+                    </div>
+                    {discount > 0 && (
+                        <div className="flex justify-between text-accent-foreground">
+                            <span>Discount ({discount}%):</span>
+                            <span className="font-bold">-Rs. {(subtotal - total).toFixed(2)}</span>
+                        </div>
+                    )}
+                    <div className="flex justify-between font-bold text-2xl border-t pt-2 mt-2 bg-primary/20 p-2 rounded-md">
+                        <span>Total:</span>
+                        <span>Rs. {total.toFixed(2)}</span>
+                    </div>
+                </div>
+                <div className="flex flex-col gap-2 pt-2">
+                    <Button 
+                        size="lg"
+                        className={cn("h-12 text-base", activeOrder && "bg-blue-600 hover:bg-blue-700")}
+                        onClick={handleSendToKitchen}
+                        disabled={isProcessing || orderItems.length === 0 || !currentActiveTableId}
+                    >
+                        {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : (activeOrder ? <Printer className="mr-2 h-4 w-4" /> : <Send className="mr-2 h-4 w-4" />)}
+                        {activeOrder ? 'Update KOT' : 'Send KOT to Kitchen'}
+                    </Button>
+                    <div className="grid grid-cols-2 gap-2">
+                        <Button size="lg" variant="outline" className="h-12 text-base" onClick={handlePrintProvisionalBill} disabled={isProcessing ||!currentActiveTableId || orderItems.length === 0}>
+                            {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Printer className="mr-2 h-4 w-4" />}
+                            Print Bill
+                        </Button>
+                        <Button size="lg" className="h-12 text-base" onClick={handleProcessPayment} disabled={isProcessing || orderItems.length === 0 || !currentActiveTableId}>
+                            {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                            Process Payment
+                        </Button>
+                    </div>
+                </div>
+            </div>
+        </Card>
+    );
+}
 
 export default function PosSystem({ 
     tables, 
@@ -365,15 +612,30 @@ export default function PosSystem({
       }
       return;
     }
-
-    setSelectedTableId(tableId);
+     // If there's an unassigned order and an available table is clicked
+    if (!activeOrder && orderItems.length > 0 && table?.status === 'Available') {
+        const orderPayload = {
+            items: orderItems,
+            tableId: Number(tableId),
+        };
+        addOrder(orderPayload);
+        updateTableStatus([tableId!], 'Occupied');
+        setPendingOrders(prev => {
+            const newPending = {...prev};
+            delete newPending[0];
+            return newPending;
+        });
+        toast({ title: 'Order Assigned!', description: `Order assigned to Table ${tableId}.` });
+    } else {
+        setSelectedTableId(tableId);
+    }
   };
   
   const setItemColor = (itemName: string, colorName: string) => {
     setMenuItemColors(prev => ({ ...prev, [itemName]: colorName }));
   };
   
-  const handleSetCategoryColor = (categoryName: string, colorName: string) => {
+  const handleSetCategoryColor = (categoryName: string, colorName:string) => {
     setCategoryColors(prev => ({ ...prev, [categoryName]: colorName }));
   };
 
@@ -403,7 +665,7 @@ export default function PosSystem({
   const subtotal = useMemo(() => orderItems.reduce((acc, item) => acc + item.price * item.quantity, 0), [orderItems]);
   const total = useMemo(() => subtotal * (1 - discount / 100), [subtotal, discount]);
   
-  const addToOrder = (item: MenuItem, quantity: number) => {
+  const addToOrder = useCallback((item: MenuItem, quantity: number) => {
     setOrderItems(prevItems => {
         const existingItem = prevItems.find(orderItem => orderItem.name === item.name);
         if (existingItem) {
@@ -416,9 +678,24 @@ export default function PosSystem({
             return [...prevItems, { ...item, quantity }];
         }
     });
-  };
+  }, [setOrderItems]);
 
   const handleItemClick = (item: MenuItem) => {
+    if (!selectedTableId && !activeOrder) {
+        // No table selected, add to a temporary "unassigned" order
+        addToOrder(item, 1);
+        setPendingOrders(prev => {
+          const newItems = [...(prev[0] || [])];
+          const existingItemIndex = newItems.findIndex(i => i.name === item.name);
+          if (existingItemIndex > -1) {
+            newItems[existingItemIndex].quantity += 1;
+          } else {
+            newItems.push({ ...item, quantity: 1 });
+          }
+          return { ...prev, 0: newItems };
+        });
+        return;
+    }
     if (isClickToAdd) {
       addToOrder(item, 1);
     } else {
@@ -426,6 +703,26 @@ export default function PosSystem({
       setIsAddItemDialogOpen(true);
     }
   };
+  
+  const handleDropOnOrder = (item: MenuItem) => {
+      addToOrder(item, 1);
+      toast({
+          title: "Item Added",
+          description: `1 x ${item.name} added to the current order.`
+      });
+      if(!selectedTableId) {
+        setPendingOrders(prev => {
+          const newItems = [...(prev[0] || [])];
+          const existingItemIndex = newItems.findIndex(i => i.name === item.name);
+          if (existingItemIndex > -1) {
+            newItems[existingItemIndex].quantity += 1;
+          } else {
+            newItems.push({ ...item, quantity: 1 });
+          }
+          return { ...prev, 0: newItems };
+        });
+      }
+  }
 
   const handleAddButtonClick = (item: MenuItem) => {
     setSelectedItem(item);
@@ -574,7 +871,7 @@ export default function PosSystem({
         // Clear pending order for this table
         setPendingOrders(prev => {
             const newPending = {...prev};
-            delete newPending[currentActiveTableId];
+            delete newPending[currentActiveTableId!];
             return newPending;
         });
 
@@ -585,36 +882,14 @@ export default function PosSystem({
   };
   
     const handleDropItemOnTable = (tableId: number, item: MenuItem) => {
-        const targetOrder = orders.find(o => o.tableId === tableId && o.status !== 'Completed');
-
-        if (targetOrder) {
-            // Update existing order
-            const existingItem = targetOrder.items.find(orderItem => orderItem.name === item.name);
-            const newItems = existingItem
-                ? targetOrder.items.map(orderItem =>
-                    orderItem.name === item.name ? { ...orderItem, quantity: orderItem.quantity + 1 } : orderItem
-                  )
-                : [...targetOrder.items, { ...item, quantity: 1 }];
-            
-            const updatedOrder = { ...targetOrder, items: newItems };
-            updateOrder(updatedOrder);
-            toast({ title: 'Item Added', description: `Added ${item.name} to Table ${tableId}'s order.`});
-            // If the updated order is the current one, update the view
-            if (activeOrder && activeOrder.id === updatedOrder.id) {
-                setOrderItems(newItems);
-            }
-        } else {
-            // Create a new order
-            const newOrder: Order = {
-                id: `K${(orders.length + 1).toString().padStart(3, '0')}`,
-                tableId: tableId,
-                items: [{ ...item, quantity: 1 }],
-                status: 'In Preparation',
-            };
-            onOrderCreated(newOrder);
-            updateTableStatus([tableId], 'Occupied');
-            toast({ title: 'New Order Created', description: `Started order for Table ${tableId} with ${item.name}.`});
-        }
+        handleSelectTable(tableId); // Select the table
+        
+        // This is a timeout to ensure state update for table selection propagates
+        // before adding item to order. A better solution might involve state management library.
+        setTimeout(() => {
+            addToOrder(item, 1);
+            toast({ title: 'Item Added', description: `Added ${item.name} to Table ${tableId}.` });
+        }, 0);
     };
 
 
@@ -989,67 +1264,6 @@ export default function PosSystem({
     }
   };
 
-  const renderOrderItems = () => {
-    const originalItemsMap = new Map(originalOrderItems.map(item => [item.name, item.quantity]));
-
-    const oldItems = orderItems.filter(item => {
-        const originalQuantity = originalItemsMap.get(item.name) || 0;
-        return originalQuantity >= item.quantity;
-    });
-
-    const newItems = orderItems.filter(item => {
-        const originalQuantity = originalItemsMap.get(item.name) || 0;
-        return originalQuantity < item.quantity;
-    });
-    
-    const newItemsExist = newItems.length > 0;
-
-    const renderItemRow = (item: OrderItem, isNewOrUpdated: boolean) => {
-        const originalQuantity = originalItemsMap.get(item.name) || 0;
-        const isNew = !originalItemsMap.has(item.name);
-        const isUpdated = originalQuantity > 0 && item.quantity > originalQuantity;
-        const quantityChange = item.quantity - originalQuantity;
-        
-        const itemClass = isNewOrUpdated
-            ? (isNew ? "bg-blue-50 dark:bg-blue-900/20" : "bg-yellow-50 dark:bg-yellow-900/20")
-            : "";
-        const itemTag = isNewOrUpdated
-            ? (isNew ? "(New)" : `(+${quantityChange})`)
-            : "";
-        const tagClass = isNew ? "text-blue-500" : "text-yellow-600";
-
-        return (
-             <div key={item.name} className={cn("flex items-center p-2 rounded-md", itemClass)}>
-                <div className="flex-grow">
-                    <p className="font-medium">{item.name} {itemTag && <span className={cn("text-xs", tagClass)}>{itemTag}</span>}</p>
-                    <p className="text-sm text-muted-foreground">₹{item.price.toFixed(2)}</p>
-                </div>
-                <div className="flex items-center gap-2">
-                    <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => updateQuantity(item.name, item.quantity - 1)}><Minus className="h-4 w-4" /></Button>
-                    <span className="w-8 text-center font-bold">{item.quantity}</span>
-                    <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => updateQuantity(item.name, item.quantity + 1)}><Plus className="h-4 w-4" /></Button>
-                    <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => removeFromOrder(item.name)}><X className="h-4 w-4" /></Button>
-                </div>
-            </div>
-        );
-    };
-
-    return (
-      <div className="space-y-3">
-        {oldItems.map(item => renderItemRow(item, false))}
-        
-        {newItemsExist && originalOrderItems.length > 0 && (
-             <div className="relative my-3">
-                <Separator />
-                <span className="absolute left-1/2 -translate-x-1/2 -top-2.5 bg-background px-2 text-xs text-muted-foreground">New/Updated Items</span>
-            </div>
-        )}
-
-        {newItems.map(item => renderItemRow(item, true))}
-      </div>
-    );
-  };
-  
   const renderTableActions = (table: Table) => {
     const orderForTable = orders.find(o => o.tableId === table.id && o.status !== 'Completed');
 
@@ -1135,256 +1349,149 @@ export default function PosSystem({
       </DropdownMenu>
     );
   };
-
+  
 
   return (
     <DndProvider backend={HTML5Backend}>
-    <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-4 gap-4 h-full p-4">
-      {/* Menu Panel */}
-      <div className="md:col-span-2 xl:col-span-3 flex flex-col h-full">
-        <Card className="flex flex-col flex-grow">
-          <CardHeader>
-            <div className="flex items-start justify-between gap-4 flex-wrap">
-              <div className="flex-grow grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                  <Input
-                    placeholder="Search menu items..."
-                    className="pl-10"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
+      <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-4 gap-4 h-full p-4">
+        {/* Menu Panel */}
+        <div className="md:col-span-2 xl:col-span-3 flex flex-col h-full">
+          <Card className="flex flex-col flex-grow">
+            <CardHeader>
+              <div className="flex items-start justify-between gap-4 flex-wrap">
+                <div className="flex-grow grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                    <Input
+                      placeholder="Search menu items..."
+                      className="pl-10"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                  </div>
+                  <div className="relative">
+                    <QrCodeIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                    <Input
+                      placeholder="Enter item code..."
+                      className="pl-10"
+                      value={itemCodeInput}
+                      onChange={(e) => setItemCodeInput(e.target.value)}
+                      onKeyDown={handleCodeEntry}
+                    />
+                  </div>
                 </div>
-                <div className="relative">
-                  <QrCodeIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                  <Input
-                    placeholder="Enter item code..."
-                    className="pl-10"
-                    value={itemCodeInput}
-                    onChange={(e) => setItemCodeInput(e.target.value)}
-                    onKeyDown={handleCodeEntry}
-                  />
-                </div>
-              </div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <RadioGroup value={viewMode} onValueChange={(v) => setViewMode(v as ViewMode)} className="flex items-center">
-                    <RadioGroupItem value="accordion" id="accordion-view" className="sr-only" />
-                    <Label htmlFor="accordion-view" className={cn("p-1.5 rounded-md cursor-pointer transition-colors", viewMode === 'accordion' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent' )}>
-                      <List className="h-5 w-5 box-content" />
-                    </Label>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <RadioGroup value={viewMode} onValueChange={(v) => setViewMode(v as ViewMode)} className="flex items-center">
+                      <RadioGroupItem value="accordion" id="accordion-view" className="sr-only" />
+                      <Label htmlFor="accordion-view" className={cn("p-1.5 rounded-md cursor-pointer transition-colors", viewMode === 'accordion' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent' )}>
+                        <List className="h-5 w-5 box-content" />
+                      </Label>
 
-                    <RadioGroupItem value="grid" id="grid-view" className="sr-only" />
-                    <Label htmlFor="grid-view" className={cn("p-1.5 rounded-md cursor-pointer transition-colors", viewMode === 'grid' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent' )}>
-                      <LayoutGrid className="h-5 w-5 box-content" />
-                    </Label>
+                      <RadioGroupItem value="grid" id="grid-view" className="sr-only" />
+                      <Label htmlFor="grid-view" className={cn("p-1.5 rounded-md cursor-pointer transition-colors", viewMode === 'grid' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent' )}>
+                        <LayoutGrid className="h-5 w-5 box-content" />
+                      </Label>
 
-                    <RadioGroupItem value="list" id="list-view" className="sr-only" />
-                    <Label htmlFor="list-view" className={cn("p-1.5 rounded-md cursor-pointer transition-colors", viewMode === 'list' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent' )}>
-                      <Rows className="h-5 w-5 box-content" />
-                    </Label>
-                </RadioGroup>
-                <Separator orientation="vertical" className="h-8" />
-                <Button variant="outline" size="sm" onClick={handleShuffleColors}>
-                  <Shuffle className="mr-2 h-4 w-4" /> Colors
-                </Button>
-                {viewMode === 'accordion' && (
-                  <Button variant="outline" size="sm" onClick={toggleAccordion}>
-                    <ChevronsUpDown className="mr-2 h-4 w-4" />
-                    {allItemsOpen ? 'Collapse' : 'Expand'}
+                      <RadioGroupItem value="list" id="list-view" className="sr-only" />
+                      <Label htmlFor="list-view" className={cn("p-1.5 rounded-md cursor-pointer transition-colors", viewMode === 'list' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent' )}>
+                        <Rows className="h-5 w-5 box-content" />
+                      </Label>
+                  </RadioGroup>
+                  <Separator orientation="vertical" className="h-8" />
+                  <Button variant="outline" size="sm" onClick={handleShuffleColors}>
+                    <Shuffle className="mr-2 h-4 w-4" /> Colors
                   </Button>
-                )}
-                <Button variant="outline" size="sm" onClick={() => setIsMenuManagerOpen(true)}>
-                  <BookOpen className="mr-2 h-4 w-4" /> Manage Menu
-                </Button>
-                <div className="flex items-center space-x-2 p-2 rounded-lg border bg-background">
-                    <Label htmlFor="easy-mode" className="font-medium text-sm flex items-center gap-1"><MousePointerClick size={14}/> Easy Mode</Label>
-                    <Switch id="easy-mode" checked={isClickToAdd} onCheckedChange={setIsClickToAdd} />
-                </div>
-              </div>
-            </div>
-          </CardHeader>
-          <ScrollArea className="flex-grow px-4">
-              {renderMenuContent()}
-          </ScrollArea>
-        </Card>
-      </div>
-
-      {/* Order Panel */}
-      <div className="md:col-span-1 xl:col-span-1 flex flex-col h-full">
-        <Card className="flex flex-col flex-grow">
-          <div className="p-4 border-b flex justify-between items-center">
-              <div>
-                  <CardTitle>{activeOrder ? `Editing Order #${activeOrder.id}` : 'Current Order'}</CardTitle>
-                  <CardDescription>
-                      {currentActiveTableId ? `Table ${currentActiveTableId}` : "No Table Selected"}
-                  </CardDescription>
-              </div>
-              {orderItems.length > 0 && (
-                  <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                          <Button variant="destructive" size="sm">
-                              <TrashIcon className="mr-2 h-4 w-4" />
-                              Clear All
-                          </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                          <AlertDialogHeader>
-                              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                  This will remove all items from the current order. This action cannot be undone.
-                              </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => clearCurrentOrder(false)}>Clear All</AlertDialogAction>
-                          </AlertDialogFooter>
-                      </AlertDialogContent>
-                  </AlertDialog>
-              )}
-          </div>
-          
-          <ScrollArea className="flex-grow p-4">
-            {orderItems.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
-                <ClipboardList className="w-16 h-16 text-gray-300" />
-                <p className="mt-4 text-sm font-medium">
-                  Add items to the order
-                </p>
-              </div>
-            ) : (
-              activeOrder ? renderOrderItems() : (
-                  <div className="space-y-3">
-                  {orderItems.map(item => (
-                      <div key={item.name} className="flex items-center">
-                      <div className="flex-grow">
-                          <p className="font-medium">{item.name}</p>
-                          <p className="text-sm text-muted-foreground">₹{item.price.toFixed(2)}</p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                          <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => updateQuantity(item.name, item.quantity - 1)}><Minus className="h-4 w-4" /></Button>
-                          <span className="w-8 text-center font-bold">{item.quantity}</span>
-                          <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => updateQuantity(item.name, item.quantity + 1)}><Plus className="h-4 w-4" /></Button>
-                          <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => removeFromOrder(item.name)}><X className="h-4 w-4" /></Button>
-                      </div>
-                      </div>
-                  ))}
-                  </div>
-              )
-            )}
-          </ScrollArea>
-          
-          <div className="p-4 border-t space-y-4 bg-muted/30">
-              <div className="space-y-2">
-                  <Label className="font-semibold block flex items-center gap-1.5"><Move size={14} /> Drag & Drop onto a Table</Label>
-                   <div className="grid grid-cols-5 gap-1.5">
-                    {tables.map(table => (
-                      <TableDropTarget key={table.id} table={table} occupancyCount={occupancyCount} handleSelectTable={handleSelectTable} onDropItem={handleDropItemOnTable}>
-                           {renderTableActions(table)}
-                            <div className="absolute top-1 left-1">
-                              {React.createElement(statusIcons[table.status], { className: "h-3 w-3" })}
-                            </div>
-                            <span className="text-3xl font-bold leading-none">{table.id}</span>
-                            <span className="text-xs font-bold">{table.status}</span>
-                      </TableDropTarget>
-                    ))}
-                </div>
-              </div>
-
-            <div>
-              <Label className="font-semibold mb-2 block">Discount</Label>
-              <RadioGroup value={discount.toString()} onValueChange={(val) => setDiscount(Number(val))} className="flex items-center flex-wrap gap-2">
-                {[0, 5, 10, 15, 20].map(d => (
-                  <div key={d} className="flex items-center space-x-2">
-                    <RadioGroupItem value={d.toString()} id={`d-${d}`} />
-                    <Label htmlFor={`d-${d}`} className="p-2 rounded-md transition-colors hover:bg-accent cursor-pointer" >{d}%</Label>
-                  </div>
-                ))}
-              </RadioGroup>
-            </div>
-
-            <div className="space-y-2 text-lg">
-              <div className="flex justify-between">
-                <span>Subtotal:</span>
-                <span className="font-bold">Rs. {subtotal.toFixed(2)}</span>
-              </div>
-              {discount > 0 && (
-                <div className="flex justify-between text-accent-foreground">
-                  <span>Discount ({discount}%):</span>
-                  <span className="font-bold">-Rs. {(subtotal - total).toFixed(2)}</span>
-                </div>
-              )}
-              <div className="flex justify-between font-bold text-2xl border-t pt-2 mt-2 bg-primary/20 p-2 rounded-md">
-                <span>Total:</span>
-                <span>Rs. {total.toFixed(2)}</span>
-              </div>
-            </div>
-            <div className="flex flex-col gap-2 pt-2">
-                <Button 
-                    size="lg"
-                    className={cn("h-12 text-base", activeOrder && "bg-blue-600 hover:bg-blue-700")}
-                    onClick={handleSendToKitchen}
-                    disabled={isProcessing || orderItems.length === 0 || !currentActiveTableId}
-                >
-                    {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : (activeOrder ? <Printer className="mr-2 h-4 w-4" /> : <Send className="mr-2 h-4 w-4" />)}
-                    {activeOrder ? 'Update KOT' : 'Send KOT to Kitchen'}
-                </Button>
-                <div className="grid grid-cols-2 gap-2">
-                    <Button size="lg" variant="outline" className="h-12 text-base" onClick={handlePrintProvisionalBill} disabled={isProcessing ||!currentActiveTableId || orderItems.length === 0}>
-                        {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Printer className="mr-2 h-4 w-4" />}
-                        Print Bill
+                  {viewMode === 'accordion' && (
+                    <Button variant="outline" size="sm" onClick={toggleAccordion}>
+                      <ChevronsUpDown className="mr-2 h-4 w-4" />
+                      {allItemsOpen ? 'Collapse' : 'Expand'}
                     </Button>
-                    <Button size="lg" className="h-12 text-base" onClick={handleProcessPayment} disabled={isProcessing || orderItems.length === 0 || !currentActiveTableId}>
-                        {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                        Process Payment
-                    </Button>
+                  )}
+                  <Button variant="outline" size="sm" onClick={() => setIsMenuManagerOpen(true)}>
+                    <BookOpen className="mr-2 h-4 w-4" /> Manage Menu
+                  </Button>
+                  <div className="flex items-center space-x-2 p-2 rounded-lg border bg-background">
+                      <Label htmlFor="easy-mode" className="font-medium text-sm flex items-center gap-1"><MousePointerClick size={14}/> Easy Mode</Label>
+                      <Switch id="easy-mode" checked={isClickToAdd} onCheckedChange={setIsClickToAdd} />
+                  </div>
                 </div>
-            </div>
-          </div>
-        </Card>
-      </div>
+              </div>
+            </CardHeader>
+            <ScrollArea className="flex-grow px-4">
+                {renderMenuContent()}
+            </ScrollArea>
+          </Card>
+        </div>
 
-      <PaymentDialog
-        isOpen={isPaymentDialogOpen}
-        onOpenChange={setIsPaymentDialogOpen}
-        total={total}
-        receiptPreview={receiptPreview}
-        onPaymentSuccess={handlePaymentSuccess}
-      />
-       <AddItemDialog
-        isOpen={isAddItemDialogOpen}
-        onOpenChange={setIsAddItemDialogOpen}
-        item={selectedItem}
-        onConfirm={addToOrder}
-      />
-      <ManageMenuDialog
-        isOpen={isMenuManagerOpen}
-        onOpenChange={setIsMenuManagerOpen}
-        menu={menu}
-        setMenu={setMenu}
-      />
-      <Dialog open={isReserveDialogOpen} onOpenChange={setIsReserveDialogOpen}>
-        <DialogContent>
-            <DialogHeader>
-                <DialogTitle>Reserve Table {tableToReserve}</DialogTitle>
-                <DialogDescription>Enter guest details (optional).</DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-                <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="guest-name" className="text-right">Name</Label>
-                    <Input id="guest-name" value={reservationDetails.name} onChange={(e) => setReservationDetails({...reservationDetails, name: e.target.value})} className="col-span-3" />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="reservation-time" className="text-right">Time</Label>
-                    <Input id="reservation-time" type="time" value={reservationDetails.time} onChange={(e) => setReservationDetails({...reservationDetails, time: e.target.value})} className="col-span-3" />
-                </div>
-            </div>
-            <DialogFooter>
-                <Button variant="outline" onClick={() => setIsReserveDialogOpen(false)}>Cancel</Button>
-                <Button onClick={handleReserveTable}>Reserve</Button>
-            </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </div>
+        {/* Order Panel */}
+        <div className="md:col-span-1 xl:col-span-1 flex flex-col h-full">
+            <OrderPanel
+                orderItems={orderItems}
+                originalOrderItems={originalOrderItems}
+                handleDropOnOrder={handleDropOnOrder}
+                updateQuantity={updateQuantity}
+                removeFromOrder={removeFromOrder}
+                activeOrder={activeOrder}
+                currentActiveTableId={currentActiveTableId}
+                clearCurrentOrder={clearCurrentOrder}
+                subtotal={subtotal}
+                total={total}
+                discount={discount}
+                setDiscount={setDiscount}
+                isProcessing={isProcessing}
+                tables={tables}
+                occupancyCount={occupancyCount}
+                handleSelectTable={handleSelectTable}
+                onDropItemOnTable={handleDropItemOnTable}
+                renderTableActions={renderTableActions}
+                handleSendToKitchen={handleSendToKitchen}
+                handlePrintProvisionalBill={handlePrintProvisionalBill}
+                handleProcessPayment={handleProcessPayment}
+            />
+        </div>
+
+        <PaymentDialog
+          isOpen={isPaymentDialogOpen}
+          onOpenChange={setIsPaymentDialogOpen}
+          total={total}
+          receiptPreview={receiptPreview}
+          onPaymentSuccess={handlePaymentSuccess}
+        />
+        <AddItemDialog
+          isOpen={isAddItemDialogOpen}
+          onOpenChange={setIsAddItemDialogOpen}
+          item={selectedItem}
+          onConfirm={addToOrder}
+        />
+        <ManageMenuDialog
+          isOpen={isMenuManagerOpen}
+          onOpenChange={setIsMenuManagerOpen}
+          menu={menu}
+          setMenu={setMenu}
+        />
+        <Dialog open={isReserveDialogOpen} onOpenChange={setIsReserveDialogOpen}>
+          <DialogContent>
+              <DialogHeader>
+                  <DialogTitle>Reserve Table {tableToReserve}</DialogTitle>
+                  <DialogDescription>Enter guest details (optional).</DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                  <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="guest-name" className="text-right">Name</Label>
+                      <Input id="guest-name" value={reservationDetails.name} onChange={(e) => setReservationDetails({...reservationDetails, name: e.target.value})} className="col-span-3" />
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="reservation-time" className="text-right">Time</Label>
+                      <Input id="reservation-time" type="time" value={reservationDetails.time} onChange={(e) => setReservationDetails({...reservationDetails, time: e.target.value})} className="col-span-3" />
+                  </div>
+              </div>
+              <DialogFooter>
+                  <Button variant="outline" onClick={() => setIsReserveDialogOpen(false)}>Cancel</Button>
+                  <Button onClick={handleReserveTable}>Reserve</Button>
+              </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
     </DndProvider>
   );
 }
