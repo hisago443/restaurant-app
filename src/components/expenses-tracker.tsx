@@ -442,8 +442,8 @@ export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
                       <TableRow key={expense.id}>
                           <TableCell className="border-r font-bold">{format(expense.date, 'PPP')}</TableCell>
                           <TableCell className="border-r font-bold">{expense.category}</TableCell>
-                          <TableCell className="border-r font-bold">{expense.description}</TableCell>
-                          <TableCell className="border-r font-bold">{vendor?.name || 'N/A'}</TableCell>
+                          <TableCell className="border-r font-bold bg-blue-50 dark:bg-blue-900/20">{expense.description}</TableCell>
+                          <TableCell className="border-r font-bold bg-green-50 dark:bg-green-900/20">{vendor?.name || 'N/A'}</TableCell>
                           <TableCell className="border-r font-bold">{vendor?.phone || 'N/A'}</TableCell>
                           <TableCell className="text-right font-mono border-r text-red-600 dark:text-red-400 font-bold">
                           Rs. {expense.amount.toFixed(2)}
