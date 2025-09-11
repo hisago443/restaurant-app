@@ -428,20 +428,14 @@ export default function MainLayout() {
               />
             </TabsContent>
             <TabsContent value="kitchen" className="m-0 p-0 h-full">
-              <Tabs defaultValue="orders" className="h-full flex flex-col">
-                <div className="flex justify-center border-b">
-                    <TabsList className="m-2">
-                        <TabsTrigger value="orders">Kitchen Orders</TabsTrigger>
-                        <TabsTrigger value="inventory">Inventory</TabsTrigger>
-                    </TabsList>
-                </div>
-                <TabsContent value="orders" className="flex-grow">
-                    <KitchenOrders orders={orders} setOrders={setOrders} />
-                </TabsContent>
-                <TabsContent value="inventory" className="flex-grow">
-                    <InventoryManagement inventory={inventory} />
-                </TabsContent>
-              </Tabs>
+              <div className="grid grid-cols-1 lg:grid-cols-2 h-full gap-4">
+                  <div className="h-full">
+                      <KitchenOrders orders={orders} setOrders={setOrders} />
+                  </div>
+                  <div className="h-full">
+                      <InventoryManagement inventory={inventory} />
+                  </div>
+              </div>
             </TabsContent>
             <TabsContent value="staff" className="m-0 p-0">
               <StaffManagement 
