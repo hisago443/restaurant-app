@@ -53,6 +53,7 @@ const itemStatusNames = Object.keys(itemStatusColors);
 
 
 type ViewMode = 'accordion' | 'grid' | 'list';
+type VegFilter = 'All' | 'Veg' | 'Non-Veg';
 
 const statusBaseColors: Record<TableStatus, string> = {
   Available: 'green',
@@ -471,6 +472,7 @@ export default function PosSystem({
   const [isReserveDialogOpen, setIsReserveDialogOpen] = useState(false);
   const [reservationDetails, setReservationDetails] = useState({ name: '', time: '' });
   const [tableToReserve, setTableToReserve] = useState<number | null>(null);
+  const [vegFilter, setVegFilter] = useState<VegFilter>('All');
 
 
   const typedMenuData: MenuCategory[] = menu;
@@ -648,17 +650,40 @@ export default function PosSystem({
   };
 
   const filteredMenu = useMemo(() => {
-    if (!searchTerm) return typedMenuData;
-    const lowercasedTerm = searchTerm.toLowerCase();
-    
-    return typedMenuData.map(category => ({
-      ...category,
-      subCategories: category.subCategories.map(subCategory => ({
-        ...subCategory,
-        items: subCategory.items.filter(item => item.name.toLowerCase().includes(lowercasedTerm))
-      })).filter(subCategory => subCategory.items.length > 0)
-    })).filter(category => category.subCategories.length > 0);
-  }, [searchTerm, typedMenuData]);
+    let menuToFilter = typedMenuData;
+
+    // Search filter
+    if (searchTerm) {
+        const lowercasedTerm = searchTerm.toLowerCase();
+        menuToFilter = menuToFilter.map(category => ({
+            ...category,
+            subCategories: category.subCategories.map(subCategory => ({
+                ...subCategory,
+                items: subCategory.items.filter(item => item.name.toLowerCase().includes(lowercasedTerm))
+            })).filter(subCategory => subCategory.items.length > 0)
+        })).filter(category => category.subCategories.length > 0);
+    }
+
+    // Veg/Non-Veg filter
+    if (vegFilter !== 'All') {
+        menuToFilter = menuToFilter.map(category => ({
+            ...category,
+            subCategories: category.subCategories.filter(subCategory => {
+                const subCatName = subCategory.name.toLowerCase();
+                if (vegFilter === 'Veg') {
+                    // Include 'Veg' subcategories or those that are not 'Non-Veg' explicitly
+                    return subCatName.includes('veg') || !subCatName.includes('non-veg');
+                }
+                if (vegFilter === 'Non-Veg') {
+                    return subCatName.includes('non-veg');
+                }
+                return true;
+            }).map(sub => ({...sub}))
+        })).filter(category => category.subCategories.length > 0);
+    }
+
+    return menuToFilter;
+}, [searchTerm, vegFilter, typedMenuData]);
 
   const subtotal = useMemo(() => orderItems.reduce((acc, item) => acc + item.price * item.quantity, 0), [orderItems]);
   const total = useMemo(() => subtotal * (1 - discount / 100), [subtotal, discount]);
@@ -1050,7 +1075,7 @@ export default function PosSystem({
         className={cn(
           "group rounded-lg transition-all hover:shadow-md relative overflow-hidden",
           finalColorName,
-          easyMode ? 'cursor-pointer hover:scale-105' : ''
+          easyMode && 'cursor-pointer hover:scale-105'
         )}
         onClick={() => handleItemClick(item)}
       >
@@ -1060,7 +1085,7 @@ export default function PosSystem({
               <Button
                 variant="ghost"
                 size="icon"
-                className="absolute bottom-1 left-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                className="absolute bottom-1 right-1 h-6 w-6 opacity-50 hover:opacity-100 transition-opacity"
               >
                 <Palette className="h-4 w-4" />
               </Button>
@@ -1082,30 +1107,28 @@ export default function PosSystem({
         <CardContent className="p-3">
           <div className="flex justify-between items-start mb-2">
              <div className="flex items-center gap-2">
-                <span className={cn('h-3 w-3 rounded-sm border border-black/20', isNonVeg ? 'bg-red-500' : 'bg-green-500')}></span>
+                <span className={cn('h-4 w-4 rounded-sm border border-black/20', isNonVeg ? 'bg-red-500' : 'bg-green-500')}></span>
                 <span className="font-semibold pr-2 text-black">{item.name}</span>
             </div>
             <span className="font-mono text-right whitespace-nowrap text-black">₹{item.price.toFixed(2)}</span>
           </div>
-          <div className="flex justify-between items-end">
+           <div className="flex justify-between items-end">
             <span className="text-xs font-mono text-black/60">{item.code}</span>
-          </div>
-        </CardContent>
-
-        {!easyMode && (
-            <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+            {!easyMode && (
                 <Button
                     size="sm"
-                    className="bg-primary/80 text-primary-foreground hover:bg-primary"
+                    variant="secondary"
+                    className="h-7 text-xs"
                     onClick={(e) => {
                         e.stopPropagation();
                         handleAddButtonClick(item);
                     }}
                 >
-                    <ShoppingCart className="mr-2 h-4 w-4" /> Add to Order
+                    Add
                 </Button>
-            </div>
-        )}
+            )}
+          </div>
+        </CardContent>
       </Card>
     );
 
@@ -1119,11 +1142,11 @@ export default function PosSystem({
   const CategoryColorPicker = ({ categoryName }: { categoryName: string }) => (
     <Popover>
         <PopoverTrigger asChild>
-            <div onClick={(e) => e.stopPropagation()}>
-                <Button variant="ghost" size="icon" className="h-6 w-6">
-                    <Palette className="h-4 w-4" />
-                </Button>
-            </div>
+          <div onClick={(e) => e.stopPropagation()} role="button" aria-label="Change category color">
+            <Button variant="ghost" size="icon" className="h-6 w-6">
+                <Palette className="h-4 w-4" />
+            </Button>
+          </div>
         </PopoverTrigger>
         <PopoverContent className="w-auto p-2" onClick={(e) => e.stopPropagation()}>
             <div className="grid grid-cols-5 gap-1">
@@ -1223,27 +1246,7 @@ export default function PosSystem({
                     <AccordionTrigger className={cn("p-3 rounded-md text-lg font-bold hover:no-underline", categoryColors[category.category] ? colorPalette[categoryColors[category.category]]?.dark : 'bg-muted')}>
                         <div className="flex items-center justify-between w-full">
                            <span className={cn("flex-grow text-left text-black")}>{category.category}</span>
-                            <Popover>
-                                <PopoverTrigger asChild>
-                                    <div onClick={(e) => e.stopPropagation()}>
-                                        <Button variant="ghost" size="icon" className="h-6 w-6">
-                                            <Palette className="h-4 w-4" />
-                                        </Button>
-                                    </div>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-auto p-2" onClick={(e) => e.stopPropagation()}>
-                                    <div className="grid grid-cols-5 gap-1">
-                                        {colorNames.map((name) => (
-                                            <div
-                                                key={name}
-                                                className={cn("h-6 w-6 rounded-full cursor-pointer", colorPalette[name].light)}
-                                                onClick={(e) => { e.stopPropagation(); handleSetCategoryColor(category.category, name); }}
-                                            />
-                                        ))}
-                                        <Button variant="ghost" size="sm" className="col-span-5 h-8" onClick={(e) => { e.stopPropagation(); handleSetCategoryColor(category.category, ''); }}>Reset</Button>
-                                    </div>
-                                </PopoverContent>
-                            </Popover>
+                           <CategoryColorPicker categoryName={category.category} />
                         </div>
                     </AccordionTrigger>
                     <AccordionContent className="p-2 space-y-2">
@@ -1392,6 +1395,12 @@ export default function PosSystem({
                       onKeyDown={handleCodeEntry}
                     />
                   </div>
+                   <div className="sm:col-span-2 flex items-center gap-2">
+                        <Label>Filter:</Label>
+                        <Button variant={vegFilter === 'All' ? 'secondary' : 'outline'} size="sm" onClick={() => setVegFilter('All')}>All</Button>
+                        <Button variant={vegFilter === 'Veg' ? 'secondary' : 'outline'} size="sm" onClick={() => setVegFilter('Veg')} className="border-green-500 text-green-600 hover:bg-green-50">Veg</Button>
+                        <Button variant={vegFilter === 'Non-Veg' ? 'secondary' : 'outline'} size="sm" onClick={() => setVegFilter('Non-Veg')} className="border-red-500 text-red-600 hover:bg-red-50">Non-Veg</Button>
+                    </div>
                 </div>
                 <div className="flex items-center gap-2 flex-wrap">
                   <RadioGroup value={viewMode} onValueChange={(v) => setViewMode(v as ViewMode)} className="flex items-center">
@@ -1509,5 +1518,7 @@ export default function PosSystem({
     </DndProvider>
   );
 }
+
+    
 
     
