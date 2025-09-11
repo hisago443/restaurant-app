@@ -18,7 +18,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from '@/hooks/use-toast';
-import { Search, Plus, Minus, X, LayoutGrid, List, Rows, ChevronsUpDown, Palette, Shuffle, ClipboardList, Send, CheckCircle2, Users, Bookmark, Sparkles, Repeat, Edit, UserCheck, BookmarkX, Printer, Loader2, BookOpen, Trash2 as TrashIcon, MoreVertical, View, Pencil } from 'lucide-react';
+import { Search, Plus, Minus, X, LayoutGrid, List, Rows, ChevronsUpDown, Palette, Shuffle, ClipboardList, Send, CheckCircle2, Users, Bookmark, Sparkles, Repeat, Edit, UserCheck, BookmarkX, Printer, Loader2, BookOpen, Trash2 as TrashIcon, MoreVertical, View, Pencil, QrCode as QrCodeIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuLabel } from '@/components/ui/dropdown-menu';
@@ -141,6 +141,7 @@ export default function PosSystem({
     onEditOrder,
 }: PosSystemProps) {
   const [searchTerm, setSearchTerm] = useState('');
+  const [itemCodeInput, setItemCodeInput] = useState('');
   const [menu, setMenu] = useState<MenuCategory[]>(menuData as MenuCategory[]);
   const [originalOrderItems, setOriginalOrderItems] = useState<OrderItem[]>([]);
   const [isClickToAdd, setIsClickToAdd] = useState(true);
@@ -165,6 +166,11 @@ export default function PosSystem({
     if (activeOrder) return activeOrder.tableId;
     return selectedTableId;
   }, [activeOrder, selectedTableId]);
+  
+  const allMenuItems: MenuItem[] = useMemo(() => 
+    typedMenuData.flatMap(cat => cat.subCategories.flatMap(sub => sub.items)),
+    [typedMenuData]
+  );
   
   useEffect(() => {
     const defaultCategoryColors: Record<string, string> = {};
@@ -367,6 +373,29 @@ export default function PosSystem({
   const handleAddButtonClick = (item: MenuItem) => {
     setSelectedItem(item);
     setIsAddItemDialogOpen(true);
+  };
+  
+  const handleCodeEntry = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      const code = itemCodeInput.trim().toUpperCase();
+      if (!code) return;
+      
+      const item = allMenuItems.find(i => i.code === code);
+      if (item) {
+        addToOrder(item, 1);
+        toast({
+            title: "Item Added",
+            description: `1 x ${item.name} added to the order.`,
+        });
+        setItemCodeInput('');
+      } else {
+        toast({
+            variant: "destructive",
+            title: "Invalid Code",
+            description: `No item found with code "${code}".`,
+        });
+      }
+    }
   };
 
   const updateQuantity = (name: string, quantity: number) => {
@@ -699,13 +728,14 @@ export default function PosSystem({
             </div>
             <span className="font-mono text-right whitespace-nowrap text-black">₹{item.price.toFixed(2)}</span>
           </div>
-          {finalDarkColor && (
-            <div className="flex justify-end">
+          <div className="flex justify-between items-end">
+            <span className="text-xs font-mono text-black/60">{item.code}</span>
+            {finalDarkColor && (
                 <span className={cn("text-xs font-semibold px-2 py-0.5 rounded-full text-black", finalDarkColor)}>
                     {categoryName}
                 </span>
-            </div>
-          )}
+            )}
+          </div>
           {!isClickToAdd && (
             <div className="flex justify-end mt-2">
               <Button 
@@ -1013,17 +1043,27 @@ export default function PosSystem({
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 h-full">
       <Card className="col-span-1 lg:col-span-2 flex flex-col relative m-4">
         <CardHeader>
-          <div className="flex items-center justify-between gap-4 flex-wrap">
-             <div className="flex-grow">
-              <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                  <Input
-                    placeholder="Search menu items..."
-                    className="pl-10"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
-              </div>
+          <div className="flex items-start justify-between gap-4 flex-wrap">
+             <div className="flex-grow grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                    <Input
+                        placeholder="Search menu items..."
+                        className="pl-10"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                </div>
+                <div className="relative">
+                    <QrCodeIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                    <Input
+                        placeholder="Enter item code..."
+                        className="pl-10"
+                        value={itemCodeInput}
+                        onChange={(e) => setItemCodeInput(e.target.value)}
+                        onKeyDown={handleCodeEntry}
+                    />
+                </div>
             </div>
             <div className="flex items-center gap-2 flex-wrap">
                <RadioGroup value={viewMode} onValueChange={(v) => setViewMode(v as ViewMode)} className="flex items-center">
@@ -1254,9 +1294,3 @@ export default function PosSystem({
     </div>
   );
 }
-
-    
-
-    
-
-    

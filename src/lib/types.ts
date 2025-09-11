@@ -5,6 +5,7 @@ import { z } from 'zod';
 export interface MenuItem {
   name: string;
   price: number;
+  code: string;
 }
 
 export interface MenuSubCategory {

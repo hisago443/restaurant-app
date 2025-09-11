@@ -1,3 +1,4 @@
+
 [
   {
     "category": "Pizza's",
@@ -5,23 +6,23 @@
       {
         "name": "Veg",
         "items": [
-          { "name": "Margherita Pizza (Medium)", "price": 299 },
-          { "name": "Margherita Pizza (Large)", "price": 399 },
-          { "name": "Vegie Supreme Pizza (Medium)", "price": 319 },
-          { "name": "Vegie Supreme Pizza (Large)", "price": 419 },
-          { "name": "Loaded Paneer Pizza (Medium)", "price": 379 },
-          { "name": "Loaded Paneer Pizza (Large)", "price": 479 },
-          { "name": "Pesto Pizza Veg (Medium)", "price": 349 },
-          { "name": "Pesto Pizza Veg (Large)", "price": 449 }
+          { "name": "Margherita Pizza (Medium)", "price": 299, "code": "PZ01" },
+          { "name": "Margherita Pizza (Large)", "price": 399, "code": "PZ02" },
+          { "name": "Vegie Supreme Pizza (Medium)", "price": 319, "code": "PZ03" },
+          { "name": "Vegie Supreme Pizza (Large)", "price": 419, "code": "PZ04" },
+          { "name": "Loaded Paneer Pizza (Medium)", "price": 379, "code": "PZ05" },
+          { "name": "Loaded Paneer Pizza (Large)", "price": 479, "code": "PZ06" },
+          { "name": "Pesto Pizza Veg (Medium)", "price": 349, "code": "PZ07" },
+          { "name": "Pesto Pizza Veg (Large)", "price": 449, "code": "PZ08" }
         ]
       },
       {
         "name": "Non-Veg",
         "items": [
-          { "name": "Loaded Chicken Pizza (Medium)", "price": 389 },
-          { "name": "Loaded Chicken Pizza (Large)", "price": 489 },
-          { "name": "Pesto Pizza Chicken (Medium)", "price": 399 },
-          { "name": "Pesto Pizza Chicken (Large)", "price": 499 }
+          { "name": "Loaded Chicken Pizza (Medium)", "price": 389, "code": "PZ51" },
+          { "name": "Loaded Chicken Pizza (Large)", "price": 489, "code": "PZ52" },
+          { "name": "Pesto Pizza Chicken (Medium)", "price": 399, "code": "PZ53" },
+          { "name": "Pesto Pizza Chicken (Large)", "price": 499, "code": "PZ54" }
         ]
       }
     ]
@@ -32,17 +33,17 @@
       {
         "name": "Veg",
         "items": [
-          { "name": "Alfredo Pasta (Veg)", "price": 229 },
-          { "name": "Arabiatta Pasta (Veg)", "price": 229 },
-          { "name": "Preme Rose Pasta (Veg)", "price": 229 }
+          { "name": "Alfredo Pasta (Veg)", "price": 229, "code": "PA01" },
+          { "name": "Arabiatta Pasta (Veg)", "price": 229, "code": "PA02" },
+          { "name": "Preme Rose Pasta (Veg)", "price": 229, "code": "PA03" }
         ]
       },
       {
         "name": "Non-Veg",
         "items": [
-          { "name": "Alfredo Pasta (Non-Veg)", "price": 329 },
-          { "name": "Arabiatta Pasta (Non-Veg)", "price": 329 },
-          { "name": "Preme Rose Pasta (Non-Veg)", "price": 329 }
+          { "name": "Alfredo Pasta (Non-Veg)", "price": 329, "code": "PA51" },
+          { "name": "Arabiatta Pasta (Non-Veg)", "price": 329, "code": "PA52" },
+          { "name": "Preme Rose Pasta (Non-Veg)", "price": 329, "code": "PA53" }
         ]
       }
     ]
@@ -53,18 +54,18 @@
       {
         "name": "Veg",
         "items": [
-          { "name": "Bombay Sandwich", "price": 139 },
-          { "name": "All Veg Sub", "price": 149 },
-          { "name": "Veg Grilled Cheese", "price": 179 },
-          { "name": "Tangy Paneer Salsa", "price": 189 }
+          { "name": "Bombay Sandwich", "price": 139, "code": "SW01" },
+          { "name": "All Veg Sub", "price": 149, "code": "SW02" },
+          { "name": "Veg Grilled Cheese", "price": 179, "code": "SW03" },
+          { "name": "Tangy Paneer Salsa", "price": 189, "code": "SW04" }
         ]
       },
       {
         "name": "Non-Veg",
         "items": [
-          { "name": "Egg Masala", "price": 199 },
-          { "name": "Masala Chicken", "price": 229 },
-          { "name": "Mayo Chicken", "price": 239 }
+          { "name": "Egg Masala", "price": 199, "code": "SW51" },
+          { "name": "Masala Chicken", "price": 229, "code": "SW52" },
+          { "name": "Mayo Chicken", "price": 239, "code": "SW53" }
         ]
       }
     ]
@@ -75,18 +76,18 @@
       {
         "name": "Veg",
         "items": [
-          { "name": "Plain Garlic Bread", "price": 149 },
-          { "name": "Cheese Garlic Bread", "price": 209 },
-          { "name": "Stuffed Garlic Bread", "price": 229 },
-          { "name": "Corn & Cheese Bruschetta", "price": 209 },
-          { "name": "Creamy Mushroom Bruschetta", "price": 229 }
+          { "name": "Plain Garlic Bread", "price": 149, "code": "GB01" },
+          { "name": "Cheese Garlic Bread", "price": 209, "code": "GB02" },
+          { "name": "Stuffed Garlic Bread", "price": 229, "code": "GB03" },
+          { "name": "Corn & Cheese Bruschetta", "price": 209, "code": "GB04" },
+          { "name": "Creamy Mushroom Bruschetta", "price": 229, "code": "GB05" }
         ]
       },
       {
         "name": "Non-Veg",
         "items": [
-          { "name": "Creamy Chicken Bruschetta", "price": 259 },
-          { "name": "Chicken Bruschetta", "price": 249 }
+          { "name": "Creamy Chicken Bruschetta", "price": 259, "code": "GB51" },
+          { "name": "Chicken Bruschetta", "price": 249, "code": "GB52" }
         ]
       }
     ]
@@ -97,16 +98,16 @@
       {
         "name": "Veg",
         "items": [
-          { "name": "Veggie Burger", "price": 169 },
-          { "name": "Paneer Burger", "price": 189 },
-          { "name": "Tawa Paneer Burger", "price": 179 }
+          { "name": "Veggie Burger", "price": 169, "code": "BG01" },
+          { "name": "Paneer Burger", "price": 189, "code": "BG02" },
+          { "name": "Tawa Paneer Burger", "price": 179, "code": "BG03" }
         ]
       },
       {
         "name": "Non-Veg",
         "items": [
-          { "name": "Chicken Burger", "price": 199 },
-          { "name": "Tawa Chicken Burger", "price": 209 }
+          { "name": "Chicken Burger", "price": 199, "code": "BG51" },
+          { "name": "Tawa Chicken Burger", "price": 209, "code": "BG52" }
         ]
       }
     ]
@@ -117,36 +118,36 @@
       {
         "name": "Veg",
         "items": [
-          { "name": "Cornflakes", "price": 119 },
-          { "name": "Chocos", "price": 119 },
-          { "name": "Poha", "price": 139 },
-          { "name": "Lemon Rice", "price": 149 },
-          { "name": "Porridge", "price": 179 },
-          { "name": "Butter Toast", "price": 99 },
-          { "name": "Jam Toast", "price": 119 },
-          { "name": "French Toast", "price": 129 },
-          { "name": "Chilly Cheese Toast", "price": 149 },
-          { "name": "Peanut Butter Toast", "price": 169 },
-          { "name": "Banana Nutella Toast", "price": 179 },
-          { "name": "Aloo Parantha", "price": 49 },
-          { "name": "Gobhi Parantha", "price": 59 },
-          { "name": "Paneer Parantha", "price": 69 },
-          { "name": "Mix Parantha", "price": 79 },
-          { "name": "Amul Butter", "price": 20 },
-          { "name": "Curd", "price": 30 }
+          { "name": "Cornflakes", "price": 119, "code": "BF01" },
+          { "name": "Chocos", "price": 119, "code": "BF02" },
+          { "name": "Poha", "price": 139, "code": "BF03" },
+          { "name": "Lemon Rice", "price": 149, "code": "BF04" },
+          { "name": "Porridge", "price": 179, "code": "BF05" },
+          { "name": "Butter Toast", "price": 99, "code": "BF06" },
+          { "name": "Jam Toast", "price": 119, "code": "BF07" },
+          { "name": "French Toast", "price": 129, "code": "BF08" },
+          { "name": "Chilly Cheese Toast", "price": 149, "code": "BF09" },
+          { "name": "Peanut Butter Toast", "price": 169, "code": "BF10" },
+          { "name": "Banana Nutella Toast", "price": 179, "code": "BF11" },
+          { "name": "Aloo Parantha", "price": 49, "code": "BF12" },
+          { "name": "Gobhi Parantha", "price": 59, "code": "BF13" },
+          { "name": "Paneer Parantha", "price": 69, "code": "BF14" },
+          { "name": "Mix Parantha", "price": 79, "code": "BF15" },
+          { "name": "Amul Butter", "price": 20, "code": "BF16" },
+          { "name": "Curd", "price": 30, "code": "BF17" }
         ]
       },
       {
         "name": "Non-Veg",
         "items": [
-          { "name": "Plain Omelette", "price": 129 },
-          { "name": "Scrambled Egg", "price": 129 },
-          { "name": "Sunny Side Up", "price": 139 },
-          { "name": "Tomato Basil Omelette", "price": 139 },
-          { "name": "Mushroom Omelette", "price": 149 },
-          { "name": "Cheese Omelette", "price": 159 },
-          { "name": "Cheese & Corn Omelette", "price": 169 },
-          { "name": "Egg Parantha", "price": 89 }
+          { "name": "Plain Omelette", "price": 129, "code": "BF51" },
+          { "name": "Scrambled Egg", "price": 129, "code": "BF52" },
+          { "name": "Sunny Side Up", "price": 139, "code": "BF53" },
+          { "name": "Tomato Basil Omelette", "price": 139, "code": "BF54" },
+          { "name": "Mushroom Omelette", "price": 149, "code": "BF55" },
+          { "name": "Cheese Omelette", "price": 159, "code": "BF56" },
+          { "name": "Cheese & Corn Omelette", "price": 169, "code": "BF57" },
+          { "name": "Egg Parantha", "price": 89, "code": "BF58" }
         ]
       }
     ]
@@ -157,52 +158,52 @@
       {
         "name": "Hot",
         "items": [
-          { "name": "Lemon Tea", "price": 39 },
-          { "name": "Milk Tea", "price": 39 },
-          { "name": "Masala Tea", "price": 49 },
-          { "name": "Green Tea", "price": 59 },
-          { "name": "Rose Tea", "price": 59 },
-          { "name": "Ginger Lemon Honey", "price": 69 },
-          { "name": "Black Coffee", "price": 79 },
-          { "name": "Milk Coffee (hot)", "price": 89 },
-          { "name": "Cafe Latte", "price": 129 },
-          { "name": "Cappuccino Coffee", "price": 129 },
-          { "name": "Hazelnut Coffee", "price": 139 },
-          { "name": "Caramel Coffee", "price": 139 },
-          { "name": "Plain Milk", "price": 79 },
-          { "name": "Bournvita Milk", "price": 99 },
-          { "name": "Hot Chocolate With Marshmallow", "price": 149 }
+          { "name": "Lemon Tea", "price": 39, "code": "BV01" },
+          { "name": "Milk Tea", "price": 39, "code": "BV02" },
+          { "name": "Masala Tea", "price": 49, "code": "BV03" },
+          { "name": "Green Tea", "price": 59, "code": "BV04" },
+          { "name": "Rose Tea", "price": 59, "code": "BV05" },
+          { "name": "Ginger Lemon Honey", "price": 69, "code": "BV06" },
+          { "name": "Black Coffee", "price": 79, "code": "BV07" },
+          { "name": "Milk Coffee (hot)", "price": 89, "code": "BV08" },
+          { "name": "Cafe Latte", "price": 129, "code": "BV09" },
+          { "name": "Cappuccino Coffee", "price": 129, "code": "BV10" },
+          { "name": "Hazelnut Coffee", "price": 139, "code": "BV11" },
+          { "name": "Caramel Coffee", "price": 139, "code": "BV12" },
+          { "name": "Plain Milk", "price": 79, "code": "BV13" },
+          { "name": "Bournvita Milk", "price": 99, "code": "BV14" },
+          { "name": "Hot Chocolate With Marshmallow", "price": 149, "code": "BV15" }
         ]
       },
       {
         "name": "Cold",
         "items": [
-          { "name": "Cold Coffee", "price": 129 },
-          { "name": "Iced Hazelnut Coffee", "price": 159 },
-          { "name": "Creamy Iced Vanilla Coffee", "price": 169 },
-          { "name": "Banana Milkshake", "price": 119 },
-          { "name": "Vanilla Milkshake", "price": 149 },
-          { "name": "Chocolate Milkshake", "price": 160 },
-          { "name": "Oreo Milkshake", "price": 179 },
-          { "name": "Peanut Butter Milkshake", "price": 179 },
-          { "name": "Papaya Milkshake", "price": 179 },
-          { "name": "Nutella Milkshake", "price": 189 },
-          { "name": "Lemonade", "price": 69 },
-          { "name": "Fresh Lime Soda", "price": 89 },
-          { "name": "Lassi", "price": 89 },
-          { "name": "Lemon Mint Ice Tea", "price": 139 },
-          { "name": "Peach Ice Tea", "price": 149 },
-          { "name": "Orange Juice", "price": 149 },
-          { "name": "Watermelon Juice", "price": 149 },
-          { "name": "Banana Flax Smoothie", "price": 179 },
-          { "name": "Stress Buster Smoothie", "price": 199 },
-          { "name": "The Energizer (Detox)", "price": 169 },
-          { "name": "ABC (Detox)", "price": 179 },
-          { "name": "The Refresher (Detox)", "price": 189 },
-          { "name": "Water", "price": 20 },
-          { "name": "Soda", "price": 30 },
-          { "name": "Coke", "price": 40 },
-          { "name": "Sprite", "price": 40 }
+          { "name": "Cold Coffee", "price": 129, "code": "BV31" },
+          { "name": "Iced Hazelnut Coffee", "price": 159, "code": "BV32" },
+          { "name": "Creamy Iced Vanilla Coffee", "price": 169, "code": "BV33" },
+          { "name": "Banana Milkshake", "price": 119, "code": "BV34" },
+          { "name": "Vanilla Milkshake", "price": 149, "code": "BV35" },
+          { "name": "Chocolate Milkshake", "price": 160, "code": "BV36" },
+          { "name": "Oreo Milkshake", "price": 179, "code": "BV37" },
+          { "name": "Peanut Butter Milkshake", "price": 179, "code": "BV38" },
+          { "name": "Papaya Milkshake", "price": 179, "code": "BV39" },
+          { "name": "Nutella Milkshake", "price": 189, "code": "BV40" },
+          { "name": "Lemonade", "price": 69, "code": "BV41" },
+          { "name": "Fresh Lime Soda", "price": 89, "code": "BV42" },
+          { "name": "Lassi", "price": 89, "code": "BV43" },
+          { "name": "Lemon Mint Ice Tea", "price": 139, "code": "BV44" },
+          { "name": "Peach Ice Tea", "price": 149, "code": "BV45" },
+          { "name": "Orange Juice", "price": 149, "code": "BV46" },
+          { "name": "Watermelon Juice", "price": 149, "code": "BV47" },
+          { "name": "Banana Flax Smoothie", "price": 179, "code": "BV48" },
+          { "name": "Stress Buster Smoothie", "price": 199, "code": "BV49" },
+          { "name": "The Energizer (Detox)", "price": 169, "code": "BV50" },
+          { "name": "ABC (Detox)", "price": 179, "code": "BV51" },
+          { "name": "The Refresher (Detox)", "price": 189, "code": "BV52" },
+          { "name": "Water", "price": 20, "code": "BV53" },
+          { "name": "Soda", "price": 30, "code": "BV54" },
+          { "name": "Coke", "price": 40, "code": "BV55" },
+          { "name": "Sprite", "price": 40, "code": "BV56" }
         ]
       }
     ]
@@ -213,46 +214,46 @@
       {
         "name": "Chinese - Veg",
         "items": [
-          { "name": "Veg Noodles", "price": 179 },
-          { "name": "Chilly Garlic Noodles", "price": 189 },
-          { "name": "Hakka Noodles", "price": 199 },
-          { "name": "Veg Fried Rice", "price": 189 },
-          { "name": "Schezwan Fried Rice", "price": 209 },
-          { "name": "Veg Manchurian", "price": 189 }
+          { "name": "Veg Noodles", "price": 179, "code": "CS01" },
+          { "name": "Chilly Garlic Noodles", "price": 189, "code": "CS02" },
+          { "name": "Hakka Noodles", "price": 199, "code": "CS03" },
+          { "name": "Veg Fried Rice", "price": 189, "code": "CS04" },
+          { "name": "Schezwan Fried Rice", "price": 209, "code": "CS05" },
+          { "name": "Veg Manchurian", "price": 189, "code": "CS06" }
         ]
       },
       {
         "name": "Chinese - Non-Veg",
         "items": [
-          { "name": "Egg Fried Rice", "price": 219 },
-          { "name": "Chicken Fried Rice", "price": 239 },
-          { "name": "Chicken Manchurian", "price": 229 }
+          { "name": "Egg Fried Rice", "price": 219, "code": "CS51" },
+          { "name": "Chicken Fried Rice", "price": 239, "code": "CS52" },
+          { "name": "Chicken Manchurian", "price": 229, "code": "CS53" }
         ]
       },
       {
         "name": "Maggi",
         "items": [
-          { "name": "Plain Maggi", "price": 49 },
-          { "name": "Butter Maggi", "price": 79 },
-          { "name": "Vegetable Maggi", "price": 79 }
+          { "name": "Plain Maggi", "price": 49, "code": "CS71" },
+          { "name": "Butter Maggi", "price": 79, "code": "CS72" },
+          { "name": "Vegetable Maggi", "price": 79, "code": "CS73" }
         ]
       },
       {
         "name": "Snacks",
         "items": [
-          { "name": "French Fries", "price": 139 },
-          { "name": "Peri Peri Fries", "price": 149 },
-          { "name": "Cheese Fries", "price": 159 },
-          { "name": "Peanut Masala", "price": 129 },
-          { "name": "Nachos With Salsa", "price": 179 },
-          { "name": "Cheese Nachos With Salsa", "price": 199 },
-          { "name": "Honey Chilly Potato", "price": 189 },
-          { "name": "Chilly Mushroom", "price": 199 },
-          { "name": "Chilly Paneer", "price": 239 },
-          { "name": "Chilly Chicken", "price": 269 },
-          { "name": "Lemon Chicken", "price": 289 },
-          { "name": "Crispy Fried Chicken", "price": 289 },
-          { "name": "Chicken Pakoda", "price": 189 }
+          { "name": "French Fries", "price": 139, "code": "CS81" },
+          { "name": "Peri Peri Fries", "price": 149, "code": "CS82" },
+          { "name": "Cheese Fries", "price": 159, "code": "CS83" },
+          { "name": "Peanut Masala", "price": 129, "code": "CS84" },
+          { "name": "Nachos With Salsa", "price": 179, "code": "CS85" },
+          { "name": "Cheese Nachos With Salsa", "price": 199, "code": "CS86" },
+          { "name": "Honey Chilly Potato", "price": 189, "code": "CS87" },
+          { "name": "Chilly Mushroom", "price": 199, "code": "CS88" },
+          { "name": "Chilly Paneer", "price": 239, "code": "CS89" },
+          { "name": "Chilly Chicken", "price": 269, "code": "CS90" },
+          { "name": "Lemon Chicken", "price": 289, "code": "CS91" },
+          { "name": "Crispy Fried Chicken", "price": 289, "code": "CS92" },
+          { "name": "Chicken Pakoda", "price": 189, "code": "CS93" }
         ]
       }
     ]
