@@ -18,7 +18,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from '@/hooks/use-toast';
-import { Search, Plus, Minus, X, LayoutGrid, List, Rows, ChevronsUpDown, Palette, Shuffle, ClipboardList, Send, CheckCircle2, Users, Bookmark, Sparkles, Repeat, Edit, UserCheck, BookmarkX, Printer, Loader2, AlignLeft, AlignCenter, AlignRight, BookOpen } from 'lucide-react';
+import { Search, Plus, Minus, X, LayoutGrid, List, Rows, ChevronsUpDown, Palette, Shuffle, ClipboardList, Send, CheckCircle2, Users, Bookmark, Sparkles, Repeat, Edit, UserCheck, BookmarkX, Printer, Loader2, BookOpen } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { AddItemDialog } from './add-item-dialog';
@@ -44,7 +44,6 @@ const colorPalette = [
 ];
 
 type ViewMode = 'accordion' | 'grid' | 'list';
-type CategoryAlignment = 'left' | 'center' | 'right';
 
 
 const statusColors: Record<TableStatus, string> = {
@@ -119,7 +118,6 @@ export default function PosSystem({
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
   const [isAddItemDialogOpen, setIsAddItemDialogOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [categoryAlignment, setCategoryAlignment] = useState<CategoryAlignment>('center');
   const [isMenuManagerOpen, setIsMenuManagerOpen] = useState(false);
 
 
@@ -670,24 +668,13 @@ export default function PosSystem({
   );
 
   const renderMenuContent = () => {
-    const alignmentClasses = {
-      left: 'justify-start',
-      center: 'justify-center',
-      right: 'justify-end',
-    };
-    const textAlignClasses = {
-        left: 'text-left',
-        center: 'text-center',
-        right: 'text-right',
-    }
-
     if (viewMode === 'list') {
       return (
         <div className="space-y-6">
           {filteredMenu.map((category) => (
              <div key={category.category} className={cn("rounded-lg p-2", categoryColors[category.category])}>
-               <div className={cn("sticky top-0 bg-background/80 backdrop-blur-sm py-2 z-10 flex items-center gap-2 p-2 rounded-md", alignmentClasses[categoryAlignment])}>
-                <h2 className={cn("text-xl font-bold text-black", textAlignClasses[categoryAlignment], categoryAlignment !== 'center' && 'flex-grow')}>
+               <div className="sticky top-0 bg-background/80 backdrop-blur-sm py-2 z-10 flex items-center gap-2 p-2 rounded-md">
+                <h2 className="text-xl font-bold text-black flex-grow">
                   {category.category}
                 </h2>
                 <CategoryColorPicker categoryName={category.category} />
@@ -711,7 +698,7 @@ export default function PosSystem({
     if (viewMode === 'grid') {
       return (
         <Tabs defaultValue={filteredMenu[0]?.category} className="w-full">
-          <div className={cn("flex", alignmentClasses[categoryAlignment])}>
+          <div className="flex justify-center">
             <TabsList className="mb-4 flex-wrap h-auto">
               {filteredMenu.map(category => (
                 <TabsTrigger key={category.category} value={category.category} asChild>
@@ -748,7 +735,7 @@ export default function PosSystem({
           <AccordionItem key={category.category} value={category.category} className={cn("border-b-0 rounded-lg mb-2 overflow-hidden", categoryColors[category.category])}>
             <div className="flex items-center pr-4 hover:bg-muted/50 rounded-t-lg">
               <AccordionTrigger className='p-4 hover:no-underline flex-grow'>
-                  <div className={cn("text-xl font-bold text-black flex-grow", textAlignClasses[categoryAlignment])}>{category.category}</div>
+                  <div className="text-xl font-bold text-black flex-grow text-left">{category.category}</div>
               </AccordionTrigger>
               <CategoryColorPicker categoryName={category.category} />
             </div>
@@ -874,23 +861,6 @@ export default function PosSystem({
                   <Label htmlFor="list-view" className={cn("p-1.5 rounded-md cursor-pointer transition-colors", viewMode === 'list' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent' )}>
                     <Rows className="h-5 w-5 box-content" />
                   </Label>
-              </RadioGroup>
-              <Separator orientation="vertical" className="h-8" />
-              <RadioGroup value={categoryAlignment} onValueChange={(v) => setCategoryAlignment(v as CategoryAlignment)} className="flex items-center">
-                <RadioGroupItem value="left" id="align-left" className="sr-only" />
-                <Label htmlFor="align-left" className={cn("p-1.5 rounded-md cursor-pointer transition-colors", categoryAlignment === 'left' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent' )}>
-                  <AlignLeft className="h-5 w-5 box-content" />
-                </Label>
-
-                <RadioGroupItem value="center" id="align-center" className="sr-only" />
-                <Label htmlFor="align-center" className={cn("p-1.5 rounded-md cursor-pointer transition-colors", categoryAlignment === 'center' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent' )}>
-                  <AlignCenter className="h-5 w-5 box-content" />
-                </Label>
-
-                <RadioGroupItem value="right" id="align-right" className="sr-only" />
-                <Label htmlFor="align-right" className={cn("p-1.5 rounded-md cursor-pointer transition-colors", categoryAlignment === 'right' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent' )}>
-                  <AlignRight className="h-5 w-5 box-content" />
-                </Label>
               </RadioGroup>
               <Separator orientation="vertical" className="h-8" />
               <Button variant="outline" size="sm" onClick={handleShuffleColors}>
