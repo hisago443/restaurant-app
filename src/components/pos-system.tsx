@@ -1066,8 +1066,11 @@ export default function PosSystem({
     
     const itemStatus = menuItemStatus[item.name];
     const categoryColorName = categoryColors[categoryName];
-
-    const finalColorName = itemStatus ? itemStatusColors[itemStatus]?.dark : (categoryColorName ? colorPalette[categoryColorName]?.dark : (isNonVeg ? nonVegColor : 'bg-green-100 dark:bg-green-900/30'));
+    
+    let finalColorName = categoryColorName ? colorPalette[categoryColorName]?.light : (isNonVeg ? nonVegColor : vegColor);
+    if(itemStatus) {
+        finalColorName = itemStatusColors[itemStatus].light;
+    }
 
     const menuItemCard = (
       <Card
@@ -1084,9 +1087,9 @@ export default function PosSystem({
           <div className="flex justify-between items-start mb-2">
              <div className="flex items-center gap-2">
                 <span className={cn('h-4 w-4 rounded-sm border border-black/20', isNonVeg ? 'bg-red-500' : 'bg-green-500')}></span>
-                <span className="font-semibold pr-2 text-black">{item.name}</span>
+                <span className="font-semibold pr-2">{item.name}</span>
             </div>
-            <span className="font-mono text-right whitespace-nowrap text-black">₹{item.price.toFixed(2)}</span>
+            <span className="font-mono text-right whitespace-nowrap">₹{item.price.toFixed(2)}</span>
           </div>
            <div className="flex justify-between items-end">
             <span className="text-xs font-mono text-black/60">{item.code}</span>
@@ -1108,6 +1111,7 @@ export default function PosSystem({
         </CardContent>
         <Popover>
           <PopoverTrigger asChild>
+            {/* Wrapping the PopoverTrigger in a div and stopping event propagation prevents nested buttons */}
             <div onClick={(e) => e.stopPropagation()}>
               <Button
                 variant="ghost"
@@ -1141,28 +1145,28 @@ export default function PosSystem({
   };
 
   const CategoryColorPicker = ({ categoryName }: { categoryName: string }) => (
-    <Popover>
+    <div onClick={(e) => e.stopPropagation()}>
+      <Popover>
         <PopoverTrigger asChild>
-          <div onClick={(e) => e.stopPropagation()} role="button" aria-label="Change category color">
-            <Button variant="ghost" size="icon" className="h-6 w-6">
-                <Palette className="h-4 w-4" />
-            </Button>
-          </div>
+          <Button variant="ghost" size="icon" className="h-6 w-6">
+            <Palette className="h-4 w-4" />
+          </Button>
         </PopoverTrigger>
         <PopoverContent className="w-auto p-2" onClick={(e) => e.stopPropagation()}>
-            <div className="grid grid-cols-5 gap-1">
-                {colorNames.map((name) => (
-                    <div
-                        key={name}
-                        className={cn("h-6 w-6 rounded-full cursor-pointer", colorPalette[name].light)}
-                        onClick={(e) => { e.stopPropagation(); handleSetCategoryColor(categoryName, name); }}
-                    />
-                ))}
-                <Button variant="ghost" size="sm" className="col-span-5 h-8" onClick={(e) => { e.stopPropagation(); handleSetCategoryColor(categoryName, ''); }}>Reset</Button>
-            </div>
+          <div className="grid grid-cols-5 gap-1">
+            {colorNames.map((name) => (
+              <div
+                key={name}
+                className={cn("h-6 w-6 rounded-full cursor-pointer", colorPalette[name].light)}
+                onClick={(e) => { e.stopPropagation(); handleSetCategoryColor(categoryName, name); }}
+              />
+            ))}
+            <Button variant="ghost" size="sm" className="col-span-5 h-8" onClick={(e) => { e.stopPropagation(); handleSetCategoryColor(categoryName, ''); }}>Reset</Button>
+          </div>
         </PopoverContent>
-    </Popover>
-);
+      </Popover>
+    </div>
+  );
 
   const renderMenuContent = () => {
     if (viewMode === 'list') {
@@ -1201,7 +1205,7 @@ export default function PosSystem({
               <TabsList className="mb-4 flex-wrap h-auto bg-transparent border-b rounded-none p-0">
                 {filteredMenu.map(category => (
                   <div key={category.category} className="relative group p-1">
-                    <TabsTrigger value={category.category} className="rounded-none border-b-2 border-transparent data-[state=active]:shadow-none px-4 py-2 cursor-pointer">
+                    <TabsTrigger value={category.category} className={cn("rounded-none border-b-2 border-transparent data-[state=active]:shadow-none px-4 py-2 cursor-pointer", categoryColors[category.category] ? colorPalette[categoryColors[category.category]]?.dark : '')}>
                       <span className="flex-grow text-left text-lg text-black">{category.category}</span>
                     </TabsTrigger>
                     <div
@@ -1246,7 +1250,7 @@ export default function PosSystem({
                 <AccordionItem key={category.category} value={category.category} className="border-b-0">
                     <AccordionTrigger className={cn("p-3 rounded-md text-lg font-bold hover:no-underline", categoryColors[category.category] ? colorPalette[categoryColors[category.category]]?.dark : 'bg-muted')}>
                         <div className="flex items-center justify-between w-full">
-                           <span className={cn("flex-grow text-left text-black")}>{category.category}</span>
+                           <span className={cn("flex-grow text-left", "text-black")}>{category.category}</span>
                            <CategoryColorPicker categoryName={category.category} />
                         </div>
                     </AccordionTrigger>
@@ -1519,9 +1523,5 @@ export default function PosSystem({
     </DndProvider>
   );
 }
-
-    
-
-    
 
     
