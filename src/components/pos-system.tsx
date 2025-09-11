@@ -17,7 +17,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from '@/hooks/use-toast';
-import { Search, Plus, Minus, X, LayoutGrid, List, Rows, ChevronsUpDown, Palette, Shuffle, ClipboardList, Send, CheckCircle2, Users, Bookmark, Sparkles, Repeat, Edit, UserCheck, BookmarkX, Printer, Loader2, BookOpen, Trash2 as TrashIcon, MoreVertical, View, Pencil, QrCode as QrCodeIcon, MousePointerClick, Move } from 'lucide-react';
+import { Search, Plus, Minus, X, LayoutGrid, List, Rows, ChevronsUpDown, Palette, Shuffle, ClipboardList, Send, CheckCircle2, Users, Bookmark, Sparkles, Repeat, Edit, UserCheck, BookmarkX, Printer, Loader2, BookOpen, Trash2 as TrashIcon, MoreVertical, View, Pencil, QrCode as QrCodeIcon, MousePointerClick, Move, ShoppingCart } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuLabel } from '@/components/ui/dropdown-menu';
@@ -121,11 +121,11 @@ const ItemTypes = {
   MENU_ITEM: 'menuItem',
 };
 
-function DraggableMenuItem({ item, children, clickToAdd }: { item: MenuItem; children: React.ReactNode; clickToAdd: boolean }) {
+function DraggableMenuItem({ item, children, canDrag }: { item: MenuItem; children: React.ReactNode; canDrag: boolean }) {
     const [{ isDragging }, drag] = useDrag(() => ({
         type: ItemTypes.MENU_ITEM,
         item: { ...item },
-        canDrag: !clickToAdd,
+        canDrag: canDrag,
         collect: (monitor) => ({
             isDragging: !!monitor.isDragging(),
         }),
@@ -135,7 +135,7 @@ function DraggableMenuItem({ item, children, clickToAdd }: { item: MenuItem; chi
         <div
             ref={drag}
             style={{ opacity: isDragging ? 0.5 : 1 }}
-            className={cn(!clickToAdd && "cursor-move")}
+            className={cn(canDrag && "cursor-move")}
         >
             {children}
         </div>
@@ -456,7 +456,7 @@ export default function PosSystem({
   const [receiptPreview, setReceiptPreview] = useState('');
   const { toast } = useToast();
   const [activeAccordionItems, setActiveAccordionItems] = useState<string[]>([]);
-  const [viewMode, setViewMode] = useState<ViewMode>('accordion');
+  const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [menuItemColors, setMenuItemColors] = useState<Record<string, string>>({});
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
   const [isAddItemDialogOpen, setIsAddItemDialogOpen] = useState(false);
@@ -679,11 +679,13 @@ export default function PosSystem({
   };
   
   const handleDropOnOrder = (item: MenuItem) => {
-      addToOrder(item, 1);
-      toast({
-          title: "Item Added",
-          description: `1 x ${item.name} added to the current order.`
-      });
+      if (clickToAdd) {
+        addToOrder(item, 1);
+        toast({
+            title: "Item Added",
+            description: `1 x ${item.name} added to the current order.`
+        });
+      }
   }
 
   const handleAddButtonClick = (item: MenuItem) => {
@@ -845,6 +847,8 @@ export default function PosSystem({
   };
   
     const handleDropItemOnTable = (tableId: number, item: MenuItem) => {
+        if (!clickToAdd) return; // Only allow drop if clickToAdd is on
+
         const tableIsSelected = selectedTableId === tableId;
         const isNewOrder = !activeOrder && orderItems.length === 0;
 
@@ -1040,9 +1044,9 @@ export default function PosSystem({
       <Card
         key={item.name}
         className={cn(
-          "group rounded-lg transition-all hover:scale-105 relative",
+          "group rounded-lg transition-all hover:shadow-md relative overflow-hidden",
           finalLightColor,
-          clickToAdd ? 'cursor-pointer' : ''
+          clickToAdd ? 'cursor-pointer hover:scale-105' : ''
         )}
         onClick={() => handleItemClick(item)}
       >
@@ -1070,6 +1074,7 @@ export default function PosSystem({
             </div>
           </PopoverContent>
         </Popover>
+
         <CardContent className="p-3">
           <div className="flex justify-between items-start mb-2">
              <div className="flex items-center gap-2">
@@ -1087,11 +1092,26 @@ export default function PosSystem({
             )}
           </div>
         </CardContent>
+
+        {!clickToAdd && (
+            <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                <Button
+                    size="sm"
+                    className="bg-primary/80 text-primary-foreground hover:bg-primary"
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        handleAddButtonClick(item);
+                    }}
+                >
+                    <ShoppingCart className="mr-2 h-4 w-4" /> Add to Order
+                </Button>
+            </div>
+        )}
       </Card>
     );
 
     return (
-        <DraggableMenuItem key={item.name} item={item} clickToAdd={clickToAdd}>
+        <DraggableMenuItem key={item.name} item={item} canDrag={clickToAdd}>
             {menuItemCard}
         </DraggableMenuItem>
     );
@@ -1157,7 +1177,7 @@ export default function PosSystem({
     }
     if (viewMode === 'grid') {
         return (
-          <Tabs defaultValue={filteredMenu[0]?.category} className="w-full">
+          <Tabs defaultValue={filteredMenu.length > 0 ? filteredMenu[0].category : undefined} className="w-full">
             <div className="flex justify-center">
               <TabsList className="mb-4 flex-wrap h-auto bg-transparent border-b rounded-none p-0">
                 {filteredMenu.map(category => (
@@ -1383,18 +1403,13 @@ export default function PosSystem({
                   <Button variant="outline" size="sm" onClick={() => setIsMenuManagerOpen(true)}>
                     <BookOpen className="mr-2 h-4 w-4" /> Manage Menu
                   </Button>
-                   <Button 
-                    variant={clickToAdd ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setClickToAdd(prev => !prev)}
-                    className={cn(
-                        "transition-all duration-300",
-                        clickToAdd && "bg-green-500 hover:bg-green-600 text-white shadow-lg"
-                    )}
-                >
-                    <MousePointerClick className="mr-2 h-4 w-4" />
-                    Click to Add: {clickToAdd ? 'On' : 'Off'}
-                </Button>
+                   <div className="flex items-center space-x-2">
+                        <Switch id="click-to-add-switch" checked={clickToAdd} onCheckedChange={setClickToAdd} />
+                        <Label htmlFor="click-to-add-switch" className="flex items-center gap-2 cursor-pointer">
+                            <MousePointerClick className="h-4 w-4" />
+                            Click to Add
+                        </Label>
+                    </div>
                 </div>
               </div>
             </CardHeader>
