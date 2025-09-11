@@ -30,8 +30,28 @@ const getDynamicColor = (status: TableStatus, turnover: number) => {
   const color = statusBaseColors[status];
   
   const hoverShade = Math.min(900, shade + 100);
-  return `bg-${color}-${shade} hover:bg-${color}-${hoverShade}`;
+
+  // Note: TailwindCSS needs to see the full class name, so we can't use template literals with variables
+  // for the color names. We need to map them out. This is a workaround.
+  const colorClasses: Record<string, Record<number, string>> = {
+    green: { 400: 'bg-green-400', 500: 'bg-green-500', 600: 'bg-green-600', 700: 'bg-green-700', 800: 'bg-green-800', 900: 'bg-green-900' },
+    red: { 400: 'bg-red-400', 500: 'bg-red-500', 600: 'bg-red-600', 700: 'bg-red-700', 800: 'bg-red-800', 900: 'bg-red-900' },
+    blue: { 400: 'bg-blue-400', 500: 'bg-blue-500', 600: 'bg-blue-600', 700: 'bg-blue-700', 800: 'bg-blue-800', 900: 'bg-blue-900' },
+    amber: { 300: 'bg-amber-300', 400: 'bg-amber-400', 500: 'bg-amber-500', 600: 'bg-amber-600', 700: 'bg-amber-700', 800: 'bg-amber-800', 900: 'bg-amber-900' },
+  };
+  const hoverColorClasses: Record<string, Record<number, string>> = {
+    green: { 500: 'hover:bg-green-500', 600: 'hover:bg-green-600', 700: 'hover:bg-green-700', 800: 'hover:bg-green-800', 900: 'hover:bg-green-900' },
+    red: { 500: 'hover:bg-red-500', 600: 'hover:bg-red-600', 700: 'hover:bg-red-700', 800: 'hover:bg-red-800', 900: 'hover:bg-red-900' },
+    blue: { 500: 'hover:bg-blue-500', 600: 'hover:bg-blue-600', 700: 'hover:bg-blue-700', 800: 'hover:bg-blue-800', 900: 'hover:bg-blue-900' },
+    amber: { 400: 'hover:bg-amber-400', 500: 'hover:bg-amber-500', 600: 'hover:bg-amber-600', 700: 'hover:bg-amber-700', 800: 'hover:bg-amber-800', 900: 'hover:bg-amber-900' },
+  };
+
+  const bgColorClass = colorClasses[color]?.[shade] || `bg-${color}-400`;
+  const hoverBgColorClass = hoverColorClasses[color]?.[hoverShade] || `hover:bg-${color}-500`;
+
+  return `${bgColorClass} ${hoverBgColorClass}`;
 };
+
 
 
 const statusIcons: Record<TableStatus, React.ElementType> = {
@@ -107,6 +127,8 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
     const order = orders.find(o => o.tableId === table.id && o.status !== 'Completed');
     if (order) {
       onEditOrder(order);
+    } else {
+      onCreateOrder(table.id);
     }
   };
   
