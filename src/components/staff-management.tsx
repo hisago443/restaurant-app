@@ -341,7 +341,7 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
                                         </div>
                                         <div className="flex items-center gap-2">
                                             <div className="px-3 py-1 bg-red-100 dark:bg-red-900/30 rounded-md text-red-700 dark:text-red-200">
-                                              <span className="text-xl font-bold">₹{advance.amount.toLocaleString()}</span>
+                                              <span className="text-xl font-bold">Rs. {advance.amount.toLocaleString()}</span>
                                             </div>
                                             <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100" onClick={() => openAdvanceDialog(advance)}>
                                                 <Edit className="h-4 w-4"/>
@@ -692,5 +692,7 @@ function EmployeeDialog({ open, onOpenChange, employee, onSave }: { open: boolea
 
 
 
+
+    
 
     
