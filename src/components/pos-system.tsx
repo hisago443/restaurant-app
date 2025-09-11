@@ -18,10 +18,12 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from '@/hooks/use-toast';
-import { Search, Plus, Minus, X, LayoutGrid, List, Rows, ChevronsUpDown, Palette, Shuffle, ClipboardList, Send, CheckCircle2, Users, Bookmark, Sparkles, Repeat, Edit, UserCheck, BookmarkX, Printer, Loader2, BookOpen, Trash2 as TrashIcon, MoreVertical, View, Pencil, QrCode as QrCodeIcon } from 'lucide-react';
+import { Search, Plus, Minus, X, LayoutGrid, List, Rows, ChevronsUpDown, Palette, Shuffle, ClipboardList, Send, CheckCircle2, Users, Bookmark, Sparkles, Repeat, Edit, UserCheck, BookmarkX, Printer, Loader2, BookOpen, Trash2 as TrashIcon, MoreVertical, View, Pencil, QrCode as QrCodeIcon, MousePointerClick, Move } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuLabel } from '@/components/ui/dropdown-menu';
+import { DndProvider, useDrag, useDrop } from 'react-dnd';
+import { HTML5Backend } from 'react-dnd-html5-backend';
 import { AddItemDialog } from './add-item-dialog';
 import { ManageMenuDialog } from './manage-menu-dialog';
 
@@ -116,7 +118,62 @@ interface PosSystemProps {
   onEditOrder: (tableId: number) => void;
 }
 
-export default function PosSystem({ 
+const ItemTypes = {
+  MENU_ITEM: 'menuItem',
+};
+
+function DraggableMenuItem({ item, subCategoryName, categoryName, children }: { item: MenuItem; subCategoryName: string; categoryName: string; children: React.ReactNode }) {
+    const [{ isDragging }, drag] = useDrag(() => ({
+        type: ItemTypes.MENU_ITEM,
+        item: { ...item },
+        collect: (monitor) => ({
+            isDragging: !!monitor.isDragging(),
+        }),
+    }));
+
+    return (
+        <div
+            ref={drag}
+            style={{ opacity: isDragging ? 0.5 : 1 }}
+            className="cursor-move"
+        >
+            {children}
+        </div>
+    );
+}
+
+function TableDropTarget({ table, occupancyCount, handleSelectTable, children, onDropItem }: { table: Table; occupancyCount: Record<number,number>, handleSelectTable: (id: number) => void, children: React.ReactNode; onDropItem: (tableId: number, item: MenuItem) => void }) {
+    const [{ isOver, canDrop }, drop] = useDrop(() => ({
+        accept: ItemTypes.MENU_ITEM,
+        drop: (item: MenuItem) => onDropItem(table.id, item),
+        collect: (monitor) => ({
+            isOver: !!monitor.isOver(),
+            canDrop: !!monitor.canDrop(),
+        }),
+    }));
+
+    const isSelected = false; // This component doesn't manage selection state directly
+    const isActive = isOver && canDrop;
+
+    return (
+        <div
+            ref={drop}
+            className={cn(
+                "h-14 w-full flex-col justify-center items-center relative p-1 border-2 transition-transform duration-150 active:scale-95 group flex rounded-md cursor-pointer",
+                getDynamicColor(table.status, occupancyCount[table.id] || 0),
+                isSelected && 'ring-4 ring-offset-2 ring-ring',
+                isActive && 'ring-4 ring-offset-2 ring-green-500',
+                table.status === 'Available' || table.status === 'Occupied' ? 'text-white border-black' : 'text-black border-black/50',
+            )}
+            onClick={() => handleSelectTable(table.id)}
+        >
+            {children}
+        </div>
+    );
+}
+
+
+function PosSystem({ 
     tables, 
     orders, 
     setOrders, 
@@ -526,6 +583,40 @@ export default function PosSystem({
         setIsProcessing(false);
     }, 50);
   };
+  
+    const handleDropItemOnTable = (tableId: number, item: MenuItem) => {
+        const targetOrder = orders.find(o => o.tableId === tableId && o.status !== 'Completed');
+
+        if (targetOrder) {
+            // Update existing order
+            const existingItem = targetOrder.items.find(orderItem => orderItem.name === item.name);
+            const newItems = existingItem
+                ? targetOrder.items.map(orderItem =>
+                    orderItem.name === item.name ? { ...orderItem, quantity: orderItem.quantity + 1 } : orderItem
+                  )
+                : [...targetOrder.items, { ...item, quantity: 1 }];
+            
+            const updatedOrder = { ...targetOrder, items: newItems };
+            updateOrder(updatedOrder);
+            toast({ title: 'Item Added', description: `Added ${item.name} to Table ${tableId}'s order.`});
+            // If the updated order is the current one, update the view
+            if (activeOrder && activeOrder.id === updatedOrder.id) {
+                setOrderItems(newItems);
+            }
+        } else {
+            // Create a new order
+            const newOrder: Order = {
+                id: `K${(orders.length + 1).toString().padStart(3, '0')}`,
+                tableId: tableId,
+                items: [{ ...item, quantity: 1 }],
+                status: 'In Preparation',
+            };
+            onOrderCreated(newOrder);
+            updateTableStatus([tableId], 'Occupied');
+            toast({ title: 'New Order Created', description: `Started order for Table ${tableId} with ${item.name}.`});
+        }
+    };
+
 
   const addBill = async (bill: Omit<Bill, 'id'>) => {
     try {
@@ -687,12 +778,13 @@ export default function PosSystem({
     const finalLightColor = finalColorName ? colorPalette[finalColorName]?.light : (isNonVeg ? nonVegColor : '');
     const finalDarkColor = finalColorName ? colorPalette[finalColorName]?.dark : '';
 
-    return (
+    const menuItemCard = (
       <Card
         key={item.name}
         className={cn(
-          "group rounded-lg transition-all hover:scale-105 relative cursor-pointer",
+          "group rounded-lg transition-all hover:scale-105 relative",
           finalLightColor,
+          isClickToAdd ? 'cursor-pointer' : 'cursor-default'
         )}
         onClick={() => handleItemClick(item)}
       >
@@ -749,6 +841,12 @@ export default function PosSystem({
           )}
         </CardContent>
       </Card>
+    );
+
+    return (
+        <DraggableMenuItem item={item} subCategoryName={subCategoryName} categoryName={categoryName}>
+            {menuItemCard}
+        </DraggableMenuItem>
     );
   };
 
@@ -1040,6 +1138,7 @@ export default function PosSystem({
 
 
   return (
+    <DndProvider backend={HTML5Backend}>
     <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-4 gap-4 h-full p-4">
       {/* Menu Panel */}
       <div className="md:col-span-2 xl:col-span-3 flex flex-col h-full">
@@ -1097,9 +1196,9 @@ export default function PosSystem({
                 <Button variant="outline" size="sm" onClick={() => setIsMenuManagerOpen(true)}>
                   <BookOpen className="mr-2 h-4 w-4" /> Manage Menu
                 </Button>
-                <div className="flex items-center space-x-2">
-                  <Switch id="click-to-add-mode" checked={isClickToAdd} onCheckedChange={setIsClickToAdd} />
-                  <Label htmlFor="click-to-add-mode">Click-to-Add</Label>
+                <div className="flex items-center space-x-2 p-2 rounded-lg border bg-background">
+                    <Label htmlFor="easy-mode" className="font-medium text-sm flex items-center gap-1"><MousePointerClick size={14}/> Easy Mode</Label>
+                    <Switch id="easy-mode" checked={isClickToAdd} onCheckedChange={setIsClickToAdd} />
                 </div>
               </div>
             </div>
@@ -1176,30 +1275,18 @@ export default function PosSystem({
           
           <div className="p-4 border-t space-y-4 bg-muted/30">
               <div className="space-y-2">
-                  <Label className="font-semibold block">Select Table</Label>
+                  <Label className="font-semibold block flex items-center gap-1.5"><Move size={14} /> Drag & Drop onto a Table</Label>
                    <div className="grid grid-cols-5 gap-1.5">
-                    {tables.map(table => {
-                      const isSelected = currentActiveTableId === table.id;
-                      return (
-                        <div
-                            key={table.id}
-                            className={cn(
-                              "h-14 w-full flex-col justify-center items-center relative p-1 border-2 transition-transform duration-150 active:scale-95 group flex rounded-md cursor-pointer",
-                              getDynamicColor(table.status, occupancyCount[table.id] || 0),
-                              isSelected && 'ring-4 ring-offset-2 ring-ring',
-                              table.status === 'Available' || table.status === 'Occupied' ? 'text-white border-black' : 'text-black border-black/50',
-                            )}
-                            onClick={() => handleSelectTable(table.id)}
-                        >
+                    {tables.map(table => (
+                      <TableDropTarget key={table.id} table={table} occupancyCount={occupancyCount} handleSelectTable={handleSelectTable} onDropItem={handleDropItemOnTable}>
                            {renderTableActions(table)}
                             <div className="absolute top-1 left-1">
                               {React.createElement(statusIcons[table.status], { className: "h-3 w-3" })}
                             </div>
                             <span className="text-3xl font-bold leading-none">{table.id}</span>
                             <span className="text-xs font-bold">{table.status}</span>
-                        </div>
-                      )
-                    })}
+                      </TableDropTarget>
+                    ))}
                 </div>
               </div>
 
@@ -1298,5 +1385,6 @@ export default function PosSystem({
         </DialogContent>
       </Dialog>
     </div>
+    </DndProvider>
   );
 }
