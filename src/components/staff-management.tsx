@@ -287,7 +287,7 @@ export default function StaffManagement({ employees }: StaffManagementProps) {
                 />
               </CardContent>
             </Card>
-            <Card className="lg:col-span-2">
+            <Card className="lg:col-span-2 bg-muted/30">
               <CardHeader>
                 <div className="flex justify-between items-start">
                   <div>
@@ -306,7 +306,7 @@ export default function StaffManagement({ employees }: StaffManagementProps) {
                         {employees.map(employee => {
                             const attendanceRecord = attendanceForSelectedDate.find(a => a.employeeId === employee.id);
                             return (
-                            <div key={employee.id} className="flex justify-between items-center p-2 bg-muted/50 rounded-lg group">
+                            <div key={employee.id} className="flex justify-between items-center p-2 bg-background/50 rounded-lg group">
                                 <div className="flex items-center gap-2 font-medium">
                                     <span className={cn('h-2.5 w-2.5 rounded-full', employee.color)} />
                                     {employee.name}
@@ -346,7 +346,7 @@ export default function StaffManagement({ employees }: StaffManagementProps) {
                         advancesForSelectedDate.map(advance => {
                             const employee = employees.find(e => e.id === advance.employeeId);
                             return (
-                                <div key={advance.id} className="flex justify-between items-center p-3 bg-muted/50 rounded-lg group">
+                                <div key={advance.id} className="flex justify-between items-center p-3 bg-background/50 rounded-lg group">
                                     <div className="flex items-center gap-2">
                                         <span className={cn('h-2.5 w-2.5 rounded-full', employee?.color)} />
                                         <div>
