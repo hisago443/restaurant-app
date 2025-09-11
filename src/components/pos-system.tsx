@@ -709,11 +709,29 @@ export default function PosSystem({
             <TabsList className="mb-4 flex-wrap h-auto bg-transparent border-b rounded-none p-0">
               {filteredMenu.map(category => (
                 <div key={category.category} className="relative">
-                    <TabsTrigger value={category.category} className="text-black !bg-transparent rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none">
-                        <span className="flex-grow text-left text-lg">{category.category}</span>
+                    <TabsTrigger value={category.category} asChild>
+                        <div className='flex items-center text-black !bg-transparent rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none px-4 py-2 cursor-pointer'>
+                           <span className="flex-grow text-left text-lg">{category.category}</span>
+                        </div>
                     </TabsTrigger>
                     <div className="absolute right-0 top-1/2 -translate-y-1/2">
-                        <CategoryColorPicker categoryName={category.category} />
+                        <Popover>
+                            <PopoverTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-6 w-6"><Palette className="h-4 w-4" /></Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-2">
+                                <div className="grid grid-cols-5 gap-1">
+                                {colorNames.map((name) => (
+                                    <div
+                                    key={name}
+                                    className={cn("h-6 w-6 rounded-full cursor-pointer", colorPalette[name].light)}
+                                    onClick={() => handleSetCategoryColor(category.category, name)}
+                                    />
+                                ))}
+                                <Button variant="ghost" size="sm" className="col-span-5 h-8" onClick={() => handleSetCategoryColor(category.category, '')}>Reset</Button>
+                                </div>
+                            </PopoverContent>
+                        </Popover>
                     </div>
                 </div>
               ))}
@@ -1065,5 +1083,7 @@ export default function PosSystem({
     </div>
   );
 }
+
+    
 
     
