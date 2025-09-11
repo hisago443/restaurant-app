@@ -290,24 +290,26 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-4">
             <div className="space-y-4">
               <Card className="flex flex-col p-0 border-black shadow-lg">
-                  <Calendar
-                      mode="single"
-                      selected={selectedDate}
-                      onSelect={(date) => setSelectedDate(date || new Date())}
-                      className="rounded-t-lg border-b bg-background"
-                      components={{ DayContent: CustomDay }}
-                      modifiers={{
-                        advance: datesWithAdvance,
-                        absent: datesWithAbsence,
-                      }}
-                      modifiersStyles={{
-                        advance: { border: '2px solid hsl(var(--primary))' },
-                        absent: { 
-                          backgroundColor: 'hsl(var(--destructive) / 0.2)',
-                          color: 'hsl(var(--destructive))',
-                        },
-                      }}
-                  />
+                  <div className='flex justify-center'>
+                    <Calendar
+                        mode="single"
+                        selected={selectedDate}
+                        onSelect={(date) => setSelectedDate(date || new Date())}
+                        className="rounded-t-lg border-b bg-background"
+                        components={{ DayContent: CustomDay }}
+                        modifiers={{
+                          advance: datesWithAdvance,
+                          absent: datesWithAbsence,
+                        }}
+                        modifiersStyles={{
+                          advance: { border: '2px solid hsl(var(--primary))' },
+                          absent: { 
+                            backgroundColor: 'hsl(var(--destructive) / 0.2)',
+                            color: 'hsl(var(--destructive))',
+                          },
+                        }}
+                    />
+                  </div>
                   <div className="p-4 space-y-2">
                       <div className="flex items-center space-x-2">
                           <Checkbox id="show-advances" checked={showAdvancesOnCalendar} onCheckedChange={(checked) => setShowAdvancesOnCalendar(Boolean(checked))} />
@@ -337,11 +339,11 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
                                         <div className='flex items-center gap-2'>
                                             <span className={cn("h-2.5 w-2.5 rounded-full", employee?.color)} />
                                             <div>
-                                                <p className="font-medium">{employee?.name}</p>
+                                                <p className="font-medium text-lg">{employee?.name}</p>
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-2">
-                                            <p className="font-mono font-semibold text-red-600 dark:text-red-400 text-lg">₹{advance.amount.toLocaleString()}</p>
+                                            <p className="font-mono font-semibold text-red-600 dark:text-red-400 text-xl">₹{advance.amount.toLocaleString()}</p>
                                             <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100" onClick={() => openAdvanceDialog(advance)}>
                                                 <Edit className="h-4 w-4"/>
                                             </Button>
@@ -682,3 +684,4 @@ function EmployeeDialog({ open, onOpenChange, employee, onSave }: { open: boolea
         </Dialog>
     );
 }
+
