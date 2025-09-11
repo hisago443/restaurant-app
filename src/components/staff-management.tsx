@@ -15,7 +15,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { PlusCircle, Edit, Trash2, Check, X, CircleSlash, Pencil, UserCheck, UserX, UserMinus } from 'lucide-react';
+import { PlusCircle, Edit, Trash2, Check, X, CircleSlash, Pencil, UserCheck, UserX, UserMinus, Banknote } from 'lucide-react';
 import type { Employee, Advance, Attendance, AttendanceStatus } from '@/lib/types';
 import { format, isSameDay, startOfDay } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -283,87 +283,80 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
         {/* Left Column */}
         <div className="flex flex-col gap-6">
-            <Card className="flex flex-col items-center justify-center p-2 bg-muted/30">
-                <Calendar
-                  mode="single"
-                  selected={selectedDate}
-                  onSelect={(date) => setSelectedDate(date || new Date())}
-                  className="rounded-md border bg-background"
-                  components={{ DayContent: CustomDay }}
-                  modifiers={{
-                    advance: datesWithAdvance,
-                    absent: datesWithAbsence,
-                  }}
-                  modifiersStyles={{
-                    advance: { border: '2px solid hsl(var(--primary))' },
-                    absent: { 
-                        backgroundColor: 'hsl(var(--destructive) / 0.2)',
-                        color: 'hsl(var(--destructive))',
-                     },
-                  }}
-                />
-                 <div className="space-y-2 mt-4 p-4 border rounded-md w-full bg-background/50">
-                    <h4 className="font-semibold text-sm mb-2">Calendar Highlights:</h4>
-                    <div className="flex items-center space-x-2">
-                        <Checkbox id="show-advances" checked={showAdvancesOnCalendar} onCheckedChange={(checked) => setShowAdvancesOnCalendar(Boolean(checked))} />
-                        <Label htmlFor="show-advances">Show Advances Given</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                        <Checkbox id="show-absences" checked={showAbsencesOnCalendar} onCheckedChange={(checked) => setShowAbsencesOnCalendar(Boolean(checked))} />
-                        <Label htmlFor="show-absences">Show Absent Days</Label>
-                    </div>
-                 </div>
-            </Card>
-
-             <Card className="bg-muted/30">
-                <CardHeader>
-                    <div className="flex justify-between items-center">
-                        <div>
-                            <CardTitle>Advances on {format(selectedDate, 'PPP')}</CardTitle>
-                            <CardDescription>Log and view salary advances.</CardDescription>
-                        </div>
-                        <Button size="sm" onClick={() => openAdvanceDialog(null)}>
-                            <PlusCircle className="mr-2 h-4 w-4" /> Add Advance
-                        </Button>
-                    </div>
-                </CardHeader>
-                <CardContent>
-                    <div className="max-h-64 overflow-y-auto">
-                      {advancesForSelectedDate.length > 0 ? (
-                        <div className="space-y-2 pr-4">
-                            {advancesForSelectedDate.map(advance => {
-                                const employee = employees.find(e => e.id === advance.employeeId);
-                                const totalAdvance = (advancesByEmployee[advance.employeeId] || []).reduce((sum, a) => sum + a.amount, 0);
-                                return (
-                                <div key={advance.id} className="flex justify-between items-center p-2 bg-background/50 rounded-lg group">
-                                    <div className='flex items-center gap-2'>
-                                        <span className={cn("h-2.5 w-2.5 rounded-full", employee?.color)} />
-                                        <div>
-                                            <p className="font-medium">{employee?.name}</p>
-                                            <p className="text-xs text-muted-foreground">Total Advance: <span className="font-mono">₹{totalAdvance.toLocaleString()}</span></p>
+            <Card className="flex-col p-2 bg-muted/30">
+                <CardContent className="p-0 flex flex-col items-center justify-center">
+                  <Calendar
+                    mode="single"
+                    selected={selectedDate}
+                    onSelect={(date) => setSelectedDate(date || new Date())}
+                    className="rounded-md border bg-background"
+                    components={{ DayContent: CustomDay }}
+                    modifiers={{
+                      advance: datesWithAdvance,
+                      absent: datesWithAbsence,
+                    }}
+                    modifiersStyles={{
+                      advance: { border: '2px solid hsl(var(--primary))' },
+                      absent: { 
+                          backgroundColor: 'hsl(var(--destructive) / 0.2)',
+                          color: 'hsl(var(--destructive))',
+                       },
+                    }}
+                  />
+                  <div className="w-full mt-4">
+                      <Separator/>
+                      <div className='p-4'>
+                        <p className="font-semibold mb-2">Advances on {format(selectedDate, 'PPP')}</p>
+                        <div className="max-h-32 overflow-y-auto">
+                          {advancesForSelectedDate.length > 0 ? (
+                            <div className="space-y-2 pr-4">
+                                {advancesForSelectedDate.map(advance => {
+                                    const employee = employees.find(e => e.id === advance.employeeId);
+                                    const totalAdvance = (advancesByEmployee[advance.employeeId] || []).reduce((sum, a) => sum + a.amount, 0);
+                                    return (
+                                    <div key={advance.id} className="flex justify-between items-center p-2 bg-background/50 rounded-lg group">
+                                        <div className='flex items-center gap-2'>
+                                            <span className={cn("h-2.5 w-2.5 rounded-full", employee?.color)} />
+                                            <div>
+                                                <p className="font-medium">{employee?.name}</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <p className="font-mono font-semibold text-red-600 dark:text-red-400 text-lg">₹{advance.amount.toLocaleString()}</p>
+                                            <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100" onClick={() => openAdvanceDialog(advance)}>
+                                                <Edit className="h-4 w-4"/>
+                                            </Button>
                                         </div>
                                     </div>
-                                    <div className="flex items-center gap-2">
-                                        <p className="font-mono font-semibold text-red-600 dark:text-red-400 text-lg">₹{advance.amount.toLocaleString()}</p>
-                                        <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100" onClick={() => openAdvanceDialog(advance)}>
-                                            <Edit className="h-4 w-4"/>
-                                        </Button>
-                                    </div>
-                                </div>
-                            )})}
+                                )})}
+                            </div>
+                          ) : (
+                            <div className="h-full flex items-center justify-center py-4">
+                                <p className="text-muted-foreground text-sm">No advances on this date.</p>
+                            </div>
+                          )}
                         </div>
-                      ) : (
-                        <div className="h-full flex items-center justify-center py-10">
-                            <p className="text-muted-foreground">No advances given on this date.</p>
-                        </div>
-                      )}
-                    </div>
+                      </div>
+                  </div>
                 </CardContent>
             </Card>
+
+            
         </div>
 
         {/* Right Column */}
         <div className="flex flex-col gap-6">
+            <Card>
+                <CardHeader>
+                    <CardTitle>Add Salary Advance</CardTitle>
+                    <CardDescription>Log an advance for {format(selectedDate, 'PPP')}.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <Button size="lg" className="w-full h-16 text-lg" onClick={() => openAdvanceDialog(null)}>
+                        <Banknote className="mr-4 h-8 w-8" /> Add Salary Advance
+                    </Button>
+                </CardContent>
+            </Card>
             <Card className="bg-muted/30">
                 <CardHeader>
                     <CardTitle>Staff Attendance</CardTitle>
@@ -438,9 +431,12 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
                         <Table>
                             <TableHeader>
                                 <TableRow>
-                                    <TableHead>Employee</TableHead>
-                                    <TableHead>Salary / Remaining</TableHead>
-                                    <TableHead className="text-right">Actions</TableHead>
+                                    <TableHead className="font-bold text-foreground">Employee</TableHead>
+                                    <TableHead className="font-bold text-foreground">Role</TableHead>
+                                    <TableHead className="font-bold text-foreground">Salary</TableHead>
+                                    <TableHead className="font-bold text-foreground">Total Advance</TableHead>
+                                    <TableHead className="font-bold text-foreground">Remaining</TableHead>
+                                    <TableHead className="text-right font-bold text-foreground">Actions</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -449,18 +445,17 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
                                 const remainingSalary = employee.salary - totalAdvance;
                                 return (
                                 <TableRow key={employee.id}>
-                                    <TableCell>
+                                    <TableCell className="bg-background/20 border-r">
                                         <div className="flex items-center gap-2 font-medium">
                                             <span className={cn('h-2 w-2 rounded-full', employee.color)} />
                                             {employee.name}
                                         </div>
-                                        <span className="text-xs text-muted-foreground">{employee.role}</span>
                                     </TableCell>
-                                    <TableCell>
-                                        <div className='font-mono text-sm'>₹{employee.salary.toLocaleString()}</div>
-                                        <div className='font-mono text-xs text-green-600 dark:text-green-400'>₹{remainingSalary.toLocaleString()} Left</div>
-                                    </TableCell>
-                                    <TableCell className="text-right">
+                                    <TableCell className="bg-background/20 border-r">{employee.role}</TableCell>
+                                    <TableCell className="font-mono text-sm bg-background/20 border-r">₹{employee.salary.toLocaleString()}</TableCell>
+                                    <TableCell className="font-mono text-sm text-red-600 dark:text-red-400 bg-background/20 border-r">₹{totalAdvance.toLocaleString()}</TableCell>
+                                    <TableCell className="font-mono text-sm text-green-600 dark:text-green-400 bg-background/20 border-r">₹{remainingSalary.toLocaleString()}</TableCell>
+                                    <TableCell className="text-right bg-background/20">
                                         <TooltipProvider>
                                             <Tooltip>
                                                 <TooltipTrigger asChild>
@@ -744,3 +739,4 @@ function EmployeeDialog({ open, onOpenChange, employee, onSave }: { open: boolea
 
 
     
+
