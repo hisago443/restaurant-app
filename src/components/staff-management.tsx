@@ -256,8 +256,8 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
                         return (
                             <TooltipProvider key={employeeId}>
                                 <Tooltip>
-                                    <TooltipTrigger>
-                                        <div 
+                                    <TooltipTrigger asChild>
+                                        <span 
                                             className={cn(
                                                 "h-2 w-2 rounded-full",
                                                 employee.color,
