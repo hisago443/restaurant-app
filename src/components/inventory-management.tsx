@@ -1,7 +1,7 @@
 
 "use client"
 
-import { useState, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { db } from '@/lib/firebase';
 import { collection, doc, addDoc, updateDoc, deleteDoc, onSnapshot } from 'firebase/firestore';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -12,9 +12,10 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Label } from '@/components/ui/label';
-import { PlusCircle, Edit, Trash2, Plus, Minus } from 'lucide-react';
+import { PlusCircle, Edit, Trash2, Plus, Minus, Server, Search } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import type { InventoryItem } from '@/lib/types';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface InventoryManagementProps {
   inventory: InventoryItem[];
@@ -37,7 +38,7 @@ function AddOrEditItemDialog({
   const [capacity, setCapacity] = useState('');
   const [unit, setUnit] = useState('');
 
-  useEffect(() => {
+  useState(() => {
     if (existingItem) {
       setName(existingItem.name);
       setCategory(existingItem.category || '');
@@ -109,6 +110,14 @@ export default function InventoryManagement({ inventory }: InventoryManagementPr
   const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const filteredInventory = useMemo(() => {
+    if (!searchTerm) return inventory;
+    return inventory.filter(item => 
+      item.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [inventory, searchTerm]);
 
   const handleSaveItem = async (itemData: Omit<InventoryItem, 'id'> & { id?: string }) => {
     const { id, ...data } = itemData;
@@ -160,14 +169,25 @@ export default function InventoryManagement({ inventory }: InventoryManagementPr
     <div className="p-4">
     <Card>
       <CardHeader>
-        <div className="flex justify-between items-center">
+        <div className="flex justify-between items-center gap-4 flex-wrap">
           <div>
             <CardTitle>Inventory Management</CardTitle>
             <CardDescription>Track and manage your stock levels.</CardDescription>
           </div>
-          <Button onClick={() => handleOpenDialog(null)}>
-            <PlusCircle className="mr-2 h-4 w-4" /> Add Item
-          </Button>
+           <div className="flex items-center gap-2">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search items..."
+                className="pl-9"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            <Button onClick={() => handleOpenDialog(null)}>
+              <PlusCircle className="mr-2 h-4 w-4" /> Add Item
+            </Button>
+          </div>
         </div>
       </CardHeader>
       <CardContent>
@@ -182,7 +202,7 @@ export default function InventoryManagement({ inventory }: InventoryManagementPr
             </TableRow>
           </TableHeader>
           <TableBody>
-            {inventory.map((item) => (
+            {filteredInventory.map((item) => (
               <TableRow key={item.id}>
                 <TableCell className="font-medium">{item.name}</TableCell>
                 <TableCell>{item.category}</TableCell>
@@ -205,11 +225,7 @@ export default function InventoryManagement({ inventory }: InventoryManagementPr
                             value={item.stock}
                             onChange={(e) => {
                                 const value = e.target.value;
-                                if (value === '') {
-                                    handleStockChange(item.id, 0);
-                                } else {
-                                    handleStockChange(item.id, parseInt(value));
-                                }
+                                handleStockChange(item.id, value === '' ? 0 : parseInt(value, 10));
                             }}
                              onBlur={(e) => {
                                 if (e.target.value === '') {
@@ -221,6 +237,18 @@ export default function InventoryManagement({ inventory }: InventoryManagementPr
                         <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => handleStockChange(item.id, item.stock + 1)}>
                             <Plus className="h-4 w-4" />
                         </Button>
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => handleStockChange(item.id, item.capacity)}>
+                                        <Server className="h-4 w-4" />
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    <p>Fill to Capacity</p>
+                                </TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
                     </div>
                 </TableCell>
                 <TableCell className="text-right">
