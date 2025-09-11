@@ -562,21 +562,6 @@ export default function AdminDashboard({ billHistory, employees, expenses }: Adm
             </Dialog>
             <Dialog>
               <DialogTrigger asChild>
-                <Button variant="outline" size="lg" className="justify-start gap-2">
-                  <Package className="h-5 w-5" />
-                  <span>Inventory Management</span>
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-3xl">
-                  <DialogHeader>
-                    <DialogTitle>Inventory Management</DialogTitle>
-                    <DialogDescription>Track and manage your stock levels.</DialogDescription>
-                  </DialogHeader>
-                  <InventoryManagement />
-              </DialogContent>
-            </Dialog>
-            <Dialog>
-              <DialogTrigger asChild>
                  <Button variant="outline" size="lg" className="justify-start gap-2">
                     <Settings className="h-5 w-5" />
                     <span>System Settings</span>
