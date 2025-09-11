@@ -288,7 +288,7 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
         </TabsList>
         <TabsContent value="attendance">
            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-4">
-            <Card className="flex-col p-0">
+            <Card className="flex flex-col p-0">
                 <Calendar
                     mode="single"
                     selected={selectedDate}
@@ -317,9 +317,9 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
                         <Label htmlFor="show-absences">Show Absent Dates</Label>
                     </div>
                 </div>
-                <div className="w-full">
-                    <p className="font-semibold p-4 pb-2">Advances on {format(selectedDate, 'PPP')}</p>
-                    <div className="max-h-32 overflow-y-auto px-4 pb-4">
+                <div className="w-full p-4">
+                    <p className="font-semibold pb-2">Advances on {format(selectedDate, 'PPP')}</p>
+                    <div className="max-h-32 overflow-y-auto">
                         {advancesForSelectedDate.length > 0 ? (
                             <div className="space-y-2">
                                 {advancesForSelectedDate.map(advance => {
@@ -368,9 +368,8 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
                       {employees.map(employee => {
                           const attendanceRecord = attendanceForSelectedDate.find(a => a.employeeId === employee.id);
                           return (
-                              <div key={employee.id} className="grid grid-cols-[1fr_auto] items-center gap-4 p-2 border rounded-lg bg-muted/30">
-                                  <div className="flex items-center gap-3">
-                                      <span className={cn("h-3 w-3 rounded-full", employee.color)} />
+                              <div key={employee.id} className="flex items-center gap-4 p-2 border rounded-lg bg-muted/30">
+                                  <div className="flex-grow flex items-center justify-center p-2 rounded-md bg-background cursor-pointer hover:bg-accent transition-colors">
                                       <span className="font-semibold text-lg">{employee.name}</span>
                                   </div>
                                   <div className="flex items-center gap-2">
@@ -432,11 +431,11 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="font-bold text-foreground">ID</TableHead>
-                      <TableHead className="font-bold text-foreground">Employee</TableHead>
-                      <TableHead className="font-bold text-foreground">Role</TableHead>
-                      <TableHead className="font-bold text-foreground">Salary</TableHead>
-                      <TableHead className="font-bold text-foreground">Total Advance</TableHead>
+                      <TableHead className="font-bold text-foreground border-r">ID</TableHead>
+                      <TableHead className="font-bold text-foreground border-r">Employee</TableHead>
+                      <TableHead className="font-bold text-foreground border-r">Role</TableHead>
+                      <TableHead className="font-bold text-foreground border-r">Salary</TableHead>
+                      <TableHead className="font-bold text-foreground border-r">Total Advance</TableHead>
                       <TableHead className="font-bold text-foreground">Remaining</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -446,17 +445,17 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
                       const remainingSalary = employee.salary - totalAdvance;
                       return (
                         <TableRow key={employee.id}>
-                          <TableCell className="font-mono text-xs">{employee.id}</TableCell>
-                          <TableCell>
+                          <TableCell className="font-mono text-xs border-r">{employee.id}</TableCell>
+                          <TableCell className="border-r">
                             <div className="flex items-center gap-2 font-medium">
                               <span className={cn('h-2 w-2 rounded-full', employee.color)} />
                               {employee.name}
                             </div>
                           </TableCell>
-                          <TableCell>{employee.role}</TableCell>
-                          <TableCell className="font-mono text-sm bg-green-100 dark:bg-green-900/30">₹{employee.salary.toLocaleString()}</TableCell>
-                          <TableCell className="font-mono text-sm text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900/30">₹{totalAdvance.toLocaleString()}</TableCell>
-                          <TableCell className="font-mono text-sm text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/30">₹{remainingSalary.toLocaleString()}</TableCell>
+                          <TableCell className="border-r">{employee.role}</TableCell>
+                          <TableCell className="font-mono text-sm bg-blue-100 text-black border-r">₹{employee.salary.toLocaleString()}</TableCell>
+                          <TableCell className="font-mono text-sm bg-red-100 text-black border-r">₹{totalAdvance.toLocaleString()}</TableCell>
+                          <TableCell className="font-mono text-sm bg-green-100 text-black">₹{remainingSalary.toLocaleString()}</TableCell>
                         </TableRow>
                       );
                     })}
@@ -694,25 +693,4 @@ function EmployeeDialog({ open, onOpenChange, employee, onSave }: { open: boolea
         </Dialog>
     );
 }
-    
-
-    
-
-
-
-
-
-
-
-
-
-    
-
-
-
-
-    
-
-    
-
     
