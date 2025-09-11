@@ -2,6 +2,7 @@
 
 "use client";
 
+import * as React from 'react';
 import { useState, useEffect, useMemo } from 'react';
 import { collection, onSnapshot, addDoc, doc, setDoc, deleteDoc, updateDoc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
