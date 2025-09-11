@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState, useEffect } from 'react';
@@ -195,9 +196,13 @@ export default function InventoryManagement({ inventory }: InventoryManagementPr
                   </div>
                 </TableCell>
                 <TableCell>
-                    <div className="flex items-center gap-1">
-                        <Button size="sm" variant="outline" onClick={() => handleStockChange(item.id, item.stock - 1)}>-1</Button>
-                        <Button size="sm" variant="outline" onClick={() => handleStockChange(item.id, item.stock + 1)}>+1</Button>
+                    <div className="flex items-center gap-2">
+                        <Input 
+                            type="number"
+                            value={item.stock}
+                            onChange={(e) => handleStockChange(item.id, parseInt(e.target.value))}
+                            className="w-20 h-9"
+                        />
                         <Button size="sm" variant="secondary" onClick={() => handleStockChange(item.id, item.capacity)}>Fill</Button>
                     </div>
                 </TableCell>
