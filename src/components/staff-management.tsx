@@ -248,30 +248,6 @@ export default function StaffManagement({ employees }: StaffManagementProps) {
                                                             <span className="font-mono font-semibold">Rs. {advance.amount.toLocaleString()}</span>
                                                             <span className="text-muted-foreground ml-2">on {format(advance.date, 'PPP')}</span>
                                                         </div>
-                                                        <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                                                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openAdvanceDialog(advance)}>
-                                                                <Edit className="h-4 w-4" />
-                                                            </Button>
-                                                            <AlertDialog>
-                                                                <AlertDialogTrigger asChild>
-                                                                    <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive">
-                                                                        <Trash2 className="h-4 w-4" />
-                                                                    </Button>
-                                                                </AlertDialogTrigger>
-                                                                <AlertDialogContent>
-                                                                    <AlertDialogHeader>
-                                                                        <AlertDialogTitle>Delete this advance?</AlertDialogTitle>
-                                                                        <AlertDialogDescription>
-                                                                            This will delete the advance of Rs. {advance.amount} for {employee?.name}. This action cannot be undone.
-                                                                        </AlertDialogDescription>
-                                                                    </AlertDialogHeader>
-                                                                    <AlertDialogFooter>
-                                                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                                                        <AlertDialogAction onClick={() => handleDeleteAdvance(advance.id)}>Delete</AlertDialogAction>
-                                                                    </AlertDialogFooter>
-                                                                </AlertDialogContent>
-                                                            </AlertDialog>
-                                                        </div>
                                                     </li>
                                                 ))}
                                             </ul>
@@ -361,7 +337,7 @@ export default function StaffManagement({ employees }: StaffManagementProps) {
                 <Separator />
 
                 <div>
-                    <h3 className="font-semibold mb-2 text-lg">Advances Given on this Date</h3>
+                    <h3 className="font-semibold mb-2 text-lg">Advances Given on {format(selectedDate, 'do MMMM')}</h3>
                     <div className="space-y-2">
                     {advancesForSelectedDate.length > 0 ? (
                         advancesForSelectedDate.map(advance => {
