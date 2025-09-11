@@ -282,9 +282,9 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
   return (
     <div className="p-4 space-y-4">
       <Tabs defaultValue="attendance" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 bg-primary p-1 h-auto text-black rounded-lg">
-          <TabsTrigger value="attendance" className="py-2 data-[state=active]:bg-primary-foreground data-[state=active]:text-primary data-[state=active]:shadow-md text-lg">Attendance &amp; Advance</TabsTrigger>
-          <TabsTrigger value="employees" className="py-2 data-[state=active]:bg-primary-foreground data-[state=active]:text-primary data-[state=active]:shadow-md text-lg">Employee List</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-2 bg-primary text-black p-1 h-auto rounded-lg">
+          <TabsTrigger value="attendance" className="py-2 data-[state=active]:bg-background data-[state=active]:shadow-md data-[state=active]:text-primary text-lg">Attendance &amp; Advance</TabsTrigger>
+          <TabsTrigger value="employees" className="py-2 data-[state=active]:bg-background data-[state=active]:shadow-md data-[state=active]:text-primary text-lg">Employee List</TabsTrigger>
         </TabsList>
         <TabsContent value="attendance">
            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-4">
@@ -382,7 +382,7 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
                                               key={status}
                                               variant={isSelected ? 'default' : 'outline'}
                                               onClick={() => handleMarkAttendance(employee.id, status)}
-                                              className={cn("h-10", isSelected && config.className)}
+                                              className={cn("h-10 w-32", isSelected && config.className)}
                                           >
                                               {React.createElement(config.icon, {className: "mr-2 h-5 w-5"})}
                                               {config.label}
@@ -423,12 +423,12 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="font-bold text-foreground border-r">ID</TableHead>
-                      <TableHead className="font-bold text-foreground border-r">Employee</TableHead>
-                      <TableHead className="font-bold text-foreground border-r">Role</TableHead>
-                      <TableHead className="font-bold text-foreground border-r">Salary</TableHead>
-                      <TableHead className="font-bold text-foreground border-r">Total Advance</TableHead>
-                      <TableHead className="font-bold text-foreground">Remaining</TableHead>
+                      <TableHead className="font-bold text-foreground border-r text-lg">ID</TableHead>
+                      <TableHead className="font-bold text-foreground border-r text-lg">Employee</TableHead>
+                      <TableHead className="font-bold text-foreground border-r text-lg">Role</TableHead>
+                      <TableHead className="font-bold text-foreground border-r text-lg">Salary</TableHead>
+                      <TableHead className="font-bold text-foreground border-r text-lg">Total Advance</TableHead>
+                      <TableHead className="font-bold text-foreground text-lg">Remaining</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -437,17 +437,17 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
                       const remainingSalary = employee.salary - totalAdvance;
                       return (
                         <TableRow key={employee.id}>
-                          <TableCell className="font-mono text-xs border-r">{employee.id}</TableCell>
-                          <TableCell className="border-r">
+                          <TableCell className="font-mono text-sm border-r font-bold">{employee.id}</TableCell>
+                          <TableCell className="border-r font-bold">
                             <div className="flex items-center gap-2 font-medium">
                               <span className={cn('h-2 w-2 rounded-full', employee.color)} />
                               {employee.name}
                             </div>
                           </TableCell>
-                          <TableCell className="border-r">{employee.role}</TableCell>
-                          <TableCell className="font-mono text-sm bg-blue-100 text-black border-r">₹{employee.salary.toLocaleString()}</TableCell>
-                          <TableCell className="font-mono text-sm bg-red-100 text-black border-r">₹{totalAdvance.toLocaleString()}</TableCell>
-                          <TableCell className="font-mono text-sm bg-green-100 text-black">₹{remainingSalary.toLocaleString()}</TableCell>
+                          <TableCell className="border-r font-bold">{employee.role}</TableCell>
+                          <TableCell className="font-mono text-sm bg-blue-100 text-black border-r font-bold">₹{employee.salary.toLocaleString()}</TableCell>
+                          <TableCell className="font-mono text-sm bg-red-100 text-black border-r font-bold">₹{totalAdvance.toLocaleString()}</TableCell>
+                          <TableCell className="font-mono text-sm bg-green-100 text-black font-bold">₹{remainingSalary.toLocaleString()}</TableCell>
                         </TableRow>
                       );
                     })}
