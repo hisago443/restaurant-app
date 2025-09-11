@@ -209,7 +209,7 @@ function OrderPanel({
     isProcessing: boolean;
     tables: Table[];
     occupancyCount: Record<number, number>;
-    handleSelectTable: (id: number) => void;
+    handleSelectTable: (id: number | null) => void;
     onDropItemOnTable: (tableId: number, item: MenuItem) => void;
     renderTableActions: (table: Table) => React.ReactNode;
     handleSendToKitchen: () => void;
@@ -354,7 +354,7 @@ function OrderPanel({
                     <Label className="font-semibold block flex items-center gap-1.5"><Move size={14} /> Drag & Drop onto a Table</Label>
                     <div className="grid grid-cols-5 gap-1.5">
                         {tables.map(table => (
-                            <TableDropTarget key={table.id} table={table} occupancyCount={occupancyCount} handleSelectTable={handleSelectTable} onDropItem={onDropItemOnTable}>
+                            <TableDropTarget key={table.id} table={table} occupancyCount={occupancyCount} handleSelectTable={() => handleSelectTable(table.id)} onDropItem={onDropItemOnTable}>
                                 {renderTableActions(table)}
                                 <div className="absolute top-1 left-1">
                                     {React.createElement(statusIcons[table.status], { className: "h-3 w-3" })}
@@ -614,18 +614,15 @@ export default function PosSystem({
     }
      // If there's an unassigned order and an available table is clicked
     if (!activeOrder && orderItems.length > 0 && table?.status === 'Available') {
-        const orderPayload = {
-            items: orderItems,
-            tableId: Number(tableId),
-        };
-        addOrder(orderPayload);
+        setSelectedTableId(tableId);
         updateTableStatus([tableId!], 'Occupied');
         setPendingOrders(prev => {
             const newPending = {...prev};
-            delete newPending[0];
+            newPending[tableId!] = orderItems;
+            delete newPending[0]; 
             return newPending;
         });
-        toast({ title: 'Order Assigned!', description: `Order assigned to Table ${tableId}.` });
+        toast({ title: 'Order Assigned!', description: `Order assigned to Table ${tableId}. Send to kitchen when ready.` });
     } else {
         setSelectedTableId(tableId);
     }
