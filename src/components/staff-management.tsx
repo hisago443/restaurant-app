@@ -283,8 +283,8 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
     <div className="p-4 space-y-4">
       <Tabs defaultValue="attendance" className="w-full">
         <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="attendance">Attendance & Advance</TabsTrigger>
-          <TabsTrigger value="employees">Employee List</TabsTrigger>
+          <TabsTrigger value="attendance" className="py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Attendance & Advance</TabsTrigger>
+          <TabsTrigger value="employees" className="py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Employee List</TabsTrigger>
         </TabsList>
         <TabsContent value="attendance">
            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-4">
@@ -438,7 +438,6 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
                       <TableHead className="font-bold text-foreground">Salary</TableHead>
                       <TableHead className="font-bold text-foreground">Total Advance</TableHead>
                       <TableHead className="font-bold text-foreground">Remaining</TableHead>
-                      <TableHead className="text-right font-bold text-foreground">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -458,40 +457,6 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
                           <TableCell className="font-mono text-sm bg-green-100 dark:bg-green-900/30">₹{employee.salary.toLocaleString()}</TableCell>
                           <TableCell className="font-mono text-sm text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900/30">₹{totalAdvance.toLocaleString()}</TableCell>
                           <TableCell className="font-mono text-sm text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/30">₹{remainingSalary.toLocaleString()}</TableCell>
-                          <TableCell className="text-right">
-                            <TooltipProvider>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button variant="ghost" size="icon" onClick={() => openEmployeeDialog(employee)}>
-                                    <Edit className="h-4 w-4" />
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>Edit Employee</TooltipContent>
-                              </Tooltip>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <AlertDialog>
-                                    <AlertDialogTrigger asChild>
-                                      <Button variant="ghost" size="icon" className="text-destructive">
-                                        <Trash2 className="h-4 w-4" />
-                                      </Button>
-                                    </AlertDialogTrigger>
-                                    <AlertDialogContent>
-                                      <AlertDialogHeader>
-                                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                                        <AlertDialogDescription>This will permanently delete {employee.name}'s record.</AlertDialogDescription>
-                                      </AlertDialogHeader>
-                                      <AlertDialogFooter>
-                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                        <AlertDialogAction onClick={() => handleDeleteEmployee(employee.id)}>Delete</AlertDialogAction>
-                                      </AlertDialogFooter>
-                                    </AlertDialogContent>
-                                  </AlertDialog>
-                                </TooltipTrigger>
-                                <TooltipContent>Delete Employee</TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
-                          </TableCell>
                         </TableRow>
                       );
                     })}
@@ -745,6 +710,8 @@ function EmployeeDialog({ open, onOpenChange, employee, onSave }: { open: boolea
 
 
 
+
+    
 
     
 
