@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import * as React from 'react';
@@ -282,229 +281,236 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
 
   return (
     <div className="p-4 space-y-4">
-        <Tabs defaultValue="attendance" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="attendance">Attendance & Advance</TabsTrigger>
-                <TabsTrigger value="employees">Employee List</TabsTrigger>
-            </TabsList>
-            <TabsContent value="attendance">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start mt-4">
-                    <div className="flex flex-col gap-6">
-                        <Card className="flex-col p-2 bg-muted/30">
-                            <CardContent className="p-0 flex flex-col items-center justify-center">
-                            <Calendar
-                                mode="single"
-                                selected={selectedDate}
-                                onSelect={(date) => setSelectedDate(date || new Date())}
-                                className="rounded-md border bg-background"
-                                components={{ DayContent: CustomDay }}
-                                modifiers={{
-                                advance: datesWithAdvance,
-                                absent: datesWithAbsence,
-                                }}
-                                modifiersStyles={{
-                                advance: { border: '2px solid hsl(var(--primary))' },
-                                absent: { 
-                                    backgroundColor: 'hsl(var(--destructive) / 0.2)',
-                                    color: 'hsl(var(--destructive))',
-                                },
-                                }}
-                            />
-                            <div className="w-full mt-4">
-                                <Separator/>
-                                <div className='p-4'>
-                                    <p className="font-semibold mb-2">Advances on {format(selectedDate, 'PPP')}</p>
-                                    <div className="max-h-32 overflow-y-auto">
-                                    {advancesForSelectedDate.length > 0 ? (
-                                        <div className="space-y-2 pr-4">
-                                            {advancesForSelectedDate.map(advance => {
-                                                const employee = employees.find(e => e.id === advance.employeeId);
-                                                return (
-                                                <div key={advance.id} className="flex justify-between items-center p-2 bg-background/50 rounded-lg group">
-                                                    <div className='flex items-center gap-2'>
-                                                        <span className={cn("h-2.5 w-2.5 rounded-full", employee?.color)} />
-                                                        <div>
-                                                            <p className="font-medium">{employee?.name}</p>
-                                                        </div>
-                                                    </div>
-                                                    <div className="flex items-center gap-2">
-                                                        <p className="font-mono font-semibold text-red-600 dark:text-red-400 text-lg">₹{advance.amount.toLocaleString()}</p>
-                                                        <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100" onClick={() => openAdvanceDialog(advance)}>
-                                                            <Edit className="h-4 w-4"/>
-                                                        </Button>
-                                                    </div>
-                                                </div>
-                                            )})}
-                                        </div>
-                                    ) : (
-                                        <div className="h-full flex items-center justify-center py-4">
-                                            <p className="text-muted-foreground text-sm">No advances on this date.</p>
-                                        </div>
-                                    )}
-                                    </div>
-                                </div>
-                            </div>
-                            </CardContent>
-                        </Card>
+      <Tabs defaultValue="attendance" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="attendance">Attendance & Advance</TabsTrigger>
+          <TabsTrigger value="employees">Employee List</TabsTrigger>
+        </TabsList>
+        <TabsContent value="attendance">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start mt-4">
+            <div className="flex flex-col gap-6">
+              <Card className="flex-col p-2 bg-muted/30">
+                <CardContent className="p-0 flex flex-col items-center justify-center">
+                  <Calendar
+                    mode="single"
+                    selected={selectedDate}
+                    onSelect={(date) => setSelectedDate(date || new Date())}
+                    className="rounded-md border bg-background"
+                    components={{ DayContent: CustomDay }}
+                    modifiers={{
+                      advance: datesWithAdvance,
+                      absent: datesWithAbsence,
+                    }}
+                    modifiersStyles={{
+                      advance: { border: '2px solid hsl(var(--primary))' },
+                      absent: { 
+                        backgroundColor: 'hsl(var(--destructive) / 0.2)',
+                        color: 'hsl(var(--destructive))',
+                      },
+                    }}
+                  />
+                  <div className="p-4 space-y-2 border-t w-full">
+                    <div className="flex items-center space-x-2">
+                        <Checkbox id="show-advances" checked={showAdvancesOnCalendar} onCheckedChange={(checked) => setShowAdvancesOnCalendar(Boolean(checked))} />
+                        <Label htmlFor="show-advances">Show Advance Dates</Label>
                     </div>
+                     <div className="flex items-center space-x-2">
+                        <Checkbox id="show-absences" checked={showAbsencesOnCalendar} onCheckedChange={(checked) => setShowAbsencesOnCalendar(Boolean(checked))} />
+                        <Label htmlFor="show-absences">Show Absent Dates</Label>
+                    </div>
+                  </div>
+                  <div className="w-full border-t">
+                    <p className="font-semibold p-4 pb-2">Advances on {format(selectedDate, 'PPP')}</p>
+                    <div className="max-h-32 overflow-y-auto px-4 pb-4">
+                      {advancesForSelectedDate.length > 0 ? (
+                          <div className="space-y-2">
+                              {advancesForSelectedDate.map(advance => {
+                                  const employee = employees.find(e => e.id === advance.employeeId);
+                                  return (
+                                  <div key={advance.id} className="flex justify-between items-center p-2 bg-background/50 rounded-lg group">
+                                      <div className='flex items-center gap-2'>
+                                          <span className={cn("h-2.5 w-2.5 rounded-full", employee?.color)} />
+                                          <div>
+                                              <p className="font-medium">{employee?.name}</p>
+                                          </div>
+                                      </div>
+                                      <div className="flex items-center gap-2">
+                                          <p className="font-mono font-semibold text-red-600 dark:text-red-400 text-lg">₹{advance.amount.toLocaleString()}</p>
+                                          <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100" onClick={() => openAdvanceDialog(advance)}>
+                                              <Edit className="h-4 w-4"/>
+                                          </Button>
+                                      </div>
+                                  </div>
+                              )})}
+                          </div>
+                      ) : (
+                          <div className="h-full flex items-center justify-center py-4">
+                              <p className="text-muted-foreground text-sm">No advances on this date.</p>
+                          </div>
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
 
-                    <div className="flex flex-col gap-6">
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Add Salary Advance</CardTitle>
-                                <CardDescription>Log an advance for {format(selectedDate, 'PPP')}.</CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                <Button size="lg" className="w-full h-16 text-lg" onClick={() => openAdvanceDialog(null)}>
-                                    <Banknote className="mr-4 h-8 w-8" /> Add Salary Advance
-                                </Button>
-                            </CardContent>
-                        </Card>
-                        <Card className="bg-muted/30">
-                            <CardHeader>
-                                <CardTitle>Staff Attendance</CardTitle>
-                                <CardDescription>Manage attendance for {format(selectedDate, 'PPP')}</CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="space-y-2 max-h-80 overflow-y-auto">
-                                    {employees.map(employee => {
-                                        const attendanceRecord = attendanceForSelectedDate.find(a => a.employeeId === employee.id);
-                                        return (
-                                            <div key={employee.id} className="p-3 bg-background/50 rounded-lg border">
-                                                <div className="flex justify-between items-center">
-                                                    <div className="flex items-center gap-2 font-medium">
-                                                        <span className={cn('h-2.5 w-2.5 rounded-full', employee.color)} />
-                                                        {employee.name}
-                                                    </div>
-                                                    <div className="flex items-center gap-1.5">
-                                                        {(Object.keys(attendanceStatusConfig) as AttendanceStatus[]).map(status => {
-                                                            const isSelected = attendanceRecord?.status === status;
-                                                            return (
-                                                                <TooltipProvider key={status}>
-                                                                    <Tooltip>
-                                                                        <TooltipTrigger asChild>
-                                                                            <Button 
-                                                                                key={status}
-                                                                                variant={isSelected ? 'default' : 'outline'}
-                                                                                size="icon"
-                                                                                onClick={() => handleMarkAttendance(employee.id, status)}
-                                                                                className={cn("h-9 w-9", isSelected && attendanceStatusConfig[status].className)}
-                                                                            >
-                                                                                {React.createElement(attendanceStatusConfig[status].icon, {className: "h-5 w-5"})}
-                                                                            </Button>
-                                                                        </TooltipTrigger>
-                                                                        <TooltipContent>
-                                                                            <p>{attendanceStatusConfig[status].label}</p>
-                                                                        </TooltipContent>
-                                                                    </Tooltip>
-                                                                </TooltipProvider>
-                                                            )
-                                                        })}
-                                                        <TooltipProvider>
-                                                            <Tooltip>
-                                                                <TooltipTrigger asChild>
-                                                                    <Button variant="ghost" size="icon" onClick={() => openNotesDialog(employee.id)}>
-                                                                        <Pencil className="h-4 w-4" />
-                                                                    </Button>
-                                                                </TooltipTrigger>
-                                                                <TooltipContent>Add/Edit Note</TooltipContent>
-                                                            </Tooltip>
-                                                        </TooltipProvider>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        )
-                                    })}
-                                </div>
-                            </CardContent>
-                        </Card>
-                    </div>
-                </div>
-            </TabsContent>
-            <TabsContent value="employees">
-                <Card className="bg-muted/30 mt-4">
-                    <CardHeader>
-                        <div className='flex justify-between items-center'>
-                            <div>
-                                <CardTitle>Employees & Advances</CardTitle>
-                                <CardDescription>Manage staff salary and advance information.</CardDescription>
+            <div className="flex flex-col gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Add Salary Advance</CardTitle>
+                  <CardDescription>Log an advance for {format(selectedDate, 'PPP')}.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Button size="lg" className="w-full h-16 text-lg" onClick={() => openAdvanceDialog(null)}>
+                    <Banknote className="mr-4 h-8 w-8" /> Add Salary Advance
+                  </Button>
+                </CardContent>
+              </Card>
+              <Card className="bg-muted/30">
+                <CardHeader>
+                  <CardTitle>Staff Attendance</CardTitle>
+                  <CardDescription>Manage attendance for {format(selectedDate, 'PPP')}</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2 max-h-80 overflow-y-auto">
+                    {employees.map(employee => {
+                      const attendanceRecord = attendanceForSelectedDate.find(a => a.employeeId === employee.id);
+                      return (
+                        <div key={employee.id} className="p-3 bg-background/50 rounded-lg border">
+                          <div className="flex justify-between items-center">
+                            <div className="flex items-center gap-3 font-medium text-lg">
+                              <span className={cn('h-3 w-3 rounded-full', employee.color)} />
+                              {employee.name}
                             </div>
-                            <Button onClick={() => openEmployeeDialog(null)}><PlusCircle className="mr-2 h-4 w-4" /> Add Employee</Button>
+                            <div className="flex items-center gap-2">
+                              {(Object.keys(attendanceStatusConfig) as AttendanceStatus[]).map(status => {
+                                const isSelected = attendanceRecord?.status === status;
+                                return (
+                                  <TooltipProvider key={status}>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <Button 
+                                          key={status}
+                                          variant={isSelected ? 'default' : 'outline'}
+                                          size="lg"
+                                          onClick={() => handleMarkAttendance(employee.id, status)}
+                                          className={cn("h-10 w-10 p-0", isSelected && attendanceStatusConfig[status].className)}
+                                        >
+                                          {React.createElement(attendanceStatusConfig[status].icon, {className: "h-5 w-5"})}
+                                        </Button>
+                                      </TooltipTrigger>
+                                      <TooltipContent>
+                                        <p>{attendanceStatusConfig[status].label}</p>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
+                                )
+                              })}
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button variant="ghost" size="icon" onClick={() => openNotesDialog(employee.id)}>
+                                      <Pencil className="h-4 w-4" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>Add/Edit Note</TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            </div>
+                          </div>
                         </div>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="max-h-[60vh] overflow-y-auto">
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead className="font-bold text-foreground">Employee</TableHead>
-                                        <TableHead className="font-bold text-foreground">Role</TableHead>
-                                        <TableHead className="font-bold text-foreground">Salary</TableHead>
-                                        <TableHead className="font-bold text-foreground">Total Advance</TableHead>
-                                        <TableHead className="font-bold text-foreground">Remaining</TableHead>
-                                        <TableHead className="text-right font-bold text-foreground">Actions</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                {employees.map((employee) => {
-                                    const totalAdvance = (advancesByEmployee[employee.id] || []).reduce((sum, a) => sum + a.amount, 0);
-                                    const remainingSalary = employee.salary - totalAdvance;
-                                    return (
-                                    <TableRow key={employee.id}>
-                                        <TableCell className="bg-background/20 border-r">
-                                            <div className="flex items-center gap-2 font-medium">
-                                                <span className={cn('h-2 w-2 rounded-full', employee.color)} />
-                                                {employee.name}
-                                            </div>
-                                        </TableCell>
-                                        <TableCell className="bg-background/20 border-r">{employee.role}</TableCell>
-                                        <TableCell className="font-mono text-sm bg-background/20 border-r">₹{employee.salary.toLocaleString()}</TableCell>
-                                        <TableCell className="font-mono text-sm text-red-600 dark:text-red-400 bg-background/20 border-r">₹{totalAdvance.toLocaleString()}</TableCell>
-                                        <TableCell className="font-mono text-sm text-green-600 dark:text-green-400 bg-background/20 border-r">₹{remainingSalary.toLocaleString()}</TableCell>
-                                        <TableCell className="text-right bg-background/20">
-                                            <TooltipProvider>
-                                                <Tooltip>
-                                                    <TooltipTrigger asChild>
-                                                        <Button variant="ghost" size="icon" onClick={() => openEmployeeDialog(employee)}>
-                                                            <Edit className="h-4 w-4" />
-                                                        </Button>
-                                                    </TooltipTrigger>
-                                                    <TooltipContent>Edit Employee</TooltipContent>
-                                                </Tooltip>
-                                                <Tooltip>
-                                                    <TooltipTrigger asChild>
-                                                        <AlertDialog>
-                                                            <AlertDialogTrigger asChild>
-                                                                <Button variant="ghost" size="icon" className="text-destructive">
-                                                                    <Trash2 className="h-4 w-4" />
-                                                                </Button>
-                                                            </AlertDialogTrigger>
-                                                            <AlertDialogContent>
-                                                                <AlertDialogHeader>
-                                                                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                                                                    <AlertDialogDescription>This will permanently delete {employee.name}'s record.</AlertDialogDescription>
-                                                                </AlertDialogHeader>
-                                                                <AlertDialogFooter>
-                                                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                                                    <AlertDialogAction onClick={() => handleDeleteEmployee(employee.id)}>Delete</AlertDialogAction>
-                                                                </AlertDialogFooter>
-                                                            </AlertDialogContent>
-                                                        </AlertDialog>
-                                                    </TooltipTrigger>
-                                                    <TooltipContent>Delete Employee</TooltipContent>
-                                                </Tooltip>
-                                            </TooltipProvider>
-                                        </TableCell>
-                                    </TableRow>
-                                    );
-                                })}
-                                </TableBody>
-                            </Table>
-                        </div>
-                    </CardContent>
-                </Card>
-            </TabsContent>
-        </Tabs>
+                      )
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </TabsContent>
+        <TabsContent value="employees">
+          <Card className="bg-muted/30 mt-4">
+            <CardHeader>
+              <div className='flex justify-between items-center'>
+                <div>
+                  <CardTitle>Employees & Advances</CardTitle>
+                  <CardDescription>Manage staff salary and advance information.</CardDescription>
+                </div>
+                <Button onClick={() => openEmployeeDialog(null)}><PlusCircle className="mr-2 h-4 w-4" /> Add Employee</Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="max-h-[60vh] overflow-y-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="font-bold text-foreground">Employee</TableHead>
+                      <TableHead className="font-bold text-foreground">Role</TableHead>
+                      <TableHead className="font-bold text-foreground">Salary</TableHead>
+                      <TableHead className="font-bold text-foreground">Total Advance</TableHead>
+                      <TableHead className="font-bold text-foreground">Remaining</TableHead>
+                      <TableHead className="text-right font-bold text-foreground">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {employees.map((employee) => {
+                      const totalAdvance = (advancesByEmployee[employee.id] || []).reduce((sum, a) => sum + a.amount, 0);
+                      const remainingSalary = employee.salary - totalAdvance;
+                      return (
+                        <TableRow key={employee.id}>
+                          <TableCell className="bg-background/20 border-r">
+                            <div className="flex items-center gap-2 font-medium">
+                              <span className={cn('h-2 w-2 rounded-full', employee.color)} />
+                              {employee.name}
+                            </div>
+                          </TableCell>
+                          <TableCell className="bg-background/20 border-r">{employee.role}</TableCell>
+                          <TableCell className="font-mono text-sm bg-background/20 border-r">₹{employee.salary.toLocaleString()}</TableCell>
+                          <TableCell className="font-mono text-sm text-red-600 dark:text-red-400 bg-background/20 border-r">₹{totalAdvance.toLocaleString()}</TableCell>
+                          <TableCell className="font-mono text-sm text-green-600 dark:text-green-400 bg-background/20 border-r">₹{remainingSalary.toLocaleString()}</TableCell>
+                          <TableCell className="text-right bg-background/20">
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button variant="ghost" size="icon" onClick={() => openEmployeeDialog(employee)}>
+                                    <Edit className="h-4 w-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Edit Employee</TooltipContent>
+                              </Tooltip>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                      <Button variant="ghost" size="icon" className="text-destructive">
+                                        <Trash2 className="h-4 w-4" />
+                                      </Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                      <AlertDialogHeader>
+                                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                        <AlertDialogDescription>This will permanently delete {employee.name}'s record.</AlertDialogDescription>
+                                      </AlertDialogHeader>
+                                      <AlertDialogFooter>
+                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                        <AlertDialogAction onClick={() => handleDeleteEmployee(employee.id)}>Delete</AlertDialogAction>
+                                      </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                  </AlertDialog>
+                                </TooltipTrigger>
+                                <TooltipContent>Delete Employee</TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
       
       <AddOrEditAdvanceDialog 
         open={isAdvanceDialogOpen}
@@ -747,3 +753,6 @@ function EmployeeDialog({ open, onOpenChange, employee, onSave }: { open: boolea
     
 
 
+
+
+    
