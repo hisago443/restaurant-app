@@ -456,7 +456,7 @@ export default function PosSystem({
   const [receiptPreview, setReceiptPreview] = useState('');
   const { toast } = useToast();
   const [activeAccordionItems, setActiveAccordionItems] = useState<string[]>([]);
-  const [viewMode, setViewMode] = useState<ViewMode>('accordion');
+  const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [menuItemColors, setMenuItemColors] = useState<Record<string, string>>({});
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
   const [isAddItemDialogOpen, setIsAddItemDialogOpen] = useState(false);
@@ -1198,30 +1198,42 @@ export default function PosSystem({
     // Accordion view is default
     return (
        <div className="flex justify-center">
-        <Accordion type="multiple" value={activeAccordionItems} onValueChange={setActiveAccordionItems} className="w-full max-w-4xl">
-            {filteredMenu.map((category) => (
-            <AccordionItem key={category.category} value={category.category} className={cn("border-b-0 rounded-lg mb-2 overflow-hidden", categoryColors[category.category] ? colorPalette[categoryColors[category.category]]?.light : '')}>
-                <div className="flex items-center pr-4">
-                <AccordionTrigger className='p-4 hover:no-underline flex-grow'>
-                    <div className="text-xl font-bold text-black flex-grow text-left">{category.category}</div>
-                </AccordionTrigger>
-                <CategoryColorPicker categoryName={category.category} />
-                </div>
-                <AccordionContent className="p-2 pt-0">
-                <div className="space-y-4 pt-2">
-                    {category.subCategories.map((subCategory) => (
-                    <div key={subCategory.name}>
-                        <h3 className="text-md font-semibold mb-2 text-muted-foreground pl-2">{subCategory.name}</h3>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-                        {subCategory.items.map((item) => renderMenuItem(item, subCategory.name, category.category))}
-                        </div>
+        <Tabs defaultValue={filteredMenu[0]?.category} className="w-full">
+            <div className="flex justify-center">
+              <TabsList className="mb-4 flex-wrap h-auto bg-transparent border-b rounded-none p-0">
+                {filteredMenu.map(category => (
+                  <div key={category.category} className="relative group p-1">
+                    <TabsTrigger value={category.category} className="rounded-none border-b-2 border-transparent data-[state=active]:shadow-none px-4 py-2 cursor-pointer">
+                      <span className="flex-grow text-left text-lg text-black">{category.category}</span>
+                    </TabsTrigger>
+                    <div
+                      className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                      }}
+                    >
+                      <CategoryColorPicker categoryName={category.category} />
                     </div>
-                    ))}
+                  </div>
+                ))}
+              </TabsList>
+            </div>
+            {filteredMenu.map(category => (
+              <TabsContent key={category.category} value={category.category} className={cn("m-0 rounded-lg p-2", categoryColors[category.category] ? colorPalette[categoryColors[category.category]]?.light : '')}>
+                <div className="space-y-4">
+                  {category.subCategories.map((subCategory) => (
+                    <div key={subCategory.name}>
+                      <h3 className="text-md font-semibold mb-2 text-muted-foreground pl-2">{subCategory.name}</h3>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                        {subCategory.items.map((item) => renderMenuItem(item, subCategory.name, category.category))}
+                      </div>
+                    </div>
+                  ))}
                 </div>
-                </AccordionContent>
-            </AccordionItem>
+              </TabsContent>
             ))}
-        </Accordion>
+          </Tabs>
        </div>
     );
   };
