@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import * as React from 'react';
@@ -32,16 +31,18 @@ import { PaymentDialog } from './payment-dialog';
 const vegColor = 'bg-green-100 dark:bg-green-900/30';
 const nonVegColor = 'bg-rose-100 dark:bg-rose-900/30';
 
-const colorPalette = [
-    'bg-sky-200 dark:bg-sky-800/70',
-    'bg-amber-200 dark:bg-amber-800/70',
-    'bg-pink-200 dark:bg-pink-800/70',
-    'bg-lime-200 dark:bg-lime-800/70',
-    'bg-purple-200 dark:bg-purple-800/70',
-    'bg-teal-200 dark:bg-teal-800/70',
-    'bg-orange-200 dark:bg-orange-800/70',
-    'bg-cyan-200 dark:bg-cyan-800/70',
-];
+const colorPalette: Record<string, {light: string, dark: string}> = {
+    sky: { light: 'bg-sky-200 dark:bg-sky-800/70', dark: 'bg-sky-300 dark:bg-sky-700' },
+    amber: { light: 'bg-amber-200 dark:bg-amber-800/70', dark: 'bg-amber-300 dark:bg-amber-700' },
+    pink: { light: 'bg-pink-200 dark:bg-pink-800/70', dark: 'bg-pink-300 dark:bg-pink-700' },
+    lime: { light: 'bg-lime-200 dark:bg-lime-800/70', dark: 'bg-lime-300 dark:bg-lime-700' },
+    purple: { light: 'bg-purple-200 dark:bg-purple-800/70', dark: 'bg-purple-300 dark:bg-purple-700' },
+    teal: { light: 'bg-teal-200 dark:bg-teal-800/70', dark: 'bg-teal-300 dark:bg-teal-700' },
+    orange: { light: 'bg-orange-200 dark:bg-orange-800/70', dark: 'bg-orange-300 dark:bg-orange-700' },
+    cyan: { light: 'bg-cyan-200 dark:bg-cyan-800/70', dark: 'bg-cyan-300 dark:bg-cyan-700' },
+};
+const colorNames = Object.keys(colorPalette);
+
 
 type ViewMode = 'accordion' | 'grid' | 'list';
 
@@ -132,7 +133,7 @@ export default function PosSystem({
     const defaultCategoryColors: Record<string, string> = {};
     if (Object.keys(categoryColors).length === 0) {
         typedMenuData.forEach((category, index) => {
-            defaultCategoryColors[category.category] = colorPalette[index % colorPalette.length];
+            defaultCategoryColors[category.category] = colorNames[index % colorNames.length];
         });
         setCategoryColors(defaultCategoryColors);
     }
@@ -268,16 +269,16 @@ export default function PosSystem({
     setSelectedTableId(tableId);
   };
   
-  const setItemColor = (itemName: string, colorClass: string) => {
-    setMenuItemColors(prev => ({ ...prev, [itemName]: colorClass }));
+  const setItemColor = (itemName: string, colorName: string) => {
+    setMenuItemColors(prev => ({ ...prev, [itemName]: colorName }));
   };
   
-  const handleSetCategoryColor = (categoryName: string, colorClass: string) => {
-    setCategoryColors(prev => ({ ...prev, [categoryName]: colorClass }));
+  const handleSetCategoryColor = (categoryName: string, colorName: string) => {
+    setCategoryColors(prev => ({ ...prev, [categoryName]: colorName }));
   };
 
   const handleShuffleColors = () => {
-    const shuffledPalette = [...colorPalette].sort(() => 0.5 - Math.random());
+    const shuffledPalette = [...colorNames].sort(() => 0.5 - Math.random());
     const newCategoryColors: Record<string, string> = {};
     typedMenuData.forEach((category, index) => {
       newCategoryColors[category.category] = shuffledPalette[index % shuffledPalette.length];
@@ -575,20 +576,20 @@ export default function PosSystem({
 
   const renderMenuItem = (item: MenuItem, subCategoryName: string, categoryName: string) => {
     const isNonVeg = subCategoryName.toLowerCase().includes('non-veg');
-    const defaultColor = isNonVeg ? nonVegColor : vegColor;
-    const categoryColor = categoryColors[categoryName];
-    const itemColor = menuItemColors[item.name];
     
-    const finalColor = itemColor || categoryColor || defaultColor;
-    const isColorApplied = !!(itemColor || categoryColor);
+    const itemColorName = menuItemColors[item.name];
+    const categoryColorName = categoryColors[categoryName];
+
+    const finalColorName = itemColorName || categoryColorName;
+    const finalLightColor = finalColorName ? colorPalette[finalColorName]?.light : (isNonVeg ? nonVegColor : vegColor);
+    const finalDarkColor = finalColorName ? colorPalette[finalColorName]?.dark : '';
 
     return (
       <Card
         key={item.name}
         className={cn(
           "group rounded-lg transition-all hover:scale-105 relative cursor-pointer",
-          finalColor,
-          isColorApplied && "border-black shadow-lg hover:shadow-xl"
+          finalLightColor,
         )}
         onClick={() => handleItemClick(item)}
       >
@@ -605,11 +606,11 @@ export default function PosSystem({
           </PopoverTrigger>
           <PopoverContent className="w-auto p-2" onClick={(e) => e.stopPropagation()}>
             <div className="grid grid-cols-5 gap-1">
-              {colorPalette.map((colorClass, i) => (
+              {colorNames.map((name) => (
                 <div
-                  key={i}
-                  className={cn("h-6 w-6 rounded-full cursor-pointer", colorClass)}
-                  onClick={(e) => { e.stopPropagation(); setItemColor(item.name, colorClass); }}
+                  key={name}
+                  className={cn("h-6 w-6 rounded-full cursor-pointer", colorPalette[name].light)}
+                  onClick={(e) => { e.stopPropagation(); setItemColor(item.name, name); }}
                 />
               ))}
               <Button variant="ghost" size="sm" className="col-span-5 h-8" onClick={(e) => { e.stopPropagation(); setItemColor(item.name, ''); }}>Reset</Button>
@@ -617,13 +618,20 @@ export default function PosSystem({
           </PopoverContent>
         </Popover>
         <CardContent className="p-3">
-          <div className="flex justify-between items-start">
-            <div className="flex items-center gap-2">
-              <span className={cn('h-2.5 w-2.5 rounded-full', isNonVeg ? 'bg-red-500' : 'bg-green-500')}></span>
-              <span className="font-semibold pr-2 text-black">{item.name}</span>
+          <div className="flex justify-between items-start mb-2">
+             <div className="flex items-center gap-2">
+                <span className={cn('h-2.5 w-2.5 rounded-full', isNonVeg ? 'bg-red-500' : 'bg-green-500')}></span>
+                <span className="font-semibold pr-2 text-black">{item.name}</span>
             </div>
             <span className="font-mono text-right whitespace-nowrap text-black">₹{item.price.toFixed(2)}</span>
           </div>
+          {finalDarkColor && (
+            <div className="flex justify-end">
+                <span className={cn("text-xs font-semibold px-2 py-0.5 rounded-full text-black", finalDarkColor)}>
+                    {categoryName}
+                </span>
+            </div>
+          )}
           {!isClickToAdd && (
             <div className="flex justify-end mt-2">
               <Button 
@@ -654,11 +662,11 @@ export default function PosSystem({
       </PopoverTrigger>
       <PopoverContent className="w-auto p-2" onClick={(e) => e.stopPropagation()}>
         <div className="grid grid-cols-5 gap-1">
-          {colorPalette.map((colorClass, i) => (
+          {colorNames.map((name) => (
             <div
-              key={i}
-              className={cn("h-6 w-6 rounded-full cursor-pointer", colorClass)}
-              onClick={() => handleSetCategoryColor(categoryName, colorClass)}
+              key={name}
+              className={cn("h-6 w-6 rounded-full cursor-pointer", colorPalette[name].light)}
+              onClick={() => handleSetCategoryColor(categoryName, name)}
             />
           ))}
            <Button variant="ghost" size="sm" className="col-span-5 h-8" onClick={() => handleSetCategoryColor(categoryName, '')}>Reset</Button>
@@ -672,7 +680,7 @@ export default function PosSystem({
       return (
         <div className="space-y-6">
           {filteredMenu.map((category) => (
-             <div key={category.category} className={cn("rounded-lg p-2", categoryColors[category.category])}>
+             <div key={category.category} className={cn("rounded-lg p-2", categoryColors[category.category] ? colorPalette[categoryColors[category.category]]?.light : '')}>
                <div className="sticky top-0 bg-background/80 backdrop-blur-sm py-2 z-10 flex items-center justify-between gap-2 p-2">
                 <h2 className="text-xl font-bold text-black flex-grow">
                   {category.category}
@@ -701,19 +709,20 @@ export default function PosSystem({
           <div className="flex justify-center">
             <TabsList className="mb-4 flex-wrap h-auto">
               {filteredMenu.map(category => (
-                <TabsTrigger key={category.category} value={category.category} asChild>
-                    <div className="relative p-2 rounded-sm cursor-pointer flex items-center justify-between gap-2 flex-grow min-w-[120px]">
-                        <span className={cn('text-black flex-grow text-left')}>{category.category}</span>
+                 <div key={category.category} className={cn("relative p-0.5 rounded-sm cursor-pointer data-[state=active]:ring-2 ring-primary", categoryColors[category.category] ? colorPalette[categoryColors[category.category]]?.light : '')}>
+                    <TabsTrigger value={category.category} className="flex-grow justify-between gap-2 w-full pr-8 data-[state=active]:bg-background/70">
+                       <span className={cn('text-black flex-grow text-left')}>{category.category}</span>
+                    </TabsTrigger>
+                     <div className="absolute right-1 top-1/2 -translate-y-1/2">
                         <CategoryColorPicker categoryName={category.category} />
-                        <div className={cn("absolute inset-0 -z-10 rounded-sm", categoryColors[category.category])}/>
-                    </div>
-                </TabsTrigger>
+                     </div>
+                </div>
               ))}
             </TabsList>
           </div>
           {filteredMenu.map(category => (
              <TabsContent key={category.category} value={category.category} className="m-0">
-               <div className={cn("rounded-lg p-2 space-y-4", categoryColors[category.category])}>
+               <div className={cn("rounded-lg p-2 space-y-4", categoryColors[category.category] ? colorPalette[categoryColors[category.category]]?.light : '')}>
                 {category.subCategories.map((subCategory) => (
                   <div key={subCategory.name}>
                     <h3 className="text-md font-semibold mb-2 text-muted-foreground pl-2">{subCategory.name}</h3>
@@ -732,7 +741,7 @@ export default function PosSystem({
     return (
       <Accordion type="multiple" value={activeAccordionItems} onValueChange={setActiveAccordionItems} className="w-full">
         {filteredMenu.map((category) => (
-          <AccordionItem key={category.category} value={category.category} className={cn("border-b-0 rounded-lg mb-2 overflow-hidden", categoryColors[category.category])}>
+          <AccordionItem key={category.category} value={category.category} className={cn("border-b-0 rounded-lg mb-2 overflow-hidden", categoryColors[category.category] ? colorPalette[categoryColors[category.category]]?.light : '')}>
             <div className="flex items-center pr-4">
               <AccordionTrigger className='p-4 hover:no-underline flex-grow'>
                   <div className="text-xl font-bold text-black flex-grow text-left">{category.category}</div>
@@ -869,7 +878,7 @@ export default function PosSystem({
                {viewMode === 'accordion' && (
                 <Button variant="outline" size="sm" onClick={toggleAccordion}>
                   <ChevronsUpDown className="mr-2 h-4 w-4" />
-                  {allItemsOpen ? 'Collapse' : 'Expand'}
+                  {allItemsOpen ? 'Collapse' : 'Collapse'}
                 </Button>
               )}
                <Button variant="outline" size="sm" onClick={() => setIsMenuManagerOpen(true)}>
@@ -1031,3 +1040,4 @@ export default function PosSystem({
     </div>
   );
 }
+
