@@ -107,9 +107,6 @@ export default function StaffManagement({ employees }: StaffManagementProps) {
   const { toast } = useToast();
   const [advances, setAdvances] = useState<Advance[]>([]);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
-  const [isAddEmployeeDialogOpen, setIsAddEmployeeDialogOpen] = useState(false);
-  const [isEditEmployeeDialogOpen, setIsEditEmployeeDialogOpen] = useState(false);
-  const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
   const [isAdvanceDialogOpen, setIsAdvanceDialogOpen] = useState(false);
   const [editingAdvance, setEditingAdvance] = useState<Advance | null>(null);
   
@@ -164,72 +161,6 @@ export default function StaffManagement({ employees }: StaffManagementProps) {
     }
   }
   
-  const generateNewEmployeeId = () => {
-    const existingIds = employees.map(e => parseInt(e.id.replace('UA', ''), 10)).filter(id => !isNaN(id));
-    const maxId = existingIds.length > 0 ? Math.max(...existingIds) : 0;
-    return `UA${(maxId + 1).toString().padStart(3, '0')}`;
-  }
-
-  const addEmployee = async (employee: Omit<Employee, 'id'>) => {
-    try {
-      const newId = generateNewEmployeeId();
-      const employeeRef = doc(db, "employees", newId);
-      await setDoc(employeeRef, {...employee, id: newId});
-      toast({ title: 'Employee Added', description: `${employee.name} saved with ID ${newId}.` });
-    } catch (error) {
-      console.error("Error adding employee: ", error);
-      toast({ variant: 'destructive', title: 'Save Failed', description: 'Could not save the employee.' });
-    }
-  };
-
-  const handleAddEmployee = (employee: Omit<Employee, 'id' | 'color'>) => {
-    const newEmployee: Omit<Employee, 'id'> = {
-      ...employee,
-      color: colors[employees.length % colors.length]
-    };
-    addEmployee(newEmployee);
-  }
-  
-  const updateEmployee = async (employee: Employee) => {
-    try {
-      const employeeRef = doc(db, "employees", employee.id);
-      await setDoc(employeeRef, {
-        name: employee.name,
-        role: employee.role,
-        salary: employee.salary,
-        color: employee.color,
-      }, { merge: true });
-      toast({ title: 'Employee Updated', description: 'Employee information has been updated.' });
-    } catch (error) {
-      console.error("Error updating employee: ", error);
-      toast({ variant: 'destructive', title: 'Update Failed', description: 'Could not update employee details.' });
-    }
-  };
-
-  const handleEditEmployee = (employee: Employee) => {
-      updateEmployee(employee);
-      setEditingEmployee(null);
-  }
-
-  const deleteEmployee = async (employeeId: string) => {
-    try {
-      await deleteDoc(doc(db, "employees", employeeId));
-      toast({ title: 'Employee Deleted', description: 'Employee has been removed from the database.' });
-    } catch (error) {
-      console.error("Error deleting employee: ", error);
-      toast({ variant: 'destructive', title: 'Delete Failed', description: 'Could not delete the employee.' });
-    }
-  };
-
-  const handleDeleteEmployee = (employeeId: string) => {
-      deleteEmployee(employeeId);
-  }
-  
-  const openEditEmployeeDialog = (employee: Employee) => {
-    setEditingEmployee(employee);
-    setIsEditEmployeeDialogOpen(true);
-  }
-
   const openAdvanceDialog = (advance: Advance | null) => {
     setEditingAdvance(advance);
     setIsAdvanceDialogOpen(true);
@@ -246,14 +177,9 @@ export default function StaffManagement({ employees }: StaffManagementProps) {
           <Card>
             <CardHeader>
               <CardTitle>Employees</CardTitle>
-              <CardDescription>Manage your restaurant staff.</CardDescription>
+              <CardDescription>A read-only list of your restaurant staff.</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="mb-4">
-                <Button onClick={() => { setEditingEmployee(null); setIsAddEmployeeDialogOpen(true); }}>
-                  <PlusCircle className="mr-2 h-4 w-4" /> Add Employee
-                </Button>
-              </div>
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -263,7 +189,6 @@ export default function StaffManagement({ employees }: StaffManagementProps) {
                     <TableHead>Salary (Rs.)</TableHead>
                     <TableHead>Advance (Rs.)</TableHead>
                     <TableHead>Remaining Salary (Rs.)</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -287,30 +212,6 @@ export default function StaffManagement({ employees }: StaffManagementProps) {
                         <TableCell className="bg-yellow-100 dark:bg-yellow-900/30 text-yellow-900 dark:text-yellow-200">{employee.salary.toLocaleString()}</TableCell>
                         <TableCell className="bg-red-100 dark:bg-red-900/30 text-red-900 dark:text-red-200">{totalAdvance.toLocaleString()}</TableCell>
                         <TableCell className="bg-green-100 dark:bg-green-900/30 text-green-900 dark:text-green-200">{remainingSalary.toLocaleString()}</TableCell>
-                        <TableCell className="text-right">
-                          <Button variant="ghost" size="icon" onClick={() => openEditEmployeeDialog(employee)}>
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                                  <Button variant="ghost" size="icon" className="text-destructive">
-                                    <Trash2 className="h-4 w-4" />
-                                  </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                                  <AlertDialogHeader>
-                                      <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                                      <AlertDialogDescription>
-                                          This action cannot be undone. This will permanently delete {employee.name}'s record.
-                                      </AlertDialogDescription>
-                                  </AlertDialogHeader>
-                                  <AlertDialogFooter>
-                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                      <AlertDialogAction onClick={() => handleDeleteEmployee(employee.id)}>Delete</AlertDialogAction>
-                                  </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        </TableCell>
                       </TableRow>
                     );
                   })}
@@ -413,106 +314,9 @@ export default function StaffManagement({ employees }: StaffManagementProps) {
         selectedDate={selectedDate || new Date()}
         existingAdvance={editingAdvance}
       />
-
-      <EmployeeDialog
-        key={editingEmployee?.id ?? 'add'}
-        open={isAddEmployeeDialogOpen || isEditEmployeeDialogOpen}
-        onOpenChange={(open) => {
-          if (!open) {
-            setEditingEmployee(null);
-            setIsAddEmployeeDialogOpen(false);
-            setIsEditEmployeeDialogOpen(false);
-          } else if (editingEmployee) {
-            setIsEditEmployeeDialogOpen(true);
-          } else {
-            setIsAddEmployeeDialogOpen(true);
-          }
-        }}
-        employee={editingEmployee}
-        onSave={(employeeData) => {
-            if (editingEmployee) {
-                handleEditEmployee({ ...editingEmployee, ...employeeData });
-            } else {
-                handleAddEmployee(employeeData as Omit<Employee, 'id' | 'color'>);
-            }
-        }}
-      />
     </div>
   );
 }
-
-function EmployeeDialog({ open, onOpenChange, employee, onSave }: { open: boolean; onOpenChange: (open: boolean) => void; employee: Employee | null; onSave: (data: Omit<Employee, 'id' | 'color'> & {id?: string}) => void;}) {
-    
-    const [name, setName] = useState(employee?.name || '');
-    const [role, setRole] = useState(employee?.role || '');
-    const [salary, setSalary] = useState(employee?.salary?.toString() || '');
-    
-    useEffect(() => {
-        if (open) {
-            setName(employee?.name || '');
-            setRole(employee?.role || '');
-            setSalary(employee?.salary?.toString() || '');
-        }
-    }, [open, employee]);
-    
-    const handleSave = () => {
-        const data: Omit<Employee, 'color' | 'id'> & {id?: string} = { name, role, salary: parseFloat(salary) };
-        if (employee) {
-            data.id = employee.id;
-        }
-        onSave(data);
-        onOpenChange(false);
-    }
-
-    return (
-         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent>
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  handleSave();
-                }}
-              >
-                <DialogHeader>
-                    <DialogTitle>{employee ? "Edit Employee" : "Add New Employee"}</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4 py-4">
-                    <div className="space-y-2">
-                    <Label htmlFor="name">Employee Name</Label>
-                    <Input id="name" placeholder="e.g., John Doe" value={name} onChange={(e) => setName(e.target.value)} required />
-                    </div>
-                    <div className="space-y-2">
-                    <Label htmlFor="role">Role</Label>
-                    <Select value={role} onValueChange={setRole} required>
-                        <SelectTrigger id="role">
-                        <SelectValue placeholder="Select a role" />
-                        </SelectTrigger>
-                        <SelectContent>
-                        <SelectItem value="Manager">Manager</SelectItem>
-                        <SelectItem value="Head Chef">Head Chef</SelectItem>
-                        <SelectItem value="Chef">Chef</SelectItem>
-                        <SelectItem value="Waiter">Waiter</SelectItem>
-                        <SelectItem value="Cleaner">Cleaner</SelectItem>
-                        <SelectItem value="Helper">Helper</SelectItem>
-                        <SelectItem value="Bar Tender">Bar Tender</SelectItem>
-                        </SelectContent>
-                    </Select>
-                    </div>
-                    <div className="space-y-2">
-                    <Label htmlFor="salary">Salary</Label>
-                    <Input id="salary" type="number" placeholder="e.g., 30000" value={salary} onChange={(e) => setSalary(e.target.value)} required/>
-                    </div>
-                </div>
-                <DialogFooter>
-                    <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-                    <Button type="submit">Save Employee</Button>
-                </DialogFooter>
-              </form>
-            </DialogContent>
-        </Dialog>
-    );
-}
-
     
 
     

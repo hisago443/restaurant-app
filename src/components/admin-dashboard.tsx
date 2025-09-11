@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from 'react';
-import { BarChart, Book, Download, TrendingUp, Settings, Package, User, ShoppingCart, History, Mail, Receipt, Edit, Trash2, Building } from 'lucide-react';
+import { BarChart, Book, Download, TrendingUp, Settings, Package, User, ShoppingCart, History, Mail, Receipt, Edit, Trash2, Building, Users } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -20,13 +20,15 @@ import { Label } from '@/components/ui/label';
 import { format } from 'date-fns';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger, AlertDialogDescription } from "@/components/ui/alert-dialog";
 import { db } from '@/lib/firebase';
-import { doc, deleteDoc, getDocs, collection, writeBatch, onSnapshot, updateDoc, addDoc } from 'firebase/firestore';
+import { doc, deleteDoc, getDocs, collection, writeBatch, onSnapshot, updateDoc, addDoc, setDoc } from 'firebase/firestore';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { CalendarIcon } from 'lucide-react';
+import { CalendarIcon, PlusCircle } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
+const colors = ['bg-blue-500', 'bg-green-500', 'bg-yellow-500', 'bg-purple-500', 'bg-pink-500', 'bg-indigo-500', 'bg-teal-500'];
 
 const topItems: { name: string; count: number }[] = [];
 
@@ -52,6 +54,11 @@ export default function AdminDashboard({ billHistory, employees, expenses }: Adm
   const [vendors, setVendors] = useState<Vendor[]>([]);
   const [isExpenseDialogOpen, setIsExpenseDialogOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
+
+  const [isStaffManagerOpen, setIsStaffManagerOpen] = useState(false);
+  const [isAddEmployeeDialogOpen, setIsAddEmployeeDialogOpen] = useState(false);
+  const [isEditEmployeeDialogOpen, setIsEditEmployeeDialogOpen] = useState(false);
+  const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
 
   useEffect(() => {
     const unsubVendors = onSnapshot(collection(db, "vendors"), (snapshot) => {
@@ -207,6 +214,72 @@ export default function AdminDashboard({ billHistory, employees, expenses }: Adm
     }
   };
 
+  const generateNewEmployeeId = () => {
+    const existingIds = employees.map(e => parseInt(e.id.replace('UA', ''), 10)).filter(id => !isNaN(id));
+    const maxId = existingIds.length > 0 ? Math.max(...existingIds) : 0;
+    return `UA${(maxId + 1).toString().padStart(3, '0')}`;
+  }
+
+  const addEmployee = async (employee: Omit<Employee, 'id'>) => {
+    try {
+      const newId = generateNewEmployeeId();
+      const employeeRef = doc(db, "employees", newId);
+      await setDoc(employeeRef, {...employee, id: newId});
+      toast({ title: 'Employee Added', description: `${employee.name} saved with ID ${newId}.` });
+    } catch (error) {
+      console.error("Error adding employee: ", error);
+      toast({ variant: 'destructive', title: 'Save Failed', description: 'Could not save the employee.' });
+    }
+  };
+
+  const handleAddEmployee = (employee: Omit<Employee, 'id' | 'color'>) => {
+    const newEmployee: Omit<Employee, 'id'> = {
+      ...employee,
+      color: colors[employees.length % colors.length]
+    };
+    addEmployee(newEmployee);
+  }
+  
+  const updateEmployee = async (employee: Employee) => {
+    try {
+      const employeeRef = doc(db, "employees", employee.id);
+      await setDoc(employeeRef, {
+        name: employee.name,
+        role: employee.role,
+        salary: employee.salary,
+        color: employee.color,
+      }, { merge: true });
+      toast({ title: 'Employee Updated', description: 'Employee information has been updated.' });
+    } catch (error) {
+      console.error("Error updating employee: ", error);
+      toast({ variant: 'destructive', title: 'Update Failed', description: 'Could not update employee details.' });
+    }
+  };
+
+  const handleEditEmployee = (employee: Employee) => {
+      updateEmployee(employee);
+      setEditingEmployee(null);
+  }
+
+  const deleteEmployee = async (employeeId: string) => {
+    try {
+      await deleteDoc(doc(db, "employees", employeeId));
+      toast({ title: 'Employee Deleted', description: 'Employee has been removed from the database.' });
+    } catch (error) {
+      console.error("Error deleting employee: ", error);
+      toast({ variant: 'destructive', title: 'Delete Failed', description: 'Could not delete the employee.' });
+    }
+  };
+
+  const handleDeleteEmployee = (employeeId: string) => {
+      deleteEmployee(employeeId);
+  }
+  
+  const openEditEmployeeDialog = (employee: Employee) => {
+    setEditingEmployee(employee);
+    setIsEditEmployeeDialogOpen(true);
+  }
+
 
   return (
     <div className="p-4 space-y-4">
@@ -327,6 +400,77 @@ export default function AdminDashboard({ billHistory, employees, expenses }: Adm
                   <BillHistory bills={billHistory} onClearAll={handleClearAllBills} />
                 </div>
               </DialogContent>
+            </Dialog>
+            <Dialog open={isStaffManagerOpen} onOpenChange={setIsStaffManagerOpen}>
+                <DialogTrigger asChild>
+                    <Button variant="outline" size="lg" className="justify-start gap-2">
+                        <Users className="h-5 w-5" />
+                        <span>Manage Staff</span>
+                    </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-4xl">
+                    <DialogHeader>
+                        <DialogTitle>Staff Management</DialogTitle>
+                        <DialogDescription>Add, edit, or remove staff members.</DialogDescription>
+                    </DialogHeader>
+                    <div className="mt-4">
+                        <Button onClick={() => { setEditingEmployee(null); setIsAddEmployeeDialogOpen(true); }}>
+                            <PlusCircle className="mr-2 h-4 w-4" /> Add Employee
+                        </Button>
+                    </div>
+                    <div className="max-h-[60vh] overflow-y-auto mt-4">
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                <TableHead>ID</TableHead>
+                                <TableHead>Name</TableHead>
+                                <TableHead>Role</TableHead>
+                                <TableHead>Salary (Rs.)</TableHead>
+                                <TableHead className="text-right">Actions</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {employees.map((employee) => (
+                                <TableRow key={employee.id}>
+                                    <TableCell className="font-mono text-xs text-muted-foreground">{employee.id}</TableCell>
+                                    <TableCell>
+                                    <div className="flex items-center gap-2">
+                                        <span className={cn('h-2 w-2 rounded-full', employee.color)} />
+                                        {employee.name}
+                                    </div>
+                                    </TableCell>
+                                    <TableCell>{employee.role}</TableCell>
+                                    <TableCell>{employee.salary.toLocaleString()}</TableCell>
+                                    <TableCell className="text-right">
+                                    <Button variant="ghost" size="icon" onClick={() => openEditEmployeeDialog(employee)}>
+                                        <Edit className="h-4 w-4" />
+                                    </Button>
+                                    <AlertDialog>
+                                        <AlertDialogTrigger asChild>
+                                            <Button variant="ghost" size="icon" className="text-destructive">
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                        </AlertDialogTrigger>
+                                        <AlertDialogContent>
+                                            <AlertDialogHeader>
+                                                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                                <AlertDialogDescription>
+                                                    This action cannot be undone. This will permanently delete {employee.name}'s record.
+                                                </AlertDialogDescription>
+                                            </AlertDialogHeader>
+                                            <AlertDialogFooter>
+                                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                <AlertDialogAction onClick={() => handleDeleteEmployee(employee.id)}>Delete</AlertDialogAction>
+                                            </AlertDialogFooter>
+                                        </AlertDialogContent>
+                                    </AlertDialog>
+                                    </TableCell>
+                                </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </div>
+                </DialogContent>
             </Dialog>
             <Button variant="outline" size="lg" className="justify-start gap-2" onClick={handleExportCSV}>
               <Download className="h-5 w-5" />
@@ -494,6 +638,29 @@ export default function AdminDashboard({ billHistory, employees, expenses }: Adm
             setEditingExpense(null);
         }}
       />
+       <EmployeeDialog
+        key={editingEmployee?.id ?? 'add'}
+        open={isAddEmployeeDialogOpen || isEditEmployeeDialogOpen}
+        onOpenChange={(open) => {
+          if (!open) {
+            setEditingEmployee(null);
+            setIsAddEmployeeDialogOpen(false);
+            setIsEditEmployeeDialogOpen(false);
+          } else if (editingEmployee) {
+            setIsEditEmployeeDialogOpen(true);
+          } else {
+            setIsAddEmployeeDialogOpen(true);
+          }
+        }}
+        employee={editingEmployee}
+        onSave={(employeeData) => {
+            if (editingEmployee) {
+                handleEditEmployee({ ...editingEmployee, ...employeeData });
+            } else {
+                handleAddEmployee(employeeData as Omit<Employee, 'id' | 'color'>);
+            }
+        }}
+      />
     </div>
   );
 }
@@ -600,5 +767,78 @@ function ExpenseDialog({
     </Dialog>
   );
 }
+
+function EmployeeDialog({ open, onOpenChange, employee, onSave }: { open: boolean; onOpenChange: (open: boolean) => void; employee: Employee | null; onSave: (data: Omit<Employee, 'id' | 'color'> & {id?: string}) => void;}) {
+    
+    const [name, setName] = useState(employee?.name || '');
+    const [role, setRole] = useState(employee?.role || '');
+    const [salary, setSalary] = useState(employee?.salary?.toString() || '');
+    
+    useEffect(() => {
+        if (open) {
+            setName(employee?.name || '');
+            setRole(employee?.role || '');
+            setSalary(employee?.salary?.toString() || '');
+        }
+    }, [open, employee]);
+    
+    const handleSave = () => {
+        const data: Omit<Employee, 'color' | 'id'> & {id?: string} = { name, role, salary: parseFloat(salary) };
+        if (employee) {
+            data.id = employee.id;
+        }
+        onSave(data);
+        onOpenChange(false);
+    }
+
+    return (
+         <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogContent>
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  handleSave();
+                }}
+              >
+                <DialogHeader>
+                    <DialogTitle>{employee ? "Edit Employee" : "Add New Employee"}</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                    <div className="space-y-2">
+                    <Label htmlFor="name">Employee Name</Label>
+                    <Input id="name" placeholder="e.g., John Doe" value={name} onChange={(e) => setName(e.target.value)} required />
+                    </div>
+                    <div className="space-y-2">
+                    <Label htmlFor="role">Role</Label>
+                    <Select value={role} onValueChange={setRole} required>
+                        <SelectTrigger id="role">
+                        <SelectValue placeholder="Select a role" />
+                        </SelectTrigger>
+                        <SelectContent>
+                        <SelectItem value="Manager">Manager</SelectItem>
+                        <SelectItem value="Head Chef">Head Chef</SelectItem>
+                        <SelectItem value="Chef">Chef</SelectItem>
+                        <SelectItem value="Waiter">Waiter</SelectItem>
+                        <SelectItem value="Cleaner">Cleaner</SelectItem>
+                        <SelectItem value="Helper">Helper</SelectItem>
+                        <SelectItem value="Bar Tender">Bar Tender</SelectItem>
+                        </SelectContent>
+                    </Select>
+                    </div>
+                    <div className="space-y-2">
+                    <Label htmlFor="salary">Salary</Label>
+                    <Input id="salary" type="number" placeholder="e.g., 30000" value={salary} onChange={(e) => setSalary(e.target.value)} required/>
+                    </div>
+                </div>
+                <DialogFooter>
+                    <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+                    <Button type="submit">Save Employee</Button>
+                </DialogFooter>
+              </form>
+            </DialogContent>
+        </Dialog>
+    );
+}
+    
 
     
