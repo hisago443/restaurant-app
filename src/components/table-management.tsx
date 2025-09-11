@@ -432,7 +432,7 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
                       <Button variant="destructive" disabled={tables.length === 0}>
-                        <Trash2 className="mr-2 h-4 w-4" /> Remove Last Table
+                        <Trash2 className="mr-2 h-4 w-4" /> Remove Table
                       </Button>
                     </AlertDialogTrigger>
                     <AlertDialogContent>
