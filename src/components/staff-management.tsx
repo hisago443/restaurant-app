@@ -245,23 +245,30 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
         <div className="relative h-full w-full flex items-center justify-center">
             <DayContent {...props} />
             {uniqueEmployeeIds.size > 0 && (
-                <div className="absolute bottom-1 flex items-center justify-center space-x-1">
-                    {Array.from(uniqueEmployeeIds).map(employeeId => {
+                <div className="absolute bottom-1.5 flex items-center justify-center space-x-1">
+                    {Array.from(uniqueEmployeeIds).slice(0, 5).map(employeeId => {
                         const employee = employees.find(e => e.id === employeeId);
                         if (!employee) return null;
                         
                         const wasAbsent = dayAbsences.some(a => a.employeeId === employeeId);
                         
                         return (
-                            <div 
-                                key={employeeId} 
-                                className={cn(
-                                    "h-1.5 w-1.5 rounded-full",
-                                    employee.color,
-                                    wasAbsent && "ring-1 ring-offset-1 ring-destructive"
-                                )}
-                                title={employee.name}
-                            />
+                            <TooltipProvider key={employeeId}>
+                                <Tooltip>
+                                    <TooltipTrigger>
+                                        <div 
+                                            className={cn(
+                                                "h-2 w-2 rounded-full",
+                                                employee.color,
+                                                wasAbsent && "ring-1 ring-offset-1 ring-destructive"
+                                            )}
+                                        />
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        <p>{employee.name}</p>
+                                    </TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
                         )
                     })}
                 </div>
@@ -713,6 +720,7 @@ function EmployeeDialog({ open, onOpenChange, employee, onSave }: { open: boolea
     
 
     
+
 
 
 
