@@ -7,7 +7,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { collection, onSnapshot, addDoc, doc, setDoc, deleteDoc, updateDoc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Button } from '@/components/ui/button';
-import { Calendar } from '@/components/ui/calendar';
+import { Calendar, CalendarProps } from '@/components/ui/calendar';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger, AlertDialogFooter } from "@/components/ui/alert-dialog";
@@ -25,6 +25,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from './ui/scroll-area';
 import { Separator } from './ui/separator';
 import { Checkbox } from './ui/checkbox';
+import { DayContent, DayContentProps } from 'react-day-picker';
 
 const attendanceStatusConfig: Record<AttendanceStatus, { icon: React.ElementType, color: string, label: string, className: string }> = {
   'Present': { icon: UserCheck, color: 'green', label: 'Present', className: 'bg-green-500 hover:bg-green-600 text-white' },
@@ -179,6 +180,49 @@ export default function StaffManagement({ employees }: StaffManagementProps) {
     }, {} as Record<string, Advance[]>);
   }, [advances]);
 
+  const CustomDay = (props: DayContentProps) => {
+    const { date } = props;
+    const dayAdvances = showAdvancesOnCalendar ? advances.filter(a => isSameDay(a.date, date)) : [];
+    const dayAbsences = showAbsencesOnCalendar ? attendance.filter(a => isSameDay(a.date, date) && a.status === 'Absent') : [];
+
+    const events = [
+      ...dayAdvances.map(a => ({ type: 'advance', employeeId: a.employeeId })),
+      ...dayAbsences.map(a => ({ type: 'absence', employeeId: a.employeeId }))
+    ];
+    
+    // Use a Set to only show one dot per employee per day, even if they have multiple events
+    const uniqueEmployeeIds = new Set(events.map(e => e.employeeId));
+
+    return (
+        <div className="relative h-full w-full flex flex-col items-center justify-center">
+            <DayContent {...props} />
+            {uniqueEmployeeIds.size > 0 && (
+                <div className="absolute bottom-1 flex items-center justify-center space-x-0.5">
+                    {Array.from(uniqueEmployeeIds).map(employeeId => {
+                        const employee = employees.find(e => e.id === employeeId);
+                        if (!employee) return null;
+                        
+                        const wasAbsent = dayAbsences.some(a => a.employeeId === employeeId);
+                        
+                        return (
+                            <div 
+                                key={employeeId} 
+                                className={cn(
+                                    "h-1.5 w-1.5 rounded-full",
+                                    employee.color,
+                                    wasAbsent && "ring-1 ring-offset-1 ring-destructive"
+                                )}
+                                title={employee.name}
+                            />
+                        )
+                    })}
+                </div>
+            )}
+        </div>
+    );
+  }
+
+
   return (
     <div className="p-4 space-y-4">
       <Tabs defaultValue="attendance">
@@ -287,6 +331,7 @@ export default function StaffManagement({ employees }: StaffManagementProps) {
                   selected={selectedDate}
                   onSelect={(date) => setSelectedDate(date || new Date())}
                   className="rounded-md border bg-background"
+                  components={{ DayContent: CustomDay }}
                   modifiers={{
                     advance: datesWithAdvance,
                     absent: datesWithAbsence,
