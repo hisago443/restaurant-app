@@ -173,7 +173,7 @@ function TableDropTarget({ table, occupancyCount, handleSelectTable, children, o
 }
 
 
-function PosSystem({ 
+export default function PosSystem({ 
     tables, 
     orders, 
     setOrders, 
