@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import * as React from 'react';
@@ -18,7 +17,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from '@/hooks/use-toast';
-import { Search, Plus, Minus, X, LayoutGrid, List, Rows, ChevronsUpDown, Palette, Shuffle, ClipboardList, Send, CheckCircle2, Users, Bookmark, Sparkles, Repeat, Edit, UserCheck, BookmarkX, Printer, Loader2, BookOpen } from 'lucide-react';
+import { Search, Plus, Minus, X, LayoutGrid, List, Rows, ChevronsUpDown, Palette, Shuffle, ClipboardList, Send, CheckCircle2, Users, Bookmark, Sparkles, Repeat, Edit, UserCheck, BookmarkX, Printer, Loader2, BookOpen, Trash2 as TrashIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { AddItemDialog } from './add-item-dialog';
@@ -33,9 +32,7 @@ const vegColor = 'bg-green-100 dark:bg-green-900/30';
 const nonVegColor = 'bg-rose-100 dark:bg-rose-900/30';
 
 const colorPalette: Record<string, {light: string, dark: string}> = {
-    sky: { light: 'bg-sky-200 dark:bg-sky-800/70', dark: 'bg-sky-300 dark:bg-sky-700' },
     amber: { light: 'bg-amber-200 dark:bg-amber-800/70', dark: 'bg-amber-300 dark:bg-amber-700' },
-    pink: { light: 'bg-pink-200 dark:bg-pink-800/70', dark: 'bg-pink-300 dark:bg-pink-700' },
     lime: { light: 'bg-lime-200 dark:bg-lime-800/70', dark: 'bg-lime-300 dark:bg-lime-700' },
     purple: { light: 'bg-purple-200 dark:bg-purple-800/70', dark: 'bg-purple-300 dark:bg-purple-700' },
     teal: { light: 'bg-teal-200 dark:bg-teal-800/70', dark: 'bg-teal-300 dark:bg-teal-700' },
@@ -710,20 +707,22 @@ export default function PosSystem({
           <div className="flex justify-center">
             <TabsList className="mb-4 flex-wrap h-auto">
               {filteredMenu.map(category => (
-                <div key={category.category} className="relative p-0.5 rounded-sm cursor-pointer">
-                    <TabsTrigger value={category.category} className="flex-grow justify-between gap-2 w-full pr-8 data-[state=active]:shadow-none text-black">
-                       <span className="flex-grow text-left">{category.category}</span>
+                 <div key={category.category} className={cn("relative p-0.5 rounded-md cursor-pointer", categoryColors[category.category] ? colorPalette[categoryColors[category.category]]?.light : '')}>
+                    <TabsTrigger value={category.category} asChild className="flex-grow justify-between gap-2 w-full pr-8 data-[state=active]:shadow-none !bg-transparent text-black">
+                       <div>
+                         <span className="flex-grow text-left">{category.category}</span>
+                         <div className="absolute right-1 top-1/2 -translate-y-1/2">
+                            <CategoryColorPicker categoryName={category.category} />
+                         </div>
+                       </div>
                     </TabsTrigger>
-                     <div className="absolute right-1 top-1/2 -translate-y-1/2">
-                        <CategoryColorPicker categoryName={category.category} />
-                     </div>
                 </div>
               ))}
             </TabsList>
           </div>
           {filteredMenu.map(category => (
              <TabsContent key={category.category} value={category.category} className="m-0">
-               <div className={cn("rounded-lg p-2 space-y-4", categoryColors[category.category] ? colorPalette[categoryColors[category.category]]?.light : '')}>
+               <div className={cn("rounded-lg p-2 space-y-4")}>
                 {category.subCategories.map((subCategory) => (
                   <div key={subCategory.name}>
                     <h3 className="text-md font-semibold mb-2 text-muted-foreground pl-2">{subCategory.name}</h3>
@@ -740,30 +739,32 @@ export default function PosSystem({
     }
     // Accordion view is default
     return (
-      <Accordion type="multiple" value={activeAccordionItems} onValueChange={setActiveAccordionItems} className="w-full">
-        {filteredMenu.map((category) => (
-          <AccordionItem key={category.category} value={category.category} className={cn("border-b-0 rounded-lg mb-2 overflow-hidden", categoryColors[category.category] ? colorPalette[categoryColors[category.category]]?.light : '')}>
-            <div className="flex items-center pr-4">
-              <AccordionTrigger className='p-4 hover:no-underline flex-grow'>
-                  <div className="text-xl font-bold text-black flex-grow text-left">{category.category}</div>
-              </AccordionTrigger>
-              <CategoryColorPicker categoryName={category.category} />
-            </div>
-            <AccordionContent className="p-2 pt-0">
-              <div className="space-y-4 pt-2">
-                {category.subCategories.map((subCategory) => (
-                  <div key={subCategory.name}>
-                    <h3 className="text-md font-semibold mb-2 text-muted-foreground pl-2">{subCategory.name}</h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-                      {subCategory.items.map((item) => renderMenuItem(item, subCategory.name, category.category))}
+       <div className="flex justify-center">
+        <Accordion type="multiple" value={activeAccordionItems} onValueChange={setActiveAccordionItems} className="w-full max-w-4xl">
+            {filteredMenu.map((category) => (
+            <AccordionItem key={category.category} value={category.category} className={cn("border-b-0 rounded-lg mb-2 overflow-hidden", categoryColors[category.category] ? colorPalette[categoryColors[category.category]]?.light : '')}>
+                <div className="flex items-center pr-4">
+                <AccordionTrigger className='p-4 hover:no-underline flex-grow'>
+                    <div className="text-xl font-bold text-black flex-grow text-left">{category.category}</div>
+                </AccordionTrigger>
+                <CategoryColorPicker categoryName={category.category} />
+                </div>
+                <AccordionContent className="p-2 pt-0">
+                <div className="space-y-4 pt-2">
+                    {category.subCategories.map((subCategory) => (
+                    <div key={subCategory.name}>
+                        <h3 className="text-md font-semibold mb-2 text-muted-foreground pl-2">{subCategory.name}</h3>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                        {subCategory.items.map((item) => renderMenuItem(item, subCategory.name, category.category))}
+                        </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            </AccordionContent>
-          </AccordionItem>
-        ))}
-      </Accordion>
+                    ))}
+                </div>
+                </AccordionContent>
+            </AccordionItem>
+            ))}
+        </Accordion>
+       </div>
     );
   };
   
@@ -807,7 +808,7 @@ export default function PosSystem({
         const tagClass = isNew ? "text-blue-500" : "text-yellow-600";
 
         return (
-            <div key={item.name} className={cn("flex items-center p-2 rounded-md", itemClass)}>
+             <div key={item.name} className={cn("flex items-center p-2 rounded-md", itemClass)}>
                 <div className="flex-grow">
                     <p className="font-medium">{item.name} {itemTag && <span className={cn("text-xs", tagClass)}>{itemTag}</span>}</p>
                     <p className="text-sm text-muted-foreground">₹{item.price.toFixed(2)}</p>
@@ -879,7 +880,7 @@ export default function PosSystem({
                {viewMode === 'accordion' && (
                 <Button variant="outline" size="sm" onClick={toggleAccordion}>
                   <ChevronsUpDown className="mr-2 h-4 w-4" />
-                  {allItemsOpen ? 'Collapse' : 'Collapse'}
+                  {allItemsOpen ? 'Collapse' : 'Expand'}
                 </Button>
               )}
                <Button variant="outline" size="sm" onClick={() => setIsMenuManagerOpen(true)}>
@@ -898,11 +899,35 @@ export default function PosSystem({
       </Card>
 
       <Card className="col-span-1 flex flex-col m-4 ml-0">
-        <div className="p-4 border-b">
-          <CardTitle>{activeOrder ? `Editing Order #${activeOrder.id}` : 'Current Order'}</CardTitle>
-          <CardDescription>
-            {currentActiveTableId ? `Table ${currentActiveTableId}` : "No Table Selected"}
-          </CardDescription>
+        <div className="p-4 border-b flex justify-between items-center">
+            <div>
+                <CardTitle>{activeOrder ? `Editing Order #${activeOrder.id}` : 'Current Order'}</CardTitle>
+                <CardDescription>
+                    {currentActiveTableId ? `Table ${currentActiveTableId}` : "No Table Selected"}
+                </CardDescription>
+            </div>
+            {orderItems.length > 0 && (
+                <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                        <Button variant="destructive" size="sm">
+                            <TrashIcon className="mr-2 h-4 w-4" />
+                            Clear All
+                        </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                                This will remove all items from the current order. This action cannot be undone.
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => clearCurrentOrder(false)}>Clear All</AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
+            )}
         </div>
         
         <ScrollArea className="flex-grow p-4">
@@ -937,7 +962,7 @@ export default function PosSystem({
         
         <div className="p-4 border-t space-y-4 bg-muted/30">
             <div className="space-y-2">
-                <Label className="font-semibold block">{currentActiveTableId ? "Select Table" : "Select a Table"}</Label>
+                <Label className="font-semibold block">Select Table</Label>
                  <div className="grid grid-cols-5 gap-1.5">
                   {tables.map(table => (
                       <Button
@@ -949,7 +974,7 @@ export default function PosSystem({
                             currentActiveTableId === table.id && 'ring-4 ring-offset-2 ring-ring',
                             table.status === 'Available' || table.status === 'Occupied' ? 'text-white border-black' : 'text-black border-black/50',
                           )}
-                          onClick={() => setSelectedTableId(table.id)}
+                          onClick={() => handleSelectTable(table.id)}
                       >
                         {(showOccupancy && occupancyCount[table.id] > 0) &&
                             <div className="absolute bottom-0.5 right-0.5 flex items-center gap-1 bg-black/50 text-white text-xs font-bold px-1 rounded-md">
@@ -1042,4 +1067,4 @@ export default function PosSystem({
   );
 }
 
-
+    
