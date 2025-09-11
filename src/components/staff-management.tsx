@@ -313,11 +313,11 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
                   <div className="p-4 space-y-2">
                       <div className="flex items-center space-x-2">
                           <Checkbox id="show-advances" checked={showAdvancesOnCalendar} onCheckedChange={(checked) => setShowAdvancesOnCalendar(Boolean(checked))} />
-                          <Label htmlFor="show-advances">Show Advance Dates</Label>
+                          <Label htmlFor="show-advances" className="font-bold">Show Advance Dates</Label>
                       </div>
                         <div className="flex items-center space-x-2">
                           <Checkbox id="show-absences" checked={showAbsencesOnCalendar} onCheckedChange={(checked) => setShowAbsencesOnCalendar(Boolean(checked))} />
-                          <Label htmlFor="show-absences">Show Absent Dates</Label>
+                          <Label htmlFor="show-absences" className="font-bold">Show Absent Dates</Label>
                       </div>
                   </div>
               </Card>
@@ -689,3 +689,6 @@ function EmployeeDialog({ open, onOpenChange, employee, onSave }: { open: boolea
 
 
 
+
+
+    
