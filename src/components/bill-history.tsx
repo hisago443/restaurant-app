@@ -215,3 +215,5 @@ export default function BillHistory({ bills, onClearAll }: BillHistoryProps) {
     </>
   );
 }
+
+    
