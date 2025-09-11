@@ -31,6 +31,8 @@ export default function MainLayout() {
   const [activeOrder, setActiveOrder] = useState<Order | null>(null);
   const [currentOrderItems, setCurrentOrderItems] = useState<OrderItem[]>([]);
   const [activeTab, setActiveTab] = useState('pos');
+  const [initialTableForManagement, setInitialTableForManagement] = useState<number | null>(null);
+
 
   // Lifted state for POS
   const [selectedTableId, setSelectedTableId] = useState<number | null>(null);
@@ -261,7 +263,8 @@ export default function MainLayout() {
   }, [billHistory]);
 
   const handleTabChange = (tab: string) => {
-    setActiveTab(tab)
+    setInitialTableForManagement(null); // Reset when manually changing tabs
+    setActiveTab(tab);
   }
   
   const onOrderCreated = useCallback((order: Order) => {
@@ -270,6 +273,26 @@ export default function MainLayout() {
     setCurrentOrderItems(order.items);
   }, []);
   
+  const handleViewTableDetails = (tableId: number) => {
+    setInitialTableForManagement(tableId);
+    setActiveTab('tables');
+  };
+  
+  const handleEditOrderFromShortcut = (tableId: number) => {
+    const order = orders.find(o => o.tableId === tableId && o.status !== 'Completed');
+    if (order) {
+      setSelectedTableId(order.tableId);
+      setActiveOrder(order);
+      setCurrentOrderItems(order.items);
+      setDiscount(0);
+      setActiveTab('pos');
+    } else {
+        // If no active order, just select the table for a new order.
+        handleSelectTable(tableId);
+    }
+  };
+
+
   return (
     <div className="flex flex-col h-screen bg-background">
       <header className="flex items-center justify-between h-16 px-6 border-b shrink-0">
@@ -333,6 +356,8 @@ export default function MainLayout() {
                   setPendingOrders={setPendingOrders}
                   categoryColors={categoryColors}
                   setCategoryColors={setCategoryColors}
+                  onViewTableDetails={handleViewTableDetails}
+                  onEditOrder={handleEditOrderFromShortcut}
                 />
             </TabsContent>
             <TabsContent value="tables" className="m-0 p-0">
@@ -353,6 +378,7 @@ export default function MainLayout() {
                 }}
                 showOccupancy={showOccupancy}
                 setShowOccupancy={setShowOccupancy}
+                initialSelectedTableId={initialTableForManagement}
               />
             </TabsContent>
             <TabsContent value="kitchen" className="m-0 p-0 h-full">

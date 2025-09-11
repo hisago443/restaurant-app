@@ -18,9 +18,10 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from '@/hooks/use-toast';
-import { Search, Plus, Minus, X, LayoutGrid, List, Rows, ChevronsUpDown, Palette, Shuffle, ClipboardList, Send, CheckCircle2, Users, Bookmark, Sparkles, Repeat, Edit, UserCheck, BookmarkX, Printer, Loader2, BookOpen, Trash2 as TrashIcon } from 'lucide-react';
+import { Search, Plus, Minus, X, LayoutGrid, List, Rows, ChevronsUpDown, Palette, Shuffle, ClipboardList, Send, CheckCircle2, Users, Bookmark, Sparkles, Repeat, Edit, UserCheck, BookmarkX, Printer, Loader2, BookOpen, Trash2 as TrashIcon, MoreVertical, View, Pencil } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { AddItemDialog } from './add-item-dialog';
 import { ManageMenuDialog } from './manage-menu-dialog';
 
@@ -81,6 +82,8 @@ interface PosSystemProps {
   setPendingOrders: React.Dispatch<React.SetStateAction<Record<number, OrderItem[]>>>;
   categoryColors: Record<string, string>;
   setCategoryColors: React.Dispatch<React.SetStateAction<Record<string, string>>>;
+  onViewTableDetails: (tableId: number) => void;
+  onEditOrder: (tableId: number) => void;
 }
 
 export default function PosSystem({ 
@@ -104,6 +107,8 @@ export default function PosSystem({
     setPendingOrders,
     categoryColors,
     setCategoryColors,
+    onViewTableDetails,
+    onEditOrder,
 }: PosSystemProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [menu, setMenu] = useState<MenuCategory[]>(menuData as MenuCategory[]);
@@ -708,27 +713,25 @@ export default function PosSystem({
           <div className="flex justify-center">
             <TabsList className="mb-4 flex-wrap h-auto bg-transparent border-b rounded-none p-0">
               {filteredMenu.map(category => (
-                <div key={category.category} className="relative">
-                    <TabsTrigger value={category.category} asChild>
-                        <div className='flex items-center text-black !bg-transparent rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none px-4 py-2 cursor-pointer'>
-                           <span className="flex-grow text-left text-lg">{category.category}</span>
-                        </div>
+                <div key={category.category} className="relative group">
+                    <TabsTrigger value={category.category} className='flex items-center text-black !bg-transparent rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none px-4 py-2 cursor-pointer'>
+                       <span className="flex-grow text-left text-lg">{category.category}</span>
                     </TabsTrigger>
-                    <div className="absolute right-0 top-1/2 -translate-y-1/2">
+                    <div className="absolute right-0 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
                         <Popover>
                             <PopoverTrigger asChild>
                                 <Button variant="ghost" size="icon" className="h-6 w-6"><Palette className="h-4 w-4" /></Button>
                             </PopoverTrigger>
-                            <PopoverContent className="w-auto p-2">
+                            <PopoverContent className="w-auto p-2" onClick={e => e.stopPropagation()}>
                                 <div className="grid grid-cols-5 gap-1">
                                 {colorNames.map((name) => (
                                     <div
                                     key={name}
                                     className={cn("h-6 w-6 rounded-full cursor-pointer", colorPalette[name].light)}
-                                    onClick={() => handleSetCategoryColor(category.category, name)}
+                                    onClick={(e) => { e.stopPropagation(); handleSetCategoryColor(category.category, name); }}
                                     />
                                 ))}
-                                <Button variant="ghost" size="sm" className="col-span-5 h-8" onClick={() => handleSetCategoryColor(category.category, '')}>Reset</Button>
+                                <Button variant="ghost" size="sm" className="col-span-5 h-8" onClick={(e) => { e.stopPropagation(); handleSetCategoryColor(category.category, ''); }}>Reset</Button>
                                 </div>
                             </PopoverContent>
                         </Popover>
@@ -853,6 +856,83 @@ export default function PosSystem({
 
         {newItems.map(item => renderItemRow(item, true))}
       </div>
+    );
+  };
+  
+  const renderTableActions = (table: Table) => {
+    const orderForTable = orders.find(o => o.tableId === table.id && o.status !== 'Completed');
+
+    const handleActionClick = (e: React.MouseEvent) => {
+        e.stopPropagation();
+    };
+
+    return (
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute top-0.5 right-0.5 h-7 w-7 bg-black/20 hover:bg-black/40 text-white"
+            onClick={handleActionClick}
+          >
+            <MoreVertical className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent onClick={handleActionClick} className="w-56">
+          <DropdownMenuItem onClick={() => onViewTableDetails(table.id)}>
+            <View className="mr-2 h-4 w-4" />
+            <span>View Details</span>
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          {table.status === 'Occupied' && orderForTable && (
+            <>
+              <DropdownMenuItem onClick={() => onEditOrder(table.id)}>
+                <Pencil className="mr-2 h-4 w-4" />
+                <span>Update Order</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handlePrintProvisionalBill}>
+                <Printer className="mr-2 h-4 w-4" />
+                <span>Print Provisional Bill</span>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => updateTableStatus([table.id], 'Cleaning')}>
+                <Sparkles className="mr-2 h-4 w-4" />
+                <span>Mark as Cleaning</span>
+              </DropdownMenuItem>
+            </>
+          )}
+          {table.status === 'Available' && (
+            <>
+              <DropdownMenuItem onClick={() => onEditOrder(table.id)}>
+                <Users className="mr-2 h-4 w-4" />
+                <span>Create Order</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => updateTableStatus([table.id], 'Reserved')}>
+                <Bookmark className="mr-2 h-4 w-4" />
+                <span>Reserve Table</span>
+              </DropdownMenuItem>
+            </>
+          )}
+          {table.status === 'Reserved' && (
+            <>
+              <DropdownMenuItem onClick={() => updateTableStatus([table.id], 'Occupied')}>
+                <UserCheck className="mr-2 h-4 w-4" />
+                <span>Guest Arrived</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => updateTableStatus([table.id], 'Available')}>
+                <BookmarkX className="mr-2 h-4 w-4" />
+                <span>Cancel Reservation</span>
+              </DropdownMenuItem>
+            </>
+          )}
+          {table.status === 'Cleaning' && (
+             <DropdownMenuItem onClick={() => updateTableStatus([table.id], 'Available')}>
+                <CheckCircle2 className="mr-2 h-4 w-4" />
+                <span>Mark as Available</span>
+              </DropdownMenuItem>
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
     );
   };
 
@@ -993,6 +1073,7 @@ export default function PosSystem({
                           )}
                           onClick={() => handleSelectTable(table.id)}
                       >
+                         {renderTableActions(table)}
                         {(showOccupancy && occupancyCount[table.id] > 0) &&
                             <div className="absolute bottom-0.5 right-0.5 flex items-center gap-1 bg-black/50 text-white text-xs font-bold px-1 rounded-md">
                                 <Repeat className="h-2.5 w-2.5" />

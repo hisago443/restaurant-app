@@ -42,9 +42,10 @@ interface TableManagementProps {
   onEditOrder: (order: Order) => void;
   showOccupancy: boolean;
   setShowOccupancy: React.Dispatch<React.SetStateAction<boolean>>;
+  initialSelectedTableId?: number | null;
 }
 
-export default function TableManagement({ tables, orders, billHistory, updateTableStatus, addTable, removeLastTable, occupancyCount, onEditOrder, showOccupancy, setShowOccupancy }: TableManagementProps) {
+export default function TableManagement({ tables, orders, billHistory, updateTableStatus, addTable, removeLastTable, occupancyCount, onEditOrder, showOccupancy, setShowOccupancy, initialSelectedTableId }: TableManagementProps) {
   const [selectedTable, setSelectedTable] = useState<Table | null>(null);
   const [selectedTables, setSelectedTables] = useState<number[]>([]);
   const [isLayoutManagerOpen, setIsLayoutManagerOpen] = useState(false);
@@ -52,6 +53,15 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
   const [hoveredStatus, setHoveredStatus] = useState<TableStatus | null>(null);
   const [isPrintDialogOpen, setIsPrintDialogOpen] = useState(false);
   const [tableForPrint, setTableForPrint] = useState<Table | null>(null);
+
+  useEffect(() => {
+    if (initialSelectedTableId) {
+        const table = tables.find(t => t.id === initialSelectedTableId);
+        if (table) {
+            setSelectedTable(table);
+        }
+    }
+  }, [initialSelectedTableId, tables]);
 
   const filteredTables = tables.filter(table => filter === 'All' || table.status === filter);
   
