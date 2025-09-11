@@ -19,7 +19,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { isSameDay, format } from 'date-fns';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger, AlertDialogDescription } from "@/components/ui/alert-dialog";
 import { db } from '@/lib/firebase';
 import { doc, deleteDoc } from 'firebase/firestore';
 
@@ -242,7 +242,9 @@ export default function AdminDashboard({ billHistory, employees, expenses }: Adm
                   <DialogTitle>Bill History</DialogTitle>
                   <DialogDescription>A log of all completed transactions.</DialogDescription>
                 </DialogHeader>
-                <BillHistory bills={billHistory} />
+                <div className="pt-4">
+                  <BillHistory bills={billHistory} />
+                </div>
               </DialogContent>
             </Dialog>
             <Button variant="outline" size="lg" className="justify-start gap-2" onClick={handleExportCSV}>
