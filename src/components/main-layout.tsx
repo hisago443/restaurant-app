@@ -289,6 +289,7 @@ export default function MainLayout() {
     } else {
         // If no active order, just select the table for a new order.
         handleSelectTable(tableId);
+        setActiveTab('pos');
     }
   };
 
@@ -396,6 +397,7 @@ export default function MainLayout() {
               <AdminDashboard 
                 billHistory={billHistory} 
                 employees={employees} 
+                expenses={expenses}
               />
             </TabsContent>
           </div>

@@ -1256,7 +1256,3 @@ export default function PosSystem({
     
 
     
-
-
-
-

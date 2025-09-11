@@ -287,16 +287,6 @@ export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
     resetForm();
   };
 
-  const handleDeleteExpense = async (expenseId: string) => {
-    try {
-        await deleteDoc(doc(db, "expenses", expenseId));
-        toast({ title: "Expense deleted successfully" });
-    } catch (error) {
-        toast({ variant: "destructive", title: "Error deleting expense" });
-        console.error("Error deleting expense: ", error);
-    }
-  };
-
   const handleSaveVendor = async (vendor: Omit<Vendor, 'id'> & { id?: string }) => {
     const { id, ...vendorData } = vendor;
     if (id) {
@@ -442,7 +432,7 @@ export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
                   <TableHead className="border-r font-bold text-foreground">Description</TableHead>
                   <TableHead className="border-r font-bold text-foreground">Vendor</TableHead>
                   <TableHead className="border-r font-bold text-foreground">Vendor Mobile</TableHead>
-                  <TableHead className="text-right border-r font-bold text-foreground">Amount (Rs.)</TableHead>
+                  <TableHead className="text-right border-r font-bold text-foreground">Amount</TableHead>
               </TableRow>
               </TableHeader>
               <TableBody>
@@ -457,7 +447,7 @@ export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
                           <TableCell className="border-r">{vendor?.name || 'N/A'}</TableCell>
                           <TableCell className="border-r">{vendor?.phone || 'N/A'}</TableCell>
                           <TableCell className="text-right font-mono border-r text-red-600 dark:text-red-400">
-                          {expense.amount.toFixed(2)}
+                          Rs. {expense.amount.toFixed(2)}
                           </TableCell>
                       </TableRow>
                     )

@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useState, useEffect, useMemo } from 'react';
@@ -6,7 +7,7 @@ import { BarChart, Book, Download, TrendingUp, Settings, Package, User, Shopping
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import SalesReport from './sales-report';
 import ActivityLog from './activity-log';
 import InventoryManagement from './inventory-management';
@@ -17,7 +18,10 @@ import { generateAndSendReport } from '@/ai/flows/generate-report';
 import { useToast } from '@/hooks/use-toast';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { isSameDay } from 'date-fns';
+import { isSameDay, format } from 'date-fns';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { db } from '@/lib/firebase';
+import { doc, deleteDoc } from 'firebase/firestore';
 
 
 const topItems: { name: string; count: number }[] = [];
@@ -32,9 +36,10 @@ const salesData = [
 interface AdminDashboardProps {
   billHistory: Bill[];
   employees: Employee[];
+  expenses: Expense[];
 }
 
-export default function AdminDashboard({ billHistory, employees }: AdminDashboardProps) {
+export default function AdminDashboard({ billHistory, employees, expenses }: AdminDashboardProps) {
   const { toast } = useToast();
   const [isReportLoading, setIsReportLoading] = useState(false);
   const [autoSendDaily, setAutoSendDaily] = useState(false);
@@ -109,6 +114,16 @@ export default function AdminDashboard({ billHistory, employees }: AdminDashboar
       });
     } finally {
       setIsReportLoading(false);
+    }
+  };
+
+  const handleDeleteExpense = async (expenseId: string) => {
+    try {
+        await deleteDoc(doc(db, "expenses", expenseId));
+        toast({ title: "Expense deleted successfully" });
+    } catch (error) {
+        toast({ variant: "destructive", title: "Error deleting expense" });
+        console.error("Error deleting expense: ", error);
     }
   };
 
@@ -247,6 +262,66 @@ export default function AdminDashboard({ billHistory, employees }: AdminDashboar
                   <DialogDescription>Recent activities across the system.</DialogDescription>
                 </DialogHeader>
                 <ActivityLog />
+              </DialogContent>
+            </Dialog>
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="lg" className="justify-start gap-2">
+                  <Receipt className="h-5 w-5" />
+                  <span>Manage Expenses</span>
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-3xl">
+                  <DialogHeader>
+                    <DialogTitle>Manage Expenses</DialogTitle>
+                    <DialogDescription>Review and manage all business expenses.</DialogDescription>
+                  </DialogHeader>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Date</TableHead>
+                        <TableHead>Category</TableHead>
+                        <TableHead>Description</TableHead>
+                        <TableHead className="text-right">Amount</TableHead>
+                        <TableHead className="text-center">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {expenses.length > 0 ? (
+                          expenses.map(expense => (
+                            <TableRow key={expense.id}>
+                              <TableCell>{format(expense.date, 'PPP')}</TableCell>
+                              <TableCell>{expense.category}</TableCell>
+                              <TableCell>{expense.description}</TableCell>
+                              <TableCell className="text-right font-mono text-red-600 dark:text-red-400">Rs. {expense.amount.toFixed(2)}</TableCell>
+                              <TableCell className="text-center">
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="text-destructive">
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                      <AlertDialogDescription>This will permanently delete this expense. This action cannot be undone.</AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                      <AlertDialogAction onClick={() => handleDeleteExpense(expense.id)}>Delete</AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
+                              </TableCell>
+                            </TableRow>
+                          ))
+                      ) : (
+                        <TableRow>
+                          <TableCell colSpan={5} className="text-center text-muted-foreground">No expenses recorded.</TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
               </DialogContent>
             </Dialog>
             <Dialog>
