@@ -303,6 +303,30 @@ export default function StaffManagement({ employees }: StaffManagementProps) {
                                                             <span className="font-mono font-semibold">Rs. {advance.amount.toLocaleString()}</span>
                                                             <span className="text-muted-foreground ml-2">on {format(advance.date, 'PPP')}</span>
                                                         </div>
+                                                        <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                                                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openAdvanceDialog(advance)}>
+                                                                <Edit className="h-4 w-4" />
+                                                            </Button>
+                                                            <AlertDialog>
+                                                                <AlertDialogTrigger asChild>
+                                                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive">
+                                                                        <Trash2 className="h-4 w-4" />
+                                                                    </Button>
+                                                                </AlertDialogTrigger>
+                                                                <AlertDialogContent>
+                                                                    <AlertDialogHeader>
+                                                                        <AlertDialogTitle>Delete this advance?</AlertDialogTitle>
+                                                                        <AlertDialogDescription>
+                                                                            This will delete the advance of Rs. {advance.amount} for {employee?.name}. This action cannot be undone.
+                                                                        </AlertDialogDescription>
+                                                                    </AlertDialogHeader>
+                                                                    <AlertDialogFooter>
+                                                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                                        <AlertDialogAction onClick={() => handleDeleteAdvance(advance.id)}>Delete</AlertDialogAction>
+                                                                    </AlertDialogFooter>
+                                                                </AlertDialogContent>
+                                                            </AlertDialog>
+                                                        </div>
                                                     </li>
                                                 ))}
                                             </ul>
@@ -319,8 +343,8 @@ export default function StaffManagement({ employees }: StaffManagementProps) {
             </div>
         </TabsContent>
         <TabsContent value="attendance">
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <Card className="lg:col-span-1 bg-violet-50 dark:bg-violet-900/20">
+          <div className="grid md:grid-cols-2 gap-6">
+            <Card className="bg-violet-50 dark:bg-violet-900/20">
               <CardHeader>
                 <CardTitle>Calendar</CardTitle>
                 <CardDescription>Select a date to manage records.</CardDescription>
@@ -357,21 +381,20 @@ export default function StaffManagement({ employees }: StaffManagementProps) {
                  </div>
               </CardContent>
             </Card>
-            <Card className="lg:col-span-2 bg-violet-50 dark:bg-violet-900/20">
-              <CardHeader>
-                <div className="flex justify-between items-start">
-                  <div>
-                    <CardTitle>Manage for {format(selectedDate, 'PPP')}</CardTitle>
-                    <CardDescription>Mark attendance and record salary advances.</CardDescription>
-                  </div>
-                  <Button onClick={() => openAdvanceDialog(null)}>
-                    <span className="mr-2">Rs.</span> Add Advance
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                    <h3 className="font-semibold mb-2 text-lg">Staff Attendance</h3>
+            <div className="space-y-6">
+               <Card className="bg-violet-50 dark:bg-violet-900/20">
+                <CardHeader>
+                    <div className="flex justify-between items-start">
+                    <div>
+                        <CardTitle>Staff Attendance</CardTitle>
+                        <CardDescription>Manage for {format(selectedDate, 'PPP')}</CardDescription>
+                    </div>
+                    <Button onClick={() => openAdvanceDialog(null)}>
+                        <span className="mr-2">Rs.</span> Add Advance
+                    </Button>
+                    </div>
+                </CardHeader>
+                <CardContent>
                     <div className="space-y-2">
                         {employees.map(employee => {
                             const attendanceRecord = attendanceForSelectedDate.find(a => a.employeeId === employee.id);
@@ -405,12 +428,14 @@ export default function StaffManagement({ employees }: StaffManagementProps) {
                             )
                         })}
                     </div>
-                </div>
-                
-                <Separator />
+                </CardContent>
+              </Card>
 
-                <div>
-                    <h3 className="font-semibold mb-2 text-lg">Advances Given on {format(selectedDate, 'do MMMM')}</h3>
+              <Card className="bg-violet-50 dark:bg-violet-900/20">
+                <CardHeader>
+                    <CardTitle className="text-lg">Advances Given on {format(selectedDate, 'do MMMM')}</CardTitle>
+                </CardHeader>
+                 <CardContent>
                     <div className="space-y-2">
                     {advancesForSelectedDate.length > 0 ? (
                         advancesForSelectedDate.map(advance => {
@@ -455,9 +480,9 @@ export default function StaffManagement({ employees }: StaffManagementProps) {
                         <p className="text-muted-foreground text-sm text-center pt-4">No advances were given on this date.</p>
                     )}
                     </div>
-                </div>
-              </CardContent>
-            </Card>
+                 </CardContent>
+              </Card>
+            </div>
           </div>
         </TabsContent>
       </Tabs>
