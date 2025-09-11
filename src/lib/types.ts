@@ -48,7 +48,7 @@ export interface Bill {
 
 export interface Employee {
   id: string;
-  name: string;
+  name:string;
   role: string;
   salary: number;
   color: string;
@@ -59,6 +59,16 @@ export interface Advance {
   employeeId: string;
   date: Date;
   amount: number;
+}
+
+export type AttendanceStatus = 'Present' | 'Absent' | 'Half-day';
+
+export interface Attendance {
+  id: string; // Composite key: `${employeeId}_${yyyy-MM-dd}`
+  employeeId: string;
+  date: Date;
+  status: AttendanceStatus;
+  notes?: string;
 }
 
 export interface Vendor {

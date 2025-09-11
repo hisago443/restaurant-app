@@ -2,8 +2,8 @@
 
 "use client";
 
-import { useState, useEffect } from 'react';
-import { collection, onSnapshot, addDoc, doc, setDoc, deleteDoc, updateDoc } from 'firebase/firestore';
+import { useState, useEffect, useMemo } from 'react';
+import { collection, onSnapshot, addDoc, doc, setDoc, deleteDoc, updateDoc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
@@ -15,138 +15,80 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { PlusCircle, Edit, Trash2 } from 'lucide-react';
-import type { Employee, Advance } from '@/lib/types';
-import { format, isSameDay } from 'date-fns';
+import { PlusCircle, Edit, Trash2, Check, X, CircleSlash, Pencil, UserCheck, UserX, UserMinus } from 'lucide-react';
+import type { Employee, Advance, Attendance, AttendanceStatus } from '@/lib/types';
+import { format, isSameDay, startOfDay } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { Textarea } from '@/components/ui/textarea';
 
 const colors = ['bg-blue-500', 'bg-green-500', 'bg-yellow-500', 'bg-purple-500', 'bg-pink-500', 'bg-indigo-500', 'bg-teal-500'];
 
-function AddOrEditAdvanceDialog({
-  open,
-  onOpenChange,
-  employees,
-  onSave,
-  selectedDate,
-  existingAdvance,
-}: {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  employees: Employee[];
-  onSave: (advance: Omit<Advance, 'date' | 'id'> & { date: Date; id?: string }) => void;
-  selectedDate: Date;
-  existingAdvance: Advance | null;
-}) {
-  const [employeeId, setEmployeeId] = useState('');
-  const [amount, setAmount] = useState('');
-  
-  useEffect(() => {
-    if (existingAdvance) {
-      setEmployeeId(existingAdvance.employeeId);
-      setAmount(String(existingAdvance.amount));
-    } else {
-      setEmployeeId('');
-      setAmount('');
-    }
-  }, [existingAdvance, open]);
-
-  const handleSave = () => {
-    if (employeeId && amount) {
-      onSave({
-        id: existingAdvance?.id,
-        employeeId,
-        amount: parseFloat(amount),
-        date: selectedDate,
-      });
-      onOpenChange(false);
-    }
-  };
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>{existingAdvance ? 'Edit' : 'Add'} Advance</DialogTitle>
-          <DialogDescription>
-            Record an advance for an employee on {format(selectedDate, 'PPP')}.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="space-y-4 py-4">
-          <div className="space-y-2">
-            <Label htmlFor="employee">Employee</Label>
-            <Select onValueChange={setEmployeeId} value={employeeId} disabled={!!existingAdvance}>
-              <SelectTrigger id="employee">
-                <SelectValue placeholder="Select an employee" />
-              </SelectTrigger>
-              <SelectContent>
-                {employees.map(e => <SelectItem key={e.id} value={e.id}>{e.name} ({e.id})</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="amount">Amount (Rs.)</Label>
-            <Input id="amount" type="number" placeholder="e.g., 2000" value={amount} onChange={e => setAmount(e.target.value)} />
-          </div>
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button onClick={handleSave}>Save Advance</Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
+const attendanceStatusConfig: Record<AttendanceStatus, { icon: React.ElementType, color: string, label: string }> = {
+  'Present': { icon: UserCheck, color: 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 border-green-200 dark:border-green-800', label: 'Present' },
+  'Absent': { icon: UserX, color: 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200 border-red-200 dark:border-red-800', label: 'Absent' },
+  'Half-day': { icon: UserMinus, color: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 border-yellow-200 dark:border-yellow-800', label: 'Half-day' }
+};
 
 interface StaffManagementProps {
   employees: Employee[];
 }
 
-
 export default function StaffManagement({ employees }: StaffManagementProps) {
   const { toast } = useToast();
   const [advances, setAdvances] = useState<Advance[]>([]);
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+  const [attendance, setAttendance] = useState<Attendance[]>([]);
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  
   const [isAdvanceDialogOpen, setIsAdvanceDialogOpen] = useState(false);
+  const [isNotesDialogOpen, setIsNotesDialogOpen] = useState(false);
+  
   const [editingAdvance, setEditingAdvance] = useState<Advance | null>(null);
-  
+  const [editingAttendance, setEditingAttendance] = useState<Attendance | null>(null);
+
   useEffect(() => {
-    const unsub = onSnapshot(collection(db, "advances"), (snapshot) => {
-        const advancesData = snapshot.docs.map(doc => {
-            const data = doc.data();
-            return { ...data, id: doc.id, date: data.date.toDate() } as Advance;
-        });
-        setAdvances(advancesData);
+    const unsubAdvances = onSnapshot(collection(db, "advances"), (snapshot) => {
+        const data = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id, date: doc.data().date.toDate() } as Advance));
+        setAdvances(data);
     });
-    return () => unsub();
+
+    const unsubAttendance = onSnapshot(collection(db, "attendance"), (snapshot) => {
+        const data = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id, date: doc.data().date.toDate() } as Attendance));
+        setAttendance(data);
+    });
+
+    return () => {
+      unsubAdvances();
+      unsubAttendance();
+    };
   }, []);
+
+  const advancesForSelectedDate = useMemo(() => advances.filter(
+    (advance) => isSameDay(advance.date, selectedDate)
+  ), [advances, selectedDate]);
   
-  const advancesForSelectedDate = advances.filter(
-    (advance) => selectedDate && isSameDay(advance.date, selectedDate)
-  );
+  const attendanceForSelectedDate = useMemo(() => attendance.filter(
+    (att) => isSameDay(att.date, selectedDate)
+  ), [attendance, selectedDate]);
+
+  const datesWithAdvance = useMemo(() => advances.map(a => startOfDay(a.date)), [advances]);
+  const datesWithAttendance = useMemo(() => attendance.map(a => startOfDay(a.date)), [attendance]);
   
-  const datesWithAdvance = advances.map(a => a.date);
-  
-  const handleSaveAdvance = async (advance: Advance) => {
-    if (advance.id) {
-        // Update existing advance
+  const handleSaveAdvance = async (advance: Omit<Advance, 'id'> & {id?: string}) => {
+    const { id, ...advanceData } = advance;
+    if (id) {
         try {
-            const advanceRef = doc(db, "advances", advance.id);
-            await updateDoc(advanceRef, { amount: advance.amount });
-            toast({ title: 'Advance Updated', description: 'The advance has been updated.' });
+            await updateDoc(doc(db, "advances", id), advanceData);
+            toast({ title: 'Advance Updated' });
         } catch (error) {
-            console.error("Error updating advance: ", error);
-            toast({ variant: 'destructive', title: 'Update Failed', description: 'Could not update the advance.' });
+            toast({ variant: 'destructive', title: 'Update Failed' });
         }
     } else {
-        // Add new advance
         try {
-            const { id, ...newAdvance } = advance;
-            await addDoc(collection(db, "advances"), newAdvance);
-            toast({ title: 'Advance Saved', description: 'The advance has been recorded.' });
+            await addDoc(collection(db, "advances"), advanceData);
+            toast({ title: 'Advance Saved' });
         } catch (error) {
-            console.error("Error adding advance: ", error);
-            toast({ variant: 'destructive', title: 'Save Failed', description: 'Could not save the advance.' });
+            toast({ variant: 'destructive', title: 'Save Failed' });
         }
     }
   }
@@ -154,10 +96,9 @@ export default function StaffManagement({ employees }: StaffManagementProps) {
   const handleDeleteAdvance = async (advanceId: string) => {
     try {
         await deleteDoc(doc(db, "advances", advanceId));
-        toast({ title: 'Advance Deleted', description: 'The advance has been removed.' });
+        toast({ title: 'Advance Deleted' });
     } catch (error) {
-        console.error("Error deleting advance: ", error);
-        toast({ variant: 'destructive', title: 'Delete Failed', description: 'Could not delete the advance.' });
+        toast({ variant: 'destructive', title: 'Delete Failed' });
     }
   }
   
@@ -166,9 +107,57 @@ export default function StaffManagement({ employees }: StaffManagementProps) {
     setIsAdvanceDialogOpen(true);
   }
 
+  const handleMarkAttendance = async (employeeId: string, status: AttendanceStatus) => {
+    const dateKey = format(selectedDate, 'yyyy-MM-dd');
+    const attendanceId = `${employeeId}_${dateKey}`;
+    const attendanceDocRef = doc(db, 'attendance', attendanceId);
+    
+    const record: Omit<Attendance, 'id'> = {
+      employeeId,
+      date: startOfDay(selectedDate),
+      status,
+    };
+
+    try {
+      await setDoc(attendanceDocRef, record, { merge: true });
+      toast({
+        title: `Attendance Marked`,
+        description: `${employees.find(e => e.id === employeeId)?.name} marked as ${status}.`
+      })
+    } catch(e) {
+      console.error("Error marking attendance: ", e);
+      toast({ variant: 'destructive', title: 'Error', description: 'Could not save attendance.' })
+    }
+  }
+  
+  const handleSaveNote = async (note: string) => {
+    if (!editingAttendance) return;
+    try {
+      const attendanceRef = doc(db, "attendance", editingAttendance.id);
+      await updateDoc(attendanceRef, { notes: note });
+      toast({ title: 'Note Saved' });
+    } catch (error) {
+      toast({ variant: 'destructive', title: 'Save Failed' });
+    }
+    setIsNotesDialogOpen(false);
+    setEditingAttendance(null);
+  }
+
+  const openNotesDialog = (employeeId: string) => {
+    const dateKey = format(selectedDate, 'yyyy-MM-dd');
+    const attendanceId = `${employeeId}_${dateKey}`;
+    const record = attendance.find(a => a.id === attendanceId);
+    if(record) {
+      setEditingAttendance(record);
+      setIsNotesDialogOpen(true);
+    } else {
+        toast({ variant: 'destructive', title: 'Mark Attendance First', description: 'You must mark attendance before adding a note.' })
+    }
+  }
+
   return (
     <div className="p-4 space-y-4">
-      <Tabs defaultValue="employees">
+      <Tabs defaultValue="attendance">
         <TabsList className="m-2 self-center rounded-lg bg-primary/10 p-2">
           <TabsTrigger value="employees" className="px-6 py-2 text-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md">Employee List</TabsTrigger>
           <TabsTrigger value="attendance" className="px-6 py-2 text-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md">Attendance & Advance</TabsTrigger>
@@ -177,7 +166,7 @@ export default function StaffManagement({ employees }: StaffManagementProps) {
           <Card>
             <CardHeader>
               <CardTitle>Employees</CardTitle>
-              <CardDescription>A read-only list of your restaurant staff.</CardDescription>
+              <CardDescription>A read-only list of your restaurant staff and their salary details.</CardDescription>
             </CardHeader>
             <CardContent>
               <Table>
@@ -221,36 +210,35 @@ export default function StaffManagement({ employees }: StaffManagementProps) {
           </Card>
         </TabsContent>
         <TabsContent value="attendance">
-          <div className="grid md:grid-cols-2 gap-4">
-            <Card>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <Card className="lg:col-span-1">
               <CardHeader>
                 <CardTitle>Calendar</CardTitle>
-                <CardDescription>Select a date to view attendance and advance details.</CardDescription>
+                <CardDescription>Select a date to manage attendance.</CardDescription>
               </CardHeader>
               <CardContent className="flex justify-center">
                 <Calendar
                   mode="single"
                   selected={selectedDate}
-                  onSelect={setSelectedDate}
+                  onSelect={(date) => setSelectedDate(date || new Date())}
                   className="rounded-md border"
                   modifiers={{
                     advance: datesWithAdvance,
+                    attendance: datesWithAttendance,
                   }}
                   modifiersStyles={{
-                    advance: {
-                      border: '2px solid hsl(var(--primary))',
-                      fontWeight: 'bold',
-                    }
+                    advance: { border: '2px solid hsl(var(--primary))' },
+                    attendance: { textDecoration: 'underline' },
                   }}
                 />
               </CardContent>
             </Card>
-            <Card>
+            <Card className="lg:col-span-2">
               <CardHeader>
                 <div className="flex justify-between items-start">
                   <div>
-                    <CardTitle>Details for {selectedDate ? format(selectedDate, 'PPP') : '...'}</CardTitle>
-                    <CardDescription>Advances and other details for the selected date.</CardDescription>
+                    <CardTitle>Manage for {format(selectedDate, 'PPP')}</CardTitle>
+                    <CardDescription>Mark attendance, give advances, and add notes.</CardDescription>
                   </div>
                   <Button onClick={() => openAdvanceDialog(null)}>
                     <span className="mr-2">Rs.</span> Add Advance
@@ -258,54 +246,91 @@ export default function StaffManagement({ employees }: StaffManagementProps) {
                 </div>
               </CardHeader>
               <CardContent>
-                <h3 className="font-semibold mb-2">Advances Given</h3>
-                {advancesForSelectedDate.length > 0 ? (
-                  <ul className="space-y-2">
-                    {advancesForSelectedDate.map((advance, index) => {
-                      const employee = employees.find(e => e.id === advance.employeeId);
-                      return (
-                      <li key={index} className="flex justify-between items-center p-2 bg-muted rounded-md group">
-                        <div className="flex items-center gap-2">
-                          {employee && <span className={cn('h-2 w-2 rounded-full', employee.color)} />}
-                          <span>{employee ? employee.name : 'Unknown Employee'}:</span>
-                          <span className="font-mono font-bold">Rs. {advance.amount.toLocaleString()}</span>
+                  <div className="space-y-4">
+                      <div>
+                        <h3 className="font-semibold mb-2">Staff Attendance</h3>
+                        <div className="space-y-2">
+                            {employees.map(employee => {
+                                const attendanceRecord = attendanceForSelectedDate.find(a => a.employeeId === employee.id);
+                                return (
+                                <div key={employee.id} className="flex justify-between items-center p-2 bg-muted/50 rounded-lg group">
+                                    <div className="flex items-center gap-2 font-medium">
+                                        <span className={cn('h-2.5 w-2.5 rounded-full', employee.color)} />
+                                        {employee.name}
+                                    </div>
+                                    <div className="flex items-center gap-1.5">
+                                        {(Object.keys(attendanceStatusConfig) as AttendanceStatus[]).map(status => (
+                                          <Button 
+                                            key={status} 
+                                            variant={attendanceRecord?.status === status ? 'default' : 'outline'}
+                                            size="sm"
+                                            onClick={() => handleMarkAttendance(employee.id, status)}
+                                            className={cn(attendanceRecord?.status === status && attendanceStatusConfig[status].color.replace('bg-', 'border-'))}
+                                          >
+                                            {React.createElement(attendanceStatusConfig[status].icon, {className: "h-4 w-4"})}
+                                            <span className="ml-2 hidden sm:inline">{attendanceStatusConfig[status].label}</span>
+                                          </Button>
+                                        ))}
+                                        <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => openNotesDialog(employee.id)}>
+                                          <Pencil className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                </div>
+                                )
+                            })}
                         </div>
-                        <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openAdvanceDialog(advance)}>
-                                <Edit className="h-4 w-4" />
-                            </Button>
-                            <AlertDialog>
-                                <AlertDialogTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive">
-                                        <Trash2 className="h-4 w-4" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold mb-2">Advances Given</h3>
+                        {advancesForSelectedDate.length > 0 ? (
+                          <ul className="space-y-2">
+                            {advancesForSelectedDate.map((advance) => {
+                              const employee = employees.find(e => e.id === advance.employeeId);
+                              return (
+                              <li key={advance.id} className="flex justify-between items-center p-2 bg-muted rounded-md group">
+                                <div className="flex items-center gap-2">
+                                  {employee && <span className={cn('h-2 w-2 rounded-full', employee.color)} />}
+                                  <span>{employee ? employee.name : 'Unknown Employee'}:</span>
+                                  <span className="font-mono font-bold">Rs. {advance.amount.toLocaleString()}</span>
+                                </div>
+                                <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openAdvanceDialog(advance)}>
+                                        <Edit className="h-4 w-4" />
                                     </Button>
-                                </AlertDialogTrigger>
-                                <AlertDialogContent>
-                                    <AlertDialogHeader>
-                                        <AlertDialogTitle>Delete this advance?</AlertDialogTitle>
-                                        <AlertDialogDescription>
-                                            This will delete the advance of Rs. {advance.amount} for {employee?.name}. This action cannot be undone.
-                                        </AlertDialogDescription>
-                                    </AlertDialogHeader>
-                                    <AlertDialogFooter>
-                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                        <AlertDialogAction onClick={() => handleDeleteAdvance(advance.id)}>Delete</AlertDialogAction>
-                                    </AlertDialogFooter>
-                                </AlertDialogContent>
-                            </AlertDialog>
-                        </div>
-                      </li>
-                    )})}
-                  </ul>
-                ) : (
-                  <p className="text-muted-foreground">No advances on this date.</p>
-                )}
+                                    <AlertDialog>
+                                        <AlertDialogTrigger asChild>
+                                            <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive">
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                        </AlertDialogTrigger>
+                                        <AlertDialogContent>
+                                            <AlertDialogHeader>
+                                                <AlertDialogTitle>Delete this advance?</AlertDialogTitle>
+                                                <AlertDialogDescription>
+                                                    This will delete the advance of Rs. {advance.amount} for {employee?.name}. This action cannot be undone.
+                                                </AlertDialogDescription>
+                                            </AlertDialogHeader>
+                                            <AlertDialogFooter>
+                                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                <AlertDialogAction onClick={() => handleDeleteAdvance(advance.id)}>Delete</AlertDialogAction>
+                                            </AlertDialogFooter>
+                                        </AlertDialogContent>
+                                    </AlertDialog>
+                                </div>
+                              </li>
+                            )})}
+                          </ul>
+                        ) : (
+                          <p className="text-muted-foreground text-sm pl-2">No advances given on this date.</p>
+                        )}
+                      </div>
+                  </div>
               </CardContent>
             </Card>
           </div>
         </TabsContent>
       </Tabs>
-
+      
       <AddOrEditAdvanceDialog 
         open={isAdvanceDialogOpen}
         onOpenChange={setIsAdvanceDialogOpen}
@@ -314,9 +339,132 @@ export default function StaffManagement({ employees }: StaffManagementProps) {
         selectedDate={selectedDate || new Date()}
         existingAdvance={editingAdvance}
       />
+      
+      <NotesDialog
+        open={isNotesDialogOpen}
+        onOpenChange={setIsNotesDialogOpen}
+        attendance={editingAttendance}
+        onSave={handleSaveNote}
+      />
     </div>
   );
 }
-    
 
+function AddOrEditAdvanceDialog({
+  open,
+  onOpenChange,
+  employees,
+  onSave,
+  selectedDate,
+  existingAdvance,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  employees: Employee[];
+  onSave: (advance: Omit<Advance, 'id' | 'date'> & { id?: string, date: Date }) => void;
+  selectedDate: Date;
+  existingAdvance: Advance | null;
+}) {
+  const [employeeId, setEmployeeId] = useState('');
+  const [amount, setAmount] = useState('');
+  
+  useEffect(() => {
+    if (existingAdvance) {
+      setEmployeeId(existingAdvance.employeeId);
+      setAmount(String(existingAdvance.amount));
+    } else {
+      setEmployeeId('');
+      setAmount('');
+    }
+  }, [existingAdvance, open]);
+
+  const handleSave = () => {
+    if (employeeId && amount) {
+      onSave({
+        id: existingAdvance?.id,
+        employeeId,
+        amount: parseFloat(amount),
+        date: startOfDay(selectedDate),
+      });
+      onOpenChange(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{existingAdvance ? 'Edit' : 'Add'} Advance</DialogTitle>
+          <DialogDescription>
+            Record an advance for an employee on {format(selectedDate, 'PPP')}.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4 py-4">
+          <div className="space-y-2">
+            <Label htmlFor="employee">Employee</Label>
+            <Select onValueChange={setEmployeeId} value={employeeId} disabled={!!existingAdvance}>
+              <SelectTrigger id="employee">
+                <SelectValue placeholder="Select an employee" />
+              </SelectTrigger>
+              <SelectContent>
+                {employees.map(e => <SelectItem key={e.id} value={e.id}>{e.name} ({e.id})</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="amount">Amount (Rs.)</Label>
+            <Input id="amount" type="number" placeholder="e.g., 2000" value={amount} onChange={e => setAmount(e.target.value)} />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button onClick={handleSave}>Save Advance</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function NotesDialog({
+  open,
+  onOpenChange,
+  attendance,
+  onSave,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  attendance: Attendance | null;
+  onSave: (note: string) => void;
+}) {
+  const [note, setNote] = useState('');
+  
+  useEffect(() => {
+    if (attendance) {
+      setNote(attendance.notes || '');
+    }
+  }, [attendance]);
+  
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add/Edit Note</DialogTitle>
+            {attendance && <DialogDescription>For attendance on {format(attendance.date, 'PPP')}</DialogDescription>}
+          </DialogHeader>
+          <div className="py-4">
+            <Textarea
+              placeholder="e.g., Arrived 30 minutes late."
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              rows={4}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+            <Button onClick={() => onSave(note)}>Save Note</Button>
+          </DialogFooter>
+        </DialogContent>
+    </Dialog>
+  )
+}
     
