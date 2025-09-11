@@ -36,12 +36,12 @@ const vegColor = 'bg-green-100 dark:bg-green-900/30';
 const nonVegColor = 'bg-rose-100 dark:bg-rose-900/30';
 
 const colorPalette: Record<string, {light: string, dark: string}> = {
-    amber: { light: 'bg-amber-200 dark:bg-amber-800/70', dark: 'bg-amber-300 dark:bg-amber-700' },
-    lime: { light: 'bg-lime-200 dark:bg-lime-800/70', dark: 'bg-lime-300 dark:bg-lime-700' },
-    purple: { light: 'bg-purple-200 dark:bg-purple-800/70', dark: 'bg-purple-300 dark:bg-purple-700' },
-    teal: { light: 'bg-teal-200 dark:bg-teal-800/70', dark: 'bg-teal-300 dark:bg-teal-700' },
-    orange: { light: 'bg-orange-200 dark:bg-orange-800/70', dark: 'bg-orange-300 dark:bg-orange-700' },
-    cyan: { light: 'bg-cyan-200 dark:bg-cyan-800/70', dark: 'bg-cyan-300 dark:bg-cyan-700' },
+    amber: { light: 'bg-amber-100 dark:bg-amber-900/40', dark: 'bg-amber-200 dark:bg-amber-800/70' },
+    lime: { light: 'bg-lime-100 dark:bg-lime-900/40', dark: 'bg-lime-200 dark:bg-lime-800/70' },
+    purple: { light: 'bg-purple-100 dark:bg-purple-900/40', dark: 'bg-purple-200 dark:bg-purple-800/70' },
+    teal: { light: 'bg-teal-100 dark:bg-teal-900/40', dark: 'bg-teal-200 dark:bg-teal-800/70' },
+    orange: { light: 'bg-orange-100 dark:bg-orange-900/40', dark: 'bg-orange-200 dark:bg-orange-800/70' },
+    cyan: { light: 'bg-cyan-100 dark:bg-cyan-900/40', dark: 'bg-cyan-200 dark:bg-cyan-800/70' },
 };
 const colorNames = Object.keys(colorPalette);
 
@@ -1037,15 +1037,14 @@ export default function PosSystem({
     const categoryColorName = categoryColors[categoryName];
 
     const finalColorName = itemColorName || categoryColorName;
-    const finalLightColor = finalColorName ? colorPalette[finalColorName]?.light : (isNonVeg ? nonVegColor : '');
-    const finalDarkColor = finalColorName ? colorPalette[finalColorName]?.dark : '';
+    const finalItemColor = finalColorName ? colorPalette[finalColorName]?.dark : (isNonVeg ? nonVegColor : 'bg-green-100 dark:bg-green-900/30');
 
     const menuItemCard = (
       <Card
         key={item.name}
         className={cn(
           "group rounded-lg transition-all hover:shadow-md relative overflow-hidden",
-          finalLightColor,
+          finalItemColor,
           clickToAdd ? 'cursor-pointer hover:scale-105' : ''
         )}
         onClick={() => handleItemClick(item)}
@@ -1085,11 +1084,6 @@ export default function PosSystem({
           </div>
           <div className="flex justify-between items-end">
             <span className="text-xs font-mono text-black/60">{item.code}</span>
-            {finalDarkColor && (
-                <span className={cn("text-xs font-semibold px-2 py-0.5 rounded-full text-black", finalDarkColor)}>
-                    {categoryName}
-                </span>
-            )}
           </div>
         </CardContent>
 
@@ -1225,7 +1219,7 @@ export default function PosSystem({
         >
             {filteredMenu.map(category => (
                 <AccordionItem key={category.category} value={category.category} className="border-b-0">
-                    <AccordionTrigger className={cn("p-3 rounded-md text-lg font-bold hover:no-underline", categoryColors[category.category] ? colorPalette[categoryColors[category.category]]?.light : 'bg-muted')}>
+                    <AccordionTrigger className={cn("p-3 rounded-md text-lg font-bold hover:no-underline", categoryColors[category.category] ? colorPalette[categoryColors[category.category]]?.dark : 'bg-muted')}>
                         <div className="flex items-center gap-2">
                            <span className={cn("flex-grow text-left text-black")}>{category.category}</span>
                            <CategoryColorPicker categoryName={category.category}/>
