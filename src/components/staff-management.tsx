@@ -198,7 +198,7 @@ export default function StaffManagement({ employees }: StaffManagementProps) {
         <div className="relative h-full w-full flex items-center justify-center">
             <DayContent {...props} />
             {uniqueEmployeeIds.size > 0 && (
-                <div className="absolute bottom-1.5 flex items-center justify-center space-x-1">
+                <div className="absolute bottom-1.5 flex items-center justify-center space-x-1.5">
                     {Array.from(uniqueEmployeeIds).map(employeeId => {
                         const employee = employees.find(e => e.id === employeeId);
                         if (!employee) return null;
@@ -209,7 +209,7 @@ export default function StaffManagement({ employees }: StaffManagementProps) {
                             <div 
                                 key={employeeId} 
                                 className={cn(
-                                    "h-2.5 w-2.5 rounded-full",
+                                    "h-3 w-3 rounded-full",
                                     employee.color,
                                     wasAbsent && "ring-2 ring-offset-1 ring-destructive"
                                 )}
@@ -527,15 +527,21 @@ function AddOrEditAdvanceDialog({
         </DialogHeader>
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label htmlFor="employee">Employee</Label>
-            <Select onValueChange={setEmployeeId} value={employeeId} disabled={!!existingAdvance}>
-              <SelectTrigger id="employee">
-                <SelectValue placeholder="Select an employee" />
-              </SelectTrigger>
-              <SelectContent>
-                {employees.map(e => <SelectItem key={e.id} value={e.id}>{e.name} ({e.id})</SelectItem>)}
-              </SelectContent>
-            </Select>
+            <Label>Employee</Label>
+            <div className="grid grid-cols-3 gap-2">
+                {employees.map(e => (
+                    <Button 
+                        key={e.id}
+                        variant={employeeId === e.id ? 'default' : 'outline'}
+                        onClick={() => setEmployeeId(e.id)}
+                        disabled={!!existingAdvance}
+                        className="flex items-center justify-start gap-2"
+                    >
+                        <span className={cn("h-2 w-2 rounded-full", e.color)} />
+                        {e.name}
+                    </Button>
+                ))}
+            </div>
           </div>
           <div className="space-y-2">
             <Label htmlFor="amount">Amount (Rs.)</Label>
@@ -596,4 +602,5 @@ function NotesDialog({
     
 
     
+
 
