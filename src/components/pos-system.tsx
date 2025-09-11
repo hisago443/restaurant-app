@@ -1079,6 +1079,33 @@ export default function PosSystem({
         )}
         onClick={() => handleItemClick(item)}
       >
+        
+        <CardContent className="p-3">
+          <div className="flex justify-between items-start mb-2">
+             <div className="flex items-center gap-2">
+                <span className={cn('h-4 w-4 rounded-sm border border-black/20', isNonVeg ? 'bg-red-500' : 'bg-green-500')}></span>
+                <span className="font-semibold pr-2 text-black">{item.name}</span>
+            </div>
+            <span className="font-mono text-right whitespace-nowrap text-black">₹{item.price.toFixed(2)}</span>
+          </div>
+           <div className="flex justify-between items-end">
+            <span className="text-xs font-mono text-black/60">{item.code}</span>
+            {!easyMode && (
+                <Button
+                    size="sm"
+                    variant="secondary"
+                    className="h-7 text-xs"
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        handleAddButtonClick(item);
+                    }}
+                >
+                    <Plus className="mr-1 h-3 w-3" />
+                    Add
+                </Button>
+            )}
+          </div>
+        </CardContent>
         <Popover>
           <PopoverTrigger asChild>
             <div onClick={(e) => e.stopPropagation()}>
@@ -1103,32 +1130,6 @@ export default function PosSystem({
             </div>
           </PopoverContent>
         </Popover>
-
-        <CardContent className="p-3">
-          <div className="flex justify-between items-start mb-2">
-             <div className="flex items-center gap-2">
-                <span className={cn('h-4 w-4 rounded-sm border border-black/20', isNonVeg ? 'bg-red-500' : 'bg-green-500')}></span>
-                <span className="font-semibold pr-2 text-black">{item.name}</span>
-            </div>
-            <span className="font-mono text-right whitespace-nowrap text-black">₹{item.price.toFixed(2)}</span>
-          </div>
-           <div className="flex justify-between items-end">
-            <span className="text-xs font-mono text-black/60">{item.code}</span>
-            {!easyMode && (
-                <Button
-                    size="sm"
-                    variant="secondary"
-                    className="h-7 text-xs"
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        handleAddButtonClick(item);
-                    }}
-                >
-                    Add
-                </Button>
-            )}
-          </div>
-        </CardContent>
       </Card>
     );
 
@@ -1518,6 +1519,8 @@ export default function PosSystem({
     </DndProvider>
   );
 }
+
+    
 
     
 
