@@ -289,10 +289,11 @@ export default function StaffManagement({ employees }: StaffManagementProps) {
                               const employee = employees.find(e => e.id === advance.employeeId);
                               return (
                               <li key={advance.id} className="flex justify-between items-center p-2 bg-muted rounded-md group">
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-2 flex-wrap">
                                   {employee && <span className={cn('h-2 w-2 rounded-full', employee.color)} />}
                                   <span>{employee ? employee.name : 'Unknown Employee'}:</span>
                                   <span className="font-mono font-bold">Rs. {advance.amount.toLocaleString()}</span>
+                                  <span className="text-xs text-muted-foreground">on {format(advance.date, 'PP')}</span>
                                 </div>
                                 <div className="opacity-0 group-hover:opacity-100 transition-opacity">
                                     <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openAdvanceDialog(advance)}>
