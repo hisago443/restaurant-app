@@ -278,6 +278,10 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
     );
   }
 
+  const totalAdvanceForDay = useMemo(() => {
+    return advancesForSelectedDate.reduce((sum, advance) => sum + advance.amount, 0);
+  }, [advancesForSelectedDate]);
+
 
   return (
     <div className="p-4 space-y-4">
@@ -322,8 +326,13 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
                   </div>
               </Card>
               <Card>
-                <CardHeader>
+                <CardHeader className="flex flex-row items-center justify-between">
                     <CardTitle>Advances for {format(selectedDate, 'PPP')}</CardTitle>
+                    {totalAdvanceForDay > 0 && (
+                        <div className="px-3 py-1 bg-red-100 dark:bg-red-900/30 rounded-md text-red-700 dark:text-red-200">
+                          <span className="font-bold">Total: Rs. {totalAdvanceForDay.toLocaleString()}</span>
+                        </div>
+                    )}
                 </CardHeader>
                 <CardContent>
                     <div className="max-h-48 overflow-y-auto pt-2">
@@ -692,6 +701,8 @@ function EmployeeDialog({ open, onOpenChange, employee, onSave }: { open: boolea
 
 
 
+
+    
 
     
 
