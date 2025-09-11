@@ -3,7 +3,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from 'react';
-import { BarChart, Book, Download, TrendingUp, Settings, Package, User, ShoppingCart, History, Mail, Receipt, Edit, Trash2 } from 'lucide-react';
+import { BarChart, Book, Download, TrendingUp, Settings, Package, User, ShoppingCart, History, Mail, Receipt, Edit, Trash2, Building } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -13,15 +13,20 @@ import ActivityLog from './activity-log';
 import InventoryManagement from './inventory-management';
 import SystemSettings from './system-settings';
 import BillHistory from './bill-history';
-import type { Bill, Employee, OrderItem, Expense } from '@/lib/types';
+import type { Bill, Employee, OrderItem, Expense, Vendor } from '@/lib/types';
 import { generateAndSendReport } from '@/ai/flows/generate-report';
 import { useToast } from '@/hooks/use-toast';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { isSameDay, format } from 'date-fns';
+import { format } from 'date-fns';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger, AlertDialogDescription } from "@/components/ui/alert-dialog";
 import { db } from '@/lib/firebase';
-import { doc, deleteDoc, getDocs, collection, writeBatch } from 'firebase/firestore';
+import { doc, deleteDoc, getDocs, collection, writeBatch, onSnapshot, updateDoc, addDoc } from 'firebase/firestore';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { CalendarIcon } from 'lucide-react';
 
 
 const topItems: { name: string; count: number }[] = [];
@@ -44,8 +49,20 @@ export default function AdminDashboard({ billHistory, employees, expenses }: Adm
   const [isReportLoading, setIsReportLoading] = useState(false);
   const [autoSendDaily, setAutoSendDaily] = useState(false);
   const [autoSendMonthly, setAutoSendMonthly] = useState(false);
+  
+  const [vendors, setVendors] = useState<Vendor[]>([]);
+  const [isExpenseDialogOpen, setIsExpenseDialogOpen] = useState(false);
+  const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
 
-  const todaysBills = useMemo(() => billHistory.filter(bill => isSameDay(new Date(bill.timestamp), new Date())), [billHistory]);
+  useEffect(() => {
+    const unsubVendors = onSnapshot(collection(db, "vendors"), (snapshot) => {
+        const data = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as Vendor));
+        setVendors(data);
+    });
+    return () => unsubVendors();
+  }, []);
+
+  const todaysBills = useMemo(() => billHistory.filter(bill => format(bill.timestamp, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd')), [billHistory]);
   
   const totalRevenue = useMemo(() => todaysBills.reduce((sum, bill) => sum + bill.total, 0), [todaysBills]);
   const totalOrders = useMemo(() => todaysBills.length, [todaysBills]);
@@ -152,6 +169,11 @@ export default function AdminDashboard({ billHistory, employees, expenses }: Adm
       setIsReportLoading(false);
     }
   };
+
+  const handleEditExpense = (expense: Expense) => {
+    setEditingExpense(expense);
+    setIsExpenseDialogOpen(true);
+  }
 
   const handleDeleteExpense = async (expenseId: string) => {
     try {
@@ -333,60 +355,65 @@ export default function AdminDashboard({ billHistory, employees, expenses }: Adm
                   <span>Manage Expenses</span>
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-3xl">
+              <DialogContent className="max-w-4xl">
                   <DialogHeader>
                     <DialogTitle>Manage Expenses</DialogTitle>
                     <DialogDescription>Review and manage all business expenses.</DialogDescription>
                   </DialogHeader>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Date</TableHead>
-                        <TableHead>Category</TableHead>
-                        <TableHead>Description</TableHead>
-                        <TableHead className="text-right">Amount</TableHead>
-                        <TableHead className="text-center">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {expenses.length > 0 ? (
-                          expenses.map(expense => (
-                            <TableRow key={expense.id}>
-                              <TableCell>{format(expense.date, 'PPP')}</TableCell>
-                              <TableCell>{expense.category}</TableCell>
-                              <TableCell>{expense.description}</TableCell>
-                              <TableCell className="text-right font-mono text-red-600 dark:text-red-400">Rs. {expense.amount.toFixed(2)}</TableCell>
-                              <TableCell className="text-center space-x-1">
-                                <Button variant="ghost" size="icon">
-                                  <Edit className="h-4 w-4" />
-                                </Button>
-                                <AlertDialog>
-                                  <AlertDialogTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="text-destructive">
-                                      <Trash2 className="h-4 w-4" />
-                                    </Button>
-                                  </AlertDialogTrigger>
-                                  <AlertDialogContent>
-                                    <AlertDialogHeader>
-                                      <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                                      <AlertDialogDescription>This will permanently delete this expense. This action cannot be undone.</AlertDialogDescription>
-                                    </AlertDialogHeader>
-                                    <AlertDialogFooter>
-                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                      <AlertDialogAction onClick={() => handleDeleteExpense(expense.id)}>Delete</AlertDialogAction>
-                                    </AlertDialogFooter>
-                                  </AlertDialogContent>
-                                </AlertDialog>
-                              </TableCell>
-                            </TableRow>
-                          ))
-                      ) : (
+                  <div className="max-h-[60vh] overflow-y-auto">
+                    <Table>
+                      <TableHeader>
                         <TableRow>
-                          <TableCell colSpan={5} className="text-center text-muted-foreground">No expenses recorded.</TableCell>
+                          <TableHead>Date</TableHead>
+                          <TableHead>Vendor Name</TableHead>
+                          <TableHead>Description</TableHead>
+                          <TableHead className="text-right">Amount</TableHead>
+                          <TableHead className="text-center">Actions</TableHead>
                         </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
+                      </TableHeader>
+                      <TableBody>
+                        {expenses.length > 0 ? (
+                            expenses.map(expense => {
+                              const vendor = vendors.find(v => v.id === expense.vendorId);
+                              return (
+                                <TableRow key={expense.id}>
+                                  <TableCell>{format(expense.date, 'PPP')}</TableCell>
+                                  <TableCell>{vendor?.name || "N/A"}</TableCell>
+                                  <TableCell>{expense.description}</TableCell>
+                                  <TableCell className="text-right font-mono text-red-600 dark:text-red-400">Rs. {expense.amount.toFixed(2)}</TableCell>
+                                  <TableCell className="text-center space-x-1">
+                                    <Button variant="ghost" size="icon" onClick={() => handleEditExpense(expense)}>
+                                      <Edit className="h-4 w-4" />
+                                    </Button>
+                                    <AlertDialog>
+                                      <AlertDialogTrigger asChild>
+                                        <Button variant="ghost" size="icon" className="text-destructive">
+                                          <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                      </AlertDialogTrigger>
+                                      <AlertDialogContent>
+                                        <AlertDialogHeader>
+                                          <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                          <AlertDialogDescription>This will permanently delete this expense. This action cannot be undone.</AlertDialogDescription>
+                                        </AlertDialogHeader>
+                                        <AlertDialogFooter>
+                                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                          <AlertDialogAction onClick={() => handleDeleteExpense(expense.id)}>Delete</AlertDialogAction>
+                                        </AlertDialogFooter>
+                                      </AlertDialogContent>
+                                    </AlertDialog>
+                                  </TableCell>
+                                </TableRow>
+                              )
+                            })
+                        ) : (
+                          <TableRow>
+                            <TableCell colSpan={5} className="text-center text-muted-foreground">No expenses recorded.</TableCell>
+                          </TableRow>
+                        )}
+                      </TableBody>
+                    </Table>
+                  </div>
               </DialogContent>
             </Dialog>
             <Dialog>
@@ -451,6 +478,126 @@ export default function AdminDashboard({ billHistory, employees, expenses }: Adm
           </CardContent>
         </Card>
       </div>
+
+      <ExpenseDialog 
+        key={editingExpense ? editingExpense.id : 'add-expense'}
+        isOpen={isExpenseDialogOpen}
+        onOpenChange={setIsExpenseDialogOpen}
+        expense={editingExpense}
+        vendors={vendors}
+        onSave={(data) => {
+            if (editingExpense) {
+                updateDoc(doc(db, "expenses", editingExpense.id), data);
+            } else {
+                addDoc(collection(db, "expenses"), data);
+            }
+            setIsExpenseDialogOpen(false);
+            setEditingExpense(null);
+        }}
+      />
     </div>
+  );
+}
+
+
+function ExpenseDialog({
+  isOpen,
+  onOpenChange,
+  expense,
+  vendors,
+  onSave,
+}: {
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
+  expense: Expense | null;
+  vendors: Vendor[];
+  onSave: (data: any) => void;
+}) {
+  const [date, setDate] = useState<Date | undefined>(expense?.date || new Date());
+  const [description, setDescription] = useState(expense?.description || '');
+  const [amount, setAmount] = useState(expense?.amount.toString() || '');
+  const [vendorId, setVendorId] = useState<string | undefined>(expense?.vendorId || undefined);
+
+  const selectedVendor = vendors.find(v => v.id === vendorId);
+  const expenseCategory = selectedVendor?.category || 'Miscellaneous';
+
+  useEffect(() => {
+    if (expense) {
+        setDate(expense.date);
+        setDescription(expense.description);
+        setAmount(String(expense.amount));
+        setVendorId(expense.vendorId || undefined);
+    } else {
+        // Reset form for new expense
+        setDate(new Date());
+        setDescription('');
+        setAmount('');
+        setVendorId(undefined);
+    }
+  }, [expense, isOpen]);
+
+  const handleSave = () => {
+    const expenseData = {
+      date,
+      category: expenseCategory,
+      description,
+      amount: parseFloat(amount),
+      vendorId: vendorId || null,
+    };
+    onSave(expenseData);
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{expense ? 'Edit' : 'Add'} Expense</DialogTitle>
+        </DialogHeader>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
+          <div className="space-y-2">
+            <Label>Date</Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant={"outline"} className="w-full justify-start text-left font-normal">
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {date ? format(date, "PPP") : <span>Pick a date</span>}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0">
+                <Calendar mode="single" selected={date} onSelect={setDate} initialFocus />
+              </PopoverContent>
+            </Popover>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="vendor">Vendor</Label>
+            <Select onValueChange={(value) => setVendorId(value === 'none' ? undefined : value)} value={vendorId || 'none'}>
+              <SelectTrigger id="vendor">
+                <SelectValue placeholder="None" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">None</SelectItem>
+                {vendors.map(v => <SelectItem key={v.id} value={v.id}>{v.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label>Vendor Category</Label>
+            <Input value={expenseCategory} readOnly className="bg-muted" />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="description">Description (Optional)</Label>
+            <Input id="description" placeholder="e.g., Weekly vegetable purchase" value={description} onChange={e => setDescription(e.target.value)} />
+          </div>
+          <div className="space-y-2 md:col-span-2">
+            <Label htmlFor="amount">Amount (Rs.)</Label>
+            <Input id="amount" type="number" placeholder="e.g., 5000" value={amount} onChange={e => setAmount(e.target.value)} />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button onClick={handleSave}>Save Expense</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
