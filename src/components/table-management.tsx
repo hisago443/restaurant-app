@@ -318,7 +318,7 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
                 onClick={() => handleTableClick(table)}
                 onDoubleClick={() => handleDoubleClick(table)}
               >
-                <div className="absolute top-1 right-1">
+                <div className="absolute top-1 left-1">
                     {table.status === 'Occupied' && (
                         <Button
                             variant="secondary"
@@ -331,12 +331,12 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
                     )}
                 </div>
                  {showOccupancy && turnover > 0 &&
-                    <div className="absolute bottom-1 right-1 flex items-center gap-1 bg-black/50 text-white text-xs font-bold p-1 rounded-md">
+                    <div className="absolute bottom-1 left-1 flex items-center gap-1 bg-black/50 text-white text-xs font-bold p-1 rounded-md">
                         <Repeat className="h-3 w-3" />
                         <span>{turnover}</span>
                     </div>
                 }
-                <div className="absolute top-1 left-1">
+                <div className="absolute top-1 right-1">
                   <Checkbox 
                     className="bg-white/50 border-gray-500 data-[state=checked]:bg-primary"
                     checked={selectedTables.includes(table.id)}
@@ -344,10 +344,12 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
                     onClick={(e) => e.stopPropagation()}
                   />
                 </div>
-                <span className={cn("text-6xl font-bold", table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black')}>{table.id}</span>
-                <div className="flex items-center gap-1">
-                  {React.createElement(Icon, { className: cn("h-4 w-4", table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black') })}
-                  <span className={cn("text-base font-semibold", table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black')}>{table.status}</span>
+                <div className="text-center">
+                    <span className={cn("text-6xl font-bold", table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black')}>{table.id}</span>
+                    <div className="flex items-center justify-center gap-1">
+                      {React.createElement(Icon, { className: cn("h-4 w-4", table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black') })}
+                      <span className={cn("text-base font-semibold", table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black')}>{table.status}</span>
+                    </div>
                 </div>
               </div>
             )})}
@@ -520,3 +522,4 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
     </div>
   );
 }
+
