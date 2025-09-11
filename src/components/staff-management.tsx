@@ -307,7 +307,7 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
                       },
                     }}
                 />
-                <div className="p-4 space-y-2 border-b">
+                <div className="p-4 space-y-2">
                     <div className="flex items-center space-x-2">
                         <Checkbox id="show-advances" checked={showAdvancesOnCalendar} onCheckedChange={(checked) => setShowAdvancesOnCalendar(Boolean(checked))} />
                         <Label htmlFor="show-advances">Show Advance Dates</Label>
@@ -317,49 +317,8 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
                         <Label htmlFor="show-absences">Show Absent Dates</Label>
                     </div>
                 </div>
-                <div className="w-full p-4">
-                    <p className="font-semibold pb-2">Advances on {format(selectedDate, 'PPP')}</p>
-                    <div className="max-h-32 overflow-y-auto">
-                        {advancesForSelectedDate.length > 0 ? (
-                            <div className="space-y-2">
-                                {advancesForSelectedDate.map(advance => {
-                                    const employee = employees.find(e => e.id === advance.employeeId);
-                                    return (
-                                    <div key={advance.id} className="flex justify-between items-center p-2 bg-muted/50 rounded-lg group">
-                                        <div className='flex items-center gap-2'>
-                                            <span className={cn("h-2.5 w-2.5 rounded-full", employee?.color)} />
-                                            <div>
-                                                <p className="font-medium">{employee?.name}</p>
-                                            </div>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <p className="font-mono font-semibold text-red-600 dark:text-red-400 text-lg">₹{advance.amount.toLocaleString()}</p>
-                                            <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100" onClick={() => openAdvanceDialog(advance)}>
-                                                <Edit className="h-4 w-4"/>
-                                            </Button>
-                                        </div>
-                                    </div>
-                                )})}
-                            </div>
-                        ) : (
-                            <div className="h-full flex items-center justify-center py-4">
-                                <p className="text-muted-foreground text-sm">No advances on this date.</p>
-                            </div>
-                        )}
-                    </div>
-                </div>
             </Card>
             <div className="space-y-4">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Add Salary Advance</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <Button size="lg" className="w-full h-20 text-lg" onClick={() => openAdvanceDialog(null)}>
-                      <Banknote className="mr-4 h-8 w-8" /> Add Salary Advance for {format(selectedDate, 'do MMMM')}
-                    </Button>
-                  </CardContent>
-                </Card>
                 <Card>
                   <CardHeader>
                     <CardTitle>Staff Attendance for {format(selectedDate, 'PPP')}</CardTitle>
@@ -404,6 +363,44 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
                           )
                       })}
                   </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Advances for {format(selectedDate, 'PPP')}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                        <Button size="lg" className="w-full h-16 text-lg" onClick={() => openAdvanceDialog(null)}>
+                          <Banknote className="mr-4 h-8 w-8" /> Add Salary Advance
+                        </Button>
+                        <div className="max-h-32 overflow-y-auto pt-2">
+                            {advancesForSelectedDate.length > 0 ? (
+                                <div className="space-y-2">
+                                    {advancesForSelectedDate.map(advance => {
+                                        const employee = employees.find(e => e.id === advance.employeeId);
+                                        return (
+                                        <div key={advance.id} className="flex justify-between items-center p-2 bg-muted/50 rounded-lg group">
+                                            <div className='flex items-center gap-2'>
+                                                <span className={cn("h-2.5 w-2.5 rounded-full", employee?.color)} />
+                                                <div>
+                                                    <p className="font-medium">{employee?.name}</p>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <p className="font-mono font-semibold text-red-600 dark:text-red-400 text-lg">₹{advance.amount.toLocaleString()}</p>
+                                                <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100" onClick={() => openAdvanceDialog(advance)}>
+                                                    <Edit className="h-4 w-4"/>
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    )})}
+                                </div>
+                            ) : (
+                                <div className="h-full flex items-center justify-center py-4">
+                                    <p className="text-muted-foreground text-sm">No advances on this date.</p>
+                                </div>
+                            )}
+                        </div>
+                    </CardContent>
                 </Card>
             </div>
           </div>
