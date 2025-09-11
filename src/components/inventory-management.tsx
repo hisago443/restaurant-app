@@ -191,92 +191,95 @@ export default function InventoryManagement({ inventory }: InventoryManagementPr
         </div>
       </CardHeader>
       <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Item</TableHead>
-              <TableHead>Category</TableHead>
-              <TableHead>Stock Level</TableHead>
-              <TableHead>Adjust Stock</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredInventory.map((item) => (
-              <TableRow key={item.id}>
-                <TableCell className="font-medium">{item.name}</TableCell>
-                <TableCell>{item.category}</TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-2">
-                    <Progress
-                      value={(item.stock / item.capacity) * 100}
-                      className="w-40 h-3"
-                    />
-                    <span>{item.stock} / {item.capacity} {item.unit}</span>
-                  </div>
-                </TableCell>
-                <TableCell>
-                    <div className="flex items-center gap-2">
-                        <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => handleStockChange(item.id, item.stock - 1)}>
+        <div className="max-h-[calc(100vh-15rem)] overflow-y-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Item</TableHead>
+                <TableHead>Stock Level</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredInventory.map((item) => (
+                <TableRow key={item.id}>
+                  <TableCell className="font-medium">
+                      <div>{item.name}</div>
+                      <div className="text-xs text-muted-foreground">{item.category}</div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex flex-col gap-2">
+                      <Progress
+                        value={(item.stock / item.capacity) * 100}
+                        className="w-full h-3"
+                      />
+                      <div className="flex items-center gap-2">
+                        <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => handleStockChange(item.id, item.stock - 1)}>
                             <Minus className="h-4 w-4" />
                         </Button>
-                        <Input 
+                         <Input 
                             type="number"
                             value={item.stock}
-                            onChange={(e) => {
-                                const value = e.target.value;
-                                handleStockChange(item.id, value === '' ? 0 : parseInt(value, 10));
-                            }}
-                             onBlur={(e) => {
-                                if (e.target.value === '') {
-                                    handleStockChange(item.id, 0);
-                                }
-                             }}
-                            className="w-20 h-9 text-center"
+                            onChange={(e) => handleStockChange(item.id, e.target.value === '' ? 0 : parseInt(e.target.value, 10))}
+                            onBlur={(e) => { if (e.target.value === '') { handleStockChange(item.id, 0); } }}
+                            className="w-16 h-8 text-center"
                         />
-                        <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => handleStockChange(item.id, item.stock + 1)}>
+                        <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => handleStockChange(item.id, item.stock + 1)}>
                             <Plus className="h-4 w-4" />
                         </Button>
-                        <TooltipProvider>
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => handleStockChange(item.id, item.capacity)}>
-                                        <Server className="h-4 w-4" />
-                                    </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                    <p>Fill to Capacity</p>
-                                </TooltipContent>
-                            </Tooltip>
-                        </TooltipProvider>
+                        <div className="text-sm text-muted-foreground">/ {item.capacity} {item.unit}</div>
+                      </div>
                     </div>
-                </TableCell>
-                <TableCell className="text-right">
-                  <Button variant="ghost" size="icon" onClick={() => handleOpenDialog(item)}>
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button variant="ghost" size="icon" className="text-destructive">
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                        <AlertDialogDescription>This will permanently delete the item "{item.name}".</AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => handleDeleteItem(item.id)}>Delete</AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <TooltipProvider>
+                      <Tooltip>
+                          <TooltipTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleStockChange(item.id, item.capacity)}>
+                                  <Server className="h-4 w-4" />
+                              </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                              <p>Fill to Capacity</p>
+                          </TooltipContent>
+                      </Tooltip>
+                      <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button variant="ghost" size="icon" onClick={() => handleOpenDialog(item)}>
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent><p>Edit Item</p></TooltipContent>
+                      </Tooltip>
+                      <Tooltip>
+                          <TooltipTrigger asChild>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="ghost" size="icon" className="text-destructive">
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                  <AlertDialogDescription>This will permanently delete the item "{item.name}".</AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => handleDeleteItem(item.id)}>Delete</AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </TooltipTrigger>
+                          <TooltipContent><p>Delete Item</p></TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       </CardContent>
     </Card>
 
