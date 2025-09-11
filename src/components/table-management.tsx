@@ -53,9 +53,10 @@ interface TableManagementProps {
   showOccupancy: boolean;
   setShowOccupancy: React.Dispatch<React.SetStateAction<boolean>>;
   initialSelectedTableId?: number | null;
+  onCreateOrder: (tableId: number) => void;
 }
 
-export default function TableManagement({ tables, orders, billHistory, updateTableStatus, addTable, removeLastTable, occupancyCount, onEditOrder, showOccupancy, setShowOccupancy, initialSelectedTableId }: TableManagementProps) {
+export default function TableManagement({ tables, orders, billHistory, updateTableStatus, addTable, removeLastTable, occupancyCount, onEditOrder, showOccupancy, setShowOccupancy, initialSelectedTableId, onCreateOrder }: TableManagementProps) {
   const [selectedTable, setSelectedTable] = useState<Table | null>(null);
   const [selectedTables, setSelectedTables] = useState<number[]>([]);
   const [isLayoutManagerOpen, setIsLayoutManagerOpen] = useState(false);
@@ -192,7 +193,7 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
       case 'Available':
         return (
           <>
-            <Button onClick={() => { onEditOrder({ id: '', items: [], status: 'Pending', tableId: table.id }); setSelectedTable(null); }}><Users className="mr-2 h-4 w-4" />Create Order</Button>
+            <Button onClick={() => { onCreateOrder(table.id); setSelectedTable(null); }}><Users className="mr-2 h-4 w-4" />Create Order</Button>
             <Button variant="outline" onClick={() => { localUpdateTableStatus(table.id, 'Reserved'); setSelectedTable(null); }}><Bookmark className="mr-2 h-4 w-4" />Reserve Table</Button>
           </>
         );
@@ -477,4 +478,3 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
     </div>
   );
 }
-

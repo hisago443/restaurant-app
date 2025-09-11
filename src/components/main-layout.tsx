@@ -293,6 +293,11 @@ export default function MainLayout() {
     }
   };
 
+  const handleCreateOrderFromTables = (tableId: number) => {
+    handleSelectTable(tableId);
+    setActiveTab('pos');
+  };
+
 
   return (
     <div className="flex flex-col h-screen bg-background">
@@ -377,6 +382,7 @@ export default function MainLayout() {
                   setDiscount(0);
                   setActiveTab('pos');
                 }}
+                onCreateOrder={handleCreateOrderFromTables}
                 showOccupancy={showOccupancy}
                 setShowOccupancy={setShowOccupancy}
                 initialSelectedTableId={initialTableForManagement}
