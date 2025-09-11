@@ -27,10 +27,10 @@ import { Separator } from './ui/separator';
 
 const colors = ['bg-blue-500', 'bg-green-500', 'bg-yellow-500', 'bg-purple-500', 'bg-pink-500', 'bg-indigo-500', 'bg-teal-500'];
 
-const attendanceStatusConfig: Record<AttendanceStatus, { icon: React.ElementType, color: string, label: string }> = {
-  'Present': { icon: UserCheck, color: 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 border-green-200 dark:border-green-800', label: 'Present' },
-  'Absent': { icon: UserX, color: 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200 border-red-200 dark:border-red-800', label: 'Absent' },
-  'Half-day': { icon: UserMinus, color: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 border-yellow-200 dark:border-yellow-800', label: 'Half-day' }
+const attendanceStatusConfig: Record<AttendanceStatus, { icon: React.ElementType, color: string, label: string, className: string }> = {
+  'Present': { icon: UserCheck, color: 'green', label: 'Present', className: 'bg-green-500 hover:bg-green-600 text-white' },
+  'Absent': { icon: UserX, color: 'red', label: 'Absent', className: 'bg-red-500 hover:bg-red-600 text-white' },
+  'Half-day': { icon: UserMinus, color: 'yellow', label: 'Half-day', className: 'bg-yellow-500 hover:bg-yellow-600 text-white' }
 };
 
 interface StaffManagementProps {
@@ -312,18 +312,21 @@ export default function StaffManagement({ employees }: StaffManagementProps) {
                                     {employee.name}
                                 </div>
                                 <div className="flex items-center gap-1.5">
-                                    {(Object.keys(attendanceStatusConfig) as AttendanceStatus[]).map(status => (
-                                      <Button 
-                                        key={status} 
-                                        variant={attendanceRecord?.status === status ? 'default' : 'outline'}
-                                        size="sm"
-                                        onClick={() => handleMarkAttendance(employee.id, status)}
-                                        className={cn(attendanceRecord?.status === status && attendanceStatusConfig[status].color.replace('bg-', 'border-'))}
-                                      >
-                                        {React.createElement(attendanceStatusConfig[status].icon, {className: "h-4 w-4"})}
-                                        <span className="ml-2 hidden sm:inline">{attendanceStatusConfig[status].label}</span>
-                                      </Button>
-                                    ))}
+                                    {(Object.keys(attendanceStatusConfig) as AttendanceStatus[]).map(status => {
+                                      const isSelected = attendanceRecord?.status === status;
+                                      return (
+                                        <Button 
+                                          key={status} 
+                                          variant={isSelected ? 'default' : 'outline'}
+                                          size="sm"
+                                          onClick={() => handleMarkAttendance(employee.id, status)}
+                                          className={cn(isSelected && attendanceStatusConfig[status].className)}
+                                        >
+                                          {React.createElement(attendanceStatusConfig[status].icon, {className: "h-4 w-4"})}
+                                          <span className="ml-2 hidden sm:inline">{attendanceStatusConfig[status].label}</span>
+                                        </Button>
+                                      )
+                                    })}
                                     <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => openNotesDialog(employee.id)}>
                                       <Pencil className="h-4 w-4" />
                                     </Button>
