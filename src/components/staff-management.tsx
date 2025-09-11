@@ -259,7 +259,7 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
                                     <TooltipTrigger asChild>
                                         <span 
                                             className={cn(
-                                                "h-2 w-2 rounded-full",
+                                                "h-2.5 w-2.5 rounded-full",
                                                 employee.color,
                                                 wasAbsent && "ring-1 ring-offset-1 ring-destructive"
                                             )}
@@ -283,14 +283,14 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
     <div className="p-4 space-y-4">
       <Tabs defaultValue="attendance" className="w-full">
         <TabsList className="grid w-full grid-cols-2 bg-primary text-black p-1 h-auto rounded-lg">
-          <TabsTrigger value="attendance" className="py-2 data-[state=active]:bg-background data-[state=active]:shadow-md data-[state=active]:text-primary text-lg">Attendance &amp; Advance</TabsTrigger>
-          <TabsTrigger value="employees" className="py-2 data-[state=active]:bg-background data-[state=active]:shadow-md data-[state=active]:text-primary text-lg">Employee List</TabsTrigger>
+          <TabsTrigger value="attendance" className="py-2 data-[state=active]:bg-background data-[state=active]:shadow-md data-[state=active]:text-black text-lg">Attendance &amp; Advance</TabsTrigger>
+          <TabsTrigger value="employees" className="py-2 data-[state=active]:bg-background data-[state=active]:shadow-md data-[state=active]:text-black text-lg">Employee List</TabsTrigger>
         </TabsList>
         <TabsContent value="attendance">
            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-4">
             <div className="space-y-4">
               <Card className="flex flex-col p-0 border-black shadow-lg">
-                  <div className='flex justify-center bg-blue-50 dark:bg-blue-900/20 rounded-t-lg'>
+                  <div className='flex justify-center bg-blue-100 dark:bg-blue-900/20 rounded-t-lg'>
                     <Calendar
                         mode="single"
                         selected={selectedDate}
@@ -686,5 +686,6 @@ function EmployeeDialog({ open, onOpenChange, employee, onSave }: { open: boolea
         </Dialog>
     );
 }
+
 
 
