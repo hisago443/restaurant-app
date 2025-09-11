@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import { useState, useEffect, useMemo } from 'react';
@@ -347,8 +346,8 @@ export default function AdminDashboard({ billHistory, employees, expenses }: Adm
                 {topSellingItems.length > 0 ? (
                   topSellingItems.map(item => (
                     <TableRow key={item.name}>
-                      <TableCell className="font-medium">{item.name}</TableCell>
-                      <TableCell className="text-right">{item.count}</TableCell>
+                      <TableCell className="font-bold">{item.name}</TableCell>
+                      <TableCell className="text-right font-bold">{item.count}</TableCell>
                     </TableRow>
                   ))
                 ) : (
@@ -825,4 +824,6 @@ function EmployeeDialog({ open, onOpenChange, employee, onSave }: { open: boolea
         </Dialog>
     );
 }
+    
+
     
