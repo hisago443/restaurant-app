@@ -51,33 +51,69 @@ export default function AdminDashboard({ billHistory, employees, expenses }: Adm
   const totalOrders = useMemo(() => todaysBills.length, [todaysBills]);
   const averageOrderValue = useMemo(() => (totalOrders > 0 ? totalRevenue / totalOrders : 0), [totalRevenue, totalOrders]);
 
-  const topSellingItems = useMemo(() => {
+  const allTimeItemCounts = useMemo(() => {
     const itemCounts: Record<string, number> = {};
-    todaysBills.forEach(bill => {
+    billHistory.forEach(bill => {
       bill.orderItems.forEach((item: OrderItem) => {
         itemCounts[item.name] = (itemCounts[item.name] || 0) + item.quantity;
       });
     });
-
     return Object.entries(itemCounts)
       .map(([name, count]) => ({ name, count }))
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 5);
-  }, [todaysBills]);
+      .sort((a, b) => b.count - a.count);
+  }, [billHistory]);
+
+  const topSellingItems = useMemo(() => allTimeItemCounts.slice(0, 5), [allTimeItemCounts]);
+  const leastSellingItems = useMemo(() => allTimeItemCounts.slice(-5).reverse(), [allTimeItemCounts]);
 
 
   const handleExportCSV = () => {
-    if (billHistory.length === 0) return;
-    const header = 'id,tableId,total,timestamp,items\n';
-    const rows = billHistory.map(bill => {
+    let csvContent = "data:text/csv;charset=utf-8,";
+
+    // Summary Section
+    csvContent += "Summary\n";
+    csvContent += "Metric,Value\n";
+    csvContent += `Total Revenue (Today),${totalRevenue.toFixed(2)}\n`;
+    csvContent += `Total Orders (Today),${totalOrders}\n`;
+    csvContent += `Average Order Value (Today),${averageOrderValue.toFixed(2)}\n`;
+    csvContent += "\n";
+
+    // Top Selling Items
+    csvContent += "Top Selling Items (All Time)\n";
+    csvContent += "Item,Quantity Sold\n";
+    topSellingItems.forEach(item => {
+      csvContent += `${item.name},${item.count}\n`;
+    });
+    csvContent += "\n";
+
+    // Least Selling Items
+    csvContent += "Least Selling Items (All Time)\n";
+    csvContent += "Item,Quantity Sold\n";
+    leastSellingItems.forEach(item => {
+      csvContent += `${item.name},${item.count}\n`;
+    });
+    csvContent += "\n";
+
+    // Expenses
+    csvContent += "Expenses\n";
+    csvContent += "Date,Category,Description,Amount\n";
+    expenses.forEach(expense => {
+      csvContent += `${format(expense.date, 'yyyy-MM-dd')},${expense.category},"${expense.description || ''}",${expense.amount}\n`;
+    });
+    csvContent += "\n";
+    
+    // Bills
+    csvContent += "Bill History\n";
+    csvContent += 'id,tableId,total,timestamp,items\n';
+    billHistory.forEach(bill => {
         const items = bill.orderItems.map(item => `${item.quantity}x ${item.name}`).join('; ');
-        return `${bill.id},${bill.tableId},${bill.total},"${new Date(bill.timestamp).toISOString()}","${items}"`;
-    }).join('\n');
-    const csvContent = `data:text/csv;charset=utf-8,${header}${rows}`;
+        csvContent += `${bill.id},${bill.tableId},${bill.total},"${new Date(bill.timestamp).toISOString()}","${items}"\n`;
+    });
+
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement('a');
     link.setAttribute('href', encodedUri);
-    link.setAttribute('download', 'sales_data.csv');
+    link.setAttribute('download', 'all_data_export.csv');
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -273,7 +309,7 @@ export default function AdminDashboard({ billHistory, employees, expenses }: Adm
             </Dialog>
             <Button variant="outline" size="lg" className="justify-start gap-2" onClick={handleExportCSV}>
               <Download className="h-5 w-5" />
-              <span>Export Sales Data (CSV)</span>
+              <span>Export All Data (CSV)</span>
             </Button>
             <Dialog>
               <DialogTrigger asChild>
