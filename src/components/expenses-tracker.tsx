@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -441,12 +440,12 @@ export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
                     const vendor = getVendorDetails(expense.vendorId);
                     return (
                       <TableRow key={expense.id}>
-                          <TableCell className="border-r">{format(expense.date, 'PPP')}</TableCell>
-                          <TableCell className="border-r">{expense.category}</TableCell>
-                          <TableCell className="border-r">{expense.description}</TableCell>
-                          <TableCell className="border-r">{vendor?.name || 'N/A'}</TableCell>
-                          <TableCell className="border-r">{vendor?.phone || 'N/A'}</TableCell>
-                          <TableCell className="text-right font-mono border-r text-red-600 dark:text-red-400">
+                          <TableCell className="border-r font-bold">{format(expense.date, 'PPP')}</TableCell>
+                          <TableCell className="border-r font-bold">{expense.category}</TableCell>
+                          <TableCell className="border-r font-bold">{expense.description}</TableCell>
+                          <TableCell className="border-r font-bold">{vendor?.name || 'N/A'}</TableCell>
+                          <TableCell className="border-r font-bold">{vendor?.phone || 'N/A'}</TableCell>
+                          <TableCell className="text-right font-mono border-r text-red-600 dark:text-red-400 font-bold">
                           Rs. {expense.amount.toFixed(2)}
                           </TableCell>
                       </TableRow>
@@ -506,3 +505,5 @@ export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
     </div>
   );
 }
+
+    
