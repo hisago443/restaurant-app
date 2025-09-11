@@ -176,8 +176,8 @@ export default function StaffManagement({ employees }: StaffManagementProps) {
           <TabsTrigger value="attendance" className="px-6 py-2 text-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md">Attendance & Advance</TabsTrigger>
         </TabsList>
         <TabsContent value="employees">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Card>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                <Card className="lg:col-span-2">
                     <CardHeader>
                     <CardTitle>Employees</CardTitle>
                     <CardDescription>A read-only list of your restaurant staff and their salary details.</CardDescription>
@@ -220,7 +220,7 @@ export default function StaffManagement({ employees }: StaffManagementProps) {
                     </Table>
                     </CardContent>
                 </Card>
-                 <Card>
+                 <Card className="lg:col-span-1">
                     <CardHeader>
                         <CardTitle>Advance History</CardTitle>
                         <CardDescription>A complete log of all salary advances.</CardDescription>
@@ -232,17 +232,13 @@ export default function StaffManagement({ employees }: StaffManagementProps) {
                                 Object.entries(advancesByEmployee).map(([employeeId, employeeAdvances]) => {
                                     const employee = employees.find(e => e.id === employeeId);
                                     if (!employee) return null;
-                                    const totalAdvance = employeeAdvances.reduce((sum, a) => sum + a.amount, 0);
-
+                                    
                                     return (
                                         <div key={employeeId} className="p-3 bg-muted rounded-md">
                                             <div className="flex justify-between items-center mb-2">
                                                 <div className="flex items-center gap-2 font-semibold">
                                                     <span className={cn('h-2.5 w-2.5 rounded-full', employee.color)} />
                                                     {employee.name}
-                                                </div>
-                                                <div className="font-bold text-sm">
-                                                    Total Given: <span className="font-mono text-red-600 dark:text-red-400">Rs. {totalAdvance.toLocaleString()}</span>
                                                 </div>
                                             </div>
                                             <ul className="space-y-1">
