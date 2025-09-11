@@ -15,7 +15,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PlusCircle, Edit, Trash2, Check, X, CircleSlash, Pencil, UserCheck, UserX, UserMinus } from 'lucide-react';
 import type { Employee, Advance, Attendance, AttendanceStatus } from '@/lib/types';
 import { format, isSameDay, startOfDay } from 'date-fns';
@@ -106,15 +105,6 @@ export default function StaffManagement({ employees }: StaffManagementProps) {
         } catch (error) {
             toast({ variant: 'destructive', title: 'Save Failed' });
         }
-    }
-  }
-
-  const handleDeleteAdvance = async (advanceId: string) => {
-    try {
-        await deleteDoc(doc(db, "advances", advanceId));
-        toast({ title: 'Advance Deleted' });
-    } catch (error) {
-        toast({ variant: 'destructive', title: 'Delete Failed' });
     }
   }
   
@@ -209,7 +199,7 @@ export default function StaffManagement({ employees }: StaffManagementProps) {
                             <div 
                                 key={employeeId} 
                                 className={cn(
-                                    "h-3 w-3 rounded-full",
+                                    "h-2 w-2 rounded-full",
                                     employee.color,
                                     wasAbsent && "ring-2 ring-offset-1 ring-destructive"
                                 )}
@@ -226,101 +216,9 @@ export default function StaffManagement({ employees }: StaffManagementProps) {
 
   return (
     <div className="p-4 space-y-4">
-      <Tabs defaultValue="attendance">
-        <TabsList className="m-2 self-center rounded-lg bg-primary/10 p-2">
-          <TabsTrigger value="employees" className="px-6 py-2 text-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md">Employee List</TabsTrigger>
-          <TabsTrigger value="attendance" className="px-6 py-2 text-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md">Attendance & Advance</TabsTrigger>
-        </TabsList>
-        <TabsContent value="employees">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                <Card className="lg:col-span-2">
-                    <CardHeader>
-                    <CardTitle>Employees</CardTitle>
-                    <CardDescription>A read-only list of your restaurant staff and their salary details.</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                    <Table>
-                        <TableHeader>
-                        <TableRow>
-                            <TableHead>ID</TableHead>
-                            <TableHead>Name</TableHead>
-                            <TableHead>Role</TableHead>
-                            <TableHead>Salary (Rs.)</TableHead>
-                            <TableHead>Total Advance (Rs.)</TableHead>
-                            <TableHead>Remaining Salary (Rs.)</TableHead>
-                        </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                        {employees.map((employee) => {
-                            const totalAdvance = (advancesByEmployee[employee.id] || []).reduce((sum, a) => sum + a.amount, 0);
-
-                            const remainingSalary = employee.salary - totalAdvance;
-
-                            return (
-                            <TableRow key={employee.id}>
-                                <TableCell className="font-mono text-xs text-muted-foreground">{employee.id}</TableCell>
-                                <TableCell>
-                                <div className="flex items-center gap-2">
-                                    <span className={cn('h-2 w-2 rounded-full', employee.color)} />
-                                    {employee.name}
-                                </div>
-                                </TableCell>
-                                <TableCell>{employee.role}</TableCell>
-                                <TableCell className="font-mono bg-yellow-100 dark:bg-yellow-900/30 text-yellow-900 dark:text-yellow-200">{employee.salary.toLocaleString()}</TableCell>
-                                <TableCell className="font-mono bg-red-100 dark:bg-red-900/30 text-red-900 dark:text-red-200">{totalAdvance.toLocaleString()}</TableCell>
-                                <TableCell className="font-mono bg-green-100 dark:bg-green-900/30 text-green-900 dark:text-green-200">{remainingSalary.toLocaleString()}</TableCell>
-                            </TableRow>
-                            );
-                        })}
-                        </TableBody>
-                    </Table>
-                    </CardContent>
-                </Card>
-                 <Card className="lg:col-span-1">
-                    <CardHeader>
-                        <CardTitle>Advance History</CardTitle>
-                        <CardDescription>A complete log of all salary advances.</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                         <ScrollArea className="h-96">
-                          <div className="space-y-4 pr-4">
-                            {Object.keys(advancesByEmployee).length > 0 ? (
-                                Object.entries(advancesByEmployee).map(([employeeId, employeeAdvances]) => {
-                                    const employee = employees.find(e => e.id === employeeId);
-                                    if (!employee) return null;
-                                    
-                                    return (
-                                        <div key={employeeId} className="p-3 bg-muted rounded-md">
-                                            <div className="flex justify-between items-center mb-2">
-                                                <div className="flex items-center gap-2 font-semibold">
-                                                    <span className={cn('h-2.5 w-2.5 rounded-full', employee.color)} />
-                                                    {employee.name}
-                                                </div>
-                                            </div>
-                                            <ul className="space-y-1">
-                                                {employeeAdvances.map(advance => (
-                                                    <li key={advance.id} className="flex justify-between items-center p-2 bg-background/50 rounded-md group text-sm">
-                                                        <div>
-                                                            <span className="font-mono font-semibold">Rs. {advance.amount.toLocaleString()}</span>
-                                                            <span className="text-muted-foreground ml-2">on {format(advance.date, 'PPP')}</span>
-                                                        </div>
-                                                    </li>
-                                                ))}
-                                            </ul>
-                                        </div>
-                                    )
-                                })
-                            ) : (
-                                <p className="text-muted-foreground text-center p-8">No advance history found.</p>
-                            )}
-                          </div>
-                        </ScrollArea>
-                    </CardContent>
-                </Card>
-            </div>
-        </TabsContent>
-        <TabsContent value="attendance">
-          <div className="grid md:grid-cols-2 gap-6">
+       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Left Column */}
+        <div className="space-y-6">
             <Card className="flex flex-col items-center justify-center p-2 bg-violet-50 dark:bg-violet-900/20">
                 <Calendar
                   mode="single"
@@ -352,8 +250,8 @@ export default function StaffManagement({ employees }: StaffManagementProps) {
                     </div>
                  </div>
             </Card>
-            <div className="space-y-6">
-               <Card className="bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 shadow-md">
+
+            <Card className="bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 shadow-md">
                 <CardHeader>
                     <CardTitle className="text-green-800 dark:text-green-200">Add Salary Advance</CardTitle>
                     <CardDescription className="text-green-700 dark:text-green-300">
@@ -365,9 +263,12 @@ export default function StaffManagement({ employees }: StaffManagementProps) {
                         <PlusCircle className="mr-2 h-5 w-5" /> Add Salary Advance
                     </Button>
                 </CardContent>
-              </Card>
+            </Card>
+        </div>
 
-               <Card className="bg-violet-50 dark:bg-violet-900/20">
+        {/* Right Column */}
+        <div className="space-y-6">
+            <Card className="bg-violet-50 dark:bg-violet-900/20">
                 <CardHeader>
                     <div className="flex justify-between items-start">
                     <div>
@@ -419,42 +320,48 @@ export default function StaffManagement({ employees }: StaffManagementProps) {
                         })}
                     </div>
                 </CardContent>
-              </Card>
+            </Card>
 
-              <Card className="bg-violet-50 dark:bg-violet-900/20">
+            <Card>
                 <CardHeader>
-                    <CardTitle className="text-lg">Advances Given on {format(selectedDate, 'do MMMM')}</CardTitle>
+                <CardTitle>Employees & Advances</CardTitle>
+                <CardDescription>A list of your staff and their salary/advance details.</CardDescription>
                 </CardHeader>
-                 <CardContent>
-                    <div className="space-y-2">
-                    {advancesForSelectedDate.length > 0 ? (
-                        advancesForSelectedDate.map(advance => {
-                            const employee = employees.find(e => e.id === advance.employeeId);
-                            const totalAdvance = (advancesByEmployee[advance.employeeId] || []).reduce((sum, a) => sum + a.amount, 0);
-                            return (
-                                <div key={advance.id} className="flex justify-between items-center p-3 bg-background/50 rounded-lg group">
-                                    <div className="flex items-center gap-2">
-                                        <span className={cn('h-2.5 w-2.5 rounded-full', employee?.color)} />
-                                        <div>
-                                            <p className="font-semibold">{employee?.name || 'Unknown Employee'}</p>
-                                            <p className="text-sm text-muted-foreground font-mono">
-                                                Today: Rs. {advance.amount.toLocaleString()} / Total: Rs. {totalAdvance.toLocaleString()}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                            );
-                        })
-                    ) : (
-                        <p className="text-muted-foreground text-sm text-center pt-4">No advances were given on this date.</p>
-                    )}
-                    </div>
-                 </CardContent>
-              </Card>
-            </div>
-          </div>
-        </TabsContent>
-      </Tabs>
+                <CardContent>
+                <Table>
+                    <TableHeader>
+                    <TableRow>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Salary (Rs.)</TableHead>
+                        <TableHead>Total Advance (Rs.)</TableHead>
+                        <TableHead>Remaining (Rs.)</TableHead>
+                    </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                    {employees.map((employee) => {
+                        const totalAdvance = (advancesByEmployee[employee.id] || []).reduce((sum, a) => sum + a.amount, 0);
+                        const remainingSalary = employee.salary - totalAdvance;
+
+                        return (
+                        <TableRow key={employee.id}>
+                            <TableCell>
+                            <div className="flex items-center gap-2">
+                                <span className={cn('h-2 w-2 rounded-full', employee.color)} />
+                                {employee.name}
+                            </div>
+                            </TableCell>
+                            <TableCell className="font-mono">{employee.salary.toLocaleString()}</TableCell>
+                            <TableCell className="font-mono text-red-600 dark:text-red-400">{totalAdvance.toLocaleString()}</TableCell>
+                            <TableCell className="font-mono font-semibold text-green-600 dark:text-green-400">{remainingSalary.toLocaleString()}</TableCell>
+                        </TableRow>
+                        );
+                    })}
+                    </TableBody>
+                </Table>
+                </CardContent>
+            </Card>
+        </div>
+      </div>
       
       <AddOrEditAdvanceDialog 
         open={isAdvanceDialogOpen}
@@ -601,6 +508,7 @@ function NotesDialog({
     
 
     
+
 
 
 
