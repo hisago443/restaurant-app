@@ -198,7 +198,7 @@ export default function StaffManagement({ employees }: StaffManagementProps) {
         <div className="relative h-full w-full flex items-center justify-center">
             <DayContent {...props} />
             {uniqueEmployeeIds.size > 0 && (
-                <div className="absolute bottom-1.5 flex items-center justify-center space-x-1">
+                <div className="absolute bottom-1 flex items-center justify-center space-x-1">
                     {Array.from(uniqueEmployeeIds).map(employeeId => {
                         const employee = employees.find(e => e.id === employeeId);
                         if (!employee) return null;
@@ -209,7 +209,7 @@ export default function StaffManagement({ employees }: StaffManagementProps) {
                             <div 
                                 key={employeeId} 
                                 className={cn(
-                                    "h-2.5 w-2.5 rounded-full",
+                                    "h-2 w-2 rounded-full",
                                     employee.color,
                                     wasAbsent && "ring-2 ring-offset-1 ring-destructive"
                                 )}
@@ -366,11 +366,10 @@ export default function StaffManagement({ employees }: StaffManagementProps) {
                     </div>
                 </CardHeader>
                 <CardContent>
-                  <TooltipProvider>
                     <div className="space-y-2">
                         {employees.map(employee => {
                             const attendanceRecord = attendanceForSelectedDate.find(a => a.employeeId === employee.id);
-                            const totalAdvance = (advancesByEmployee[employee.id] || []).reduce((sum, a) => sum + a.amount, 0);
+                             const totalAdvance = (advancesByEmployee[employee.id] || []).reduce((sum, a) => sum + a.amount, 0);
                             return (
                             <div key={employee.id} className="flex justify-between items-center p-2 bg-background/50 rounded-lg group">
                                 <div className="flex items-center gap-2 font-medium">
@@ -384,39 +383,34 @@ export default function StaffManagement({ employees }: StaffManagementProps) {
                                     {(Object.keys(attendanceStatusConfig) as AttendanceStatus[]).map(status => {
                                       const isSelected = attendanceRecord?.status === status;
                                       return (
-                                        <Tooltip key={status}>
-                                            <TooltipTrigger asChild>
-                                                <Button 
-                                                    variant={isSelected ? 'default' : 'outline'}
-                                                    size="icon"
-                                                    onClick={() => handleMarkAttendance(employee.id, status)}
-                                                    className={cn("h-9 w-9", isSelected && attendanceStatusConfig[status].className)}
-                                                >
-                                                    {React.createElement(attendanceStatusConfig[status].icon, {className: "h-4 w-4"})}
-                                                </Button>
-                                            </TooltipTrigger>
-                                            <TooltipContent>
-                                                <p>{attendanceStatusConfig[status].label}</p>
-                                            </TooltipContent>
-                                        </Tooltip>
+                                        <Button 
+                                            key={status}
+                                            variant={isSelected ? 'default' : 'outline'}
+                                            onClick={() => handleMarkAttendance(employee.id, status)}
+                                            className={cn("h-10 w-24 flex items-center justify-center gap-2", isSelected && attendanceStatusConfig[status].className)}
+                                        >
+                                            {React.createElement(attendanceStatusConfig[status].icon, {className: "h-4 w-4"})}
+                                            <span>{attendanceStatusConfig[status].label}</span>
+                                        </Button>
                                       )
                                     })}
-                                    <Tooltip>
-                                        <TooltipTrigger asChild>
-                                            <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => openNotesDialog(employee.id)}>
-                                                <Pencil className="h-4 w-4" />
-                                            </Button>
-                                        </TooltipTrigger>
-                                        <TooltipContent>
-                                            <p>Add/Edit Note</p>
-                                        </TooltipContent>
-                                    </Tooltip>
+                                    <TooltipProvider>
+                                      <Tooltip>
+                                          <TooltipTrigger asChild>
+                                              <Button variant="ghost" size="icon" className="h-10 w-10" onClick={() => openNotesDialog(employee.id)}>
+                                                  <Pencil className="h-4 w-4" />
+                                              </Button>
+                                          </TooltipTrigger>
+                                          <TooltipContent>
+                                              <p>Add/Edit Note</p>
+                                          </TooltipContent>
+                                      </Tooltip>
+                                    </TooltipProvider>
                                 </div>
                             </div>
                             )
                         })}
                     </div>
-                  </TooltipProvider>
                 </CardContent>
               </Card>
 
