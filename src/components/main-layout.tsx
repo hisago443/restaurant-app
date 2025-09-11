@@ -4,7 +4,7 @@
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Utensils, LayoutGrid, Soup, Users, Shield, Receipt } from 'lucide-react';
+import { Utensils, LayoutGrid, Soup, Users, Shield, Receipt, Package } from 'lucide-react';
 import { isSameDay } from 'date-fns';
 import { collection, onSnapshot, doc, setDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -17,6 +17,7 @@ import KitchenOrders from './kitchen-orders';
 import AdminDashboard from './admin-dashboard';
 import StaffManagement from "./staff-management";
 import ExpensesTracker from './expenses-tracker';
+import InventoryManagement from './inventory-management';
 import { Separator } from '@/components/ui/separator';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
@@ -326,6 +327,10 @@ export default function MainLayout() {
                 <Soup /> Kitchen
               </TabsTrigger>
               <Separator orientation="vertical" className="h-6 mx-1" />
+              <TabsTrigger value="inventory" className="px-4 py-2 text-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md flex items-center gap-2">
+                <Package /> Inventory
+              </TabsTrigger>
+              <Separator orientation="vertical" className="h-6 mx-1" />
               <TabsTrigger value="staff" className="px-4 py-2 text-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md flex items-center gap-2">
                 <Users /> Staff
               </TabsTrigger>
@@ -392,6 +397,9 @@ export default function MainLayout() {
             <TabsContent value="kitchen" className="m-0 p-0 h-full">
               <KitchenOrders orders={orders} setOrders={setOrders} />
             </TabsContent>
+             <TabsContent value="inventory" className="m-0 p-0 h-full">
+              <InventoryManagement />
+            </TabsContent>
             <TabsContent value="staff" className="m-0 p-0">
               <StaffManagement 
                 employees={employees} 
@@ -413,5 +421,3 @@ export default function MainLayout() {
     </div>
   );
 }
-
-    
