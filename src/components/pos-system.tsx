@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import * as React from 'react';
@@ -680,9 +681,9 @@ export default function PosSystem({
       return (
         <div className="space-y-6">
           {filteredMenu.map((category) => (
-             <div key={category.category} className={cn("rounded-lg p-2", categoryColors[category.category] ? colorPalette[categoryColors[category.category]]?.light : '')}>
+             <div key={category.category} className={cn("rounded-lg p-2")}>
                <div className="sticky top-0 bg-background/80 backdrop-blur-sm py-2 z-10 flex items-center justify-between gap-2 p-2">
-                <h2 className="text-xl font-bold text-black flex-grow">
+                <h2 className="text-xl font-bold flex-grow text-left">
                   {category.category}
                 </h2>
                 <CategoryColorPicker categoryName={category.category} />
@@ -709,9 +710,9 @@ export default function PosSystem({
           <div className="flex justify-center">
             <TabsList className="mb-4 flex-wrap h-auto">
               {filteredMenu.map(category => (
-                 <div key={category.category} className={cn("relative p-0.5 rounded-sm cursor-pointer", categoryColors[category.category] ? colorPalette[categoryColors[category.category]]?.light : '')}>
-                    <TabsTrigger value={category.category} className="flex-grow justify-between gap-2 w-full pr-8 data-[state=active]:bg-transparent data-[state=active]:shadow-none">
-                       <span className={cn('text-black flex-grow text-left')}>{category.category}</span>
+                <div key={category.category} className="relative p-0.5 rounded-sm cursor-pointer">
+                    <TabsTrigger value={category.category} className="flex-grow justify-between gap-2 w-full pr-8 data-[state=active]:shadow-none text-black">
+                       <span className="flex-grow text-left">{category.category}</span>
                     </TabsTrigger>
                      <div className="absolute right-1 top-1/2 -translate-y-1/2">
                         <CategoryColorPicker categoryName={category.category} />
@@ -741,7 +742,7 @@ export default function PosSystem({
     return (
       <Accordion type="multiple" value={activeAccordionItems} onValueChange={setActiveAccordionItems} className="w-full">
         {filteredMenu.map((category) => (
-          <AccordionItem key={category.category} value={category.category} className={cn("border-b-0 rounded-lg mb-2 overflow-hidden", categoryColors[category.category] ? colorPalette[categoryColors[category.category]]?.light : 'bg-muted/30')}>
+          <AccordionItem key={category.category} value={category.category} className={cn("border-b-0 rounded-lg mb-2 overflow-hidden", categoryColors[category.category] ? colorPalette[categoryColors[category.category]]?.light : '')}>
             <div className="flex items-center pr-4">
               <AccordionTrigger className='p-4 hover:no-underline flex-grow'>
                   <div className="text-xl font-bold text-black flex-grow text-left">{category.category}</div>
@@ -936,14 +937,14 @@ export default function PosSystem({
         
         <div className="p-4 border-t space-y-4 bg-muted/30">
             <div className="space-y-2">
-                <Label className="font-semibold block">{currentActiveTableId ? "Selected Table" : "Select a Table"}</Label>
+                <Label className="font-semibold block">{currentActiveTableId ? "Select Table" : "Select a Table"}</Label>
                  <div className="grid grid-cols-5 gap-1.5">
                   {tables.map(table => (
                       <Button
                           key={table.id}
                           variant="outline"
                           className={cn(
-                            "h-auto aspect-square flex-col justify-center items-center relative p-1 border-2 transition-transform duration-150 active:scale-95",
+                            "h-14 w-full flex-col justify-center items-center relative p-1 border-2 transition-transform duration-150 active:scale-95",
                             statusColors[table.status],
                             currentActiveTableId === table.id && 'ring-4 ring-offset-2 ring-ring',
                             table.status === 'Available' || table.status === 'Occupied' ? 'text-white border-black' : 'text-black border-black/50',
@@ -989,7 +990,7 @@ export default function PosSystem({
                 <span className="font-bold">-Rs. {(subtotal - total).toFixed(2)}</span>
               </div>
             )}
-            <div className="flex justify-between font-bold text-2xl border-t pt-2">
+            <div className="flex justify-between font-bold text-2xl border-t pt-2 mt-2 bg-primary/20 p-2 rounded-md">
               <span>Total:</span>
               <span>Rs. {total.toFixed(2)}</span>
             </div>
@@ -997,7 +998,7 @@ export default function PosSystem({
           <div className="flex flex-col gap-2 pt-2">
               <Button 
                   size="lg"
-                  className={cn(activeOrder && "bg-blue-600 hover:bg-blue-700")}
+                  className={cn("h-12 text-base", activeOrder && "bg-blue-600 hover:bg-blue-700")}
                   onClick={handleSendToKitchen}
                   disabled={isProcessing || orderItems.length === 0 || !currentActiveTableId}
               >
@@ -1005,11 +1006,11 @@ export default function PosSystem({
                   {activeOrder ? 'Update KOT' : 'Send KOT to Kitchen'}
               </Button>
               <div className="grid grid-cols-2 gap-2">
-                  <Button size="lg" variant="outline" onClick={handlePrintProvisionalBill} disabled={isProcessing ||!currentActiveTableId || orderItems.length === 0}>
+                  <Button size="lg" variant="outline" className="h-12 text-base" onClick={handlePrintProvisionalBill} disabled={isProcessing ||!currentActiveTableId || orderItems.length === 0}>
                       {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Printer className="mr-2 h-4 w-4" />}
                       Print Bill
                   </Button>
-                  <Button size="lg" onClick={handleProcessPayment} disabled={isProcessing || orderItems.length === 0 || !currentActiveTableId}>
+                  <Button size="lg" className="h-12 text-base" onClick={handleProcessPayment} disabled={isProcessing || orderItems.length === 0 || !currentActiveTableId}>
                       {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                       Process Payment
                   </Button>
@@ -1040,4 +1041,5 @@ export default function PosSystem({
     </div>
   );
 }
+
 

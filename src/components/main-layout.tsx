@@ -284,28 +284,28 @@ export default function MainLayout() {
       </header>
       <main className="flex-1">
         <Tabs value={activeTab} onValueChange={handleTabChange} className="h-full flex flex-col">
-          <TabsList className="m-2 self-center rounded-lg bg-primary/10 p-2 h-auto">
-            <TabsTrigger value="pos" className="px-4 py-2 text-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md flex items-center gap-2">
+          <TabsList className="m-2 self-center p-0 h-auto bg-transparent">
+            <TabsTrigger value="pos" className="px-4 py-2 text-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md flex items-center gap-2">
                 <Utensils /> Main
             </TabsTrigger>
             <Separator orientation="vertical" className="h-6 mx-1" />
-            <TabsTrigger value="tables" className="px-4 py-2 text-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md flex items-center gap-2">
+            <TabsTrigger value="tables" className="px-4 py-2 text-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md flex items-center gap-2">
               <LayoutGrid /> Tables
             </TabsTrigger>
              <Separator orientation="vertical" className="h-6 mx-1" />
-            <TabsTrigger value="kitchen" className="px-4 py-2 text-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md flex items-center gap-2">
+            <TabsTrigger value="kitchen" className="px-4 py-2 text-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md flex items-center gap-2">
               <Soup /> Kitchen
             </TabsTrigger>
             <Separator orientation="vertical" className="h-6 mx-1" />
-             <TabsTrigger value="staff" className="px-4 py-2 text-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md flex items-center gap-2">
+             <TabsTrigger value="staff" className="px-4 py-2 text-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md flex items-center gap-2">
               <Users /> Staff
             </TabsTrigger>
             <Separator orientation="vertical" className="h-6 mx-1" />
-            <TabsTrigger value="expenses" className="px-4 py-2 text-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md flex items-center gap-2">
+            <TabsTrigger value="expenses" className="px-4 py-2 text-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md flex items-center gap-2">
               <Receipt /> Expenses
             </TabsTrigger>
             <Separator orientation="vertical" className="h-6 mx-1" />
-            <TabsTrigger value="admin" className="px-4 py-2 text-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md flex items-center gap-2">
+            <TabsTrigger value="admin" className="px-4 py-2 text-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md flex items-center gap-2">
               <Shield /> Admin
             </TabsTrigger>
           </TabsList>
