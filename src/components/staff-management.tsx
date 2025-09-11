@@ -198,7 +198,7 @@ export default function StaffManagement({ employees }: StaffManagementProps) {
         <div className="relative h-full w-full flex items-center justify-center">
             <DayContent {...props} />
             {uniqueEmployeeIds.size > 0 && (
-                <div className="absolute bottom-1 flex items-center justify-center space-x-1">
+                <div className="absolute bottom-1.5 flex items-center justify-center space-x-1">
                     {Array.from(uniqueEmployeeIds).map(employeeId => {
                         const employee = employees.find(e => e.id === employeeId);
                         if (!employee) return null;
@@ -209,7 +209,7 @@ export default function StaffManagement({ employees }: StaffManagementProps) {
                             <div 
                                 key={employeeId} 
                                 className={cn(
-                                    "h-2 w-2 rounded-full",
+                                    "h-2.5 w-2.5 rounded-full",
                                     employee.color,
                                     wasAbsent && "ring-2 ring-offset-1 ring-destructive"
                                 )}
@@ -370,11 +370,15 @@ export default function StaffManagement({ employees }: StaffManagementProps) {
                     <div className="space-y-2">
                         {employees.map(employee => {
                             const attendanceRecord = attendanceForSelectedDate.find(a => a.employeeId === employee.id);
+                            const totalAdvance = (advancesByEmployee[employee.id] || []).reduce((sum, a) => sum + a.amount, 0);
                             return (
                             <div key={employee.id} className="flex justify-between items-center p-2 bg-background/50 rounded-lg group">
                                 <div className="flex items-center gap-2 font-medium">
                                     <span className={cn('h-2.5 w-2.5 rounded-full', employee.color)} />
-                                    {employee.name}
+                                    <div>
+                                      {employee.name}
+                                      <p className="text-xs font-mono text-muted-foreground">Total Adv: Rs. {totalAdvance.toLocaleString()}</p>
+                                    </div>
                                 </div>
                                 <div className="flex items-center gap-1.5">
                                     {(Object.keys(attendanceStatusConfig) as AttendanceStatus[]).map(status => {
