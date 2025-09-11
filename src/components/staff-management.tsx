@@ -376,25 +376,17 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
                                   <div className="flex items-center gap-2">
                                       {(Object.keys(attendanceStatusConfig) as AttendanceStatus[]).map(status => {
                                           const isSelected = attendanceRecord?.status === status;
+                                          const config = attendanceStatusConfig[status];
                                           return (
-                                              <TooltipProvider key={status}>
-                                                  <Tooltip>
-                                                      <TooltipTrigger asChild>
-                                                      <Button 
-                                                          key={status}
-                                                          variant={isSelected ? 'default' : 'outline'}
-                                                          size="icon"
-                                                          onClick={() => handleMarkAttendance(employee.id, status)}
-                                                          className={cn("h-10 w-10", isSelected && attendanceStatusConfig[status].className)}
-                                                      >
-                                                          {React.createElement(attendanceStatusConfig[status].icon, {className: "h-5 w-5"})}
-                                                      </Button>
-                                                      </TooltipTrigger>
-                                                      <TooltipContent>
-                                                      <p>{attendanceStatusConfig[status].label}</p>
-                                                      </TooltipContent>
-                                                  </Tooltip>
-                                              </TooltipProvider>
+                                              <Button 
+                                                  key={status}
+                                                  variant={isSelected ? 'default' : 'outline'}
+                                                  onClick={() => handleMarkAttendance(employee.id, status)}
+                                                  className={cn("h-10", isSelected && config.className)}
+                                              >
+                                                  {React.createElement(config.icon, {className: "mr-2 h-5 w-5"})}
+                                                  {config.label}
+                                              </Button>
                                           )
                                       })}
                                       <TooltipProvider>
