@@ -287,6 +287,7 @@ export default function StaffManagement({ employees }: StaffManagementProps) {
                           <ul className="space-y-2">
                             {advancesForSelectedDate.map((advance) => {
                               const employee = employees.find(e => e.id === advance.employeeId);
+                              const totalAdvance = advances.filter(a => a.employeeId === advance.employeeId).reduce((sum, a) => sum + a.amount, 0);
                               return (
                               <li key={advance.id} className="flex justify-between items-center p-2 bg-muted rounded-md group">
                                 <div className="flex items-center gap-2 flex-wrap">
@@ -294,6 +295,7 @@ export default function StaffManagement({ employees }: StaffManagementProps) {
                                   <span>{employee ? employee.name : 'Unknown Employee'}:</span>
                                   <span className="font-mono font-bold">Rs. {advance.amount.toLocaleString()}</span>
                                   <span className="text-xs text-muted-foreground">on {format(advance.date, 'PP')}</span>
+                                  <span className="text-xs text-blue-500 font-semibold">(Total: Rs. {totalAdvance.toLocaleString()})</span>
                                 </div>
                                 <div className="opacity-0 group-hover:opacity-100 transition-opacity">
                                     <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openAdvanceDialog(advance)}>
