@@ -664,10 +664,10 @@ export default function PosSystem({
             <div
               key={name}
               className={cn("h-6 w-6 rounded-full cursor-pointer", colorPalette[name].light)}
-              onClick={() => handleSetCategoryColor(categoryName, name)}
+              onClick={(e) => { e.stopPropagation(); handleSetCategoryColor(categoryName, name); }}
             />
           ))}
-           <Button variant="ghost" size="sm" className="col-span-5 h-8" onClick={() => handleSetCategoryColor(categoryName, '')}>Reset</Button>
+           <Button variant="ghost" size="sm" className="col-span-5 h-8" onClick={(e) => { e.stopPropagation(); handleSetCategoryColor(categoryName, ''); }}>Reset</Button>
         </div>
       </PopoverContent>
     </Popover>
@@ -707,15 +707,13 @@ export default function PosSystem({
           <div className="flex justify-center">
             <TabsList className="mb-4 flex-wrap h-auto">
               {filteredMenu.map(category => (
-                 <div key={category.category} className={cn("relative p-0.5 rounded-md cursor-pointer", categoryColors[category.category] ? colorPalette[categoryColors[category.category]]?.light : '')}>
-                    <TabsTrigger value={category.category} asChild className="flex-grow justify-between gap-2 w-full pr-8 data-[state=active]:shadow-none !bg-transparent text-black">
-                       <div>
-                         <span className="flex-grow text-left">{category.category}</span>
-                         <div className="absolute right-1 top-1/2 -translate-y-1/2">
-                            <CategoryColorPicker categoryName={category.category} />
-                         </div>
-                       </div>
-                    </TabsTrigger>
+                <div key={category.category} className={cn("relative p-0.5 rounded-md cursor-pointer", categoryColors[category.category] ? colorPalette[categoryColors[category.category]]?.light : '')}>
+                  <TabsTrigger value={category.category} className="flex-grow justify-between gap-2 w-full pr-8 !bg-transparent text-black">
+                     <span className="flex-grow text-left">{category.category}</span>
+                     <div className="absolute right-1 top-1/2 -translate-y-1/2">
+                        <CategoryColorPicker categoryName={category.category} />
+                     </div>
+                  </TabsTrigger>
                 </div>
               ))}
             </TabsList>
