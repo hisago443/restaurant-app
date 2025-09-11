@@ -1133,14 +1133,15 @@ export default function PosSystem({
             <div className="space-y-2">
                 <Label className="font-semibold block">Select Table</Label>
                  <div className="grid grid-cols-5 gap-1.5">
-                  {tables.map(table => (
-                      <Button
+                  {tables.map(table => {
+                    const isSelected = currentActiveTableId === table.id;
+                    return (
+                      <div
                           key={table.id}
-                          variant="outline"
                           className={cn(
-                            "h-14 w-full flex-col justify-center items-center relative p-1 border-2 transition-transform duration-150 active:scale-95 group",
+                            "h-14 w-full flex-col justify-center items-center relative p-1 border-2 transition-transform duration-150 active:scale-95 group flex rounded-md cursor-pointer",
                             getDynamicColor(table.status, occupancyCount[table.id] || 0),
-                            currentActiveTableId === table.id && 'ring-4 ring-offset-2 ring-ring',
+                            isSelected && 'ring-4 ring-offset-2 ring-ring',
                             table.status === 'Available' || table.status === 'Occupied' ? 'text-white border-black' : 'text-black border-black/50',
                           )}
                           onClick={() => handleSelectTable(table.id)}
@@ -1151,8 +1152,9 @@ export default function PosSystem({
                           </div>
                           <span className="text-3xl font-bold leading-none">{table.id}</span>
                           <span className="text-xs font-bold">{table.status}</span>
-                      </Button>
-                  ))}
+                      </div>
+                    )
+                  })}
               </div>
             </div>
 
@@ -1252,6 +1254,8 @@ export default function PosSystem({
     </div>
   );
 }
+
+    
 
     
 
