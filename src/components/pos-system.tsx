@@ -47,6 +47,7 @@ const colorNames = Object.keys(colorPalette);
 
 
 type ViewMode = 'accordion' | 'grid' | 'list';
+type InteractionMode = 'click' | 'drag';
 
 const statusBaseColors: Record<TableStatus, string> = {
   Available: 'green',
@@ -324,7 +325,7 @@ function OrderPanel({
                     <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
                         <ClipboardList className="w-16 h-16 text-gray-300" />
                         <p className="mt-4 text-sm font-medium text-center">
-                            Click on items to add them or drag & drop here.
+                            Click on items to add them or drag &amp; drop here.
                         </p>
                     </div>
                 ) : (
@@ -351,7 +352,7 @@ function OrderPanel({
           
             <div className="p-4 border-t space-y-4 bg-muted/30">
                 <div className="space-y-2">
-                    <Label className="font-semibold block flex items-center gap-1.5"><Move size={14} /> Drag & Drop onto a Table</Label>
+                    <Label className="font-semibold block flex items-center gap-1.5"><Move size={14} /> Drag &amp; Drop onto a Table</Label>
                     <div className="grid grid-cols-5 gap-1.5">
                         {tables.map(table => (
                             <TableDropTarget key={table.id} table={table} occupancyCount={occupancyCount} handleSelectTable={() => handleSelectTable(table.id)} onDropItem={onDropItemOnTable}>
@@ -448,7 +449,7 @@ export default function PosSystem({
   const [itemCodeInput, setItemCodeInput] = useState('');
   const [menu, setMenu] = useState<MenuCategory[]>(menuData as MenuCategory[]);
   const [originalOrderItems, setOriginalOrderItems] = useState<OrderItem[]>([]);
-  const [isClickToAdd, setIsClickToAdd] = useState(true);
+  const [interactionMode, setInteractionMode] = useState<InteractionMode>('click');
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
   const [receiptPreview, setReceiptPreview] = useState('');
   const { toast } = useToast();
@@ -489,23 +490,23 @@ export default function PosSystem({
 
   useEffect(() => {
     try {
-      const savedState = localStorage.getItem('isClickToAdd');
-      if (savedState !== null) {
-        setIsClickToAdd(JSON.parse(savedState));
+      const savedMode = localStorage.getItem('interactionMode');
+      if (savedMode) {
+        setInteractionMode(JSON.parse(savedMode));
       }
     } catch (e) {
-      console.error("Could not parse 'isClickToAdd' from localStorage", e);
-      setIsClickToAdd(true); 
+      console.error("Could not parse 'interactionMode' from localStorage", e);
+      setInteractionMode('click');
     }
   }, []);
   
   useEffect(() => {
     try {
-      localStorage.setItem('isClickToAdd', JSON.stringify(isClickToAdd));
+      localStorage.setItem('interactionMode', JSON.stringify(interactionMode));
     } catch (e) {
-      console.error("Could not save 'isClickToAdd' to localStorage", e);
+      console.error("Could not save 'interactionMode' to localStorage", e);
     }
-  }, [isClickToAdd]);
+  }, [interactionMode]);
   
   const getLocalReceipt = useCallback(() => {
     if (orderItems.length === 0) return '';
@@ -615,7 +616,6 @@ export default function PosSystem({
      // If there's an unassigned order and an available table is clicked
     if (!activeOrder && orderItems.length > 0 && table?.status === 'Available') {
         setSelectedTableId(tableId);
-        updateTableStatus([tableId!], 'Occupied');
         setPendingOrders(prev => {
             const newPending = {...prev};
             newPending[tableId!] = orderItems;
@@ -678,22 +678,7 @@ export default function PosSystem({
   }, [setOrderItems]);
 
   const handleItemClick = (item: MenuItem) => {
-    if (!selectedTableId && !activeOrder) {
-        // No table selected, add to a temporary "unassigned" order
-        addToOrder(item, 1);
-        setPendingOrders(prev => {
-          const newItems = [...(prev[0] || [])];
-          const existingItemIndex = newItems.findIndex(i => i.name === item.name);
-          if (existingItemIndex > -1) {
-            newItems[existingItemIndex].quantity += 1;
-          } else {
-            newItems.push({ ...item, quantity: 1 });
-          }
-          return { ...prev, 0: newItems };
-        });
-        return;
-    }
-    if (isClickToAdd) {
+    if (interactionMode === 'click') {
       addToOrder(item, 1);
     } else {
       setSelectedItem(item);
@@ -879,14 +864,30 @@ export default function PosSystem({
   };
   
     const handleDropItemOnTable = (tableId: number, item: MenuItem) => {
-        handleSelectTable(tableId); // Select the table
-        
-        // This is a timeout to ensure state update for table selection propagates
-        // before adding item to order. A better solution might involve state management library.
-        setTimeout(() => {
+        const tableIsSelected = selectedTableId === tableId;
+        const isNewOrder = !activeOrder && orderItems.length === 0;
+
+        if (tableIsSelected) {
+            // If the table is already selected, just add the item
             addToOrder(item, 1);
             toast({ title: 'Item Added', description: `Added ${item.name} to Table ${tableId}.` });
-        }, 0);
+        } else {
+            if(isNewOrder) {
+                // If it's a completely new order, select the table and add the item.
+                setSelectedTableId(tableId);
+                setTimeout(() => {
+                    addToOrder(item, 1);
+                    toast({ title: 'Order Started', description: `Started order for Table ${tableId} with ${item.name}.` });
+                }, 0);
+            } else {
+                // If there's an active order for another table, show a confirmation
+                toast({
+                    variant: 'destructive',
+                    title: 'Switching Tables?',
+                    description: 'Clear the current order before starting a new one on a different table.',
+                });
+            }
+        }
     };
 
 
@@ -1055,7 +1056,7 @@ export default function PosSystem({
         className={cn(
           "group rounded-lg transition-all hover:scale-105 relative",
           finalLightColor,
-          isClickToAdd ? 'cursor-pointer' : 'cursor-default'
+          interactionMode === 'click' ? 'cursor-pointer' : 'cursor-default'
         )}
         onClick={() => handleItemClick(item)}
       >
@@ -1099,7 +1100,7 @@ export default function PosSystem({
                 </span>
             )}
           </div>
-          {!isClickToAdd && (
+          {interactionMode !== 'click' && (
             <div className="flex justify-end mt-2">
               <Button 
                 size="sm" 
@@ -1406,9 +1407,23 @@ export default function PosSystem({
                   <Button variant="outline" size="sm" onClick={() => setIsMenuManagerOpen(true)}>
                     <BookOpen className="mr-2 h-4 w-4" /> Manage Menu
                   </Button>
-                  <div className="flex items-center space-x-2 p-2 rounded-lg border bg-background">
-                      <Label htmlFor="easy-mode" className="font-medium text-sm flex items-center gap-1"><MousePointerClick size={14}/> Easy Mode</Label>
-                      <Switch id="easy-mode" checked={isClickToAdd} onCheckedChange={setIsClickToAdd} />
+                   <div className="flex items-center space-x-1 p-1 rounded-lg border bg-background">
+                      <Button 
+                        size="sm" 
+                        variant={interactionMode === 'click' ? 'secondary' : 'ghost'} 
+                        onClick={() => setInteractionMode('click')}
+                        className="flex items-center gap-1"
+                      >
+                        <MousePointerClick size={14}/> Click to Add
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant={interactionMode === 'drag' ? 'secondary' : 'ghost'} 
+                        onClick={() => setInteractionMode('drag')}
+                        className="flex items-center gap-1"
+                      >
+                        <Move size={14}/> Drag &amp; Drop
+                      </Button>
                   </div>
                 </div>
               </div>
