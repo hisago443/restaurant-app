@@ -121,7 +121,7 @@ const ItemTypes = {
   MENU_ITEM: 'menuItem',
 };
 
-function DraggableMenuItem({ item, subCategoryName, categoryName, children }: { item: MenuItem; subCategoryName: string; categoryName: string; children: React.ReactNode }) {
+function DraggableMenuItem({ item, children }: { item: MenuItem; children: React.ReactNode }) {
     const [{ isDragging }, drag] = useDrag(() => ({
         type: ItemTypes.MENU_ITEM,
         item: { ...item },
@@ -1055,7 +1055,6 @@ export default function PosSystem({
 
     const menuItemCard = (
       <Card
-        key={item.name}
         className={cn(
           "group rounded-lg transition-all hover:scale-105 relative",
           finalLightColor,
@@ -1119,7 +1118,7 @@ export default function PosSystem({
     );
 
     return (
-        <DraggableMenuItem item={item} subCategoryName={subCategoryName} categoryName={categoryName}>
+        <DraggableMenuItem key={item.name} item={item}>
             {menuItemCard}
         </DraggableMenuItem>
     );
