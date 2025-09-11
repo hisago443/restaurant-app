@@ -428,10 +428,11 @@ export default function MainLayout() {
               />
             </TabsContent>
             <TabsContent value="kitchen" className="m-0 p-0 h-full">
-              <div className="grid grid-cols-1 lg:grid-cols-2 h-full gap-4">
+              <div className="grid grid-cols-[1fr_auto_1fr] h-full">
                   <div className="h-full">
                       <KitchenOrders orders={orders} setOrders={setOrders} />
                   </div>
+                   <Separator orientation="vertical" />
                   <div className="h-full">
                       <InventoryManagement inventory={inventory} />
                   </div>
