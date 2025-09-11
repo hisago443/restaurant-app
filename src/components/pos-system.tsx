@@ -619,12 +619,15 @@ export default function PosSystem({
     if (!activeOrder && orderItems.length > 0 && table?.status === 'Available') {
         setSelectedTableId(tableId);
         setPendingOrders(prev => {
-            const newPending = {...prev};
-            if(tableId) newPending[tableId] = orderItems;
-            delete newPending[0]; 
-            return newPending;
+            const newItems = [...orderItems];
+            if(tableId) {
+                const newPending = {...prev};
+                newPending[tableId] = newItems;
+                delete newPending[0]; 
+                return newPending;
+            }
+            return prev;
         });
-        toast({ title: 'Order Assigned!', description: `Order assigned to Table ${tableId}. Send to kitchen when ready.` });
     } else {
         setSelectedTableId(tableId);
     }
@@ -1061,6 +1064,7 @@ export default function PosSystem({
 
     const menuItemCard = (
       <Card
+        key={item.name}
         className={cn(
           "group rounded-lg transition-all hover:scale-105 relative",
           finalLightColor,
@@ -1525,4 +1529,3 @@ export default function PosSystem({
   );
 }
 
-    
