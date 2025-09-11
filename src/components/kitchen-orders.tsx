@@ -14,9 +14,9 @@ interface KitchenOrdersProps {
   setOrders: React.Dispatch<React.SetStateAction<Order[]>>;
 }
 
-type OrderStatus = 'Pending' | 'In Preparation' | 'Completed';
+type OrderStatus = 'In Preparation' | 'Completed';
 
-const statusColumns: OrderStatus[] = ['Pending', 'In Preparation', 'Completed'];
+const statusColumns: OrderStatus[] = ['In Preparation', 'Completed'];
 
 export default function KitchenOrders({ orders, setOrders }: KitchenOrdersProps) {
 
@@ -26,12 +26,6 @@ export default function KitchenOrders({ orders, setOrders }: KitchenOrdersProps)
 
   const getActionForOrder = (order: Order) => {
     switch (order.status) {
-      case 'Pending':
-        return (
-          <Button size="sm" onClick={() => moveOrder(order.id, 'In Preparation')}>
-            Start Prep <ArrowRight className="ml-2 h-4 w-4" />
-          </Button>
-        );
       case 'In Preparation':
         return (
           <Button size="sm" onClick={() => moveOrder(order.id, 'Completed')} className="bg-green-500 hover:bg-green-600">
@@ -47,7 +41,7 @@ export default function KitchenOrders({ orders, setOrders }: KitchenOrdersProps)
 
   return (
     <div className="p-4 h-[calc(100vh-5rem)]">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 h-full">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 h-full">
         {statusColumns.map((status) => (
           <Card key={status} className="flex flex-col">
             <CardHeader>
