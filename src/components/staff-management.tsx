@@ -26,6 +26,7 @@ import { ScrollArea } from './ui/scroll-area';
 import { Separator } from './ui/separator';
 import { Checkbox } from './ui/checkbox';
 import { DayContent, DayContentProps } from 'react-day-picker';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 
 const attendanceStatusConfig: Record<AttendanceStatus, { icon: React.ElementType, color: string, label: string, className: string }> = {
   'Present': { icon: UserCheck, color: 'green', label: 'Present', className: 'bg-green-500 hover:bg-green-600 text-white' },
@@ -197,7 +198,7 @@ export default function StaffManagement({ employees }: StaffManagementProps) {
         <div className="relative h-full w-full flex items-center justify-center">
             <DayContent {...props} />
             {uniqueEmployeeIds.size > 0 && (
-                <div className="absolute bottom-1.5 flex items-center justify-center space-x-1">
+                <div className="absolute bottom-1 flex items-center justify-center space-x-1">
                     {Array.from(uniqueEmployeeIds).map(employeeId => {
                         const employee = employees.find(e => e.id === employeeId);
                         if (!employee) return null;
@@ -303,8 +304,6 @@ export default function StaffManagement({ employees }: StaffManagementProps) {
                                                             <span className="font-mono font-semibold">Rs. {advance.amount.toLocaleString()}</span>
                                                             <span className="text-muted-foreground ml-2">on {format(advance.date, 'PPP')}</span>
                                                         </div>
-                                                        <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                                                        </div>
                                                     </li>
                                                 ))}
                                             </ul>
@@ -367,6 +366,7 @@ export default function StaffManagement({ employees }: StaffManagementProps) {
                     </div>
                 </CardHeader>
                 <CardContent>
+                  <TooltipProvider>
                     <div className="space-y-2">
                         {employees.map(employee => {
                             const attendanceRecord = attendanceForSelectedDate.find(a => a.employeeId === employee.id);
@@ -380,26 +380,39 @@ export default function StaffManagement({ employees }: StaffManagementProps) {
                                     {(Object.keys(attendanceStatusConfig) as AttendanceStatus[]).map(status => {
                                       const isSelected = attendanceRecord?.status === status;
                                       return (
-                                        <Button 
-                                          key={status} 
-                                          variant={isSelected ? 'default' : 'outline'}
-                                          size="sm"
-                                          onClick={() => handleMarkAttendance(employee.id, status)}
-                                          className={cn(isSelected && attendanceStatusConfig[status].className)}
-                                        >
-                                          {React.createElement(attendanceStatusConfig[status].icon, {className: "h-4 w-4"})}
-                                          <span className="ml-2 hidden sm:inline">{attendanceStatusConfig[status].label}</span>
-                                        </Button>
+                                        <Tooltip key={status}>
+                                            <TooltipTrigger asChild>
+                                                <Button 
+                                                    variant={isSelected ? 'default' : 'outline'}
+                                                    size="icon"
+                                                    onClick={() => handleMarkAttendance(employee.id, status)}
+                                                    className={cn("h-9 w-9", isSelected && attendanceStatusConfig[status].className)}
+                                                >
+                                                    {React.createElement(attendanceStatusConfig[status].icon, {className: "h-4 w-4"})}
+                                                </Button>
+                                            </TooltipTrigger>
+                                            <TooltipContent>
+                                                <p>{attendanceStatusConfig[status].label}</p>
+                                            </TooltipContent>
+                                        </Tooltip>
                                       )
                                     })}
-                                    <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => openNotesDialog(employee.id)}>
-                                      <Pencil className="h-4 w-4" />
-                                    </Button>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => openNotesDialog(employee.id)}>
+                                                <Pencil className="h-4 w-4" />
+                                            </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                            <p>Add/Edit Note</p>
+                                        </TooltipContent>
+                                    </Tooltip>
                                 </div>
                             </div>
                             )
                         })}
                     </div>
+                  </TooltipProvider>
                 </CardContent>
               </Card>
 
@@ -571,4 +584,6 @@ function NotesDialog({
     </Dialog>
   )
 }
+    
+
     
