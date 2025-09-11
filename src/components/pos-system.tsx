@@ -21,8 +21,7 @@ import { Search, Plus, Minus, X, LayoutGrid, List, Rows, ChevronsUpDown, Palette
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuLabel } from '@/components/ui/dropdown-menu';
-import { useDrag, useDrop, DndProvider } from 'react-dnd';
-import { HTML5Backend } from 'react-dnd-html5-backend';
+import { useDrag, useDrop } from 'react-dnd';
 import { AddItemDialog } from './add-item-dialog';
 import { ManageMenuDialog } from './manage-menu-dialog';
 
@@ -47,7 +46,6 @@ const colorNames = Object.keys(colorPalette);
 
 
 type ViewMode = 'accordion' | 'grid' | 'list';
-type InteractionMode = 'click' | 'drag';
 
 const statusBaseColors: Record<TableStatus, string> = {
   Available: 'green',
@@ -122,10 +120,11 @@ const ItemTypes = {
   MENU_ITEM: 'menuItem',
 };
 
-function DraggableMenuItem({ item, children }: { item: MenuItem; children: React.ReactNode }) {
+function DraggableMenuItem({ item, children, clickToAdd }: { item: MenuItem; children: React.ReactNode; clickToAdd: boolean }) {
     const [{ isDragging }, drag] = useDrag(() => ({
         type: ItemTypes.MENU_ITEM,
         item: { ...item },
+        canDrag: !clickToAdd,
         collect: (monitor) => ({
             isDragging: !!monitor.isDragging(),
         }),
@@ -135,7 +134,7 @@ function DraggableMenuItem({ item, children }: { item: MenuItem; children: React
         <div
             ref={drag}
             style={{ opacity: isDragging ? 0.5 : 1 }}
-            className="cursor-move"
+            className={cn(!clickToAdd && "cursor-move")}
         >
             {children}
         </div>
@@ -451,7 +450,7 @@ export default function PosSystem({
   const [itemCodeInput, setItemCodeInput] = useState('');
   const [menu, setMenu] = useState<MenuCategory[]>(menuData as MenuCategory[]);
   const [originalOrderItems, setOriginalOrderItems] = useState<OrderItem[]>([]);
-  const [interactionMode, setInteractionMode] = useState<InteractionMode>('click');
+  const [clickToAdd, setClickToAdd] = useState(false);
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
   const [receiptPreview, setReceiptPreview] = useState('');
   const { toast } = useToast();
@@ -492,23 +491,23 @@ export default function PosSystem({
 
   useEffect(() => {
     try {
-      const savedMode = localStorage.getItem('interactionMode');
+      const savedMode = localStorage.getItem('clickToAdd');
       if (savedMode) {
-        setInteractionMode(JSON.parse(savedMode));
+        setClickToAdd(JSON.parse(savedMode));
       }
     } catch (e) {
-      console.error("Could not parse 'interactionMode' from localStorage", e);
-      setInteractionMode('click');
+      console.error("Could not parse 'clickToAdd' from localStorage", e);
+      setClickToAdd(false);
     }
   }, []);
   
   useEffect(() => {
     try {
-      localStorage.setItem('interactionMode', JSON.stringify(interactionMode));
+      localStorage.setItem('clickToAdd', JSON.stringify(clickToAdd));
     } catch (e) {
-      console.error("Could not save 'interactionMode' to localStorage", e);
+      console.error("Could not save 'clickToAdd' to localStorage", e);
     }
-  }, [interactionMode]);
+  }, [clickToAdd]);
   
   const getLocalReceipt = useCallback(() => {
     if (orderItems.length === 0) return '';
@@ -673,11 +672,8 @@ export default function PosSystem({
   }, [setOrderItems]);
 
   const handleItemClick = (item: MenuItem) => {
-    if (interactionMode === 'click') {
+    if (clickToAdd) {
       addToOrder(item, 1);
-    } else {
-      // For drag mode, clicking does nothing, user must drag.
-      // Or we can open the quantity dialog. Let's keep it simple for now.
     }
   };
   
@@ -1045,7 +1041,7 @@ export default function PosSystem({
         className={cn(
           "group rounded-lg transition-all hover:scale-105 relative",
           finalLightColor,
-          interactionMode === 'click' ? 'cursor-pointer' : 'cursor-move'
+          clickToAdd ? 'cursor-pointer' : ''
         )}
         onClick={() => handleItemClick(item)}
       >
@@ -1094,7 +1090,7 @@ export default function PosSystem({
     );
 
     return (
-        <DraggableMenuItem key={item.name} item={item}>
+        <DraggableMenuItem key={item.name} item={item} clickToAdd={clickToAdd}>
             {menuItemCard}
         </DraggableMenuItem>
     );
@@ -1327,172 +1323,145 @@ export default function PosSystem({
   
 
   return (
-    <DndProvider backend={HTML5Backend}>
-      <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-4 gap-4 h-full p-4">
-        {/* Menu Panel */}
-        <div className="md:col-span-2 xl:col-span-3 flex flex-col h-full">
-          <Card className="flex flex-col flex-grow">
-            <CardHeader>
-              <div className="flex items-start justify-between gap-4 flex-wrap">
-                <div className="flex-grow grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                    <Input
-                      placeholder="Search menu items..."
-                      className="pl-10"
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                    />
-                  </div>
-                  <div className="relative">
-                    <QrCodeIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                    <Input
-                      placeholder="Enter item code..."
-                      className="pl-10"
-                      value={itemCodeInput}
-                      onChange={(e) => setItemCodeInput(e.target.value)}
-                      onKeyDown={handleCodeEntry}
-                    />
-                  </div>
+    <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-4 gap-4 h-full p-4">
+      {/* Menu Panel */}
+      <div className="md:col-span-2 xl:col-span-3 flex flex-col h-full">
+        <Card className="flex flex-col flex-grow">
+          <CardHeader>
+            <div className="flex items-start justify-between gap-4 flex-wrap">
+              <div className="flex-grow grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                  <Input
+                    placeholder="Search menu items..."
+                    className="pl-10"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
                 </div>
-                <div className="flex items-center gap-2 flex-wrap">
-                  <RadioGroup value={viewMode} onValueChange={(v) => setViewMode(v as ViewMode)} className="flex items-center">
-                      <RadioGroupItem value="accordion" id="accordion-view" className="sr-only" />
-                      <Label htmlFor="accordion-view" className={cn("p-1.5 rounded-md cursor-pointer transition-colors", viewMode === 'accordion' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent' )}>
-                        <List className="h-5 w-5 box-content" />
-                      </Label>
-
-                      <RadioGroupItem value="grid" id="grid-view" className="sr-only" />
-                      <Label htmlFor="grid-view" className={cn("p-1.5 rounded-md cursor-pointer transition-colors", viewMode === 'grid' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent' )}>
-                        <LayoutGrid className="h-5 w-5 box-content" />
-                      </Label>
-
-                      <RadioGroupItem value="list" id="list-view" className="sr-only" />
-                      <Label htmlFor="list-view" className={cn("p-1.5 rounded-md cursor-pointer transition-colors", viewMode === 'list' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent' )}>
-                        <Rows className="h-5 w-5 box-content" />
-                      </Label>
-                  </RadioGroup>
-                  <Separator orientation="vertical" className="h-8" />
-                  <Button variant="outline" size="sm" onClick={handleShuffleColors}>
-                    <Shuffle className="mr-2 h-4 w-4" /> Colors
-                  </Button>
-                  {viewMode === 'accordion' && (
-                    <Button variant="outline" size="sm" onClick={toggleAccordion}>
-                      <ChevronsUpDown className="mr-2 h-4 w-4" />
-                      {allItemsOpen ? 'Collapse' : 'Expand'}
-                    </Button>
-                  )}
-                  <Button variant="outline" size="sm" onClick={() => setIsMenuManagerOpen(true)}>
-                    <BookOpen className="mr-2 h-4 w-4" /> Manage Menu
-                  </Button>
-                  <RadioGroup
-                    value={interactionMode}
-                    onValueChange={(v) => setInteractionMode(v as InteractionMode)}
-                    className="flex items-center space-x-1 p-1 rounded-lg border bg-background"
-                  >
-                    <RadioGroupItem value="click" id="click-mode" className="sr-only" />
-                    <Label
-                      htmlFor="click-mode"
-                      className={cn(
-                        "flex items-center gap-1 cursor-pointer rounded-md px-3 py-1.5 text-sm",
-                        interactionMode === 'click' ? 'bg-secondary' : 'hover:bg-secondary/50'
-                      )}
-                    >
-                      <MousePointerClick size={14} /> Click to Add
-                    </Label>
-
-                    <RadioGroupItem value="drag" id="drag-mode" className="sr-only" />
-                    <Label
-                      htmlFor="drag-mode"
-                      className={cn(
-                        "flex items-center gap-1 cursor-pointer rounded-md px-3 py-1.5 text-sm",
-                        interactionMode === 'drag' ? 'bg-secondary' : 'hover:bg-secondary/50'
-                      )}
-                    >
-                      <Move size={14} /> Drag & Drop
-                    </Label>
-                  </RadioGroup>
+                <div className="relative">
+                  <QrCodeIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                  <Input
+                    placeholder="Enter item code..."
+                    className="pl-10"
+                    value={itemCodeInput}
+                    onChange={(e) => setItemCodeInput(e.target.value)}
+                    onKeyDown={handleCodeEntry}
+                  />
                 </div>
               </div>
-            </CardHeader>
-            <ScrollArea className="flex-grow px-4">
-                {renderMenuContent()}
-            </ScrollArea>
-          </Card>
-        </div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <RadioGroup value={viewMode} onValueChange={(v) => setViewMode(v as ViewMode)} className="flex items-center">
+                    <RadioGroupItem value="accordion" id="accordion-view" className="sr-only" />
+                    <Label htmlFor="accordion-view" className={cn("p-1.5 rounded-md cursor-pointer transition-colors", viewMode === 'accordion' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent' )}>
+                      <List className="h-5 w-5 box-content" />
+                    </Label>
 
-        {/* Order Panel */}
-        <div className="md:col-span-1 xl:col-span-1 flex flex-col h-full">
-            <OrderPanel
-                orderItems={orderItems}
-                originalOrderItems={originalOrderItems}
-                handleDropOnOrder={handleDropOnOrder}
-                updateQuantity={updateQuantity}
-                removeFromOrder={removeFromOrder}
-                activeOrder={activeOrder}
-                currentActiveTableId={currentActiveTableId}
-                clearCurrentOrder={clearCurrentOrder}
-                subtotal={subtotal}
-                total={total}
-                discount={discount}
-                setDiscount={setDiscount}
-                isProcessing={isProcessing}
-                tables={tables}
-                occupancyCount={occupancyCount}
-                handleSelectTable={handleSelectTable}
-                onDropItemOnTable={handleDropItemOnTable}
-                renderTableActions={renderTableActions}
-                handleSendToKitchen={handleSendToKitchen}
-                handlePrintProvisionalBill={handlePrintProvisionalBill}
-                handleProcessPayment={handleProcessPayment}
-                receiptPreview={receiptPreview}
-            />
-        </div>
+                    <RadioGroupItem value="grid" id="grid-view" className="sr-only" />
+                    <Label htmlFor="grid-view" className={cn("p-1.5 rounded-md cursor-pointer transition-colors", viewMode === 'grid' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent' )}>
+                      <LayoutGrid className="h-5 w-5 box-content" />
+                    </Label>
 
-        <PaymentDialog
-          isOpen={isPaymentDialogOpen}
-          onOpenChange={setIsPaymentDialogOpen}
-          total={total}
-          receiptPreview={receiptPreview}
-          onPaymentSuccess={handlePaymentSuccess}
-        />
-        <AddItemDialog
-          isOpen={isAddItemDialogOpen}
-          onOpenChange={setIsAddItemDialogOpen}
-          item={selectedItem}
-          onConfirm={addToOrder}
-        />
-        <ManageMenuDialog
-          isOpen={isMenuManagerOpen}
-          onOpenChange={setIsMenuManagerOpen}
-          menu={menu}
-          setMenu={setMenu}
-        />
-        <Dialog open={isReserveDialogOpen} onOpenChange={setIsReserveDialogOpen}>
-          <DialogContent>
-              <DialogHeader>
-                  <DialogTitle>Reserve Table {tableToReserve}</DialogTitle>
-                  <DialogDescription>Enter guest details (optional).</DialogDescription>
-              </DialogHeader>
-              <div className="grid gap-4 py-4">
-                  <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="guest-name" className="text-right">Name</Label>
-                      <Input id="guest-name" value={reservationDetails.name} onChange={(e) => setReservationDetails({...reservationDetails, name: e.target.value})} className="col-span-3" />
-                  </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="reservation-time" className="text-right">Time</Label>
-                      <Input id="reservation-time" type="time" value={reservationDetails.time} onChange={(e) => setReservationDetails({...reservationDetails, time: e.target.value})} className="col-span-3" />
-                  </div>
+                    <RadioGroupItem value="list" id="list-view" className="sr-only" />
+                    <Label htmlFor="list-view" className={cn("p-1.5 rounded-md cursor-pointer transition-colors", viewMode === 'list' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent' )}>
+                      <Rows className="h-5 w-5 box-content" />
+                    </Label>
+                </RadioGroup>
+                <Separator orientation="vertical" className="h-8" />
+                <Button variant="outline" size="sm" onClick={handleShuffleColors}>
+                  <Shuffle className="mr-2 h-4 w-4" /> Colors
+                </Button>
+                {viewMode === 'accordion' && (
+                  <Button variant="outline" size="sm" onClick={toggleAccordion}>
+                    <ChevronsUpDown className="mr-2 h-4 w-4" />
+                    {allItemsOpen ? 'Collapse' : 'Expand'}
+                  </Button>
+                )}
+                <Button variant="outline" size="sm" onClick={() => setIsMenuManagerOpen(true)}>
+                  <BookOpen className="mr-2 h-4 w-4" /> Manage Menu
+                </Button>
+                <Button variant={clickToAdd ? "secondary" : "outline"} size="sm" onClick={() => setClickToAdd(prev => !prev)}>
+                    <MousePointerClick className="mr-2 h-4 w-4" />
+                    Click to Add: {clickToAdd ? 'On' : 'Off'}
+                </Button>
               </div>
-              <DialogFooter>
-                  <Button variant="outline" onClick={() => setIsReserveDialogOpen(false)}>Cancel</Button>
-                  <Button onClick={handleReserveTable}>Reserve</Button>
-              </DialogFooter>
-          </DialogContent>
-        </Dialog>
+            </div>
+          </CardHeader>
+          <ScrollArea className="flex-grow px-4">
+              {renderMenuContent()}
+          </ScrollArea>
+        </Card>
       </div>
-    </DndProvider>
+
+      {/* Order Panel */}
+      <div className="md:col-span-1 xl:col-span-1 flex flex-col h-full">
+          <OrderPanel
+              orderItems={orderItems}
+              originalOrderItems={originalOrderItems}
+              handleDropOnOrder={handleDropOnOrder}
+              updateQuantity={updateQuantity}
+              removeFromOrder={removeFromOrder}
+              activeOrder={activeOrder}
+              currentActiveTableId={currentActiveTableId}
+              clearCurrentOrder={clearCurrentOrder}
+              subtotal={subtotal}
+              total={total}
+              discount={discount}
+              setDiscount={setDiscount}
+              isProcessing={isProcessing}
+              tables={tables}
+              occupancyCount={occupancyCount}
+              handleSelectTable={handleSelectTable}
+              onDropItemOnTable={handleDropItemOnTable}
+              renderTableActions={renderTableActions}
+              handleSendToKitchen={handleSendToKitchen}
+              handlePrintProvisionalBill={handlePrintProvisionalBill}
+              handleProcessPayment={handleProcessPayment}
+              receiptPreview={receiptPreview}
+          />
+      </div>
+
+      <PaymentDialog
+        isOpen={isPaymentDialogOpen}
+        onOpenChange={setIsPaymentDialogOpen}
+        total={total}
+        receiptPreview={receiptPreview}
+        onPaymentSuccess={handlePaymentSuccess}
+      />
+      <AddItemDialog
+        isOpen={isAddItemDialogOpen}
+        onOpenChange={setIsAddItemDialogOpen}
+        item={selectedItem}
+        onConfirm={addToOrder}
+      />
+      <ManageMenuDialog
+        isOpen={isMenuManagerOpen}
+        onOpenChange={setIsMenuManagerOpen}
+        menu={menu}
+        setMenu={setMenu}
+      />
+      <Dialog open={isReserveDialogOpen} onOpenChange={setIsReserveDialogOpen}>
+        <DialogContent>
+            <DialogHeader>
+                <DialogTitle>Reserve Table {tableToReserve}</DialogTitle>
+                <DialogDescription>Enter guest details (optional).</DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+                <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="guest-name" className="text-right">Name</Label>
+                    <Input id="guest-name" value={reservationDetails.name} onChange={(e) => setReservationDetails({...reservationDetails, name: e.target.value})} className="col-span-3" />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="reservation-time" className="text-right">Time</Label>
+                    <Input id="reservation-time" type="time" value={reservationDetails.time} onChange={(e) => setReservationDetails({...reservationDetails, time: e.target.value})} className="col-span-3" />
+                </div>
+            </div>
+            <DialogFooter>
+                <Button variant="outline" onClick={() => setIsReserveDialogOpen(false)}>Cancel</Button>
+                <Button onClick={handleReserveTable}>Reserve</Button>
+            </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 }
-
-    
