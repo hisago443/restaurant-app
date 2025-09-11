@@ -290,7 +290,7 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-4">
             <div className="space-y-4">
               <Card className="flex flex-col p-0 border-black shadow-lg">
-                  <div className='flex justify-center bg-muted/50 rounded-t-lg'>
+                  <div className='flex justify-center bg-blue-50 dark:bg-blue-900/20 rounded-t-lg'>
                     <Calendar
                         mode="single"
                         selected={selectedDate}
@@ -686,4 +686,5 @@ function EmployeeDialog({ open, onOpenChange, employee, onSave }: { open: boolea
         </Dialog>
     );
 }
+
 
