@@ -1051,14 +1051,15 @@ export default function PosSystem({
       >
         <Popover>
           <PopoverTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="absolute bottom-1 left-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <Palette className="h-4 w-4" />
-            </Button>
+            <div onClick={(e) => e.stopPropagation()}>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute bottom-1 left-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+              >
+                <Palette className="h-4 w-4" />
+              </Button>
+            </div>
           </PopoverTrigger>
           <PopoverContent className="w-auto p-2" onClick={(e) => e.stopPropagation()}>
             <div className="grid grid-cols-5 gap-1">
@@ -1077,7 +1078,7 @@ export default function PosSystem({
         <CardContent className="p-3">
           <div className="flex justify-between items-start mb-2">
              <div className="flex items-center gap-2">
-                <span className={cn('h-2.5 w-2.5 rounded-full', isNonVeg ? 'bg-red-500' : 'bg-green-500')}></span>
+                <span className={cn('h-3 w-3 rounded-sm border border-black/20', isNonVeg ? 'bg-red-500' : 'bg-green-500')}></span>
                 <span className="font-semibold pr-2 text-black">{item.name}</span>
             </div>
             <span className="font-mono text-right whitespace-nowrap text-black">₹{item.price.toFixed(2)}</span>
@@ -1114,13 +1115,15 @@ export default function PosSystem({
   const CategoryColorPicker = ({ categoryName }: { categoryName: string }) => (
     <Popover>
       <PopoverTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-6 w-6"
-        >
-          <Palette className="h-4 w-4" />
-        </Button>
+        <div onClick={(e) => e.stopPropagation()}>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6"
+          >
+            <Palette className="h-4 w-4" />
+          </Button>
+        </div>
       </PopoverTrigger>
       <PopoverContent className="w-auto p-2" onClick={(e) => e.stopPropagation()}>
         <div className="grid grid-cols-5 gap-1">
@@ -1218,7 +1221,7 @@ export default function PosSystem({
             {filteredMenu.map(category => (
                 <AccordionItem key={category.category} value={category.category} className="border-b-0">
                     <AccordionTrigger className={cn("p-3 rounded-md text-lg font-bold hover:no-underline", categoryColors[category.category] ? colorPalette[categoryColors[category.category]]?.dark : 'bg-muted')}>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center justify-between w-full">
                            <span className={cn("flex-grow text-left text-black")}>{category.category}</span>
                            <div onClick={(e) => e.stopPropagation()}>
                             <CategoryColorPicker categoryName={category.category}/>
@@ -1401,7 +1404,7 @@ export default function PosSystem({
                         <Switch id="click-to-add-switch" checked={clickToAdd} onCheckedChange={setClickToAdd} />
                         <Label htmlFor="click-to-add-switch" className="flex items-center gap-2 cursor-pointer">
                             <MousePointerClick className="h-4 w-4" />
-                            Click to Add
+                            Easy Mode
                         </Label>
                     </div>
                 </div>
