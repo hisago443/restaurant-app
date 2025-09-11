@@ -1118,10 +1118,6 @@ export default function PosSystem({
           variant="ghost"
           size="icon"
           className="h-6 w-6"
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-          }}
         >
           <Palette className="h-4 w-4" />
         </Button>
@@ -1151,7 +1147,9 @@ export default function PosSystem({
                 <h2 className="text-xl font-bold flex-grow text-left">
                   {category.category}
                 </h2>
-                <CategoryColorPicker categoryName={category.category} />
+                <div onClick={(e) => e.stopPropagation()}>
+                  <CategoryColorPicker categoryName={category.category} />
+                </div>
               </div>
 
               <div className="space-y-4 pt-2">
@@ -1222,7 +1220,9 @@ export default function PosSystem({
                     <AccordionTrigger className={cn("p-3 rounded-md text-lg font-bold hover:no-underline", categoryColors[category.category] ? colorPalette[categoryColors[category.category]]?.dark : 'bg-muted')}>
                         <div className="flex items-center gap-2">
                            <span className={cn("flex-grow text-left text-black")}>{category.category}</span>
-                           <CategoryColorPicker categoryName={category.category}/>
+                           <div onClick={(e) => e.stopPropagation()}>
+                            <CategoryColorPicker categoryName={category.category}/>
+                           </div>
                         </div>
                     </AccordionTrigger>
                     <AccordionContent className="p-2 space-y-2">
