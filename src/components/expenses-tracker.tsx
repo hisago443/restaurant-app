@@ -440,7 +440,7 @@ export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
                     const vendor = getVendorDetails(expense.vendorId);
                     return (
                       <TableRow key={expense.id}>
-                          <TableCell className="border-r font-bold bg-yellow-50 dark:bg-yellow-900/20">{format(expense.date, 'PPP')}</TableCell>
+                          <TableCell className="border-r font-bold">{format(expense.date, 'PPP')}</TableCell>
                           <TableCell className="border-r font-bold">{expense.category}</TableCell>
                           <TableCell className="border-r font-bold bg-blue-50 dark:bg-blue-900/20">{expense.description}</TableCell>
                           <TableCell className="border-r font-bold bg-green-50 dark:bg-green-900/20">{vendor?.name || 'N/A'}</TableCell>
