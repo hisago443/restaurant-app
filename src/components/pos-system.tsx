@@ -407,11 +407,11 @@ function OrderPanel({
                     </Button>
                     <div className="grid grid-cols-2 gap-2">
                         <Button size="lg" variant="outline" className="h-12 text-base" onClick={handlePrintProvisionalBill} disabled={isProcessing ||!currentActiveTableId || orderItems.length === 0}>
-                            {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Printer className="mr-2 h-4 w-4" />}
+                            {isProcessing && receiptPreview ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Printer className="mr-2 h-4 w-4" />}
                             Print Bill
                         </Button>
                         <Button size="lg" className="h-12 text-base" onClick={handleProcessPayment} disabled={isProcessing || orderItems.length === 0 || !currentActiveTableId}>
-                            {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                            {isProcessing && !receiptPreview ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                             Process Payment
                         </Button>
                     </div>
@@ -1407,24 +1407,33 @@ export default function PosSystem({
                   <Button variant="outline" size="sm" onClick={() => setIsMenuManagerOpen(true)}>
                     <BookOpen className="mr-2 h-4 w-4" /> Manage Menu
                   </Button>
-                   <div className="flex items-center space-x-1 p-1 rounded-lg border bg-background">
-                      <Button 
-                        size="sm" 
-                        variant={interactionMode === 'click' ? 'secondary' : 'ghost'} 
-                        onClick={() => setInteractionMode('click')}
-                        className="flex items-center gap-1"
-                      >
-                        <MousePointerClick size={14}/> Click to Add
-                      </Button>
-                      <Button 
-                        size="sm" 
-                        variant={interactionMode === 'drag' ? 'secondary' : 'ghost'} 
-                        onClick={() => setInteractionMode('drag')}
-                        className="flex items-center gap-1"
-                      >
-                        <Move size={14}/> Drag &amp; Drop
-                      </Button>
-                  </div>
+                   <RadioGroup
+                    value={interactionMode}
+                    onValueChange={(v) => setInteractionMode(v as InteractionMode)}
+                    className="flex items-center space-x-1 p-1 rounded-lg border bg-background"
+                  >
+                    <RadioGroupItem value="click" id="click-mode" className="sr-only" />
+                    <Label
+                      htmlFor="click-mode"
+                      className={cn(
+                        "flex items-center gap-1 cursor-pointer rounded-md px-3 py-1.5 text-sm",
+                        interactionMode === 'click' ? 'bg-secondary' : 'hover:bg-secondary/50'
+                      )}
+                    >
+                      <MousePointerClick size={14} /> Click to Add
+                    </Label>
+
+                    <RadioGroupItem value="drag" id="drag-mode" className="sr-only" />
+                    <Label
+                      htmlFor="drag-mode"
+                      className={cn(
+                        "flex items-center gap-1 cursor-pointer rounded-md px-3 py-1.5 text-sm",
+                        interactionMode === 'drag' ? 'bg-secondary' : 'hover:bg-secondary/50'
+                      )}
+                    >
+                      <Move size={14} /> Drag & Drop
+                    </Label>
+                  </RadioGroup>
                 </div>
               </div>
             </CardHeader>
@@ -1436,6 +1445,7 @@ export default function PosSystem({
 
         {/* Order Panel */}
         <div className="md:col-span-1 xl:col-span-1 flex flex-col h-full">
+          <DndProvider backend={HTML5Backend}>
             <OrderPanel
                 orderItems={orderItems}
                 originalOrderItems={originalOrderItems}
@@ -1459,6 +1469,7 @@ export default function PosSystem({
                 handlePrintProvisionalBill={handlePrintProvisionalBill}
                 handleProcessPayment={handleProcessPayment}
             />
+          </DndProvider>
         </div>
 
         <PaymentDialog
@@ -1506,5 +1517,3 @@ export default function PosSystem({
     </DndProvider>
   );
 }
-
-    
