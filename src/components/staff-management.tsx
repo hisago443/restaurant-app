@@ -282,9 +282,9 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
   return (
     <div className="p-4 space-y-4">
       <Tabs defaultValue="attendance" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="attendance" className="py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Attendance & Advance</TabsTrigger>
-          <TabsTrigger value="employees" className="py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Employee List</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-2 bg-primary/20 p-1 h-auto">
+          <TabsTrigger value="attendance" className="py-2 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-md text-lg">Attendance &amp; Advance</TabsTrigger>
+          <TabsTrigger value="employees" className="py-2 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-md text-lg">Employee List</TabsTrigger>
         </TabsList>
         <TabsContent value="attendance">
            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-4">
@@ -420,7 +420,7 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
             <CardHeader>
               <div className='flex justify-between items-center'>
                 <div>
-                  <CardTitle>Employees & Advances</CardTitle>
+                  <CardTitle>Employees &amp; Advances</CardTitle>
                   <CardDescription>Manage staff salary and advance information.</CardDescription>
                 </div>
                 <Button onClick={() => openEmployeeDialog(null)}><PlusCircle className="mr-2 h-4 w-4" /> Add Employee</Button>
@@ -693,4 +693,6 @@ function EmployeeDialog({ open, onOpenChange, employee, onSave }: { open: boolea
         </Dialog>
     );
 }
+    
+
     
