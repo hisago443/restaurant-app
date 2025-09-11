@@ -12,7 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Label } from '@/components/ui/label';
-import { PlusCircle, Edit, Trash2 } from 'lucide-react';
+import { PlusCircle, Edit, Trash2, Plus, Minus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import type { InventoryItem } from '@/lib/types';
 
@@ -197,13 +197,30 @@ export default function InventoryManagement({ inventory }: InventoryManagementPr
                 </TableCell>
                 <TableCell>
                     <div className="flex items-center gap-2">
+                        <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => handleStockChange(item.id, item.stock - 1)}>
+                            <Minus className="h-4 w-4" />
+                        </Button>
                         <Input 
                             type="number"
                             value={item.stock}
-                            onChange={(e) => handleStockChange(item.id, parseInt(e.target.value))}
-                            className="w-20 h-9"
+                            onChange={(e) => {
+                                const value = e.target.value;
+                                if (value === '') {
+                                    handleStockChange(item.id, 0);
+                                } else {
+                                    handleStockChange(item.id, parseInt(value));
+                                }
+                            }}
+                             onBlur={(e) => {
+                                if (e.target.value === '') {
+                                    handleStockChange(item.id, 0);
+                                }
+                             }}
+                            className="w-20 h-9 text-center"
                         />
-                        <Button size="sm" variant="secondary" onClick={() => handleStockChange(item.id, item.capacity)}>Fill</Button>
+                        <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => handleStockChange(item.id, item.stock + 1)}>
+                            <Plus className="h-4 w-4" />
+                        </Button>
                     </div>
                 </TableCell>
                 <TableCell className="text-right">
