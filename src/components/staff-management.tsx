@@ -22,6 +22,7 @@ import { format, isSameDay, startOfDay } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { Textarea } from '@/components/ui/textarea';
+import { ScrollArea } from './ui/scroll-area';
 
 const colors = ['bg-blue-500', 'bg-green-500', 'bg-yellow-500', 'bg-purple-500', 'bg-pink-500', 'bg-indigo-500', 'bg-teal-500'];
 
@@ -50,7 +51,7 @@ export default function StaffManagement({ employees }: StaffManagementProps) {
   useEffect(() => {
     const unsubAdvances = onSnapshot(collection(db, "advances"), (snapshot) => {
         const data = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id, date: doc.data().date.toDate() } as Advance));
-        setAdvances(data);
+        setAdvances(data.sort((a,b) => b.date.getTime() - a.date.getTime()));
     });
 
     const unsubAttendance = onSnapshot(collection(db, "attendance"), (snapshot) => {
@@ -156,6 +157,16 @@ export default function StaffManagement({ employees }: StaffManagementProps) {
     }
   }
 
+  const advancesByEmployee = useMemo(() => {
+    return advances.reduce((acc, advance) => {
+      if (!acc[advance.employeeId]) {
+        acc[advance.employeeId] = [];
+      }
+      acc[advance.employeeId].push(advance);
+      return acc;
+    }, {} as Record<string, Advance[]>);
+  }, [advances]);
+
   return (
     <div className="p-4 space-y-4">
       <Tabs defaultValue="attendance">
@@ -239,7 +250,7 @@ export default function StaffManagement({ employees }: StaffManagementProps) {
                 <div className="flex justify-between items-start">
                   <div>
                     <CardTitle>Manage for {format(selectedDate, 'PPP')}</CardTitle>
-                    <CardDescription>Mark attendance, give advances, and add notes.</CardDescription>
+                    <CardDescription>Mark attendance and give advances.</CardDescription>
                   </div>
                   <Button onClick={() => openAdvanceDialog(null)}>
                     <span className="mr-2">Rs.</span> Add Advance
@@ -282,51 +293,67 @@ export default function StaffManagement({ employees }: StaffManagementProps) {
                         </div>
                       </div>
                       <div>
-                        <h3 className="font-semibold mb-2">Advances Given</h3>
-                        {advancesForSelectedDate.length > 0 ? (
-                          <ul className="space-y-2">
-                            {advancesForSelectedDate.map((advance) => {
-                              const employee = employees.find(e => e.id === advance.employeeId);
-                              const totalAdvance = advances.filter(a => a.employeeId === advance.employeeId).reduce((sum, a) => sum + a.amount, 0);
-                              return (
-                              <li key={advance.id} className="flex justify-between items-center p-2 bg-muted rounded-md group">
-                                <div className="flex items-center gap-2 flex-wrap">
-                                  {employee && <span className={cn('h-2 w-2 rounded-full', employee.color)} />}
-                                  <span>{employee ? employee.name : 'Unknown Employee'}:</span>
-                                  <span className="font-mono font-bold">Rs. {advance.amount.toLocaleString()}</span>
-                                  <span className="text-xs text-muted-foreground">on {format(advance.date, 'PP')}</span>
-                                  <span className="text-xs text-blue-500 font-semibold">(Total: Rs. {totalAdvance.toLocaleString()})</span>
-                                </div>
-                                <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openAdvanceDialog(advance)}>
-                                        <Edit className="h-4 w-4" />
-                                    </Button>
-                                    <AlertDialog>
-                                        <AlertDialogTrigger asChild>
-                                            <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive">
-                                                <Trash2 className="h-4 w-4" />
-                                            </Button>
-                                        </AlertDialogTrigger>
-                                        <AlertDialogContent>
-                                            <AlertDialogHeader>
-                                                <AlertDialogTitle>Delete this advance?</AlertDialogTitle>
-                                                <AlertDialogDescription>
-                                                    This will delete the advance of Rs. {advance.amount} for {employee?.name}. This action cannot be undone.
-                                                </AlertDialogDescription>
-                                            </AlertDialogHeader>
-                                            <AlertDialogFooter>
-                                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                                <AlertDialogAction onClick={() => handleDeleteAdvance(advance.id)}>Delete</AlertDialogAction>
-                                            </AlertDialogFooter>
-                                        </AlertDialogContent>
-                                    </AlertDialog>
-                                </div>
-                              </li>
-                            )})}
-                          </ul>
-                        ) : (
-                          <p className="text-muted-foreground text-sm pl-2">No advances given on this date.</p>
-                        )}
+                        <h3 className="font-semibold mb-2">Advance History</h3>
+                        <ScrollArea className="h-72">
+                          <div className="space-y-4 pr-4">
+                            {Object.entries(advancesByEmployee).map(([employeeId, employeeAdvances]) => {
+                                const employee = employees.find(e => e.id === employeeId);
+                                if (!employee) return null;
+                                const totalAdvance = employeeAdvances.reduce((sum, a) => sum + a.amount, 0);
+
+                                return (
+                                    <div key={employeeId} className="p-3 bg-muted rounded-md">
+                                        <div className="flex justify-between items-center mb-2">
+                                            <div className="flex items-center gap-2 font-semibold">
+                                                <span className={cn('h-2.5 w-2.5 rounded-full', employee.color)} />
+                                                {employee.name}
+                                            </div>
+                                            <div className="font-bold text-sm">
+                                                Total: <span className="font-mono text-red-600 dark:text-red-400">Rs. {totalAdvance.toLocaleString()}</span>
+                                            </div>
+                                        </div>
+                                        <ul className="space-y-1">
+                                            {employeeAdvances.map(advance => (
+                                                <li key={advance.id} className="flex justify-between items-center p-2 bg-background/50 rounded-md group text-sm">
+                                                    <div>
+                                                        <span className="font-mono font-semibold">Rs. {advance.amount.toLocaleString()}</span>
+                                                        <span className="text-muted-foreground ml-2">on {format(advance.date, 'PPP')}</span>
+                                                    </div>
+                                                    <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openAdvanceDialog(advance)}>
+                                                            <Edit className="h-4 w-4" />
+                                                        </Button>
+                                                        <AlertDialog>
+                                                            <AlertDialogTrigger asChild>
+                                                                <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive">
+                                                                    <Trash2 className="h-4 w-4" />
+                                                                </Button>
+                                                            </AlertDialogTrigger>
+                                                            <AlertDialogContent>
+                                                                <AlertDialogHeader>
+                                                                    <AlertDialogTitle>Delete this advance?</AlertDialogTitle>
+                                                                    <AlertDialogDescription>
+                                                                        This will delete the advance of Rs. {advance.amount} for {employee?.name}. This action cannot be undone.
+                                                                    </AlertDialogDescription>
+                                                                </AlertDialogHeader>
+                                                                <AlertDialogFooter>
+                                                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                                    <AlertDialogAction onClick={() => handleDeleteAdvance(advance.id)}>Delete</AlertDialogAction>
+                                                                </AlertDialogFooter>
+                                                            </AlertDialogContent>
+                                                        </AlertDialog>
+                                                    </div>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                )
+                            })}
+                            {Object.keys(advancesByEmployee).length === 0 && (
+                                <p className="text-muted-foreground text-sm pl-2 pt-2">No advance history found.</p>
+                            )}
+                          </div>
+                        </ScrollArea>
                       </div>
                   </div>
               </CardContent>

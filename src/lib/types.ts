@@ -27,6 +27,10 @@ export type TableStatus = 'Available' | 'Occupied' | 'Reserved' | 'Cleaning';
 export interface Table {
   id: number;
   status: TableStatus;
+  reservationDetails?: {
+    name: string;
+    time: string;
+  }
 }
 
 export interface Order {
