@@ -287,15 +287,13 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
           <TabsTrigger value="employees">Employee List</TabsTrigger>
         </TabsList>
         <TabsContent value="attendance">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start mt-4">
-            <div className="flex flex-col gap-6">
-              <Card className="flex-col p-2 bg-muted/30">
-                <CardContent className="p-0 flex flex-col items-center justify-center">
-                  <Calendar
+           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-4">
+            <Card className="flex-col p-0">
+                <Calendar
                     mode="single"
                     selected={selectedDate}
                     onSelect={(date) => setSelectedDate(date || new Date())}
-                    className="rounded-md border bg-background"
+                    className="rounded-t-lg border-b bg-background"
                     components={{ DayContent: CustomDay }}
                     modifiers={{
                       advance: datesWithAdvance,
@@ -308,122 +306,113 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
                         color: 'hsl(var(--destructive))',
                       },
                     }}
-                  />
-                  <div className="p-4 space-y-2 border-t w-full">
+                />
+                <div className="p-4 space-y-2 border-b">
                     <div className="flex items-center space-x-2">
                         <Checkbox id="show-advances" checked={showAdvancesOnCalendar} onCheckedChange={(checked) => setShowAdvancesOnCalendar(Boolean(checked))} />
                         <Label htmlFor="show-advances">Show Advance Dates</Label>
                     </div>
-                     <div className="flex items-center space-x-2">
+                      <div className="flex items-center space-x-2">
                         <Checkbox id="show-absences" checked={showAbsencesOnCalendar} onCheckedChange={(checked) => setShowAbsencesOnCalendar(Boolean(checked))} />
                         <Label htmlFor="show-absences">Show Absent Dates</Label>
                     </div>
-                  </div>
-                  <div className="w-full border-t">
+                </div>
+                <div className="w-full">
                     <p className="font-semibold p-4 pb-2">Advances on {format(selectedDate, 'PPP')}</p>
                     <div className="max-h-32 overflow-y-auto px-4 pb-4">
-                      {advancesForSelectedDate.length > 0 ? (
-                          <div className="space-y-2">
-                              {advancesForSelectedDate.map(advance => {
-                                  const employee = employees.find(e => e.id === advance.employeeId);
-                                  return (
-                                  <div key={advance.id} className="flex justify-between items-center p-2 bg-background/50 rounded-lg group">
-                                      <div className='flex items-center gap-2'>
-                                          <span className={cn("h-2.5 w-2.5 rounded-full", employee?.color)} />
-                                          <div>
-                                              <p className="font-medium">{employee?.name}</p>
-                                          </div>
-                                      </div>
-                                      <div className="flex items-center gap-2">
-                                          <p className="font-mono font-semibold text-red-600 dark:text-red-400 text-lg">₹{advance.amount.toLocaleString()}</p>
-                                          <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100" onClick={() => openAdvanceDialog(advance)}>
-                                              <Edit className="h-4 w-4"/>
-                                          </Button>
-                                      </div>
-                                  </div>
-                              )})}
-                          </div>
-                      ) : (
-                          <div className="h-full flex items-center justify-center py-4">
-                              <p className="text-muted-foreground text-sm">No advances on this date.</p>
-                          </div>
-                      )}
+                        {advancesForSelectedDate.length > 0 ? (
+                            <div className="space-y-2">
+                                {advancesForSelectedDate.map(advance => {
+                                    const employee = employees.find(e => e.id === advance.employeeId);
+                                    return (
+                                    <div key={advance.id} className="flex justify-between items-center p-2 bg-muted/50 rounded-lg group">
+                                        <div className='flex items-center gap-2'>
+                                            <span className={cn("h-2.5 w-2.5 rounded-full", employee?.color)} />
+                                            <div>
+                                                <p className="font-medium">{employee?.name}</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <p className="font-mono font-semibold text-red-600 dark:text-red-400 text-lg">₹{advance.amount.toLocaleString()}</p>
+                                            <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100" onClick={() => openAdvanceDialog(advance)}>
+                                                <Edit className="h-4 w-4"/>
+                                            </Button>
+                                        </div>
+                                    </div>
+                                )})}
+                            </div>
+                        ) : (
+                            <div className="h-full flex items-center justify-center py-4">
+                                <p className="text-muted-foreground text-sm">No advances on this date.</p>
+                            </div>
+                        )}
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            <div className="flex flex-col gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Add Salary Advance</CardTitle>
-                  <CardDescription>Log an advance for {format(selectedDate, 'PPP')}.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Button size="lg" className="w-full h-16 text-lg" onClick={() => openAdvanceDialog(null)}>
-                    <Banknote className="mr-4 h-8 w-8" /> Add Salary Advance
-                  </Button>
-                </CardContent>
-              </Card>
-              <Card className="bg-muted/30">
-                <CardHeader>
-                  <CardTitle>Staff Attendance</CardTitle>
-                  <CardDescription>Manage attendance for {format(selectedDate, 'PPP')}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2 max-h-80 overflow-y-auto">
-                    {employees.map(employee => {
-                      const attendanceRecord = attendanceForSelectedDate.find(a => a.employeeId === employee.id);
-                      return (
-                        <div key={employee.id} className="p-3 bg-background/50 rounded-lg border">
-                          <div className="flex justify-between items-center">
-                            <div className="flex items-center gap-3 font-medium text-lg">
-                              <span className={cn('h-3 w-3 rounded-full', employee.color)} />
-                              {employee.name}
-                            </div>
-                            <div className="flex items-center gap-2">
-                              {(Object.keys(attendanceStatusConfig) as AttendanceStatus[]).map(status => {
-                                const isSelected = attendanceRecord?.status === status;
-                                return (
-                                  <TooltipProvider key={status}>
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
-                                        <Button 
-                                          key={status}
-                                          variant={isSelected ? 'default' : 'outline'}
-                                          size="lg"
-                                          onClick={() => handleMarkAttendance(employee.id, status)}
-                                          className={cn("h-10 w-10 p-0", isSelected && attendanceStatusConfig[status].className)}
-                                        >
-                                          {React.createElement(attendanceStatusConfig[status].icon, {className: "h-5 w-5"})}
-                                        </Button>
-                                      </TooltipTrigger>
-                                      <TooltipContent>
-                                        <p>{attendanceStatusConfig[status].label}</p>
-                                      </TooltipContent>
-                                    </Tooltip>
-                                  </TooltipProvider>
-                                )
-                              })}
-                              <TooltipProvider>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Button variant="ghost" size="icon" onClick={() => openNotesDialog(employee.id)}>
-                                      <Pencil className="h-4 w-4" />
-                                    </Button>
-                                  </TooltipTrigger>
-                                  <TooltipContent>Add/Edit Note</TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
-                            </div>
-                          </div>
-                        </div>
-                      )
-                    })}
-                  </div>
-                </CardContent>
-              </Card>
+                </div>
+            </Card>
+            <div className="space-y-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Add Salary Advance</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <Button size="lg" className="w-full h-20 text-lg" onClick={() => openAdvanceDialog(null)}>
+                      <Banknote className="mr-4 h-8 w-8" /> Add Salary Advance for {format(selectedDate, 'do MMMM')}
+                    </Button>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Staff Attendance for {format(selectedDate, 'PPP')}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                      {employees.map(employee => {
+                          const attendanceRecord = attendanceForSelectedDate.find(a => a.employeeId === employee.id);
+                          return (
+                              <div key={employee.id} className="grid grid-cols-[1fr_auto] items-center gap-4 p-2 border rounded-lg bg-muted/30">
+                                  <div className="flex items-center gap-3">
+                                      <span className={cn("h-3 w-3 rounded-full", employee.color)} />
+                                      <span className="font-semibold text-lg">{employee.name}</span>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                      {(Object.keys(attendanceStatusConfig) as AttendanceStatus[]).map(status => {
+                                          const isSelected = attendanceRecord?.status === status;
+                                          return (
+                                              <TooltipProvider key={status}>
+                                                  <Tooltip>
+                                                      <TooltipTrigger asChild>
+                                                      <Button 
+                                                          key={status}
+                                                          variant={isSelected ? 'default' : 'outline'}
+                                                          size="icon"
+                                                          onClick={() => handleMarkAttendance(employee.id, status)}
+                                                          className={cn("h-10 w-10", isSelected && attendanceStatusConfig[status].className)}
+                                                      >
+                                                          {React.createElement(attendanceStatusConfig[status].icon, {className: "h-5 w-5"})}
+                                                      </Button>
+                                                      </TooltipTrigger>
+                                                      <TooltipContent>
+                                                      <p>{attendanceStatusConfig[status].label}</p>
+                                                      </TooltipContent>
+                                                  </Tooltip>
+                                              </TooltipProvider>
+                                          )
+                                      })}
+                                      <TooltipProvider>
+                                          <Tooltip>
+                                          <TooltipTrigger asChild>
+                                              <Button variant="ghost" size="icon" onClick={() => openNotesDialog(employee.id)}>
+                                              <Pencil className="h-4 w-4" />
+                                              </Button>
+                                          </TooltipTrigger>
+                                          <TooltipContent>Add/Edit Note</TooltipContent>
+                                          </Tooltip>
+                                      </TooltipProvider>
+                                  </div>
+                              </div>
+                          )
+                      })}
+                  </CardContent>
+                </Card>
             </div>
           </div>
         </TabsContent>
@@ -443,6 +432,7 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
                 <Table>
                   <TableHeader>
                     <TableRow>
+                      <TableHead className="font-bold text-foreground">ID</TableHead>
                       <TableHead className="font-bold text-foreground">Employee</TableHead>
                       <TableHead className="font-bold text-foreground">Role</TableHead>
                       <TableHead className="font-bold text-foreground">Salary</TableHead>
@@ -457,17 +447,18 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
                       const remainingSalary = employee.salary - totalAdvance;
                       return (
                         <TableRow key={employee.id}>
-                          <TableCell className="bg-background/20 border-r">
+                          <TableCell className="font-mono text-xs">{employee.id}</TableCell>
+                          <TableCell>
                             <div className="flex items-center gap-2 font-medium">
                               <span className={cn('h-2 w-2 rounded-full', employee.color)} />
                               {employee.name}
                             </div>
                           </TableCell>
-                          <TableCell className="bg-background/20 border-r">{employee.role}</TableCell>
-                          <TableCell className="font-mono text-sm bg-background/20 border-r">₹{employee.salary.toLocaleString()}</TableCell>
-                          <TableCell className="font-mono text-sm text-red-600 dark:text-red-400 bg-background/20 border-r">₹{totalAdvance.toLocaleString()}</TableCell>
-                          <TableCell className="font-mono text-sm text-green-600 dark:text-green-400 bg-background/20 border-r">₹{remainingSalary.toLocaleString()}</TableCell>
-                          <TableCell className="text-right bg-background/20">
+                          <TableCell>{employee.role}</TableCell>
+                          <TableCell className="font-mono text-sm bg-green-100 dark:bg-green-900/30">₹{employee.salary.toLocaleString()}</TableCell>
+                          <TableCell className="font-mono text-sm text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900/30">₹{totalAdvance.toLocaleString()}</TableCell>
+                          <TableCell className="font-mono text-sm text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/30">₹{remainingSalary.toLocaleString()}</TableCell>
+                          <TableCell className="text-right">
                             <TooltipProvider>
                               <Tooltip>
                                 <TooltipTrigger asChild>
@@ -754,5 +745,7 @@ function EmployeeDialog({ open, onOpenChange, employee, onSave }: { open: boolea
 
 
 
+
+    
 
     
