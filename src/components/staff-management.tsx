@@ -436,11 +436,11 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>ID</TableHead>
-                      <TableHead>Employee</TableHead>
-                      <TableHead>Role</TableHead>
-                      <TableHead>Salary</TableHead>
-                      <TableHead>Total Advance</TableHead>
+                      <TableHead className="border-r">ID</TableHead>
+                      <TableHead className="border-r">Employee</TableHead>
+                      <TableHead className="border-r">Role</TableHead>
+                      <TableHead className="border-r">Salary</TableHead>
+                      <TableHead className="border-r">Total Advance</TableHead>
                       <TableHead>Remaining</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -450,17 +450,17 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
                       const remainingSalary = employee.salary - totalAdvance;
                       return (
                         <TableRow key={employee.id} className={cn(index % 2 === 0 ? 'bg-muted/50' : 'bg-background')}>
-                          <TableCell className="font-mono text-xs">{employee.id}</TableCell>
-                          <TableCell>
+                          <TableCell className="font-mono text-xs border-r">{employee.id}</TableCell>
+                          <TableCell className="border-r">
                             <div className="flex items-center gap-2 font-medium">
                               <span className={cn('h-2 w-2 rounded-full', employee.color)} />
                               {employee.name}
                             </div>
                           </TableCell>
-                          <TableCell>{employee.role}</TableCell>
-                          <TableCell>₹{employee.salary.toLocaleString()}</TableCell>
-                          <TableCell className="text-destructive">₹{totalAdvance.toLocaleString()}</TableCell>
-                          <TableCell className="font-semibold">₹{remainingSalary.toLocaleString()}</TableCell>
+                          <TableCell className="border-r">{employee.role}</TableCell>
+                          <TableCell className="font-semibold text-blue-600 border-r">Rs. {employee.salary.toLocaleString()}</TableCell>
+                          <TableCell className="font-semibold text-red-600 border-r">Rs. {totalAdvance.toLocaleString()}</TableCell>
+                          <TableCell className="font-bold text-green-600">Rs. {remainingSalary.toLocaleString()}</TableCell>
                         </TableRow>
                       );
                     })}
@@ -708,3 +708,6 @@ function EmployeeDialog({ open, onOpenChange, employee, onSave }: { open: boolea
 
     
 
+
+
+    
