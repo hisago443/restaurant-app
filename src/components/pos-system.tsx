@@ -18,7 +18,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from '@/hooks/use-toast';
-import { Search, Plus, Minus, X, LayoutGrid, List, Rows, ChevronsUpDown, Palette, Shuffle, ClipboardList, Send, CheckCircle2, Users, Bookmark, Sparkles, Repeat, Edit, UserCheck, BookmarkX, Printer, Loader2, BookOpen, Trash2 as TrashIcon, QrCode as QrCodeIcon, MousePointerClick, Eye, Hand } from 'lucide-react';
+import { Search, Plus, Minus, X, LayoutGrid, List, Rows, ChevronsUpDown, Palette, Shuffle, ClipboardList, Send, CheckCircle2, Users, Bookmark, Sparkles, Repeat, Edit, UserCheck, BookmarkX, Printer, Loader2, BookOpen, Trash2 as TrashIcon, QrCode as QrCodeIcon, MousePointerClick, Eye, Hand, ShoppingBag } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useDrag, useDrop } from 'react-dnd';
@@ -230,6 +230,7 @@ function OrderPanel({
     }));
     
     const showQuickAssign = orderItems.length > 0 && !currentActiveTableId;
+    const orderTitle = currentActiveTableId === null ? "Takeaway" : `Table ${currentActiveTableId}`;
 
     const renderOrderItems = () => {
         const originalItemsMap = new Map(originalOrderItems.map(item => [item.name, item.quantity]));
@@ -297,7 +298,7 @@ function OrderPanel({
                 <div>
                     <CardTitle>{activeOrder ? `Editing Order #${activeOrder.id}` : 'Current Order'}</CardTitle>
                     <CardDescription>
-                        {currentActiveTableId ? `Table ${currentActiveTableId}` : "No Table Selected"}
+                        {orderTitle}
                     </CardDescription>
                 </div>
                 {orderItems.length > 0 && (
@@ -569,7 +570,7 @@ export default function PosSystem({
     const total = subtotal * (1 - discount / 100);
 
     const input: GenerateReceiptInput = {
-        items: orderItems.map(({name, price, quantity}) => ({ name, price, quantity })),
+        items: orderItems.map(({ name, price, quantity }) => ({ name, price, quantity })),
         discount,
         subtotal,
         total,
@@ -1393,6 +1394,18 @@ export default function PosSystem({
                     </TableDropTarget>
                     )
                 })}
+                 <div
+                    className={cn(
+                        "aspect-square w-full flex-col justify-center items-center relative p-1 border-2 transition-transform duration-150 active:scale-95 group flex rounded-md cursor-pointer hover:scale-110 hover:z-10 bg-muted text-muted-foreground border-dashed",
+                        selectedTableId === null && 'ring-4 ring-offset-2 ring-primary'
+                    )}
+                    onClick={() => handleSelectTable(null)}
+                >
+                     <div className="absolute inset-0 flex flex-col items-center justify-center text-center rounded-md p-1">
+                        <ShoppingBag className="h-8 w-8" />
+                        <span className="text-sm font-bold mt-1">Takeaway</span>
+                    </div>
+                </div>
             </div>
           </OrderPanel>
       </div>
