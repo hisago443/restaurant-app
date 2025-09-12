@@ -23,7 +23,7 @@ export default function RootLayout({
       <body className="font-body antialiased">
         <ThemeProvider
           attribute="class"
-          defaultTheme="default"
+          defaultTheme="light"
           enableSystem={false}
           disableTransitionOnChange
         >

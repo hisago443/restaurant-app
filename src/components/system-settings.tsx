@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState } from 'react';
@@ -13,7 +12,7 @@ import { Check } from 'lucide-react';
 
 export default function SystemSettings() {
     const { toast } = useToast();
-    const { theme, setTheme, resolvedTheme } = useTheme();
+    const { setTheme, resolvedTheme } = useTheme();
     
     const [emailNotifications, setEmailNotifications] = useState(true);
     const [restaurantName, setRestaurantName] = useState("Up & Above Assistant");
@@ -24,10 +23,6 @@ export default function SystemSettings() {
             description: "Your new settings have been applied.",
         });
     };
-
-    const handleDarkModeToggle = (checked: boolean) => {
-        setTheme(checked ? 'dark' : 'light');
-    }
 
     return (
         <Card className="border-none shadow-none">
@@ -40,7 +35,7 @@ export default function SystemSettings() {
                         <Switch 
                             id="dark-mode"
                             checked={resolvedTheme === 'dark'}
-                            onCheckedChange={handleDarkModeToggle}
+                            onCheckedChange={(checked) => setTheme(checked ? 'dark' : 'light')}
                         />
                     </div>
                 </div>
