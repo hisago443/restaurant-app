@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import * as React from 'react';
@@ -196,6 +195,7 @@ function OrderPanel({
     handlePrintProvisionalBill,
     handleProcessPayment,
     receiptPreview,
+    children,
 }: {
     orderItems: OrderItem[];
     originalOrderItems: OrderItem[];
@@ -214,6 +214,7 @@ function OrderPanel({
     handlePrintProvisionalBill: () => Promise<void>;
     handleProcessPayment: () => Promise<void>;
     receiptPreview: string;
+    children: React.ReactNode;
 }) {
     const [{ isOver, canDrop }, drop] = useDrop(() => ({
         accept: ItemTypes.MENU_ITEM,
@@ -347,6 +348,8 @@ function OrderPanel({
                     )
                 )}
             </ScrollArea>
+            
+            {children}
           
             <div className="p-4 border-t space-y-4 bg-muted/30">
                 <div>
@@ -1330,56 +1333,52 @@ export default function PosSystem({
               handlePrintProvisionalBill={handlePrintProvisionalBill}
               handleProcessPayment={handleProcessPayment}
               receiptPreview={receiptPreview}
-          />
-          <Card>
-            <CardHeader className="p-4">
-              <CardTitle>Tables</CardTitle>
-            </CardHeader>
-            <CardContent className="p-4 pt-0">
-               <div className="grid grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2">
-                  {tables.map(table => {
-                    const Icon = statusIcons[table.status];
-                    const turnover = occupancyCount[table.id] || 0;
-                    const isSelected = table.id === selectedTableId;
-                    return (
-                      <TableDropTarget key={table.id} table={table} occupancyCount={occupancyCount} handleSelectTable={handleSelectTable} onDropItem={handleDropItemOnTable}>
-                        <div
-                          className={cn(
-                            'absolute inset-0 flex flex-col items-center justify-center transition-colors rounded-md',
-                            isSelected && 'ring-4 ring-offset-2 ring-background'
-                          )}
-                        >
-                            <div className="flex items-center justify-center">
-                              <span className={cn("text-2xl font-bold", table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black')}>{table.id}</span>
-                            </div>
-                            {showOccupancy && turnover > 0 &&
-                                <div className="absolute bottom-1 right-1 flex items-center gap-1 bg-black/50 text-white text-xs font-bold px-1 rounded-sm">
-                                    <Repeat className="h-3 w-3" />
-                                    <span>{turnover}</span>
+          >
+            <div className="p-4 border-y">
+                <div className="grid grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2">
+                    {tables.map(table => {
+                        const Icon = statusIcons[table.status];
+                        const turnover = occupancyCount[table.id] || 0;
+                        const isSelected = table.id === selectedTableId;
+                        return (
+                        <TableDropTarget key={table.id} table={table} occupancyCount={occupancyCount} handleSelectTable={handleSelectTable} onDropItem={handleDropItemOnTable}>
+                            <div
+                            className={cn(
+                                'absolute inset-0 flex flex-col items-center justify-center transition-colors rounded-md',
+                                isSelected && 'ring-4 ring-offset-2 ring-background'
+                            )}
+                            >
+                                <div className="flex items-center justify-center">
+                                <span className={cn("text-2xl font-bold", table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black')}>{table.id}</span>
                                 </div>
-                            }
-                             <div className="absolute top-1 left-1 flex items-center gap-1">
-                                <Icon className={cn("h-3 w-3", table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black')} />
-                                <span className={cn("text-xs font-semibold", table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black')}>{table.status}</span>
+                                {showOccupancy && turnover > 0 &&
+                                    <div className="absolute bottom-1 right-1 flex items-center gap-1 bg-black/50 text-white text-xs font-bold px-1 rounded-sm">
+                                        <Repeat className="h-3 w-3" />
+                                        <span>{turnover}</span>
+                                    </div>
+                                }
+                                <div className="absolute top-1 left-1 flex items-center gap-1">
+                                    <Icon className={cn("h-3 w-3", table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black')} />
+                                    <span className={cn("text-xs font-semibold", table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black')}>{table.status}</span>
+                                </div>
                             </div>
-                        </div>
-                        <div className="absolute inset-0 flex gap-1 items-center justify-center bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity rounded-md">
-                          <Button size="sm" variant="ghost" className="h-auto p-1 text-white hover:bg-white/20" onClick={(e) => { e.stopPropagation(); onViewTableDetails(table.id); }}>
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          <Button size="sm" variant="ghost" className="h-auto p-1 text-white hover:bg-white/20" onClick={(e) => { e.stopPropagation(); onEditOrder(table.id); }}>
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button size="sm" variant="ghost" className="h-auto p-1 text-white hover:bg-white/20" onClick={(e) => { e.stopPropagation(); openReservationDialog(table.id); }}>
-                            <Bookmark className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableDropTarget>
-                    )
-                  })}
-               </div>
-            </CardContent>
-          </Card>
+                            <div className="absolute inset-0 flex gap-1 items-center justify-center bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity rounded-md">
+                            <Button size="sm" variant="ghost" className="h-auto p-1 text-white hover:bg-white/20" onClick={(e) => { e.stopPropagation(); onViewTableDetails(table.id); }}>
+                                <Eye className="h-4 w-4" />
+                            </Button>
+                            <Button size="sm" variant="ghost" className="h-auto p-1 text-white hover:bg-white/20" onClick={(e) => { e.stopPropagation(); onEditOrder(table.id); }}>
+                                <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button size="sm" variant="ghost" className="h-auto p-1 text-white hover:bg-white/20" onClick={(e) => { e.stopPropagation(); openReservationDialog(table.id); }}>
+                                <Bookmark className="h-4 w-4" />
+                            </Button>
+                            </div>
+                        </TableDropTarget>
+                        )
+                    })}
+                </div>
+            </div>
+          </OrderPanel>
       </div>
 
       <PaymentDialog
@@ -1426,3 +1425,5 @@ export default function PosSystem({
     </div>
   );
 }
+
+    
