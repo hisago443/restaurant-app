@@ -32,7 +32,7 @@ export default function SystemSettings() {
         { name: 'lavender', label: 'Lavender' },
     ];
 
-    const currentBaseTheme = theme?.split(' ')[0] || 'default';
+    const currentBaseTheme = theme?.replace('dark ', '') || 'default';
     
     const handleThemeChange = (newTheme: string) => {
         const isDark = resolvedTheme === 'dark';
@@ -44,18 +44,15 @@ export default function SystemSettings() {
     }
 
     const handleDarkModeToggle = (checked: boolean) => {
-        if (checked) {
-            setTheme(`dark ${currentBaseTheme}`);
-        } else {
-            setTheme(currentBaseTheme);
-        }
+        const newTheme = checked ? `dark ${currentBaseTheme}` : currentBaseTheme;
+        setTheme(newTheme);
     }
 
     return (
         <Card className="border-none shadow-none">
             <CardContent className="space-y-6 pt-6">
-                <div className="space-y-2 p-4 rounded-lg border">
-                    <Label className="font-medium">Appearance</Label>
+                <div className="space-y-4 p-4 rounded-lg border">
+                    <Label className="font-bold text-base">Appearance</Label>
                      <p className="text-sm text-muted-foreground">Customize the look and feel of the app.</p>
                      <div className="flex items-center justify-between pt-2">
                         <Label htmlFor="dark-mode" className="font-medium">Dark Mode</Label>
@@ -67,8 +64,9 @@ export default function SystemSettings() {
                     </div>
                 </div>
                 
-                 <div className="space-y-2 p-4 rounded-lg border">
-                    <Label className="font-medium">Color Theme</Label>
+                 <div className="space-y-3 p-4 rounded-lg border">
+                    <Label className="font-bold text-base">Color Modes</Label>
+                    <p className="text-sm text-muted-foreground">Select a color scheme for buttons and accents.</p>
                     <div className="grid grid-cols-2 gap-2 pt-2">
                         {themes.map((themeOption) => (
                              <Button
