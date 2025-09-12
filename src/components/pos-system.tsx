@@ -141,7 +141,7 @@ const TableDropTarget = ({ table, occupancyCount, handleSelectTable, children, o
         <div
             ref={drop}
             className={cn(
-                "h-full flex-col justify-center items-center relative p-1 border-2 transition-transform duration-150 active:scale-95 group flex rounded-md cursor-pointer hover:scale-110 hover:z-10",
+                "aspect-square flex-col justify-center items-center relative p-1 border-2 transition-transform duration-150 active:scale-95 group flex rounded-md cursor-pointer hover:scale-110 hover:z-10",
                 getDynamicColor(table.status),
                 isActive && 'ring-4 ring-offset-2 ring-green-500',
                 table.status === 'Available' || table.status === 'Occupied' ? 'text-white border-black' : 'text-black border-black/50',
@@ -1368,9 +1368,9 @@ export default function PosSystem({
                                     <ShoppingBag className="h-3 w-3" />
                                 </div>
                             )}
-                            <span className={cn("text-5xl font-bold", table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black')}>{table.id}</span>
+                            <span className={cn("text-4xl font-bold", table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black')}>{table.id}</span>
                             <div className="flex items-center gap-1">
-                                <Icon className={cn("h-5 w-5 shrink-0", table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black')} />
+                                <Icon className={cn("h-4 w-4 shrink-0", table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black')} />
                                 <span className={cn("text-xs font-semibold leading-tight break-words", table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black')}>{table.status}</span>
                             </div>
                         </div>
@@ -1380,7 +1380,8 @@ export default function PosSystem({
                  <div
                     className={cn(
                         "h-full flex-col justify-center items-center relative p-1 border-2 transition-transform duration-150 active:scale-95 group flex rounded-md cursor-pointer hover:scale-105 hover:z-10 bg-muted text-muted-foreground border-dashed",
-                        selectedTableId === null && 'ring-4 ring-offset-2 ring-primary'
+                        selectedTableId === null && 'ring-4 ring-offset-2 ring-primary',
+                        "aspect-square"
                     )}
                     onClick={() => handleSelectTable(null)}
                 >
