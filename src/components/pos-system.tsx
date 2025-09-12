@@ -18,7 +18,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from '@/hooks/use-toast';
-import { Search, Plus, Minus, X, LayoutGrid, List, Rows, ChevronsUpDown, Palette, Shuffle, ClipboardList, Send, CheckCircle2, Users, Bookmark, Sparkles, Repeat, Edit, UserCheck, BookmarkX, Printer, Loader2, BookOpen, Trash2 as TrashIcon, QrCode as QrCodeIcon, MousePointerClick } from 'lucide-react';
+import { Search, Plus, Minus, X, LayoutGrid, List, Rows, ChevronsUpDown, Palette, Shuffle, ClipboardList, Send, CheckCircle2, Users, Bookmark, Sparkles, Repeat, Edit, UserCheck, BookmarkX, Printer, Loader2, BookOpen, Trash2 as TrashIcon, QrCode as QrCodeIcon, MousePointerClick, Eye } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useDrag, useDrop } from 'react-dnd';
@@ -135,7 +135,7 @@ function DraggableMenuItem({ item, children, canDrag }: { item: MenuItem; childr
         collect: (monitor) => ({
             isDragging: !!monitor.isDragging(),
         }),
-    }), [canDrag]);
+    }), [item, canDrag]);
 
     return (
         <div
@@ -169,6 +169,7 @@ const TableDropTarget = ({ table, occupancyCount, handleSelectTable, children, o
                 getDynamicColor(table.status, occupancyCount[table.id] || 0),
                 isActive && 'ring-4 ring-offset-2 ring-green-500',
                 table.status === 'Available' || table.status === 'Occupied' ? 'text-white border-black' : 'text-black border-black/50',
+                "border-black/50"
             )}
             onClick={() => handleSelectTable(table.id)}
         >
@@ -191,10 +192,6 @@ function OrderPanel({
     discount,
     setDiscount,
     isProcessing,
-    tables,
-    occupancyCount,
-    handleSelectTable,
-    onDropItemOnTable,
     handleSendToKitchen,
     handlePrintProvisionalBill,
     handleProcessPayment,
@@ -213,10 +210,6 @@ function OrderPanel({
     discount: number;
     setDiscount: (discount: number) => void;
     isProcessing: boolean;
-    tables: Table[];
-    occupancyCount: Record<number, number>;
-    handleSelectTable: (id: number | null) => void;
-    onDropItemOnTable: (tableId: number, item: MenuItem) => void;
     handleSendToKitchen: () => void;
     handlePrintProvisionalBill: () => Promise<void>;
     handleProcessPayment: () => Promise<void>;
@@ -356,10 +349,6 @@ function OrderPanel({
             </ScrollArea>
           
             <div className="p-4 border-t space-y-4 bg-muted/30">
-                <div className="space-y-2">
-                    
-                </div>
-
                 <div>
                     <Label className="font-semibold mb-2 block">Discount</Label>
                     <RadioGroup value={discount.toString()} onValueChange={(val) => setDiscount(Number(val))} className="flex items-center flex-wrap gap-2">
@@ -1320,7 +1309,56 @@ export default function PosSystem({
       </div>
 
       {/* Order Panel */}
-      <div className="md:col-span-1 xl:col-span-1 flex flex-col h-full">
+      <div className="md:col-span-1 xl:col-span-1 flex flex-col h-full gap-4">
+          <Card>
+            <CardHeader className="p-4">
+              <CardTitle>Tables</CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 pt-0">
+               <div className="grid grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2">
+                  {tables.map(table => {
+                    const Icon = statusIcons[table.status];
+                    const turnover = occupancyCount[table.id] || 0;
+                    const isSelected = table.id === selectedTableId;
+                    return (
+                      <TableDropTarget key={table.id} table={table} occupancyCount={occupancyCount} handleSelectTable={handleSelectTable} onDropItem={handleDropItemOnTable}>
+                        <div
+                          className={cn(
+                            'absolute inset-0 flex flex-col items-center justify-center transition-colors rounded-md',
+                            isSelected && 'ring-4 ring-offset-2 ring-background'
+                          )}
+                        >
+                            <div className="flex items-center justify-center">
+                              <span className={cn("text-2xl font-bold", table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black')}>{table.id}</span>
+                            </div>
+                            {showOccupancy && turnover > 0 &&
+                                <div className="absolute bottom-1 right-1 flex items-center gap-1 bg-black/50 text-white text-xs font-bold px-1 rounded-sm">
+                                    <Repeat className="h-3 w-3" />
+                                    <span>{turnover}</span>
+                                </div>
+                            }
+                             <div className="absolute top-1 left-1 flex items-center gap-1">
+                                <Icon className={cn("h-3 w-3", table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black')} />
+                                <span className={cn("text-xs font-semibold", table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black')}>{table.status}</span>
+                            </div>
+                        </div>
+                        <div className="absolute inset-0 flex gap-1 items-center justify-center bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity rounded-md">
+                          <Button size="sm" variant="ghost" className="h-auto p-1 text-white hover:bg-white/20" onClick={(e) => { e.stopPropagation(); onViewTableDetails(table.id); }}>
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button size="sm" variant="ghost" className="h-auto p-1 text-white hover:bg-white/20" onClick={(e) => { e.stopPropagation(); onEditOrder(table.id); }}>
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button size="sm" variant="ghost" className="h-auto p-1 text-white hover:bg-white/20" onClick={(e) => { e.stopPropagation(); openReservationDialog(table.id); }}>
+                            <Bookmark className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableDropTarget>
+                    )
+                  })}
+               </div>
+            </CardContent>
+          </Card>
           <OrderPanel
               orderItems={orderItems}
               originalOrderItems={originalOrderItems}
@@ -1335,10 +1373,6 @@ export default function PosSystem({
               discount={discount}
               setDiscount={setDiscount}
               isProcessing={isProcessing}
-              tables={tables}
-              occupancyCount={occupancyCount}
-              handleSelectTable={handleSelectTable}
-              onDropItemOnTable={handleDropItemOnTable}
               handleSendToKitchen={handleSendToKitchen}
               handlePrintProvisionalBill={handlePrintProvisionalBill}
               handleProcessPayment={handleProcessPayment}
