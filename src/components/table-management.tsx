@@ -8,7 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose, DialogDescription } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger, AlertDialogFooter, AlertDialogDescription } from "@/components/ui/alert-dialog";
-import type { Table, TableStatus, Order, Bill } from '@/lib/types';
+import type { Table as TableType, TableStatus, Order, Bill } from '@/lib/types';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
@@ -38,7 +39,7 @@ const statusIcons: Record<TableStatus, React.ElementType> = {
 };
 
 interface TableManagementProps {
-  tables: Table[];
+  tables: TableType[];
   orders: Order[];
   billHistory: Bill[];
   updateTableStatus: (tableIds: number[], status: TableStatus) => void;
@@ -53,14 +54,14 @@ interface TableManagementProps {
 }
 
 export default function TableManagement({ tables, orders, billHistory, updateTableStatus, addTable, removeLastTable, occupancyCount, onEditOrder, showOccupancy, setShowOccupancy, initialSelectedTableId, onCreateOrder }: TableManagementProps) {
-  const [selectedTable, setSelectedTable] = useState<Table | null>(null);
+  const [selectedTable, setSelectedTable] = useState<TableType | null>(null);
   const [selectedBill, setSelectedBill] = useState<Bill | null>(null);
   const [selectedTables, setSelectedTables] = useState<number[]>([]);
   const [isLayoutManagerOpen, setIsLayoutManagerOpen] = useState(false);
   const [filter, setFilter] = useState<TableStatus | 'All'>('All');
   const [hoveredStatus, setHoveredStatus] = useState<TableStatus | null>(null);
   const [isPrintDialogOpen, setIsPrintDialogOpen] = useState(false);
-  const [tableForPrint, setTableForPrint] = useState<Table | null>(null);
+  const [tableForPrint, setTableForPrint] = useState<TableType | null>(null);
 
   useEffect(() => {
     if (initialSelectedTableId) {
@@ -80,7 +81,7 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
         .sort((a,b) => b.timestamp.getTime() - a.timestamp.getTime());
   }, [billHistory, selectedTable]);
 
-  const handleTableClick = (table: Table) => {
+  const handleTableClick = (table: TableType) => {
     if (selectedTables.length > 0) {
       // If in bulk selection mode, a click should toggle selection
       handleCheckboxChange(table.id, !selectedTables.includes(table.id));
@@ -92,7 +93,7 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
   };
 
 
-  const handleDoubleClick = (table: Table) => {
+  const handleDoubleClick = (table: TableType) => {
     const order = orders.find(o => o.tableId === table.id && o.status !== 'Completed');
     if (order) {
       onEditOrder(order);
@@ -139,7 +140,7 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
     }
   };
   
-  const handleOpenPrintDialog = (e: React.MouseEvent, table: Table) => {
+  const handleOpenPrintDialog = (e: React.MouseEvent, table: TableType) => {
     e.stopPropagation();
     setTableForPrint(table);
     setIsPrintDialogOpen(true);
@@ -491,6 +492,7 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
     </div>
   );
 }
+
 
 
 
