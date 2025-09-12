@@ -8,7 +8,7 @@ body {
 }
 
 @layer base {
-  :root, .theme-default {
+  :root {
     --background: 240 25% 96.1%;
     --foreground: 240 10% 3.9%;
     --card: 0 0% 100%;
@@ -35,7 +35,7 @@ body {
     --chart-5: 27 87% 67%;
     --radius: 0.5rem;
   }
-  .dark, .dark.theme-default {
+  .dark {
     --background: 240 10% 3.9%;
     --foreground: 0 0% 98%;
     --card: 240 10% 3.9%;
