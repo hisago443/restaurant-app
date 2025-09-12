@@ -164,7 +164,7 @@ const TableDropTarget = ({ table, occupancyCount, handleSelectTable, children, o
         <div
             ref={drop}
             className={cn(
-                "h-20 w-full flex-col justify-center items-center relative p-1 border-2 transition-transform duration-150 active:scale-95 group flex rounded-md cursor-pointer",
+                "aspect-square w-full flex-col justify-center items-center relative p-1 border-2 transition-transform duration-150 active:scale-95 group flex rounded-md cursor-pointer",
                 getDynamicColor(table.status, occupancyCount[table.id] || 0),
                 isActive && 'ring-4 ring-offset-2 ring-green-500',
                 table.status === 'Available' || table.status === 'Occupied' ? 'text-white border-black' : 'text-black border-black/50',
