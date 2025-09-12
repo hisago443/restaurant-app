@@ -74,55 +74,48 @@ export default function MainLayout() {
     if (fullReset) {
       setSelectedTableId(null);
     }
-  }, []);
+    // Clear pending order for the cleared table
+    if (selectedTableId) {
+        setPendingOrders(prev => {
+            const newPending = {...prev};
+            delete newPending[selectedTableId];
+            return newPending;
+        });
+    }
+  }, [selectedTableId]);
 
   const handleSelectTable = useCallback((tableId: number | null) => {
     if (tableId === null) {
-      // Deselecting a table. If there was an active order, we should clear it.
-      if (activeOrder) {
-        clearCurrentOrder(true);
-      } else {
-        // If there were just pending items, we just deselect the table.
-        setSelectedTableId(null);
+      if (selectedTableId && !activeOrder && currentOrderItems.length > 0) {
+          setPendingOrders(prev => ({...prev, [selectedTableId]: currentOrderItems}));
       }
+      setSelectedTableId(null);
+      setActiveOrder(null);
+      setCurrentOrderItems([]);
+      setDiscount(0);
       return;
     }
 
     const table = tables.find(t => t.id === tableId);
     if (!table) return;
 
-    // Logic for an unassigned order
-    if (currentOrderItems.length > 0 && !selectedTableId) {
-      if (table.status === 'Available') {
-        setSelectedTableId(tableId);
-        toast({ title: `Order assigned to Table ${tableId}` });
-        // The useEffect for selectedTableId will handle loading the items
-      } else {
-        toast({
-          variant: 'destructive',
-          title: 'Table Not Available',
-          description: 'This table is occupied or reserved. Please select an available table.',
-        });
-      }
-      return;
+    if (currentOrderItems.length > 0 && !activeOrder && selectedTableId) {
+       setPendingOrders(prev => ({...prev, [selectedTableId]: currentOrderItems}));
     }
 
-    // Logic for switching between tables or selecting a new one
     const existingOrder = orders.find(o => o.tableId === tableId && o.status !== 'Completed');
     if (existingOrder) {
-      // This is an active, submitted order. Load its items.
       setSelectedTableId(tableId);
       setActiveOrder(existingOrder);
       setCurrentOrderItems(existingOrder.items);
-      setDiscount(0);
+      setDiscount(0); // Reset discount for existing order
     } else {
-      // This is a new order for this table.
-      clearCurrentOrder(false); // Clear previous state but keep table selected
       setSelectedTableId(tableId);
       setActiveOrder(null);
-      setCurrentOrderItems([]);
+      setCurrentOrderItems(pendingOrders[tableId] || []);
+      setDiscount(0); // Reset discount for new/pending order
     }
-  }, [tables, orders, currentOrderItems.length, selectedTableId, activeOrder, clearCurrentOrder, toast]);
+  }, [tables, orders, currentOrderItems, selectedTableId, activeOrder, pendingOrders, toast]);
   
   useEffect(() => {
     // Fetch initial tables with default status
@@ -292,6 +285,13 @@ export default function MainLayout() {
     setOrders(prev => [...prev, order]);
     setActiveOrder(order);
     setCurrentOrderItems(order.items);
+    if(order.tableId) {
+        setPendingOrders(prev => {
+            const newPending = {...prev};
+            delete newPending[order.tableId];
+            return newPending;
+        })
+    }
   }, []);
   
   const handleViewTableDetails = (tableId: number) => {
