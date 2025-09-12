@@ -404,7 +404,7 @@ function OrderPanel({
                         size="lg"
                         className={cn("h-12 text-base", activeOrder && "bg-blue-600 hover:bg-blue-700")}
                         onClick={handleSendToKitchen}
-                        disabled={isProcessing || orderItems.length === 0}
+                        disabled={isProcessing || (orderItems.length === 0) || (!activeOrder && currentActiveTableId === null)}
                     >
                         {isProcessing && (activeOrder ? 'Updating KOT...' : 'Sending KOT...').includes('Sending') ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : (activeOrder ? <Printer className="mr-2 h-4 w-4" /> : <Send className="mr-2 h-4 w-4" />)}
                         {activeOrder ? 'Update KOT' : 'Send KOT to Kitchen'}
@@ -414,7 +414,7 @@ function OrderPanel({
                             {isProcessing && receiptPreview ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Printer className="mr-2 h-4 w-4" />}
                             Print Bill
                         </Button>
-                        <Button size="lg" className="h-12 text-base" onClick={handleProcessPayment} disabled={orderItems.length === 0}>
+                        <Button size="lg" className="h-12 text-base" onClick={handleProcessPayment} disabled={isProcessing || orderItems.length === 0}>
                             {isProcessing && !receiptPreview ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                             Process Payment
                         </Button>
@@ -1386,10 +1386,10 @@ export default function PosSystem({
                             isSelected && 'ring-4 ring-offset-2 ring-background'
                         )}
                         >
-                            <span className={cn("text-2xl font-bold", table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black')}>{table.id}</span>
+                            <span className={cn("text-3xl font-bold", table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black')}>{table.id}</span>
                             <div className="flex items-center gap-1">
-                                <Icon className={cn("h-3 w-3 shrink-0", table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black')} />
-                                <span className={cn("text-xs font-semibold leading-tight break-words", table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black')}>{table.status}</span>
+                                <Icon className={cn("h-4 w-4 shrink-0", table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black')} />
+                                <span className={cn("text-sm font-semibold leading-tight break-words", table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black')}>{table.status}</span>
                             </div>
                         </div>
                     </TableDropTarget>
@@ -1397,14 +1397,14 @@ export default function PosSystem({
                 })}
                  <div
                     className={cn(
-                        "col-span-2 h-full flex-col justify-center items-center relative p-1 border-2 transition-transform duration-150 active:scale-95 group flex rounded-md cursor-pointer hover:scale-105 hover:z-10 bg-muted text-muted-foreground border-dashed",
+                        "h-full flex-col justify-center items-center relative p-1 border-2 transition-transform duration-150 active:scale-95 group flex rounded-md cursor-pointer hover:scale-105 hover:z-10 bg-muted text-muted-foreground border-dashed",
                         selectedTableId === null && 'ring-4 ring-offset-2 ring-primary'
                     )}
                     onClick={() => handleSelectTable(null)}
                 >
                      <div className="absolute inset-0 flex flex-col items-center justify-center text-center rounded-md p-1">
-                        <ShoppingBag className="h-8 w-8" />
-                        <span className="text-sm font-bold mt-1">Takeaway</span>
+                        <ShoppingBag className="h-10 w-10" />
+                        <span className="text-lg font-bold mt-1">Takeaway</span>
                     </div>
                 </div>
             </div>

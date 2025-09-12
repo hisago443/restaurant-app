@@ -91,13 +91,9 @@ export default function MainLayout() {
 
     // Save current work before switching
     if (currentOrderItems.length > 0) {
-      if (currentTableKey === PENDING_ORDER_KEY) {
-        // We were working on an unassigned order, save it.
-        setPendingOrders(prev => ({ ...prev, [PENDING_ORDER_KEY]: currentOrderItems }));
-      } else if (!activeOrder) { // Only save if it's a PENDING order, not an active one
-        // We were working on a pending order for a specific table.
-        setPendingOrders(prev => ({ ...prev, [currentTableKey]: currentOrderItems }));
-      }
+        if (!activeOrder) { // Only save if it's a PENDING order, not an active one
+            setPendingOrders(prev => ({ ...prev, [currentTableKey]: currentOrderItems }));
+        }
     }
 
     setSelectedTableId(tableId);
@@ -123,7 +119,6 @@ export default function MainLayout() {
     } else {
         // No active order for this table.
         setActiveOrder(null);
-
         let itemsToLoad = pendingOrders[tableId] || [];
         
         // If the table is available and we have a pending unassigned order, transfer it.
