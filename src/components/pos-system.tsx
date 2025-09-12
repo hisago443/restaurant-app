@@ -197,7 +197,6 @@ function OrderPanel({
     occupancyCount,
     handleSelectTable,
     onDropItemOnTable,
-    renderTableActions,
     handleSendToKitchen,
     handlePrintProvisionalBill,
     handleProcessPayment,
@@ -220,7 +219,6 @@ function OrderPanel({
     occupancyCount: Record<number, number>;
     handleSelectTable: (id: number | null) => void;
     onDropItemOnTable: (tableId: number, item: MenuItem) => void;
-    renderTableActions: (table: Table) => React.ReactNode;
     handleSendToKitchen: () => void;
     handlePrintProvisionalBill: () => Promise<void>;
     handleProcessPayment: () => Promise<void>;
@@ -365,7 +363,6 @@ function OrderPanel({
                     <div className="grid grid-cols-5 gap-1.5">
                         {tables.map(table => (
                             <TableDropTarget key={table.id} table={table} occupancyCount={occupancyCount} handleSelectTable={() => handleSelectTable(table.id)} onDropItem={onDropItemOnTable}>
-                                {renderTableActions(table)}
                                 <div className="absolute top-1 left-1">
                                     {React.createElement(statusIcons[table.status], { className: "h-3 w-3" })}
                                 </div>
@@ -1091,14 +1088,12 @@ export default function PosSystem({
               <span className="font-mono text-right whitespace-nowrap">₹{item.price.toFixed(2)}</span>
             </div>
           </div>
-          <div className="flex justify-between items-end">
-            <span className="text-xs font-mono text-black/60">{item.code}</span>
-            {!easyMode && (
-              <div className="flex justify-center w-full">
+          {!easyMode && (
+              <div className="flex justify-center w-full mt-auto">
                 <Button
                     size="sm"
                     variant="secondary"
-                    className="h-7 text-xs"
+                    className="h-7 text-xs px-4"
                     onClick={(e) => {
                         e.stopPropagation();
                         handleAddButtonClick(item);
@@ -1109,7 +1104,6 @@ export default function PosSystem({
                 </Button>
               </div>
             )}
-          </div>
         </CardContent>
         <div className="absolute bottom-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
           <Popover>
@@ -1274,10 +1268,6 @@ export default function PosSystem({
       setActiveAccordionItems(filteredMenu.map(c => c.category));
     }
   };
-
-  const renderTableActions = (table: Table) => {
-    return null;
-  };
   
 
   return (
@@ -1392,7 +1382,6 @@ export default function PosSystem({
                 occupancyCount={occupancyCount}
                 handleSelectTable={handleSelectTable}
                 onDropItemOnTable={handleDropItemOnTable}
-                renderTableActions={renderTableActions}
                 handleSendToKitchen={handleSendToKitchen}
                 handlePrintProvisionalBill={handlePrintProvisionalBill}
                 handleProcessPayment={handleProcessPayment}
