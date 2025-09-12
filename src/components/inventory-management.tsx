@@ -178,7 +178,7 @@ export default function InventoryManagement({ inventory }: InventoryManagementPr
 
   return (
     <div className="p-4">
-    <Card className="bg-blue-100 dark:bg-blue-900/30">
+    <Card className="bg-muted/30">
       <CardHeader>
         <div className="flex justify-between items-center gap-4 flex-wrap">
           <div>
