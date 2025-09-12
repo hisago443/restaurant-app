@@ -8,7 +8,7 @@ body {
 }
 
 @layer base {
-  :root {
+  :root, .theme-default {
     --background: 240 25% 96.1%;
     --foreground: 240 10% 3.9%;
     --card: 0 0% 100%;
@@ -35,7 +35,7 @@ body {
     --chart-5: 27 87% 67%;
     --radius: 0.5rem;
   }
-  .dark {
+  .dark, .dark.theme-default {
     --background: 240 10% 3.9%;
     --foreground: 0 0% 98%;
     --card: 240 10% 3.9%;
@@ -60,6 +60,42 @@ body {
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
+  }
+
+  .theme-forest {
+    --primary: 140 50% 55%;
+    --primary-foreground: 0 0% 10%;
+    --accent: 120 20% 95%;
+    --accent-foreground: 120 40% 30%;
+    --background: 40 10% 96%;
+    --ring: 140 50% 55%;
+  }
+
+  .dark.theme-forest {
+    --primary: 140 45% 45%;
+    --primary-foreground: 0 0% 98%;
+    --accent: 120 20% 10%;
+    --accent-foreground: 120 30% 80%;
+    --background: 120 5% 5%;
+    --ring: 140 45% 45%;
+  }
+
+  .theme-ocean {
+    --primary: 210 70% 60%;
+    --primary-foreground: 0 0% 100%;
+    --accent: 200 80% 94%;
+    --accent-foreground: 200 70% 30%;
+    --background: 220 20% 96%;
+    --ring: 210 70% 60%;
+  }
+
+  .dark.theme-ocean {
+    --primary: 210 60% 50%;
+    --primary-foreground: 0 0% 100%;
+    --accent: 200 40% 12%;
+    --accent-foreground: 200 70% 85%;
+    --background: 220 15% 6%;
+    --ring: 210 60% 50%;
   }
 }
 

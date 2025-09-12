@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState, useEffect } from 'react';
@@ -7,10 +8,19 @@ import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
+import { Check } from 'lucide-react';
+
+const themes = [
+    { name: 'default', label: 'Default', color: 'hsl(250 60% 65%)' },
+    { name: 'forest', label: 'Forest', color: 'hsl(140 50% 55%)' },
+    { name: 'ocean', label: 'Ocean', color: 'hsl(210 70% 60%)' },
+]
 
 export default function SystemSettings() {
     const { toast } = useToast();
     const [isDarkMode, setIsDarkMode] = useState(false);
+    const [activeTheme, setActiveTheme] = useState('default');
     const [emailNotifications, setEmailNotifications] = useState(true);
     const [restaurantName, setRestaurantName] = useState("Up & Above Assistant");
 
@@ -26,7 +36,17 @@ export default function SystemSettings() {
     useEffect(() => {
         const root = window.document.documentElement;
         setIsDarkMode(root.classList.contains('dark'));
+        
+        const savedTheme = localStorage.getItem('app-theme') || 'default';
+        setActiveTheme(savedTheme);
     }, []);
+
+    useEffect(() => {
+        const body = window.document.body;
+        body.classList.remove('theme-default', 'theme-forest', 'theme-ocean');
+        body.classList.add(`theme-${activeTheme}`);
+        localStorage.setItem('app-theme', activeTheme);
+    }, [activeTheme]);
 
     const handleSave = () => {
         toast({
@@ -48,6 +68,28 @@ export default function SystemSettings() {
                         checked={isDarkMode}
                         onCheckedChange={setIsDarkMode}
                     />
+                </div>
+                 <div className="space-y-4 p-4 rounded-lg border">
+                    <Label className="font-medium">Theme</Label>
+                    <p className="text-sm text-muted-foreground">Select a color theme for the application.</p>
+                    <div className="flex items-center gap-4 pt-2">
+                        {themes.map((theme) => (
+                            <div key={theme.name} className="flex flex-col items-center gap-2">
+                                <button
+                                    onClick={() => setActiveTheme(theme.name)}
+                                    className={cn(
+                                        'h-12 w-12 rounded-full border-2 transition-all flex items-center justify-center',
+                                        activeTheme === theme.name ? 'border-primary' : 'border-transparent'
+                                    )}
+                                >
+                                    <div className="h-10 w-10 rounded-full" style={{ backgroundColor: theme.color }}>
+                                        {activeTheme === theme.name && <Check className="h-6 w-6 text-white m-2" />}
+                                    </div>
+                                </button>
+                                <span className="text-xs font-medium">{theme.label}</span>
+                            </div>
+                        ))}
+                    </div>
                 </div>
                 <div className="flex items-center justify-between space-x-2 p-4 rounded-lg border">
                     <div>
