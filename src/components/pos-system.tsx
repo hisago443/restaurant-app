@@ -164,7 +164,7 @@ const TableDropTarget = ({ table, occupancyCount, handleSelectTable, children, o
         <div
             ref={drop}
             className={cn(
-                "h-14 w-full flex-col justify-center items-center relative p-1 border-2 transition-transform duration-150 active:scale-95 group flex rounded-md cursor-pointer",
+                "h-16 w-full flex-col justify-center items-center relative p-1 border-2 transition-transform duration-150 active:scale-95 group flex rounded-md cursor-pointer",
                 getDynamicColor(table.status, occupancyCount[table.id] || 0),
                 isActive && 'ring-4 ring-offset-2 ring-green-500',
                 table.status === 'Available' || table.status === 'Occupied' ? 'text-white border-black' : 'text-black border-black/50',
@@ -1344,14 +1344,14 @@ export default function PosSystem({
                     <TableDropTarget key={table.id} table={table} occupancyCount={occupancyCount} handleSelectTable={handleSelectTable} onDropItem={handleDropItemOnTable}>
                         <div
                         className={cn(
-                            'absolute inset-0 flex flex-col items-center justify-center transition-colors rounded-md p-1',
+                            'absolute inset-0 flex flex-col items-center justify-center text-center transition-colors rounded-md p-1',
                             isSelected && 'ring-4 ring-offset-2 ring-background'
                         )}
                         >
                             <span className={cn("text-2xl font-bold", table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black')}>{table.id}</span>
                             <div className="flex items-center gap-1">
                                 <Icon className={cn("h-3 w-3 shrink-0", table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black')} />
-                                <span className={cn("text-xs font-semibold", table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black')}>{table.status}</span>
+                                <span className={cn("text-xs font-semibold leading-tight", table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black')}>{table.status}</span>
                             </div>
                         </div>
                     </TableDropTarget>
