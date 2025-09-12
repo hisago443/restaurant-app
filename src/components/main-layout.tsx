@@ -85,11 +85,15 @@ export default function MainLayout() {
   }, [selectedTableId]);
 
   const handleSelectTable = useCallback((tableId: number | null) => {
+    // If we are deselecting a table, and there's a pending order (not saved), store it.
+    if (selectedTableId && !activeOrder && currentOrderItems.length > 0) {
+      setPendingOrders(prev => ({ ...prev, [selectedTableId]: currentOrderItems }));
+    }
+    
+    setSelectedTableId(tableId);
+
     if (tableId === null) {
-      if (selectedTableId && !activeOrder && currentOrderItems.length > 0) {
-          setPendingOrders(prev => ({...prev, [selectedTableId]: currentOrderItems}));
-      }
-      setSelectedTableId(null);
+      // If we are deselecting to no table, clear the order panel.
       setActiveOrder(null);
       setCurrentOrderItems([]);
       setDiscount(0);
@@ -99,23 +103,28 @@ export default function MainLayout() {
     const table = tables.find(t => t.id === tableId);
     if (!table) return;
 
-    if (currentOrderItems.length > 0 && !activeOrder && selectedTableId) {
-       setPendingOrders(prev => ({...prev, [selectedTableId]: currentOrderItems}));
-    }
-
+    // Check for an existing, active order for the selected table
     const existingOrder = orders.find(o => o.tableId === tableId && o.status !== 'Completed');
     if (existingOrder) {
-      setSelectedTableId(tableId);
+      // An active order exists, load it.
       setActiveOrder(existingOrder);
       setCurrentOrderItems(existingOrder.items);
       setDiscount(0); // Reset discount for existing order
+      // Clear any temporary pending items for this table as we are loading the real one.
+      if (pendingOrders[tableId]) {
+        setPendingOrders(prev => {
+            const newPending = {...prev};
+            delete newPending[tableId];
+            return newPending;
+        });
+      }
     } else {
-      setSelectedTableId(tableId);
+      // No active order, check for pending items.
       setActiveOrder(null);
       setCurrentOrderItems(pendingOrders[tableId] || []);
       setDiscount(0); // Reset discount for new/pending order
     }
-  }, [tables, orders, currentOrderItems, selectedTableId, activeOrder, pendingOrders, toast]);
+  }, [tables, orders, currentOrderItems, selectedTableId, activeOrder, pendingOrders]);
   
   useEffect(() => {
     // Fetch initial tables with default status

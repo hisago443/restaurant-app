@@ -569,7 +569,7 @@ export default function PosSystem({
     const total = subtotal * (1 - discount / 100);
 
     const input: GenerateReceiptInput = {
-        items: orderItems.map(item => ({ name: item.name, price: item.price, quantity: item.quantity })),
+        items: orderItems.map(({name, price, quantity}) => ({ name, price, quantity })),
         discount,
         subtotal,
         total,
