@@ -394,7 +394,7 @@ function OrderPanel({
                         </div>
                     )}
                     <div className="flex justify-between font-bold text-2xl border-t pt-2 mt-2 bg-primary/20 p-2 rounded-md">
-                        <span>Total:</span>
+                        <span>Rs. Total:</span>
                         <span>₹{total.toFixed(2)}</span>
                     </div>
                 </div>
@@ -680,11 +680,13 @@ export default function PosSystem({
   };
   
   const handleDropOnOrder = (item: MenuItem) => {
-    addToOrder(item, 1);
-    toast({
-        title: "Item Added",
-        description: `1 x ${item.name} added to the current order.`
-    });
+    if (easyMode) {
+      addToOrder(item, 1);
+      toast({
+          title: "Item Added",
+          description: `1 x ${item.name} added to the current order.`
+      });
+    }
   }
 
   const handleAddButtonClick = (item: MenuItem) => {
@@ -838,6 +840,7 @@ export default function PosSystem({
   };
   
     const handleDropItemOnTable = (tableId: number, item: MenuItem) => {
+      if (!easyMode) return;
       const table = tables.find(t => t.id === tableId);
       if (!table || table.status !== 'Available') {
         toast({
@@ -1057,20 +1060,22 @@ export default function PosSystem({
               <span className="font-mono text-right whitespace-nowrap">₹{item.price.toFixed(2)}</span>
             </div>
           </div>
-          <div className="flex justify-center w-full mt-auto pt-2">
-              <Button
-                  size="sm"
-                  variant="secondary"
-                  className="h-7 text-xs px-10"
-                  onClick={(e) => {
-                      e.stopPropagation();
-                      handleAddButtonClick(item);
-                  }}
-              >
-                  <Plus className="mr-1 h-3 w-3" />
-                  Add
-              </Button>
-          </div>
+          {!easyMode && (
+            <div className="flex justify-center w-full mt-auto pt-2">
+                <Button
+                    size="sm"
+                    variant="secondary"
+                    className="h-7 text-xs px-10"
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        handleAddButtonClick(item);
+                    }}
+                >
+                    <Plus className="mr-1 h-3 w-3" />
+                    Add
+                </Button>
+            </div>
+          )}
         </CardContent>
         <p className="absolute bottom-1 left-2 text-xs text-muted-foreground font-mono">{item.code}</p>
         <div className="absolute bottom-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
@@ -1097,7 +1102,7 @@ export default function PosSystem({
     );
 
     return (
-        <DraggableMenuItem key={item.name} item={item} canDrag={true}>
+        <DraggableMenuItem key={item.name} item={item} canDrag={easyMode}>
             {menuItemCard}
         </DraggableMenuItem>
     );
