@@ -141,7 +141,7 @@ const TableDropTarget = ({ table, occupancyCount, handleSelectTable, children, o
         <div
             ref={drop}
             className={cn(
-                "aspect-square w-full flex-col justify-center items-center relative p-1 border-2 transition-transform duration-150 active:scale-95 group flex rounded-md cursor-pointer hover:scale-110 hover:z-10",
+                "h-full flex-col justify-center items-center relative p-1 border-2 transition-transform duration-150 active:scale-95 group flex rounded-md cursor-pointer hover:scale-110 hover:z-10",
                 getDynamicColor(table.status),
                 isActive && 'ring-4 ring-offset-2 ring-green-500',
                 table.status === 'Available' || table.status === 'Occupied' ? 'text-white border-black' : 'text-black border-black/50',
@@ -1354,18 +1354,24 @@ export default function PosSystem({
                 {tables.map(table => {
                     const Icon = statusIcons[table.status];
                     const isSelected = table.id === selectedTableId;
+                    const hasPendingItems = (pendingOrders[table.id] || []).length > 0 && table.status !== 'Occupied';
                     return (
                     <TableDropTarget key={table.id} table={table} occupancyCount={occupancyCount} handleSelectTable={handleSelectTable} onDropItem={handleDropItemOnTable}>
                         <div
                         className={cn(
-                            'absolute inset-0 flex flex-col items-center justify-center text-center transition-colors rounded-md p-1 aspect-square h-full',
+                            'absolute inset-0 flex flex-col items-center justify-center text-center transition-colors rounded-md p-1 h-full',
                             isSelected && 'ring-4 ring-offset-2 ring-background'
                         )}
                         >
+                            {hasPendingItems && (
+                                <div className="absolute top-1 left-1 bg-amber-400 p-1 rounded-full text-black">
+                                    <ShoppingBag className="h-3 w-3" />
+                                </div>
+                            )}
                             <span className={cn("text-5xl font-bold", table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black')}>{table.id}</span>
                             <div className="flex items-center gap-1">
                                 <Icon className={cn("h-5 w-5 shrink-0", table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black')} />
-                                <span className={cn("text-sm font-semibold leading-tight break-words", table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black')}>{table.status}</span>
+                                <span className={cn("text-xs font-semibold leading-tight break-words", table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black')}>{table.status}</span>
                             </div>
                         </div>
                     </TableDropTarget>
