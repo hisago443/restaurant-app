@@ -1,16 +1,15 @@
 
 "use client"
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { cn } from '@/lib/utils';
-import { Check } from 'lucide-react';
 import { useTheme } from 'next-themes';
+import { Check } from 'lucide-react';
 
 export default function SystemSettings() {
     const { toast } = useToast();
@@ -25,22 +24,37 @@ export default function SystemSettings() {
             description: "Your new settings have been applied.",
         });
     };
-
+    
     const themes = [
         { name: 'default', label: 'Default' },
         { name: 'ocean', label: 'Ocean' },
         { name: 'sunset', label: 'Sunset' },
         { name: 'lavender', label: 'Lavender' },
     ];
+
+    const currentBaseTheme = theme?.split(' ')[0] || 'default';
     
-    // The `theme` variable can be "dark", "light", "system", or "ocean", "dark ocean", etc.
-    // We need to extract the base theme name (e.g., "ocean") from the combined string.
-    const currentBaseTheme = theme?.split(' ').pop() || 'default';
+    const handleThemeChange = (newTheme: string) => {
+        const isDark = resolvedTheme === 'dark';
+        if (isDark) {
+            setTheme(`dark ${newTheme}`);
+        } else {
+            setTheme(newTheme);
+        }
+    }
+
+    const handleDarkModeToggle = (checked: boolean) => {
+        if (checked) {
+            setTheme(`dark ${currentBaseTheme}`);
+        } else {
+            setTheme(currentBaseTheme);
+        }
+    }
 
     return (
         <Card className="border-none shadow-none">
             <CardContent className="space-y-6 pt-6">
-                 <div className="space-y-2 p-4 rounded-lg border">
+                <div className="space-y-2 p-4 rounded-lg border">
                     <Label className="font-medium">Appearance</Label>
                      <p className="text-sm text-muted-foreground">Customize the look and feel of the app.</p>
                      <div className="flex items-center justify-between pt-2">
@@ -48,7 +62,7 @@ export default function SystemSettings() {
                         <Switch 
                             id="dark-mode"
                             checked={resolvedTheme === 'dark'}
-                            onCheckedChange={(checked) => setTheme(checked ? 'dark' : 'light')}
+                            onCheckedChange={handleDarkModeToggle}
                         />
                     </div>
                 </div>
@@ -60,7 +74,7 @@ export default function SystemSettings() {
                              <Button
                                 key={themeOption.name}
                                 variant={currentBaseTheme === themeOption.name ? 'default' : 'outline'}
-                                onClick={() => setTheme(themeOption.name)}
+                                onClick={() => handleThemeChange(themeOption.name)}
                                 className="justify-start"
                             >
                                 {currentBaseTheme === themeOption.name && <Check className="mr-2 h-4 w-4" />}
@@ -96,4 +110,3 @@ export default function SystemSettings() {
         </Card>
     );
 }
-
