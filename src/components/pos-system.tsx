@@ -18,7 +18,6 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from '@/hooks/use-toast';
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { Search, Plus, Minus, X, LayoutGrid, List, Rows, ChevronsUpDown, Palette, Shuffle, ClipboardList, Send, CheckCircle2, Users, Bookmark, Sparkles, Repeat, Edit, UserCheck, BookmarkX, Printer, Loader2, BookOpen, Trash2 as TrashIcon, MoreVertical, View, Pencil, QrCode as QrCodeIcon, MousePointerClick, Move, ShoppingCart } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -150,10 +149,11 @@ function DraggableMenuItem({ item, children, canDrag }: { item: MenuItem; childr
     );
 }
 
-const TableDropTarget = ({ table, occupancyCount, handleSelectTable, children, onDropItem }: { table: Table; occupancyCount: Record<number,number>, handleSelectTable: (id: number) => void, children: React.ReactNode; onDropItem: (tableId: number, item: MenuItem) => void }) => {
+const TableDropTarget = ({ table, occupancyCount, handleSelectTable, children, onDropItem, canDropItem }: { table: Table; occupancyCount: Record<number,number>, handleSelectTable: (id: number) => void, children: React.ReactNode; onDropItem: (tableId: number, item: MenuItem) => void; canDropItem: boolean; }) => {
     const [{ isOver, canDrop }, drop] = useDrop(() => ({
         accept: ItemTypes.MENU_ITEM,
         drop: (item: MenuItem) => onDropItem(table.id, item),
+        canDrop: () => canDropItem,
         collect: (monitor) => ({
             isOver: !!monitor.isOver(),
             canDrop: !!monitor.canDrop(),
@@ -202,6 +202,7 @@ function OrderPanel({
     handlePrintProvisionalBill,
     handleProcessPayment,
     receiptPreview,
+    canDropOnOrder
 }: {
     orderItems: OrderItem[];
     originalOrderItems: OrderItem[];
@@ -224,10 +225,13 @@ function OrderPanel({
     handlePrintProvisionalBill: () => Promise<void>;
     handleProcessPayment: () => Promise<void>;
     receiptPreview: string;
+    canDropOnOrder: boolean;
+    canDropOnTable: boolean;
 }) {
     const [{ isOver, canDrop }, drop] = useDrop(() => ({
         accept: ItemTypes.MENU_ITEM,
         drop: (item: MenuItem) => handleDropOnOrder(item),
+        canDrop: () => canDropOnOrder,
         collect: (monitor) => ({
             isOver: !!monitor.isOver(),
             canDrop: !!monitor.canDrop(),
@@ -1382,6 +1386,8 @@ export default function PosSystem({
                 handlePrintProvisionalBill={handlePrintProvisionalBill}
                 handleProcessPayment={handleProcessPayment}
                 receiptPreview={receiptPreview}
+                canDropOnOrder={easyMode}
+                canDropOnTable={easyMode}
             />
         </div>
       </div>
