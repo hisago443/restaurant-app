@@ -1343,7 +1343,7 @@ export default function PosSystem({
                     <TableDropTarget key={table.id} table={table} occupancyCount={occupancyCount} handleSelectTable={handleSelectTable} onDropItem={handleDropItemOnTable}>
                         <div
                         className={cn(
-                            'absolute inset-0 flex flex-col items-center justify-center text-center transition-colors rounded-md p-1 aspect-square h-full',
+                            'absolute inset-0 flex flex-col items-center justify-center text-center transition-colors rounded-md p-1 aspect-square h-full hover:scale-110 hover:z-10',
                             isSelected && 'ring-4 ring-offset-2 ring-background'
                         )}
                         >
