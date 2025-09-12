@@ -46,8 +46,8 @@ const colorPalette: Record<string, {light: string, dark: string}> = {
 const colorNames = Object.keys(colorPalette);
 
 const itemStatusColors: Record<string, { light: string, dark: string, name: string }> = {
-    low: { light: 'bg-yellow-100 dark:bg-yellow-900/40', dark: 'bg-yellow-200 dark:bg-yellow-800/70', name: 'Running Low' },
-    out: { light: 'bg-red-100 dark:bg-red-900/40', dark: 'bg-red-200 dark:bg-red-800/70', name: 'Out of Stock' },
+    low: { light: 'bg-yellow-200 dark:bg-yellow-900/40', dark: 'bg-yellow-300 dark:bg-yellow-800/70', name: 'Running Low' },
+    out: { light: 'bg-red-500 dark:bg-red-800/50', dark: 'bg-red-500 dark:bg-red-700/70', name: 'Out of Stock' },
 };
 const itemStatusNames = Object.keys(itemStatusColors);
 
@@ -1071,13 +1071,13 @@ export default function PosSystem({
       <Card
         key={item.name}
         className={cn(
-          "group rounded-lg transition-all hover:shadow-md relative overflow-hidden h-full min-h-[100px]",
+          "group rounded-lg transition-all hover:shadow-md relative overflow-hidden h-full flex flex-col min-h-[100px]",
           finalColorName,
           easyMode && 'cursor-pointer hover:scale-105'
         )}
         onClick={() => handleItemClick(item)}
       >
-        <CardContent className="p-3 flex flex-col justify-between h-full">
+        <CardContent className="p-3 flex flex-col justify-between flex-grow">
           <div>
             <div className="flex justify-between items-start mb-2">
               <div className="flex items-center gap-2">
@@ -1105,33 +1105,30 @@ export default function PosSystem({
             )}
           </div>
         </CardContent>
-        <Popover>
-          <PopoverTrigger asChild>
-            <div
-              onClick={(e) => e.stopPropagation()}
-              className="absolute bottom-1 right-1"
-            >
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6 opacity-50 hover:opacity-100 transition-opacity"
-              >
-                <Palette className="h-4 w-4" />
-              </Button>
-            </div>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-2" onClick={(e) => e.stopPropagation()}>
-            <div className="flex flex-col gap-1">
-                {itemStatusNames.map((name) => (
-                    <Button key={name} variant="outline" className="w-full justify-start gap-2" onClick={(e) => { e.stopPropagation(); setItemStatus(item.name, name); }}>
-                        <span className={cn("h-3 w-3 rounded-sm", itemStatusColors[name].light)} />
-                        {itemStatusColors[name].name}
-                    </Button>
-                ))}
-              <Button variant="ghost" size="sm" className="col-span-2 h-8" onClick={(e) => { e.stopPropagation(); setItemStatus(item.name, ''); }}>Reset</Button>
-            </div>
-          </PopoverContent>
-        </Popover>
+        <div className="absolute bottom-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
+          <Popover>
+            <PopoverTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6"
+                >
+                  <Palette className="h-4 w-4" />
+                </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-2">
+              <div className="flex flex-col gap-1">
+                  {itemStatusNames.map((name) => (
+                      <Button key={name} variant="outline" className="w-full justify-start gap-2" onClick={(e) => { e.stopPropagation(); setItemStatus(item.name, name); }}>
+                          <span className={cn("h-3 w-3 rounded-sm", itemStatusColors[name].light)} />
+                          {itemStatusColors[name].name}
+                      </Button>
+                  ))}
+                <Button variant="ghost" size="sm" className="col-span-2 h-8" onClick={(e) => { e.stopPropagation(); setItemStatus(item.name, ''); }}>Reset</Button>
+              </div>
+            </PopoverContent>
+          </Popover>
+        </div>
       </Card>
     );
 
@@ -1143,34 +1140,38 @@ export default function PosSystem({
   };
 
   const CategoryColorPicker = ({ categoryName }: { categoryName: string }) => (
-    <Popover>
+    <div className="p-1" onClick={(e) => e.stopPropagation()}>
+      <Popover>
         <PopoverTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-6 w-6">
+            <div role="button" aria-label={`Change category color for ${categoryName}`}>
+              <Button variant="ghost" size="icon" className="h-6 w-6" type="button">
                 <Palette className="h-4 w-4" />
-            </Button>
+              </Button>
+            </div>
         </PopoverTrigger>
         <PopoverContent className="w-auto p-2">
-            <div className="grid grid-cols-5 gap-1">
-                {colorNames.map((name) => (
-                    <div
-                        key={name}
-                        className={cn("h-6 w-6 rounded-full cursor-pointer", colorPalette[name].light)}
-                        onClick={() => handleSetCategoryColor(categoryName, name)}
-                    />
-                ))}
-                <Button variant="ghost" size="sm" className="col-span-5 h-8" onClick={() => handleSetCategoryColor(categoryName, '')}>
-                    Reset
-                </Button>
-            </div>
+          <div className="grid grid-cols-5 gap-1">
+            {colorNames.map((name) => (
+              <div
+                key={name}
+                className={cn("h-6 w-6 rounded-full cursor-pointer", colorPalette[name].light)}
+                onClick={() => handleSetCategoryColor(categoryName, name)}
+              />
+            ))}
+            <Button variant="ghost" size="sm" className="col-span-5 h-8" onClick={() => handleSetCategoryColor(categoryName, '')}>
+              Reset
+            </Button>
+          </div>
         </PopoverContent>
-    </Popover>
-);
+      </Popover>
+    </div>
+  );
 
   const renderMenuContent = () => {
     if (viewMode === 'list') {
       return (
         <div className="space-y-6">
-          {filteredMenu.map((category) => (
+          {filteredMenu.map(category => (
              <div key={category.category}>
                <div className="sticky top-0 bg-background/80 backdrop-blur-sm py-2 z-10 flex items-center justify-between gap-2 p-2">
                 <h2 className="text-xl font-bold flex-grow text-left">
@@ -1247,10 +1248,8 @@ export default function PosSystem({
             {filteredMenu.map(category => (
                 <AccordionItem key={category.category} value={category.category} className="border-b-0">
                     <AccordionTrigger className={cn("p-3 rounded-md text-lg font-bold hover:no-underline", categoryColors[category.category] ? colorPalette[categoryColors[category.category]]?.dark : 'bg-muted')}>
-                        <span className={cn("flex-grow text-left", "text-black")}>{category.category}</span>
-                        <div onClick={(e) => e.stopPropagation()}>
-                           <CategoryColorPicker categoryName={category.category} />
-                        </div>
+                        <span className="flex-grow text-left text-black">{category.category}</span>
+                        <CategoryColorPicker categoryName={category.category} />
                     </AccordionTrigger>
                     <AccordionContent className="p-2 space-y-2">
                         {category.subCategories.map(subCategory => (
@@ -1321,8 +1320,7 @@ export default function PosSystem({
               <DropdownMenuItem onClick={handlePrintProvisionalBill}>
                 <Printer className="mr-2 h-4 w-4" />
                 <span>Print Provisional Bill</span>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
+              </DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => updateTableStatus([table.id], 'Cleaning')}>
                 <Sparkles className="mr-2 h-4 w-4" />
                 <span>Mark as Cleaning</span>
@@ -1521,5 +1519,6 @@ export default function PosSystem({
     </DndProvider>
   );
 }
+
 
     
