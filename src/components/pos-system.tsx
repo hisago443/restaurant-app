@@ -669,8 +669,10 @@ export default function PosSystem({
   }
 
   const handleAddButtonClick = (item: MenuItem) => {
-    setSelectedItem(item);
-    setIsAddItemDialogOpen(true);
+    if (!easyMode) {
+      setSelectedItem(item);
+      setIsAddItemDialogOpen(true);
+    }
   };
   
   const handleCodeEntry = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -907,7 +909,7 @@ export default function PosSystem({
     }
   
     setIsPaymentDialogOpen(false);
-    toast({ title: "Payment Successful", description: `₹${total.toFixed(2)} confirmed.` });
+    toast({ title: "Payment Successful", description: `Rs. ${total.toFixed(2)} confirmed.` });
     
     const billPayload: Omit<Bill, 'id' | 'timestamp'> = {
       orderItems: orderItems,
@@ -1056,7 +1058,7 @@ export default function PosSystem({
             </div>
           )}
         </CardContent>
-        <p className="absolute bottom-1 left-2 text-xs text-muted-foreground font-mono">No. {item.code}</p>
+        <p className="absolute bottom-1 left-2 text-xs text-muted-foreground font-mono">{item.code}</p>
         <div className="absolute bottom-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
           <Popover>
             <PopoverTrigger asChild>
@@ -1310,6 +1312,25 @@ export default function PosSystem({
 
       {/* Order Panel */}
       <div className="md:col-span-1 xl:col-span-1 flex flex-col h-full gap-4">
+          <OrderPanel
+              orderItems={orderItems}
+              originalOrderItems={originalOrderItems}
+              handleDropOnOrder={handleDropOnOrder}
+              updateQuantity={updateQuantity}
+              removeFromOrder={removeFromOrder}
+              activeOrder={activeOrder}
+              currentActiveTableId={currentActiveTableId}
+              clearCurrentOrder={clearCurrentOrder}
+              subtotal={subtotal}
+              total={total}
+              discount={discount}
+              setDiscount={setDiscount}
+              isProcessing={isProcessing}
+              handleSendToKitchen={handleSendToKitchen}
+              handlePrintProvisionalBill={handlePrintProvisionalBill}
+              handleProcessPayment={handleProcessPayment}
+              receiptPreview={receiptPreview}
+          />
           <Card>
             <CardHeader className="p-4">
               <CardTitle>Tables</CardTitle>
@@ -1359,25 +1380,6 @@ export default function PosSystem({
                </div>
             </CardContent>
           </Card>
-          <OrderPanel
-              orderItems={orderItems}
-              originalOrderItems={originalOrderItems}
-              handleDropOnOrder={handleDropOnOrder}
-              updateQuantity={updateQuantity}
-              removeFromOrder={removeFromOrder}
-              activeOrder={activeOrder}
-              currentActiveTableId={currentActiveTableId}
-              clearCurrentOrder={clearCurrentOrder}
-              subtotal={subtotal}
-              total={total}
-              discount={discount}
-              setDiscount={setDiscount}
-              isProcessing={isProcessing}
-              handleSendToKitchen={handleSendToKitchen}
-              handlePrintProvisionalBill={handlePrintProvisionalBill}
-              handleProcessPayment={handleProcessPayment}
-              receiptPreview={receiptPreview}
-          />
       </div>
 
       <PaymentDialog
