@@ -8,7 +8,6 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useTheme } from 'next-themes';
-import { Check } from 'lucide-react';
 
 export default function SystemSettings() {
     const { toast } = useToast();
