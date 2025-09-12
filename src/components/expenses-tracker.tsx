@@ -350,7 +350,7 @@ export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
 
   return (
     <div className="p-4 space-y-4">
-       <Card className="bg-muted/30">
+       <Card>
           <CardHeader>
               <CardTitle>{editingExpense ? 'Edit Expense' : 'Add New Expense'}</CardTitle>
               <CardDescription>{editingExpense ? `Updating expense record for ${format(editingExpense.date, 'PPP')}` : 'Record a new business expense.'}</CardDescription>
@@ -405,10 +405,10 @@ export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
                 <Button onClick={handleSaveExpense}>
                     <PlusCircle className="mr-2 h-4 w-4" /> {editingExpense ? 'Update Expense' : 'Save Expense'}
                 </Button>
-                 <Button variant="outline" className="text-primary border-primary hover:bg-primary/10 hover:text-primary" onClick={() => openAddVendorDialog(null)}>
+                 <Button variant="secondary" onClick={() => openAddVendorDialog(null)}>
                     <Building className="mr-2 h-4 w-4" /> Add Vendor
                 </Button>
-                <Button variant="outline" className="text-primary border-primary hover:bg-primary/10 hover:text-primary" onClick={() => setIsVendorManageDialogOpen(true)}>
+                <Button variant="secondary" onClick={() => setIsVendorManageDialogOpen(true)}>
                     <List className="mr-2 h-4 w-4" /> Show Vendors
                 </Button>
             </div>
@@ -417,49 +417,51 @@ export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
       
       <Separator />
 
-      <Card className="bg-muted/30">
+      <Card>
         <CardHeader>
           <CardTitle>Expense History</CardTitle>
           <CardDescription>A log of all recorded business expenses.</CardDescription>
         </CardHeader>
         <CardContent>
-          <Table>
-              <TableHeader>
-              <TableRow className="border-b-2 border-black dark:border-white">
-                  <TableHead className="border-r font-bold text-foreground text-lg">Date</TableHead>
-                  <TableHead className="border-r font-bold text-foreground text-lg">Category</TableHead>
-                  <TableHead className="border-r font-bold text-foreground text-lg">Description</TableHead>
-                  <TableHead className="border-r font-bold text-foreground text-lg">Vendor</TableHead>
-                  <TableHead className="border-r font-bold text-foreground text-lg">Vendor Mobile</TableHead>
-                  <TableHead className="text-right border-r font-bold text-foreground text-lg">Amount</TableHead>
-              </TableRow>
-              </TableHeader>
-              <TableBody>
-              {expenses.length > 0 ? (
-                  expenses.map((expense) => {
-                    const vendor = getVendorDetails(expense.vendorId);
-                    return (
-                      <TableRow key={expense.id}>
-                          <TableCell className="border-r font-bold">{format(expense.date, 'PPP')}</TableCell>
-                          <TableCell className="border-r font-bold">{expense.category}</TableCell>
-                          <TableCell className="border-r font-bold bg-blue-50 dark:bg-blue-900/20">{expense.description}</TableCell>
-                          <TableCell className="border-r font-bold bg-green-50 dark:bg-green-900/20">{vendor?.name || 'N/A'}</TableCell>
-                          <TableCell className="border-r font-bold">{vendor?.phone || 'N/A'}</TableCell>
-                          <TableCell className="text-right font-mono border-r text-red-600 dark:text-red-400 font-bold">
-                          Rs. {expense.amount.toFixed(2)}
-                          </TableCell>
-                      </TableRow>
-                    )
-                  })
-              ) : (
-                  <TableRow>
-                  <TableCell colSpan={6} className="text-center text-muted-foreground">
-                      No expenses recorded yet.
-                  </TableCell>
-                  </TableRow>
-              )}
-              </TableBody>
-          </Table>
+          <div className="max-h-[60vh] overflow-y-auto">
+            <Table>
+                <TableHeader>
+                <TableRow>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Category</TableHead>
+                    <TableHead>Description</TableHead>
+                    <TableHead>Vendor</TableHead>
+                    <TableHead>Vendor Mobile</TableHead>
+                    <TableHead className="text-right">Amount</TableHead>
+                </TableRow>
+                </TableHeader>
+                <TableBody>
+                {expenses.length > 0 ? (
+                    expenses.map((expense, index) => {
+                      const vendor = getVendorDetails(expense.vendorId);
+                      return (
+                        <TableRow key={expense.id} className={cn(index % 2 === 0 ? 'bg-muted/50' : 'bg-background')}>
+                            <TableCell>{format(expense.date, 'PPP')}</TableCell>
+                            <TableCell>{expense.category}</TableCell>
+                            <TableCell>{expense.description}</TableCell>
+                            <TableCell>{vendor?.name || 'N/A'}</TableCell>
+                            <TableCell>{vendor?.phone || 'N/A'}</TableCell>
+                            <TableCell className="text-right font-mono text-red-600 dark:text-red-400">
+                            Rs. {expense.amount.toFixed(2)}
+                            </TableCell>
+                        </TableRow>
+                      )
+                    })
+                ) : (
+                    <TableRow>
+                    <TableCell colSpan={6} className="text-center text-muted-foreground h-24">
+                        No expenses recorded yet.
+                    </TableCell>
+                    </TableRow>
+                )}
+                </TableBody>
+            </Table>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
               <Card className="bg-red-100 dark:bg-red-900/30 border-red-200 dark:border-red-800">
                   <CardHeader className="pb-2">
@@ -469,20 +471,20 @@ export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
                       <p className="text-2xl font-bold text-red-900 dark:text-red-100">Rs. {dailyExpenses.toFixed(2)}</p>
                   </CardContent>
               </Card>
-              <Card className="bg-red-100 dark:bg-red-900/30 border-red-200 dark:border-red-800">
+              <Card className="bg-orange-100 dark:bg-orange-900/30 border-orange-200 dark:border-orange-800">
                   <CardHeader className="pb-2">
-                      <CardTitle className="text-sm font-medium text-red-800 dark:text-red-200">This Month's Expenses</CardTitle>
+                      <CardTitle className="text-sm font-medium text-orange-800 dark:text-orange-200">This Month's Expenses</CardTitle>
                   </CardHeader>
                   <CardContent>
-                      <p className="text-2xl font-bold text-red-900 dark:text-red-100">Rs. {monthlyExpenses.toFixed(2)}</p>
+                      <p className="text-2xl font-bold text-orange-900 dark:text-orange-100">Rs. {monthlyExpenses.toFixed(2)}</p>
                   </CardContent>
               </Card>
-              <Card className="bg-red-100 dark:bg-red-900/30 border-red-200 dark:border-red-800">
+              <Card className="bg-yellow-100 dark:bg-yellow-900/30 border-yellow-200 dark:border-yellow-800">
                   <CardHeader className="pb-2">
-                      <CardTitle className="text-sm font-medium text-red-800 dark:text-red-200">Overall Expenses</CardTitle>
+                      <CardTitle className="text-sm font-medium text-yellow-800 dark:text-yellow-200">Overall Expenses</CardTitle>
                   </CardHeader>
                   <CardContent>
-                      <p className="text-2xl font-bold text-red-900 dark:text-red-100">Rs. {totalExpenses.toFixed(2)}</p>
+                      <p className="text-2xl font-bold text-yellow-900 dark:text-yellow-100">Rs. {totalExpenses.toFixed(2)}</p>
                   </CardContent>
               </Card>
           </div>
@@ -505,11 +507,3 @@ export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
     </div>
   );
 }
-
-    
-
-    
-
-    
-
-    

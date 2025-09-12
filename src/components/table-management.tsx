@@ -86,32 +86,9 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
       handleCheckboxChange(table.id, !selectedTables.includes(table.id));
       return;
     }
-
-    const currentStatus = table.status;
-    let nextStatus: TableStatus;
-
-    // Define the status cycle
-    switch (currentStatus) {
-      case 'Available':
-        nextStatus = 'Occupied';
-        break;
-      case 'Occupied':
-        nextStatus = 'Cleaning';
-        break;
-      case 'Cleaning':
-        nextStatus = 'Available';
-        break;
-      case 'Reserved':
-        // Don't cycle 'Reserved' status on simple click to avoid accidents.
-        // Instead, select it to show detailed actions.
-        setSelectedTable(table.id === selectedTable?.id ? null : table);
-        return;
-      default:
-        nextStatus = 'Available';
-        break;
-    }
-    updateTableStatus([table.id], nextStatus);
-    setSelectedTable(null); // Deselect after a quick status change
+    
+    // If not in bulk mode, clicking a table shows its details.
+    setSelectedTable(table.id === selectedTable?.id ? null : table);
   };
 
 
@@ -233,21 +210,49 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
     }
     
     return (
-      <div className="mt-4 p-4 border rounded-lg bg-muted/50">
+      <div className="mt-4 p-4 border rounded-lg bg-card shadow-sm">
         <div className="flex justify-between items-center">
-            <h3 className="text-lg font-semibold">Actions for Table {selectedTable.id}</h3>
+            <h3 className="text-lg font-semibold">Details for Table {selectedTable.id}</h3>
             <Button variant="ghost" size="icon" onClick={() => setSelectedTable(null)}><X className="h-4 w-4"/></Button>
         </div>
-        <div className="flex flex-wrap gap-2 mt-2">
+        <div className="flex flex-wrap gap-2 mt-4 mb-4">
             {actions}
-            <Button key="history" variant="secondary" onClick={() => {
-                // This will open the modal
-                const tableToView = selectedTable;
-                setSelectedTable(null); // Close the action bar
-                setTimeout(() => setSelectedTable(tableToView), 0); // Re-open the modal
-            }}>
-                <Eye className="mr-2 h-4 w-4" /> View History
-            </Button>
+        </div>
+        <Separator />
+        <div className="mt-4">
+            <h4 className="font-semibold mb-2">Recent Bill History</h4>
+             <div className="max-h-60 overflow-y-auto">
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Bill ID</TableHead>
+                            <TableHead>Date & Time</TableHead>
+                            <TableHead className="text-right">Amount</TableHead>
+                            <TableHead className="text-center">Action</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {tableBillHistory.length > 0 ? (
+                            tableBillHistory.map(bill => (
+                                <TableRow key={bill.id}>
+                                    <TableCell>{bill.id}</TableCell>
+                                    <TableCell>{format(bill.timestamp, 'PPP p')}</TableCell>
+                                    <TableCell className="text-right font-mono">₹{bill.total.toFixed(2)}</TableCell>
+                                    <TableCell className="text-center">
+                                        <Button variant="ghost" size="icon" onClick={() => setSelectedBill(bill)}>
+                                            <Eye className="h-4 w-4" />
+                                        </Button>
+                                    </TableCell>
+                                </TableRow>
+                            ))
+                        ) : (
+                            <TableRow>
+                                <TableCell colSpan={4} className="h-24 text-center text-muted-foreground">No bill history for this table.</TableCell>
+                            </TableRow>
+                        )}
+                    </TableBody>
+                </Table>
+            </div>
         </div>
       </div>
     );
@@ -290,8 +295,6 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
               </Button>
               {(Object.keys(statusBaseColors) as TableStatus[]).map(status => {
                   const Icon = statusIcons[status];
-                  const statusColor = status === 'Cleaning' ? `bg-amber-300` : `bg-${statusBaseColors[status]}-400`;
-                  const hoverColor = status === 'Cleaning' ? `hover:bg-amber-400` : `hover:bg-${statusBaseColors[status]}-500`;
                   return (
                     <Button
                       key={status}
@@ -299,9 +302,9 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
                       onMouseEnter={() => setHoveredStatus(status)}
                       onMouseLeave={() => setHoveredStatus(null)}
                       variant={filter === status ? 'default' : 'outline'}
-                      className={cn(
+                       className={cn(
                         'transition-all',
-                         filter !== status && `${statusColor} ${hoverColor}`,
+                         filter !== status && getDynamicColor(status),
                          filter !== status && (status === 'Available' || status === 'Occupied' ? 'text-white' : 'text-black'),
                       )}
                     >
@@ -324,7 +327,7 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
                   'aspect-square rounded-lg flex flex-col items-center justify-center cursor-pointer transition-all duration-300 shadow-lg hover:shadow-2xl relative border-2',
                   getDynamicColor(table.status),
                   selectedTables.includes(table.id) && 'ring-4 ring-offset-2 ring-primary border-primary',
-                  selectedTable?.id === table.id && 'ring-4 ring-offset-2 ring-secondary border-secondary',
+                  selectedTable?.id === table.id && 'ring-4 ring-offset-2 ring-foreground border-foreground',
                   !selectedTables.includes(table.id) && 'border-black/50',
                   hoveredStatus === table.status && 'scale-110 z-10'
                 )}
@@ -488,6 +491,7 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
     </div>
   );
 }
+
 
 
 

@@ -305,33 +305,33 @@ export default function AdminDashboard({ billHistory, employees, expenses }: Adm
             <p className="text-xs text-blue-700 dark:text-blue-300">Today's total orders</p>
           </CardContent>
         </Card>
-        <Card className="bg-amber-100 dark:bg-amber-900/30 border-amber-200 dark:border-amber-800 shadow-lg hover:shadow-xl transition-shadow">
+        <Card className="bg-orange-100 dark:bg-orange-900/30 border-orange-200 dark:border-orange-800 shadow-lg hover:shadow-xl transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-amber-800 dark:text-amber-200">Average Order Value</CardTitle>
-            <TrendingUp className="h-4 w-4 text-amber-600" />
+            <CardTitle className="text-sm font-medium text-orange-800 dark:text-orange-200">Average Order Value</CardTitle>
+            <TrendingUp className="h-4 w-4 text-orange-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-amber-900 dark:text-amber-100">Rs. {averageOrderValue.toFixed(2)}</div>
-            <p className="text-xs text-amber-700 dark:text-amber-300">Average per order</p>
+            <div className="text-2xl font-bold text-orange-900 dark:text-orange-100">Rs. {averageOrderValue.toFixed(2)}</div>
+            <p className="text-xs text-orange-700 dark:text-orange-300">Average per order</p>
           </CardContent>
         </Card>
-        <Card className="bg-violet-100 dark:bg-violet-900/30 border-violet-200 dark:border-violet-800 shadow-lg hover:shadow-xl transition-shadow">
+        <Card className="bg-purple-100 dark:bg-purple-900/30 border-purple-200 dark:border-purple-800 shadow-lg hover:shadow-xl transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-violet-800 dark:text-violet-200">Active Staff</CardTitle>
-            <User className="h-4 w-4 text-violet-600" />
+            <CardTitle className="text-sm font-medium text-purple-800 dark:text-purple-200">Active Staff</CardTitle>
+            <User className="h-4 w-4 text-purple-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-violet-900 dark:text-violet-100">{employees.length}</div>
-            <p className="text-xs text-violet-700 dark:text-violet-300">Total employees</p>
+            <div className="text-2xl font-bold text-purple-900 dark:text-purple-100">{employees.length}</div>
+            <p className="text-xs text-purple-700 dark:text-purple-300">Total employees</p>
           </CardContent>
         </Card>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
         {/* Top Selling Items */}
-        <Card className="lg:col-span-3 bg-muted/30">
+        <Card className="lg:col-span-3 bg-card">
           <CardHeader>
-            <CardTitle className="text-gray-800 dark:text-gray-200">Top Selling Items</CardTitle>
+            <CardTitle>Top Selling Items</CardTitle>
             <CardDescription>Today's most popular items.</CardDescription>
           </CardHeader>
           <CardContent>
@@ -345,7 +345,7 @@ export default function AdminDashboard({ billHistory, employees, expenses }: Adm
               <TableBody>
                 {topSellingItems.length > 0 ? (
                   topSellingItems.map(item => (
-                    <TableRow key={item.name}>
+                    <TableRow key={item.name} className="hover:bg-muted/50">
                       <TableCell className="font-bold">{item.name}</TableCell>
                       <TableCell className="text-right font-bold">{item.count}</TableCell>
                     </TableRow>
@@ -363,7 +363,7 @@ export default function AdminDashboard({ billHistory, employees, expenses }: Adm
         </Card>
 
         {/* Reports & Settings */}
-        <Card className="lg:col-span-4 bg-muted/30">
+        <Card className="lg:col-span-4 bg-card">
           <CardHeader>
             <CardTitle>Reports & Settings</CardTitle>
             <CardDescription>Manage system data and configurations.</CardDescription>
@@ -371,7 +371,7 @@ export default function AdminDashboard({ billHistory, employees, expenses }: Adm
           <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Dialog>
               <DialogTrigger asChild>
-                <Button variant="outline" size="lg" className="justify-start gap-2">
+                <Button variant="outline" size="lg" className="justify-start gap-2 h-14 text-base">
                   <BarChart className="h-5 w-5" />
                   <span>View Sales Reports</span>
                 </Button>
@@ -386,7 +386,7 @@ export default function AdminDashboard({ billHistory, employees, expenses }: Adm
             </Dialog>
             <Dialog>
               <DialogTrigger asChild>
-                <Button variant="outline" size="lg" className="justify-start gap-2">
+                <Button variant="outline" size="lg" className="justify-start gap-2 h-14 text-base">
                   <History className="h-5 w-5" />
                   <span>View Bill History</span>
                 </Button>
@@ -403,7 +403,7 @@ export default function AdminDashboard({ billHistory, employees, expenses }: Adm
             </Dialog>
             <Dialog open={isStaffManagerOpen} onOpenChange={setIsStaffManagerOpen}>
                 <DialogTrigger asChild>
-                    <Button variant="outline" size="lg" className="justify-start gap-2">
+                    <Button variant="outline" size="lg" className="justify-start gap-2 h-14 text-base">
                         <Users className="h-5 w-5" />
                         <span>Manage Staff</span>
                     </Button>
@@ -472,13 +472,13 @@ export default function AdminDashboard({ billHistory, employees, expenses }: Adm
                     </div>
                 </DialogContent>
             </Dialog>
-            <Button variant="outline" size="lg" className="justify-start gap-2" onClick={handleExportCSV}>
+            <Button variant="outline" size="lg" className="justify-start gap-2 h-14 text-base" onClick={handleExportCSV}>
               <Download className="h-5 w-5" />
               <span>Export All Data (CSV)</span>
             </Button>
             <Dialog>
               <DialogTrigger asChild>
-                <Button variant="outline" size="lg" className="justify-start gap-2">
+                <Button variant="outline" size="lg" className="justify-start gap-2 h-14 text-base">
                   <Book className="h-5 w-5" />
                   <span>View Activity Logs</span>
                 </Button>
@@ -493,7 +493,7 @@ export default function AdminDashboard({ billHistory, employees, expenses }: Adm
             </Dialog>
             <Dialog>
               <DialogTrigger asChild>
-                <Button variant="outline" size="lg" className="justify-start gap-2">
+                <Button variant="outline" size="lg" className="justify-start gap-2 h-14 text-base">
                   <Receipt className="h-5 w-5" />
                   <span>Manage Expenses</span>
                 </Button>
@@ -561,7 +561,7 @@ export default function AdminDashboard({ billHistory, employees, expenses }: Adm
             </Dialog>
             <Dialog>
               <DialogTrigger asChild>
-                 <Button variant="outline" size="lg" className="justify-start gap-2">
+                 <Button variant="outline" size="lg" className="justify-start gap-2 h-14 text-base">
                     <Settings className="h-5 w-5" />
                     <span>System Settings</span>
                 </Button>
