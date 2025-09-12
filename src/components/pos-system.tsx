@@ -1093,7 +1093,7 @@ export default function PosSystem({
                 <Button
                     size="sm"
                     variant="secondary"
-                    className="h-7 text-xs px-5"
+                    className="h-7 text-xs px-6"
                     onClick={(e) => {
                         e.stopPropagation();
                         handleAddButtonClick(item);
@@ -1302,13 +1302,13 @@ export default function PosSystem({
                             </div>
                              <RadioGroup value={vegFilter} onValueChange={(v) => setVegFilter(v as VegFilter)} className="flex items-center gap-2">
                                 <RadioGroupItem value="All" id="filter-all" className="sr-only" />
-                                <Label htmlFor="filter-all" className={cn("px-4 py-2 rounded-md cursor-pointer border-2 font-semibold text-lg", vegFilter === 'All' ? 'bg-primary text-primary-foreground border-primary' : 'bg-background text-foreground hover:bg-accent')}>All</Label>
+                                <Label htmlFor="filter-all" className={cn("h-10 flex items-center justify-center px-4 rounded-md cursor-pointer border-2 font-semibold text-lg", vegFilter === 'All' ? 'bg-primary text-primary-foreground border-primary' : 'bg-background text-foreground hover:bg-accent')}>All</Label>
                                 
                                 <RadioGroupItem value="Veg" id="filter-veg" className="sr-only" />
-                                <Label htmlFor="filter-veg" className={cn("px-4 py-2 rounded-md cursor-pointer border-2 font-semibold text-lg", vegFilter === 'Veg' ? 'bg-green-600 text-white border-green-600' : 'text-green-600 border-green-500 hover:bg-green-50')}>Veg</Label>
+                                <Label htmlFor="filter-veg" className={cn("h-10 flex items-center justify-center px-4 rounded-md cursor-pointer border-2 font-semibold text-lg", vegFilter === 'Veg' ? 'bg-green-600 text-white border-green-600' : 'text-green-600 border-green-500 hover:bg-green-50')}>Veg</Label>
                                 
                                 <RadioGroupItem value="Non-Veg" id="filter-nonveg" className="sr-only" />
-                                <Label htmlFor="filter-nonveg" className={cn("px-4 py-2 rounded-md cursor-pointer border-2 font-semibold text-lg", vegFilter === 'Non-Veg' ? 'bg-red-600 text-white border-red-600' : 'text-red-600 border-red-500 hover:bg-red-50')}>Non-Veg</Label>
+                                <Label htmlFor="filter-nonveg" className={cn("h-10 flex items-center justify-center px-4 rounded-md cursor-pointer border-2 font-semibold text-lg", vegFilter === 'Non-Veg' ? 'bg-red-600 text-white border-red-600' : 'text-red-600 border-red-500 hover:bg-red-50')}>Non-Veg</Label>
                             </RadioGroup>
                         </div>
                         <div className="flex items-center gap-2">
@@ -1439,3 +1439,4 @@ export default function PosSystem({
 
 
     
+
