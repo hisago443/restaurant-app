@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import * as React from 'react';
@@ -1064,7 +1065,7 @@ export default function PosSystem({
     const categoryColorName = categoryColors[categoryName];
     
     let finalColorName;
-    if (itemStatus && itemStatus === 'out') {
+    if (itemStatus && (itemStatus === 'out' || itemStatus === 'low')) {
         finalColorName = itemStatusColors[itemStatus]?.light ?? (isNonVeg ? nonVegColor : vegColor);
     } else {
         finalColorName = categoryColorName ? colorPalette[categoryColorName]?.light : (isNonVeg ? nonVegColor : vegColor);
@@ -1274,17 +1275,17 @@ export default function PosSystem({
 
   const renderTableActions = (table: Table) => {
     return (
-      <Button
-        variant="ghost"
-        size="icon"
-        className="absolute top-0.5 right-0.5 h-7 w-7 bg-black/20 hover:bg-black/40 text-white opacity-0 group-hover:opacity-100 transition-opacity"
-        onClick={(e) => {
-            e.stopPropagation();
-            onViewTableDetails(table.id);
-        }}
-        >
-        <MoreVertical className="h-4 w-4" />
-      </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="absolute top-0.5 right-0.5 h-7 w-7 bg-black/20 hover:bg-black/40 text-white opacity-0 group-hover:opacity-100 transition-opacity"
+          onClick={(e) => {
+              e.stopPropagation();
+              onViewTableDetails(table.id);
+          }}
+          >
+          <MoreVertical className="h-4 w-4" />
+        </Button>
     );
   };
   
@@ -1297,34 +1298,31 @@ export default function PosSystem({
           <Card className="flex flex-col flex-grow">
             <CardHeader>
               <div className="flex flex-col gap-4">
-                <div className="flex items-start justify-between gap-4">
-                    <div className="flex flex-1 flex-col gap-2">
+                 <div className="flex justify-between items-start flex-wrap gap-4">
+                    <div className="flex flex-col gap-2">
                         <div className="flex items-center gap-2 flex-wrap">
-                            <Button variant="outline" size="sm" onClick={() => setIsMenuManagerOpen(true)}>
-                                <BookOpen className="mr-2 h-4 w-4" /> Manage Menu
-                            </Button>
-                             <div className="relative flex-grow min-w-[200px]">
+                            <div className="relative flex-grow min-w-[200px]">
                                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                                 <Input
-                                placeholder="Search menu items..."
-                                className="pl-10"
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
+                                    placeholder="Search menu items..."
+                                    className="pl-10"
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
                                 />
                             </div>
                             <div className="relative flex-grow min-w-[200px]">
                                 <QrCodeIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                                 <Input
-                                placeholder="Enter item code..."
-                                className="pl-10"
-                                value={itemCodeInput}
-                                onChange={(e) => setItemCodeInput(e.target.value)}
-                                onKeyDown={handleCodeEntry}
+                                    placeholder="Enter item code..."
+                                    className="pl-10"
+                                    value={itemCodeInput}
+                                    onChange={(e) => setItemCodeInput(e.target.value)}
+                                    onKeyDown={handleCodeEntry}
                                 />
                             </div>
                         </div>
-                        <div className="flex items-center gap-2 flex-wrap">
-                           <RadioGroup value={vegFilter} onValueChange={(v) => setVegFilter(v as VegFilter)} className="flex items-center gap-2">
+                        <div className="flex items-center gap-2">
+                            <RadioGroup value={vegFilter} onValueChange={(v) => setVegFilter(v as VegFilter)} className="flex items-center gap-2">
                                 <RadioGroupItem value="All" id="filter-all" className="sr-only" />
                                 <Label htmlFor="filter-all" className="px-3 py-1.5 rounded-md cursor-pointer border data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground hover:bg-accent">All</Label>
                                 
@@ -1337,37 +1335,41 @@ export default function PosSystem({
                         </div>
                     </div>
                     <div className="flex flex-col items-end gap-2">
-                       <div className="flex items-center space-x-2">
+                        <div className="flex items-center space-x-2">
                             <Switch id="easy-mode-switch" checked={easyMode} onCheckedChange={setEasyMode} />
                             <Label htmlFor="easy-mode-switch" className="flex items-center gap-2 cursor-pointer">
-                            <MousePointerClick className="h-4 w-4" />
-                            Easy Mode
+                                <MousePointerClick className="h-4 w-4" />
+                                Easy Mode
                             </Label>
                         </div>
-                        <div className="flex items-center gap-2 flex-wrap">
+                        <div className="flex items-center gap-2">
+                            <Button variant="outline" size="sm" onClick={() => setIsMenuManagerOpen(true)}>
+                                <BookOpen className="mr-2 h-4 w-4" /> Manage Menu
+                            </Button>
+                            <Separator orientation="vertical" className="h-8" />
                             <RadioGroup value={viewMode} onValueChange={(v) => setViewMode(v as ViewMode)} className="flex items-center">
-                            <Label className={cn("p-1.5 rounded-md cursor-pointer transition-colors", viewMode === 'grid' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent' )}>
-                                <RadioGroupItem value="grid" id="grid-view" className="sr-only" />
-                                <LayoutGrid className="h-5 w-5 box-content" />
-                            </Label>
-                            <Label className={cn("p-1.5 rounded-md cursor-pointer transition-colors", viewMode === 'accordion' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent' )}>
-                                <RadioGroupItem value="accordion" id="accordion-view" className="sr-only" />
-                                <List className="h-5 w-5 box-content" />
-                            </Label>
-                            <Label className={cn("p-1.5 rounded-md cursor-pointer transition-colors", viewMode === 'list' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent' )}>
-                                <RadioGroupItem value="list" id="list-view" className="sr-only" />
-                                <Rows className="h-5 w-5 box-content" />
-                            </Label>
+                                <Label className={cn("p-1.5 rounded-md cursor-pointer transition-colors", viewMode === 'grid' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent' )}>
+                                    <RadioGroupItem value="grid" id="grid-view" className="sr-only" />
+                                    <LayoutGrid className="h-5 w-5 box-content" />
+                                </Label>
+                                <Label className={cn("p-1.5 rounded-md cursor-pointer transition-colors", viewMode === 'accordion' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent' )}>
+                                    <RadioGroupItem value="accordion" id="accordion-view" className="sr-only" />
+                                    <List className="h-5 w-5 box-content" />
+                                </Label>
+                                <Label className={cn("p-1.5 rounded-md cursor-pointer transition-colors", viewMode === 'list' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent' )}>
+                                    <RadioGroupItem value="list" id="list-view" className="sr-only" />
+                                    <Rows className="h-5 w-5 box-content" />
+                                </Label>
                             </RadioGroup>
                             <Separator orientation="vertical" className="h-8" />
                             <Button variant="outline" size="sm" onClick={handleShuffleColors}>
-                            <Shuffle className="mr-2 h-4 w-4" /> Colors
+                                <Shuffle className="mr-2 h-4 w-4" /> Colors
                             </Button>
                             {viewMode === 'accordion' && (
-                            <Button variant="outline" size="sm" onClick={toggleAccordion}>
-                                <ChevronsUpDown className="mr-2 h-4 w-4" />
-                                {allItemsOpen ? 'Collapse' : 'Expand'}
-                            </Button>
+                                <Button variant="outline" size="sm" onClick={toggleAccordion}>
+                                    <ChevronsUpDown className="mr-2 h-4 w-4" />
+                                    {allItemsOpen ? 'Collapse' : 'Expand'}
+                                </Button>
                             )}
                         </div>
                     </div>
