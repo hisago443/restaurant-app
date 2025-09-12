@@ -40,7 +40,7 @@ export default function MainLayout() {
 
 
   // Lifted state for POS
-  const [selectedTableId, setSelectedTableId] = useState<number | null>(null);
+  const [selectedTableId, setSelectedTableId] = useState<number | null>(1);
   const [discount, setDiscount] = useState(0);
   const [showOccupancy, setShowOccupancy] = useState(true);
   const [pendingOrders, setPendingOrders] = useState<Record<number, OrderItem[]>>({});

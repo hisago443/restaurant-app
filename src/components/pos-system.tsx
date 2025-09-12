@@ -1365,7 +1365,7 @@ export default function PosSystem({
                             <span className={cn("text-5xl font-bold", table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black')}>{table.id}</span>
                             <div className="flex items-center gap-1">
                                 <Icon className={cn("h-5 w-5 shrink-0", table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black')} />
-                                <span className={cn("text-lg font-semibold leading-tight break-words", table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black')}>{table.status}</span>
+                                <span className={cn("text-sm font-semibold leading-tight break-words", table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black')}>{table.status}</span>
                             </div>
                         </div>
                     </TableDropTarget>
