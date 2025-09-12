@@ -932,10 +932,6 @@ export default function PosSystem({
       });
       return;
     }
-  
-    setIsProcessing(true);
-    await generateAIRecipt();
-    setIsProcessing(false);
     
     const billTitle = currentActiveTableId === null ? 'Takeaway' : `Table #${currentActiveTableId}`;
   
@@ -1359,7 +1355,7 @@ export default function PosSystem({
                     <TableDropTarget key={table.id} table={table} occupancyCount={occupancyCount} handleSelectTable={handleSelectTable} onDropItem={handleDropItemOnTable}>
                         <div
                         className={cn(
-                            'absolute inset-0 flex flex-col items-center justify-center text-center transition-colors rounded-md p-1 h-full',
+                            'absolute inset-0 flex flex-col items-center justify-center text-center transition-colors rounded-md p-1 h-full aspect-square',
                             isSelected && 'ring-4 ring-offset-2 ring-background'
                         )}
                         >
@@ -1461,3 +1457,4 @@ export default function PosSystem({
     </div>
   );
 }
+
