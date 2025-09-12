@@ -1064,7 +1064,7 @@ export default function PosSystem({
       <Card
         key={item.name}
         className={cn(
-          "group rounded-lg transition-all hover:shadow-md relative overflow-hidden h-full flex flex-col min-h-[110px]",
+          "group rounded-lg transition-all shadow-md hover:shadow-lg border border-black relative overflow-hidden h-full flex flex-col min-h-[110px]",
           finalColorName,
           easyMode && "cursor-pointer hover:scale-105",
           (itemStatus === 'out') && "pointer-events-none opacity-60"
