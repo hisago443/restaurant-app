@@ -16,6 +16,7 @@ import { PlusCircle, Edit, Trash2, Plus, Minus, Server, Search } from 'lucide-re
 import { useToast } from '@/hooks/use-toast';
 import type { InventoryItem } from '@/lib/types';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { cn } from '@/lib/utils';
 
 interface InventoryManagementProps {
   inventory: InventoryItem[];
@@ -165,6 +166,16 @@ export default function InventoryManagement({ inventory }: InventoryManagementPr
     }
   }
 
+  const getStockColor = (stock: number) => {
+    if (stock <= 1) {
+      return "bg-red-500";
+    }
+    if (stock <= 5) {
+      return "bg-yellow-500";
+    }
+    return "bg-primary";
+  };
+
   return (
     <div className="p-4">
     <Card className="bg-blue-100 dark:bg-blue-900/30">
@@ -212,6 +223,7 @@ export default function InventoryManagement({ inventory }: InventoryManagementPr
                       <Progress
                         value={(item.stock / item.capacity) * 100}
                         className="w-full h-3"
+                        indicatorClassName={getStockColor(item.stock)}
                       />
                       <div className="flex items-center gap-1">
                         <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => handleStockChange(item.id, item.stock - 5)}>-5</Button>

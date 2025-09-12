@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -68,5 +69,14 @@ body {
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@layer components {
+  .kitchen-tabs .c-PJLV-ifVPEfe-css {
+    background-color: hsl(var(--background) / 0.9);
+  }
+  .dark .kitchen-tabs .c-PJLV-ifVPEfe-css {
+    background-color: hsl(var(--background) / 0.9);
   }
 }

@@ -47,7 +47,7 @@ const colorNames = Object.keys(colorPalette);
 
 const itemStatusColors: Record<string, { light: string, dark: string, name: string }> = {
     low: { light: 'bg-yellow-200 dark:bg-yellow-900/40', dark: 'bg-yellow-300 dark:bg-yellow-800/70', name: 'Running Low' },
-    out: { light: 'bg-red-600 dark:bg-red-800/70', dark: 'bg-red-700 dark:bg-red-700/70', name: 'Out of Stock' },
+    out: { light: 'bg-red-600 text-white dark:bg-red-800/70', dark: 'bg-red-700 dark:bg-red-700/70', name: 'Out of Stock' },
 };
 const itemStatusNames = Object.keys(itemStatusColors);
 
@@ -495,13 +495,16 @@ export default function PosSystem({
         });
         setCategoryColors(defaultCategoryColors);
     }
+  }, [typedMenuData, categoryColors, setCategoryColors]);
+
+  useEffect(() => {
     // By default, open the first category in accordion view if it exists
     if (typedMenuData.length > 0 && viewMode === 'accordion') {
         setActiveAccordionItems([typedMenuData[0].category]);
     } else {
         setActiveAccordionItems([]);
     }
-  }, [typedMenuData, categoryColors, setCategoryColors, viewMode]);
+  }, [viewMode, typedMenuData]);
 
   useEffect(() => {
     try {
@@ -671,13 +674,10 @@ export default function PosSystem({
 
     // Veg/Non-Veg filter
     if (vegFilter !== 'All') {
-        menuToFilter = menuToFilter.map(category => {
-            const filteredSubCategories = category.subCategories.filter(subCategory => subCategory.name === vegFilter);
-            if (filteredSubCategories.length > 0) {
-                return { ...category, subCategories: filteredSubCategories };
-            }
-            return null;
-        }).filter((category): category is MenuCategory => category !== null);
+        menuToFilter = menuToFilter.map(category => ({
+            ...category,
+            subCategories: category.subCategories.filter(subCategory => subCategory.name === vegFilter)
+        })).filter(category => category.subCategories.length > 0);
     }
 
     return menuToFilter;
@@ -1065,13 +1065,11 @@ export default function PosSystem({
     const itemStatus = menuItemStatus[item.name];
     const categoryColorName = categoryColors[categoryName];
     
-    let finalColorName = categoryColorName ? colorPalette[categoryColorName]?.light : (isNonVeg ? nonVegColor : vegColor);
-    if(itemStatus) {
-        if (itemStatus === 'out') {
-            finalColorName = 'bg-red-500 text-white dark:bg-red-700';
-        } else {
-            finalColorName = itemStatusColors[itemStatus].light;
-        }
+    let finalColorName;
+    if (itemStatus && itemStatus === 'out') {
+        finalColorName = itemStatusColors[itemStatus]?.light ?? (isNonVeg ? nonVegColor : vegColor);
+    } else {
+        finalColorName = categoryColorName ? colorPalette[categoryColorName]?.light : (isNonVeg ? nonVegColor : vegColor);
     }
 
     const menuItemCard = (
@@ -1088,7 +1086,7 @@ export default function PosSystem({
           <div>
             <div className="flex justify-between items-start mb-2">
               <div className="flex items-center gap-2">
-                  <span className={cn('h-4 w-4 rounded-sm border border-black', isNonVeg ? 'bg-red-500' : 'bg-green-500')}></span>
+                  <span className={cn('h-3 w-3 rounded-full border border-black', isNonVeg ? 'bg-red-500' : 'bg-green-500')}></span>
                   <span className="font-semibold pr-2">{item.name}</span>
               </div>
               <span className="font-mono text-right whitespace-nowrap">₹{item.price.toFixed(2)}</span>
@@ -1115,13 +1113,9 @@ export default function PosSystem({
         <div className="absolute bottom-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
           <Popover>
             <PopoverTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-6 w-6"
-                >
-                  <Palette className="h-4 w-4" />
-                </Button>
+              <div role="button" className="p-1 rounded-md hover:bg-black/10">
+                <Palette className="h-4 w-4" />
+              </div>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-2">
               <div className="flex flex-col gap-1">
@@ -1148,14 +1142,11 @@ export default function PosSystem({
 
   const CategoryColorPicker = ({ categoryName }: { categoryName: string }) => {
     return (
-      <div onClick={(e) => e.stopPropagation()}>
         <Popover>
           <PopoverTrigger asChild>
-              <div role="button" aria-label={`Change category color for ${categoryName}`} className="p-1">
-                <div className={cn("h-6 w-6 flex items-center justify-center rounded-md hover:bg-white/30")}>
-                  <Palette className="h-4 w-4" />
-                </div>
-              </div>
+            <div role="button" aria-label={`Change category color for ${categoryName}`} className="p-1 rounded-md hover:bg-black/10">
+                <Palette className="h-4 w-4" />
+            </div>
           </PopoverTrigger>
           <PopoverContent className="w-auto p-2">
             <div className="grid grid-cols-5 gap-1">
@@ -1172,7 +1163,6 @@ export default function PosSystem({
             </div>
           </PopoverContent>
         </Popover>
-      </div>
     );
   };
 
@@ -1186,7 +1176,9 @@ export default function PosSystem({
                 <h2 className="text-xl font-bold flex-grow text-left">
                   {category.category}
                 </h2>
-                <CategoryColorPicker categoryName={category.category} />
+                <div onClick={(e) => e.stopPropagation()}>
+                    <CategoryColorPicker categoryName={category.category} />
+                </div>
               </div>
 
               <div className="space-y-4 pt-2">
@@ -1214,8 +1206,10 @@ export default function PosSystem({
                     <TabsTrigger value={category.category} className={cn("rounded-none border-b-2 border-transparent data-[state=active]:shadow-none px-4 py-2 cursor-pointer", categoryColors[category.category] ? colorPalette[categoryColors[category.category]]?.dark : '')}>
                       <span className="flex-grow text-left text-lg text-black">{category.category}</span>
                     </TabsTrigger>
-                    <div className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <CategoryColorPicker categoryName={category.category} />
+                     <div className="absolute right-0 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div onClick={(e) => e.stopPropagation()}>
+                          <CategoryColorPicker categoryName={category.category} />
+                        </div>
                     </div>
                   </div>
                 ))}
@@ -1248,9 +1242,11 @@ export default function PosSystem({
         >
             {filteredMenu.map(category => (
                 <AccordionItem key={category.category} value={category.category} className="border-b-0">
-                    <AccordionTrigger className={cn("p-3 rounded-md text-lg font-bold hover:no-underline flex justify-between", categoryColors[category.category] ? colorPalette[categoryColors[category.category]]?.dark : 'bg-muted')}>
+                     <AccordionTrigger className={cn("p-3 rounded-md text-lg font-bold hover:no-underline flex justify-between items-center", categoryColors[category.category] ? colorPalette[categoryColors[category.category]]?.dark : 'bg-muted')}>
                         <span className="flex-grow text-left text-black">{category.category}</span>
-                        <CategoryColorPicker categoryName={category.category} />
+                        <div className="flex items-center" onClick={e => e.stopPropagation()}>
+                           <CategoryColorPicker categoryName={category.category} />
+                        </div>
                     </AccordionTrigger>
                     <AccordionContent className="p-2 space-y-2">
                         {category.subCategories.map(subCategory => (
@@ -1371,75 +1367,82 @@ export default function PosSystem({
         <div className="md:col-span-2 xl:col-span-3 flex flex-col h-full">
           <Card className="flex flex-col flex-grow">
             <CardHeader>
-              <div className="flex items-start justify-between gap-4 flex-wrap">
-                 <div className="flex items-center gap-2">
+                <div className="flex flex-col gap-4">
+                  <div className="flex justify-between items-start gap-4 flex-wrap">
                     <Button variant="outline" size="sm" onClick={() => setIsMenuManagerOpen(true)}>
                         <BookOpen className="mr-2 h-4 w-4" /> Manage Menu
                     </Button>
-                </div>
-                <div className="flex-grow grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="relative sm:col-span-2">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                    <Input
-                      placeholder="Search menu items..."
-                      className="pl-10"
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                    />
+                    <div className="flex-grow grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="relative sm:col-span-2">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                            <Input
+                                placeholder="Search menu items..."
+                                className="pl-10"
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
+                        </div>
+                        <div className="relative">
+                            <QrCodeIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                            <Input
+                                placeholder="Enter item code..."
+                                className="pl-10"
+                                value={itemCodeInput}
+                                onChange={(e) => setItemCodeInput(e.target.value)}
+                                onKeyDown={handleCodeEntry}
+                            />
+                        </div>
+                    </div>
                   </div>
-                  <div className="relative">
-                    <QrCodeIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                    <Input
-                      placeholder="Enter item code..."
-                      className="pl-10"
-                      value={itemCodeInput}
-                      onChange={(e) => setItemCodeInput(e.target.value)}
-                      onKeyDown={handleCodeEntry}
-                    />
-                  </div>
-                   <div className="flex items-center gap-2">
-                        <Label>Filter:</Label>
-                        <Button variant={vegFilter === 'All' ? 'secondary' : 'outline'} size="sm" onClick={() => setVegFilter('All')}>All</Button>
-                        <Button variant={vegFilter === 'Veg' ? 'secondary' : 'outline'} size="sm" onClick={() => setVegFilter('Veg')} className="border-green-500 text-green-600 hover:bg-green-50">Veg</Button>
-                        <Button variant={vegFilter === 'Non-Veg' ? 'secondary' : 'outline'} size="sm" onClick={() => setVegFilter('Non-Veg')} className="border-red-500 text-red-600 hover:bg-red-50">Non-Veg</Button>
+                   <div className="flex justify-between items-center gap-4 flex-wrap">
+                     <RadioGroup value={vegFilter} onValueChange={(v) => setVegFilter(v as VegFilter)} className="flex items-center gap-2">
+                        <RadioGroupItem value="All" id="filter-all" className="sr-only" />
+                        <Label htmlFor="filter-all" className={cn("p-2 rounded-md cursor-pointer", vegFilter === 'All' && 'bg-primary text-primary-foreground')}>All</Label>
+
+                        <RadioGroupItem value="Veg" id="filter-veg" className="sr-only" />
+                        <Label htmlFor="filter-veg" className={cn("p-2 rounded-md cursor-pointer border border-green-500 text-green-600 hover:bg-green-50", vegFilter === 'Veg' && 'bg-green-500 text-white')}>Veg</Label>
+                        
+                        <RadioGroupItem value="Non-Veg" id="filter-nonveg" className="sr-only" />
+                        <Label htmlFor="filter-nonveg" className={cn("p-2 rounded-md cursor-pointer border border-red-500 text-red-600 hover:bg-red-50", vegFilter === 'Non-Veg' && 'bg-red-500 text-white')}>Non-Veg</Label>
+                    </RadioGroup>
+
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <RadioGroup value={viewMode} onValueChange={(v) => setViewMode(v as ViewMode)} className="flex items-center">
+                          <RadioGroupItem value="accordion" id="accordion-view" className="sr-only" />
+                          <Label htmlFor="accordion-view" className={cn("p-1.5 rounded-md cursor-pointer transition-colors", viewMode === 'accordion' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent' )}>
+                            <List className="h-5 w-5 box-content" />
+                          </Label>
+
+                          <RadioGroupItem value="grid" id="grid-view" className="sr-only" />
+                          <Label htmlFor="grid-view" className={cn("p-1.5 rounded-md cursor-pointer transition-colors", viewMode === 'grid' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent' )}>
+                            <LayoutGrid className="h-5 w-5 box-content" />
+                          </Label>
+
+                          <RadioGroupItem value="list" id="list-view" className="sr-only" />
+                          <Label htmlFor="list-view" className={cn("p-1.5 rounded-md cursor-pointer transition-colors", viewMode === 'list' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent' )}>
+                            <Rows className="h-5 w-5 box-content" />
+                          </Label>
+                      </RadioGroup>
+                      <Separator orientation="vertical" className="h-8" />
+                      <Button variant="outline" size="sm" onClick={handleShuffleColors}>
+                        <Shuffle className="mr-2 h-4 w-4" /> Colors
+                      </Button>
+                      {viewMode === 'accordion' && (
+                        <Button variant="outline" size="sm" onClick={toggleAccordion}>
+                          <ChevronsUpDown className="mr-2 h-4 w-4" />
+                          {allItemsOpen ? 'Collapse' : 'Expand'}
+                        </Button>
+                      )}
+                       <div className="flex items-center space-x-2">
+                            <Switch id="easy-mode-switch" checked={easyMode} onCheckedChange={setEasyMode} />
+                            <Label htmlFor="easy-mode-switch" className="flex items-center gap-2 cursor-pointer">
+                                <MousePointerClick className="h-4 w-4" />
+                                Easy Mode
+                            </Label>
+                        </div>
                     </div>
                 </div>
-                <div className="flex items-center gap-2 flex-wrap">
-                  <RadioGroup value={viewMode} onValueChange={(v) => setViewMode(v as ViewMode)} className="flex items-center">
-                      <RadioGroupItem value="accordion" id="accordion-view" className="sr-only" />
-                      <Label htmlFor="accordion-view" className={cn("p-1.5 rounded-md cursor-pointer transition-colors", viewMode === 'accordion' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent' )}>
-                        <List className="h-5 w-5 box-content" />
-                      </Label>
-
-                      <RadioGroupItem value="grid" id="grid-view" className="sr-only" />
-                      <Label htmlFor="grid-view" className={cn("p-1.5 rounded-md cursor-pointer transition-colors", viewMode === 'grid' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent' )}>
-                        <LayoutGrid className="h-5 w-5 box-content" />
-                      </Label>
-
-                      <RadioGroupItem value="list" id="list-view" className="sr-only" />
-                      <Label htmlFor="list-view" className={cn("p-1.5 rounded-md cursor-pointer transition-colors", viewMode === 'list' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent' )}>
-                        <Rows className="h-5 w-5 box-content" />
-                      </Label>
-                  </RadioGroup>
-                  <Separator orientation="vertical" className="h-8" />
-                  <Button variant="outline" size="sm" onClick={handleShuffleColors}>
-                    <Shuffle className="mr-2 h-4 w-4" /> Colors
-                  </Button>
-                  {viewMode === 'accordion' && (
-                    <Button variant="outline" size="sm" onClick={toggleAccordion}>
-                      <ChevronsUpDown className="mr-2 h-4 w-4" />
-                      {allItemsOpen ? 'Collapse' : 'Expand'}
-                    </Button>
-                  )}
-                   <div className="flex items-center space-x-2">
-                        <Switch id="easy-mode-switch" checked={easyMode} onCheckedChange={setEasyMode} />
-                        <Label htmlFor="easy-mode-switch" className="flex items-center gap-2 cursor-pointer">
-                            <MousePointerClick className="h-4 w-4" />
-                            Easy Mode
-                        </Label>
-                    </div>
-                </div>
-              </div>
+            </div>
             </CardHeader>
             <ScrollArea className="flex-grow px-4">
                 {renderMenuContent()}

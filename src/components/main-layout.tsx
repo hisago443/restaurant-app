@@ -350,7 +350,7 @@ export default function MainLayout() {
       </header>
        <DndProvider backend={HTML5Backend}>
         <Tabs value={activeTab} onValueChange={handleTabChange} className="h-full flex flex-col">
-          <div className="flex justify-center border-b bg-blue-50 dark:bg-blue-900/20">
+          <div className="flex justify-center border-b kitchen-tabs">
             <TabsList className="m-2 p-0 h-auto bg-transparent">
               <TabsTrigger value="pos" className="px-4 py-2 text-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md flex items-center gap-2">
                   <Utensils /> Main
