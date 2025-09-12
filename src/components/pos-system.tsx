@@ -151,7 +151,7 @@ const TableDropTarget = ({ table, occupancyCount, handleSelectTable, children, o
     const [{ isOver, canDrop }, drop] = useDrop(() => ({
         accept: ItemTypes.MENU_ITEM,
         drop: (item: MenuItem) => onDropItem(table.id, item),
-        canDrop: () => table.status === 'Available',
+        canDrop: () => table.status === 'Available' || table.status === 'Occupied',
         collect: (monitor) => ({
             isOver: !!monitor.isOver(),
             canDrop: !!monitor.canDrop(),
@@ -164,7 +164,7 @@ const TableDropTarget = ({ table, occupancyCount, handleSelectTable, children, o
         <div
             ref={drop}
             className={cn(
-                "h-16 w-full flex-col justify-center items-center relative p-1 border-2 transition-transform duration-150 active:scale-95 group flex rounded-md cursor-pointer",
+                "h-20 w-full flex-col justify-center items-center relative p-1 border-2 transition-transform duration-150 active:scale-95 group flex rounded-md cursor-pointer",
                 getDynamicColor(table.status, occupancyCount[table.id] || 0),
                 isActive && 'ring-4 ring-offset-2 ring-green-500',
                 table.status === 'Available' || table.status === 'Occupied' ? 'text-white border-black' : 'text-black border-black/50',
@@ -828,36 +828,34 @@ export default function PosSystem({
     const handleDropItemOnTable = (tableId: number, item: MenuItem) => {
       if (!easyMode) return;
       const table = tables.find(t => t.id === tableId);
-      if (!table || table.status !== 'Available') {
+      if (!table || (table.status !== 'Available' && table.status !== 'Occupied')) {
         toast({
           variant: 'destructive',
           title: 'Table Not Available',
-          description: `Table ${tableId} is currently ${table?.status}.`
+          description: `Cannot add items to a ${table?.status} table.`
         });
         return;
       }
       
-      // If there's an ongoing unassigned order, this drop action is ambiguous.
-      if (orderItems.length > 0 && !selectedTableId) {
-        toast({
-          title: 'Assign Order First',
-          description: 'Click the available table to assign the current order, then add more items.',
-        });
-        return;
-      }
-
       // If a different table is selected, switch to the new table
       if (selectedTableId !== tableId) {
-        setSelectedTableId(tableId);
-        // Let useEffect handle clearing/loading the order.
+        handleSelectTable(tableId);
+        // Add item to the order (for the now-selected table)
+        // A small delay to allow state to update from handleSelectTable
+        setTimeout(() => {
+          addToOrder(item, 1);
+          toast({
+            title: 'Item Added',
+            description: `1 x ${item.name} added to order for Table ${tableId}.`
+          });
+        }, 50)
+      } else {
+        addToOrder(item, 1);
+        toast({
+          title: 'Item Added',
+          description: `1 x ${item.name} added to order for Table ${tableId}.`
+        });
       }
-      
-      // Add item to the order (for the now-selected table)
-      addToOrder(item, 1);
-      toast({
-        title: 'Item Added',
-        description: `Started order for Table ${tableId} with ${item.name}.`
-      });
     };
 
 
@@ -1032,7 +1030,8 @@ export default function PosSystem({
         className={cn(
           "group rounded-lg transition-all hover:shadow-md relative overflow-hidden h-full flex flex-col min-h-[110px]",
           finalColorName,
-          easyMode && "cursor-pointer hover:scale-105"
+          easyMode && "cursor-pointer hover:scale-105",
+          (itemStatus === 'out') && "pointer-events-none opacity-60"
         )}
         onClick={() => handleItemClick(item)}
       >
@@ -1088,7 +1087,7 @@ export default function PosSystem({
     );
 
     return (
-        <DraggableMenuItem key={item.name} item={item} canDrag={easyMode}>
+        <DraggableMenuItem key={item.name} item={item} canDrag={easyMode && itemStatus !== 'out'}>
             {menuItemCard}
         </DraggableMenuItem>
     );
