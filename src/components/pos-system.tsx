@@ -18,11 +18,10 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from '@/hooks/use-toast';
-import { Search, Plus, Minus, X, LayoutGrid, List, Rows, ChevronsUpDown, Palette, Shuffle, ClipboardList, Send, CheckCircle2, Users, Bookmark, Sparkles, Repeat, Edit, UserCheck, BookmarkX, Printer, Loader2, BookOpen, Trash2 as TrashIcon, MoreVertical, View, Pencil, QrCode as QrCodeIcon, MousePointerClick, Move, ShoppingCart } from 'lucide-react';
+import { Search, Plus, Minus, X, LayoutGrid, List, Rows, ChevronsUpDown, Palette, Shuffle, ClipboardList, Send, CheckCircle2, Users, Bookmark, Sparkles, Repeat, Edit, UserCheck, BookmarkX, Printer, Loader2, BookOpen, Trash2 as TrashIcon, QrCode as QrCodeIcon, MousePointerClick } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { useDrag, useDrop, DndProvider } from 'react-dnd';
-import { HTML5Backend } from 'react-dnd-html5-backend';
+import { useDrag, useDrop } from 'react-dnd';
 import { AddItemDialog } from './add-item-dialog';
 import { ManageMenuDialog } from './manage-menu-dialog';
 
@@ -30,7 +29,7 @@ import type { MenuCategory, MenuItem, OrderItem, Table, Order, Bill, TableStatus
 import menuData from '@/data/menu.json';
 import { generateReceipt, type GenerateReceiptInput } from '@/ai/flows/dynamic-receipt-discount-reasoning';
 import { PaymentDialog } from './payment-dialog';
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogClose, DialogDescription } from './ui/dialog';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog';
 
 const vegColor = 'bg-green-100 dark:bg-green-900/30';
 const nonVegColor = 'bg-rose-100 dark:bg-rose-900/30';
@@ -149,18 +148,17 @@ function DraggableMenuItem({ item, children, canDrag }: { item: MenuItem; childr
     );
 }
 
-const TableDropTarget = ({ table, occupancyCount, handleSelectTable, children, onDropItem, canDropItem }: { table: Table; occupancyCount: Record<number,number>, handleSelectTable: (id: number) => void, children: React.ReactNode; onDropItem: (tableId: number, item: MenuItem) => void; canDropItem: boolean; }) => {
+const TableDropTarget = ({ table, occupancyCount, handleSelectTable, children, onDropItem }: { table: Table; occupancyCount: Record<number,number>, handleSelectTable: (id: number) => void, children: React.ReactNode; onDropItem: (tableId: number, item: MenuItem) => void; }) => {
     const [{ isOver, canDrop }, drop] = useDrop(() => ({
         accept: ItemTypes.MENU_ITEM,
         drop: (item: MenuItem) => onDropItem(table.id, item),
-        canDrop: () => canDropItem,
+        canDrop: () => table.status === 'Available',
         collect: (monitor) => ({
             isOver: !!monitor.isOver(),
             canDrop: !!monitor.canDrop(),
         }),
     }));
 
-    const isSelected = false; // This component doesn't manage selection state directly
     const isActive = isOver && canDrop;
 
     return (
@@ -169,7 +167,6 @@ const TableDropTarget = ({ table, occupancyCount, handleSelectTable, children, o
             className={cn(
                 "h-14 w-full flex-col justify-center items-center relative p-1 border-2 transition-transform duration-150 active:scale-95 group flex rounded-md cursor-pointer",
                 getDynamicColor(table.status, occupancyCount[table.id] || 0),
-                isSelected && 'ring-4 ring-offset-2 ring-ring',
                 isActive && 'ring-4 ring-offset-2 ring-green-500',
                 table.status === 'Available' || table.status === 'Occupied' ? 'text-white border-black' : 'text-black border-black/50',
             )}
@@ -202,8 +199,6 @@ function OrderPanel({
     handlePrintProvisionalBill,
     handleProcessPayment,
     receiptPreview,
-    canDropOnOrder,
-    canDropOnTable
 }: {
     orderItems: OrderItem[];
     originalOrderItems: OrderItem[];
@@ -226,13 +221,11 @@ function OrderPanel({
     handlePrintProvisionalBill: () => Promise<void>;
     handleProcessPayment: () => Promise<void>;
     receiptPreview: string;
-    canDropOnOrder: boolean;
-    canDropOnTable: boolean;
 }) {
     const [{ isOver, canDrop }, drop] = useDrop(() => ({
         accept: ItemTypes.MENU_ITEM,
         drop: (item: MenuItem) => handleDropOnOrder(item),
-        canDrop: () => canDropOnOrder,
+        canDrop: () => true, // Always allow dropping on the order panel itself
         collect: (monitor) => ({
             isOver: !!monitor.isOver(),
             canDrop: !!monitor.canDrop(),
@@ -257,7 +250,6 @@ function OrderPanel({
         const renderItemRow = (item: OrderItem, isNewOrUpdated: boolean) => {
             const originalQuantity = originalItemsMap.get(item.name) || 0;
             const isNew = !originalItemsMap.has(item.name);
-            const isUpdated = originalQuantity > 0 && item.quantity > originalQuantity;
             const quantityChange = item.quantity - originalQuantity;
             
             const itemClass = isNewOrUpdated
@@ -367,7 +359,7 @@ function OrderPanel({
                 <div className="space-y-2">
                     <div className="grid grid-cols-5 gap-1.5">
                         {tables.map(table => (
-                            <TableDropTarget key={table.id} table={table} occupancyCount={occupancyCount} handleSelectTable={() => handleSelectTable(table.id)} onDropItem={onDropItemOnTable} canDropItem={canDropOnTable}>
+                            <TableDropTarget key={table.id} table={table} occupancyCount={occupancyCount} handleSelectTable={() => handleSelectTable(table.id)} onDropItem={onDropItemOnTable}>
                                 <div className="absolute top-1 left-1">
                                     {React.createElement(statusIcons[table.status], { className: "h-3 w-3" })}
                                 </div>
@@ -480,9 +472,8 @@ export default function PosSystem({
   const typedMenuData: MenuCategory[] = menu;
 
   const currentActiveTableId = useMemo(() => {
-    if (activeOrder) return activeOrder.tableId;
     return selectedTableId;
-  }, [activeOrder, selectedTableId]);
+  }, [selectedTableId]);
   
   const allMenuItems: MenuItem[] = useMemo(() => 
     typedMenuData.flatMap(cat => cat.subCategories.flatMap(sub => sub.items)),
@@ -612,32 +603,12 @@ export default function PosSystem({
     if (activeOrder) {
       setOriginalOrderItems([...activeOrder.items]);
     } else {
-       if (selectedTableId && pendingOrders[selectedTableId]) {
-         setOriginalOrderItems([]);
-       } else if (orderItems.length === 0) {
-           clearCurrentOrder(true);
-       }
+      setOriginalOrderItems([]);
     }
-  }, [activeOrder, selectedTableId, pendingOrders, orderItems.length, clearCurrentOrder]);
+  }, [activeOrder]);
 
   const handleSelectTable = (tableId: number | null) => {
-    const table = tables.find(t => t.id === tableId);
-    if (!table && tableId !== null) return;
-  
-    if (table && table.status === 'Cleaning') {
-      updateTableStatus([tableId!], 'Available');
-      toast({ title: `Table ${tableId} is now Available.` });
-      if (selectedTableId === tableId) {
-        setSelectedTableId(null);
-      }
-      return;
-    }
-     // If there's an unassigned order and an available table is clicked
-    if (!activeOrder && orderItems.length > 0 && table?.status === 'Available') {
-        setSelectedTableId(tableId);
-    } else {
-        setSelectedTableId(tableId);
-    }
+    setSelectedTableId(tableId);
   };
   
   const setItemStatus = (itemName: string, status: string) => {
@@ -709,13 +680,11 @@ export default function PosSystem({
   };
   
   const handleDropOnOrder = (item: MenuItem) => {
-      if (easyMode) {
-        addToOrder(item, 1);
-        toast({
-            title: "Item Added",
-            description: `1 x ${item.name} added to the current order.`
-        });
-      }
+    addToOrder(item, 1);
+    toast({
+        title: "Item Added",
+        description: `1 x ${item.name} added to the current order.`
+    });
   }
 
   const handleAddButtonClick = (item: MenuItem) => {
@@ -863,49 +832,43 @@ export default function PosSystem({
         addOrder(orderPayload);
         updateTableStatus([currentActiveTableId], 'Occupied');
         
-        // Clear pending order for this table
-        setPendingOrders(prev => {
-            const newPending = {...prev};
-            if (currentActiveTableId) delete newPending[currentActiveTableId];
-            return newPending;
-        });
-
-        toast({ title: 'Order Sent!', description: `KOT sent to the kitchen for Table ${currentActiveTableId}.` });
         }
         setIsProcessing(false);
     }, 50);
   };
   
     const handleDropItemOnTable = (tableId: number, item: MenuItem) => {
-        if (!easyMode) return; 
+      const table = tables.find(t => t.id === tableId);
+      if (!table || table.status !== 'Available') {
+        toast({
+          variant: 'destructive',
+          title: 'Table Not Available',
+          description: `Table ${tableId} is currently ${table?.status}.`
+        });
+        return;
+      }
+      
+      // If there's an ongoing unassigned order, this drop action is ambiguous.
+      if (orderItems.length > 0 && !selectedTableId) {
+        toast({
+          title: 'Assign Order First',
+          description: 'Click the available table to assign the current order, then add more items.',
+        });
+        return;
+      }
 
-        const tableIsSelected = selectedTableId === tableId;
-        const isNewOrder = !activeOrder && orderItems.length === 0;
-
-        if (tableIsSelected) {
-            // If the table is already selected, just add the item
-            addToOrder(item, 1);
-            toast({ title: 'Item Added', description: `Added ${item.name} to Table ${tableId}.` });
-        } else {
-            if(isNewOrder) {
-                // If it's a completely new order, select the table and add the item.
-                setSelectedTableId(tableId);
-                setTimeout(() => {
-                    addToOrder(item, 1);
-                    toast({ title: 'Order Started', description: `Started order for Table ${tableId} with ${item.name}.` });
-                }, 0);
-            } else {
-                if (orderItems.length > 0 && !selectedTableId) {
-                     handleSelectTable(tableId);
-                } else {
-                     toast({
-                        variant: 'destructive',
-                        title: 'Switching Tables?',
-                        description: 'Clear the current order before starting a new one on a different table.',
-                    });
-                }
-            }
-        }
+      // If a different table is selected, switch to the new table
+      if (selectedTableId !== tableId) {
+        setSelectedTableId(tableId);
+        // Let useEffect handle clearing/loading the order.
+      }
+      
+      // Add item to the order (for the now-selected table)
+      addToOrder(item, 1);
+      toast({
+        title: 'Item Added',
+        description: `Started order for Table ${tableId} with ${item.name}.`
+      });
     };
 
 
@@ -979,7 +942,6 @@ export default function PosSystem({
     }
   
     clearCurrentOrder(true);
-    setDiscount(0);
   };
 
   const handlePrintProvisionalBill = async () => {
@@ -1067,8 +1029,10 @@ export default function PosSystem({
     const categoryColorName = categoryColors[categoryName];
     
     let finalColorName;
-    if (itemStatus && (itemStatus === 'out' || itemStatus === 'low')) {
-        finalColorName = itemStatusColors[itemStatus]?.light ?? (isNonVeg ? nonVegColor : vegColor);
+    if (itemStatus === 'out') {
+      finalColorName = itemStatusColors.out.light;
+    } else if (itemStatus === 'low') {
+      finalColorName = itemStatusColors.low.light;
     } else {
         finalColorName = categoryColorName ? colorPalette[categoryColorName]?.light : (isNonVeg ? nonVegColor : vegColor);
     }
@@ -1079,7 +1043,7 @@ export default function PosSystem({
         className={cn(
           "group rounded-lg transition-all hover:shadow-md relative overflow-hidden h-full flex flex-col min-h-[110px]",
           finalColorName,
-          easyMode && 'cursor-pointer hover:scale-105'
+          easyMode && "cursor-pointer hover:scale-105"
         )}
         onClick={() => handleItemClick(item)}
       >
@@ -1093,22 +1057,20 @@ export default function PosSystem({
               <span className="font-mono text-right whitespace-nowrap">₹{item.price.toFixed(2)}</span>
             </div>
           </div>
-          {!easyMode && (
-              <div className="flex justify-center w-full mt-auto pt-2">
-                <Button
-                    size="sm"
-                    variant="secondary"
-                    className="h-7 text-xs px-10"
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        handleAddButtonClick(item);
-                    }}
-                >
-                    <Plus className="mr-1 h-3 w-3" />
-                    Add
-                </Button>
-              </div>
-            )}
+          <div className="flex justify-center w-full mt-auto pt-2">
+              <Button
+                  size="sm"
+                  variant="secondary"
+                  className="h-7 text-xs px-10"
+                  onClick={(e) => {
+                      e.stopPropagation();
+                      handleAddButtonClick(item);
+                  }}
+              >
+                  <Plus className="mr-1 h-3 w-3" />
+                  Add
+              </Button>
+          </div>
         </CardContent>
         <p className="absolute bottom-1 left-2 text-xs text-muted-foreground font-mono">{item.code}</p>
         <div className="absolute bottom-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
@@ -1135,7 +1097,7 @@ export default function PosSystem({
     );
 
     return (
-        <DraggableMenuItem key={item.name} item={item} canDrag={easyMode}>
+        <DraggableMenuItem key={item.name} item={item} canDrag={true}>
             {menuItemCard}
         </DraggableMenuItem>
     );
@@ -1277,120 +1239,116 @@ export default function PosSystem({
   
 
   return (
-    <DndProvider backend={HTML5Backend}>
-      <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-4 gap-4 h-full p-4">
-        {/* Menu Panel */}
-        <div className="md:col-span-2 xl:col-span-3 flex flex-col h-full">
-          <Card className="flex flex-col flex-grow">
-            <CardHeader>
-                <div className="flex flex-col gap-4">
-                    <div className="flex justify-between items-start flex-wrap gap-4">
-                        <div className="flex items-center gap-2 flex-wrap">
-                             <div className="relative min-w-[200px]">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                                <Input
-                                    placeholder="Search menu items..."
-                                    className="pl-10 h-10"
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                />
-                            </div>
-                            <div className="relative min-w-[200px]">
-                                <QrCodeIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                                <Input
-                                    placeholder="Enter item code..."
-                                    className="pl-10 h-10"
-                                    value={itemCodeInput}
-                                    onChange={(e) => setItemCodeInput(e.target.value)}
-                                    onKeyDown={handleCodeEntry}
-                                />
-                            </div>
-                             <RadioGroup value={vegFilter} onValueChange={(v) => setVegFilter(v as VegFilter)} className="flex items-center gap-2">
-                                <RadioGroupItem value="All" id="filter-all" className="sr-only" />
-                                <Label htmlFor="filter-all" className={cn("h-10 flex items-center justify-center px-4 rounded-md cursor-pointer border-2 font-semibold text-lg", vegFilter === 'All' ? 'bg-primary text-primary-foreground border-primary' : 'bg-background text-foreground hover:bg-accent')}>All</Label>
-                                
-                                <RadioGroupItem value="Veg" id="filter-veg" className="sr-only" />
-                                <Label htmlFor="filter-veg" className={cn("h-10 flex items-center justify-center px-4 rounded-md cursor-pointer border-2 font-semibold text-lg", vegFilter === 'Veg' ? 'bg-green-600 text-white border-green-600' : 'text-green-600 border-green-500 hover:bg-green-50')}>Veg</Label>
-                                
-                                <RadioGroupItem value="Non-Veg" id="filter-nonveg" className="sr-only" />
-                                <Label htmlFor="filter-nonveg" className={cn("h-10 flex items-center justify-center px-4 rounded-md cursor-pointer border-2 font-semibold text-lg", vegFilter === 'Non-Veg' ? 'bg-red-600 text-white border-red-600' : 'text-red-600 border-red-500 hover:bg-red-50')}>Non-Veg</Label>
-                            </RadioGroup>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <div className="flex items-center space-x-2">
-                                <Switch id="easy-mode-switch" checked={easyMode} onCheckedChange={setEasyMode} />
-                                <Label htmlFor="easy-mode-switch" className="flex items-center gap-2 cursor-pointer">
-                                    <MousePointerClick className="h-4 w-4" />
-                                    Easy Mode
-                                </Label>
-                            </div>
-                            <Separator orientation="vertical" className="h-8" />
-                             <RadioGroup value={viewMode} onValueChange={(v) => setViewMode(v as ViewMode)} className="flex items-center">
-                                <Label className={cn("p-1.5 rounded-md cursor-pointer transition-colors", viewMode === 'grid' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent' )}>
-                                    <RadioGroupItem value="grid" id="grid-view" className="sr-only" />
-                                    <LayoutGrid className="h-5 w-5 box-content" />
-                                </Label>
-                                <Label className={cn("p-1.5 rounded-md cursor-pointer transition-colors", viewMode === 'accordion' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent' )}>
-                                    <RadioGroupItem value="accordion" id="accordion-view" className="sr-only" />
-                                    <List className="h-5 w-5 box-content" />
-                                </Label>
-                                <Label className={cn("p-1.5 rounded-md cursor-pointer transition-colors", viewMode === 'list' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent' )}>
-                                    <RadioGroupItem value="list" id="list-view" className="sr-only" />
-                                    <Rows className="h-5 w-5 box-content" />
-                                </Label>
-                            </RadioGroup>
-                        </div>
-                    </div>
-                     <div className="flex justify-end items-center gap-2">
-                        <Button variant="outline" size="sm" onClick={() => setIsMenuManagerOpen(true)}>
-                            <BookOpen className="mr-2 h-4 w-4" /> Manage Menu
-                        </Button>
-                        <Button variant="outline" size="sm" onClick={handleShuffleColors}>
-                            <Shuffle className="mr-2 h-4 w-4" /> Colors
-                        </Button>
-                        {viewMode === 'accordion' && (
-                            <Button variant="outline" size="sm" onClick={toggleAccordion}>
-                                <ChevronsUpDown className="mr-2 h-4 w-4" />
-                                {allItemsOpen ? 'Collapse' : 'Expand'}
-                            </Button>
-                        )}
-                    </div>
-                </div>
-            </CardHeader>
-            <ScrollArea className="flex-grow px-4">
-                {renderMenuContent()}
-            </ScrollArea>
-          </Card>
-        </div>
+    <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-4 gap-4 h-full p-4">
+      {/* Menu Panel */}
+      <div className="md:col-span-2 xl:col-span-3 flex flex-col h-full">
+        <Card className="flex flex-col flex-grow">
+          <CardHeader>
+              <div className="flex flex-col gap-4">
+                  <div className="flex justify-between items-start flex-wrap gap-4">
+                      <div className="flex items-center gap-2 flex-wrap">
+                           <div className="relative min-w-[200px]">
+                              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                              <Input
+                                  placeholder="Search menu items..."
+                                  className="pl-10 h-10"
+                                  value={searchTerm}
+                                  onChange={(e) => setSearchTerm(e.target.value)}
+                              />
+                          </div>
+                          <div className="relative min-w-[200px]">
+                              <QrCodeIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                              <Input
+                                  placeholder="Enter item code..."
+                                  className="pl-10 h-10"
+                                  value={itemCodeInput}
+                                  onChange={(e) => setItemCodeInput(e.target.value)}
+                                  onKeyDown={handleCodeEntry}
+                              />
+                          </div>
+                           <RadioGroup value={vegFilter} onValueChange={(v) => setVegFilter(v as VegFilter)} className="flex items-center gap-2">
+                              <RadioGroupItem value="All" id="filter-all" className="sr-only" />
+                              <Label htmlFor="filter-all" className={cn("h-10 flex items-center justify-center px-4 rounded-md cursor-pointer border-2 font-semibold text-lg", vegFilter === 'All' ? 'bg-primary text-primary-foreground border-primary' : 'bg-background text-foreground hover:bg-accent')}>All</Label>
+                              
+                              <RadioGroupItem value="Veg" id="filter-veg" className="sr-only" />
+                              <Label htmlFor="filter-veg" className={cn("h-10 flex items-center justify-center px-4 rounded-md cursor-pointer border-2 font-semibold text-lg", vegFilter === 'Veg' ? 'bg-green-600 text-white border-green-600' : 'text-green-600 border-green-500 hover:bg-green-50')}>Veg</Label>
+                              
+                              <RadioGroupItem value="Non-Veg" id="filter-nonveg" className="sr-only" />
+                              <Label htmlFor="filter-nonveg" className={cn("h-10 flex items-center justify-center px-4 rounded-md cursor-pointer border-2 font-semibold text-lg", vegFilter === 'Non-Veg' ? 'bg-red-600 text-white border-red-600' : 'text-red-600 border-red-500 hover:bg-red-50')}>Non-Veg</Label>
+                          </RadioGroup>
+                      </div>
+                      <div className="flex items-center gap-2">
+                          <div className="flex items-center space-x-2">
+                              <Switch id="easy-mode-switch" checked={easyMode} onCheckedChange={setEasyMode} />
+                              <Label htmlFor="easy-mode-switch" className="flex items-center gap-2 cursor-pointer">
+                                  <MousePointerClick className="h-4 w-4" />
+                                  Easy Mode
+                              </Label>
+                          </div>
+                          <Separator orientation="vertical" className="h-8" />
+                           <RadioGroup value={viewMode} onValueChange={(v) => setViewMode(v as ViewMode)} className="flex items-center">
+                              <Label className={cn("p-1.5 rounded-md cursor-pointer transition-colors", viewMode === 'grid' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent' )}>
+                                  <RadioGroupItem value="grid" id="grid-view" className="sr-only" />
+                                  <LayoutGrid className="h-5 w-5 box-content" />
+                              </Label>
+                              <Label className={cn("p-1.5 rounded-md cursor-pointer transition-colors", viewMode === 'accordion' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent' )}>
+                                  <RadioGroupItem value="accordion" id="accordion-view" className="sr-only" />
+                                  <List className="h-5 w-5 box-content" />
+                              </Label>
+                              <Label className={cn("p-1.5 rounded-md cursor-pointer transition-colors", viewMode === 'list' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent' )}>
+                                  <RadioGroupItem value="list" id="list-view" className="sr-only" />
+                                  <Rows className="h-5 w-5 box-content" />
+                              </Label>
+                          </RadioGroup>
+                      </div>
+                  </div>
+                   <div className="flex justify-end items-center gap-2">
+                      <Button variant="outline" size="sm" onClick={() => setIsMenuManagerOpen(true)}>
+                          <BookOpen className="mr-2 h-4 w-4" /> Manage Menu
+                      </Button>
+                      <Button variant="outline" size="sm" onClick={handleShuffleColors}>
+                          <Shuffle className="mr-2 h-4 w-4" /> Colors
+                      </Button>
+                      {viewMode === 'accordion' && (
+                          <Button variant="outline" size="sm" onClick={toggleAccordion}>
+                              <ChevronsUpDown className="mr-2 h-4 w-4" />
+                              {allItemsOpen ? 'Collapse' : 'Expand'}
+                          </Button>
+                      )}
+                  </div>
+              </div>
+          </CardHeader>
+          <ScrollArea className="flex-grow px-4">
+              {renderMenuContent()}
+          </ScrollArea>
+        </Card>
+      </div>
 
-        {/* Order Panel */}
-        <div className="md:col-span-1 xl:col-span-1 flex flex-col h-full">
-            <OrderPanel
-                orderItems={orderItems}
-                originalOrderItems={originalOrderItems}
-                handleDropOnOrder={handleDropOnOrder}
-                updateQuantity={updateQuantity}
-                removeFromOrder={removeFromOrder}
-                activeOrder={activeOrder}
-                currentActiveTableId={currentActiveTableId}
-                clearCurrentOrder={clearCurrentOrder}
-                subtotal={subtotal}
-                total={total}
-                discount={discount}
-                setDiscount={setDiscount}
-                isProcessing={isProcessing}
-                tables={tables}
-                occupancyCount={occupancyCount}
-                handleSelectTable={handleSelectTable}
-                onDropItemOnTable={handleDropItemOnTable}
-                handleSendToKitchen={handleSendToKitchen}
-                handlePrintProvisionalBill={handlePrintProvisionalBill}
-                handleProcessPayment={handleProcessPayment}
-                receiptPreview={receiptPreview}
-                canDropOnOrder={easyMode}
-                canDropOnTable={easyMode}
-            />
-        </div>
+      {/* Order Panel */}
+      <div className="md:col-span-1 xl:col-span-1 flex flex-col h-full">
+          <OrderPanel
+              orderItems={orderItems}
+              originalOrderItems={originalOrderItems}
+              handleDropOnOrder={handleDropOnOrder}
+              updateQuantity={updateQuantity}
+              removeFromOrder={removeFromOrder}
+              activeOrder={activeOrder}
+              currentActiveTableId={currentActiveTableId}
+              clearCurrentOrder={clearCurrentOrder}
+              subtotal={subtotal}
+              total={total}
+              discount={discount}
+              setDiscount={setDiscount}
+              isProcessing={isProcessing}
+              tables={tables}
+              occupancyCount={occupancyCount}
+              handleSelectTable={handleSelectTable}
+              onDropItemOnTable={handleDropItemOnTable}
+              handleSendToKitchen={handleSendToKitchen}
+              handlePrintProvisionalBill={handlePrintProvisionalBill}
+              handleProcessPayment={handleProcessPayment}
+              receiptPreview={receiptPreview}
+          />
       </div>
 
       <PaymentDialog
@@ -1434,6 +1392,6 @@ export default function PosSystem({
             </DialogFooter>
         </DialogContent>
       </Dialog>
-    </DndProvider>
+    </div>
   );
 }
