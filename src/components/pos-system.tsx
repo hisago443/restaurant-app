@@ -577,9 +577,9 @@ export default function PosSystem({
 
     const input: GenerateReceiptInput = {
         items: orderItems.map(item => ({ name: item.name, price: item.price, quantity: item.quantity })),
-        discount: discount,
-        subtotal: subtotal,
-        total: total,
+        discount,
+        subtotal,
+        total,
     };
     try {
         const result = await generateReceipt(input);
@@ -1091,9 +1091,10 @@ export default function PosSystem({
               <span className="font-mono text-right whitespace-nowrap">₹{item.price.toFixed(2)}</span>
             </div>
           </div>
-           <div className="flex justify-between items-end">
+          <div className="flex justify-between items-end">
             <span className="text-xs font-mono text-black/60">{item.code}</span>
             {!easyMode && (
+              <div className="flex justify-center w-full">
                 <Button
                     size="sm"
                     variant="secondary"
@@ -1106,6 +1107,7 @@ export default function PosSystem({
                     <Plus className="mr-1 h-3 w-3" />
                     Add
                 </Button>
+              </div>
             )}
           </div>
         </CardContent>
@@ -1274,19 +1276,7 @@ export default function PosSystem({
   };
 
   const renderTableActions = (table: Table) => {
-    return (
-        <Button
-          variant="ghost"
-          size="icon"
-          className="absolute top-0.5 right-0.5 h-7 w-7 bg-black/20 hover:bg-black/40 text-white opacity-0 group-hover:opacity-100 transition-opacity"
-          onClick={(e) => {
-              e.stopPropagation();
-              onViewTableDetails(table.id);
-          }}
-          >
-          <MoreVertical className="h-4 w-4" />
-        </Button>
-    );
+    return null;
   };
   
 
@@ -1455,5 +1445,7 @@ export default function PosSystem({
     </DndProvider>
   );
 }
+
+    
 
     
