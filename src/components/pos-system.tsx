@@ -669,15 +669,7 @@ export default function PosSystem({
         menuToFilter = menuToFilter.map(category => ({
             ...category,
             subCategories: category.subCategories.filter(subCategory => {
-                const subCatName = subCategory.name.toLowerCase();
-                if (vegFilter === 'Veg') {
-                    // Include 'Veg' subcategories or those that are not 'Non-Veg' explicitly
-                    return subCatName.includes('veg') || !subCatName.includes('non-veg');
-                }
-                if (vegFilter === 'Non-Veg') {
-                    return subCatName.includes('non-veg');
-                }
-                return true;
+                return vegFilter === subCategory.name;
             }).map(sub => ({...sub}))
         })).filter(category => category.subCategories.length > 0);
     }
@@ -1076,20 +1068,21 @@ export default function PosSystem({
       <Card
         key={item.name}
         className={cn(
-          "group rounded-lg transition-all hover:shadow-md relative overflow-hidden",
+          "group rounded-lg transition-all hover:shadow-md relative overflow-hidden h-full min-h-[100px]",
           finalColorName,
           easyMode && 'cursor-pointer hover:scale-105'
         )}
         onClick={() => handleItemClick(item)}
       >
-        
-        <CardContent className="p-3">
-          <div className="flex justify-between items-start mb-2">
-             <div className="flex items-center gap-2">
-                <span className={cn('h-4 w-4 rounded-sm border border-black/20', isNonVeg ? 'bg-red-500' : 'bg-green-500')}></span>
-                <span className="font-semibold pr-2">{item.name}</span>
+        <CardContent className="p-3 flex flex-col justify-between h-full">
+          <div>
+            <div className="flex justify-between items-start mb-2">
+              <div className="flex items-center gap-2">
+                  <span className={cn('h-4 w-4 rounded-sm border border-black/50', isNonVeg ? 'bg-red-500' : 'bg-green-500')}></span>
+                  <span className="font-semibold pr-2">{item.name}</span>
+              </div>
+              <span className="font-mono text-right whitespace-nowrap">₹{item.price.toFixed(2)}</span>
             </div>
-            <span className="font-mono text-right whitespace-nowrap">₹{item.price.toFixed(2)}</span>
           </div>
            <div className="flex justify-between items-end">
             <span className="text-xs font-mono text-black/60">{item.code}</span>
@@ -1111,12 +1104,14 @@ export default function PosSystem({
         </CardContent>
         <Popover>
           <PopoverTrigger asChild>
-            {/* Wrapping the PopoverTrigger in a div and stopping event propagation prevents nested buttons */}
-            <div onClick={(e) => e.stopPropagation()}>
+            <div
+              onClick={(e) => e.stopPropagation()}
+              className="absolute bottom-1 right-1"
+            >
               <Button
                 variant="ghost"
                 size="icon"
-                className="absolute bottom-1 right-1 h-6 w-6 opacity-50 hover:opacity-100 transition-opacity"
+                className="h-6 w-6 opacity-50 hover:opacity-100 transition-opacity"
               >
                 <Palette className="h-4 w-4" />
               </Button>
@@ -1148,9 +1143,11 @@ export default function PosSystem({
     <div onClick={(e) => e.stopPropagation()}>
       <Popover>
         <PopoverTrigger asChild>
-          <Button variant="ghost" size="icon" className="h-6 w-6">
-            <Palette className="h-4 w-4" />
-          </Button>
+          <div role="button" aria-label="Change category color" className="p-1">
+             <Button variant="ghost" size="icon" className="h-6 w-6" type="button">
+                <Palette className="h-4 w-4" />
+             </Button>
+          </div>
         </PopoverTrigger>
         <PopoverContent className="w-auto p-2" onClick={(e) => e.stopPropagation()}>
           <div className="grid grid-cols-5 gap-1">
@@ -1381,7 +1378,7 @@ export default function PosSystem({
                     </Button>
                 </div>
                 <div className="flex-grow grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="relative">
+                  <div className="relative sm:col-span-2">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                     <Input
                       placeholder="Search menu items..."
@@ -1400,7 +1397,7 @@ export default function PosSystem({
                       onKeyDown={handleCodeEntry}
                     />
                   </div>
-                   <div className="sm:col-span-2 flex items-center gap-2">
+                   <div className="flex items-center gap-2">
                         <Label>Filter:</Label>
                         <Button variant={vegFilter === 'All' ? 'secondary' : 'outline'} size="sm" onClick={() => setVegFilter('All')}>All</Button>
                         <Button variant={vegFilter === 'Veg' ? 'secondary' : 'outline'} size="sm" onClick={() => setVegFilter('Veg')} className="border-green-500 text-green-600 hover:bg-green-50">Veg</Button>
@@ -1523,5 +1520,3 @@ export default function PosSystem({
     </DndProvider>
   );
 }
-
-    
