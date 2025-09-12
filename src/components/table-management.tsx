@@ -18,38 +18,14 @@ import { Switch } from '@/components/ui/switch';
 import { format } from 'date-fns';
 
 const statusBaseColors: Record<TableStatus, string> = {
-  Available: 'green',
-  Occupied: 'red',
-  Reserved: 'blue',
-  Cleaning: 'amber',
+  Available: 'bg-green-400 hover:bg-green-500',
+  Occupied: 'bg-red-400 hover:bg-red-500',
+  Reserved: 'bg-blue-400 hover:bg-blue-500',
+  Cleaning: 'bg-amber-300 hover:bg-amber-400',
 };
 
-const getDynamicColor = (status: TableStatus, turnover: number) => {
-  const baseShade = status === 'Cleaning' ? 300 : 400;
-  const shade = Math.min(900, baseShade + turnover * 100);
-  const color = statusBaseColors[status];
-  
-  const hoverShade = Math.min(900, shade + 100);
-
-  // Note: TailwindCSS needs to see the full class name, so we can't use template literals with variables
-  // for the color names. We need to map them out. This is a workaround.
-  const colorClasses: Record<string, Record<number, string>> = {
-    green: { 400: 'bg-green-400', 500: 'bg-green-500', 600: 'bg-green-600', 700: 'bg-green-700', 800: 'bg-green-800', 900: 'bg-green-900' },
-    red: { 400: 'bg-red-400', 500: 'bg-red-500', 600: 'bg-red-600', 700: 'bg-red-700', 800: 'bg-red-800', 900: 'bg-red-900' },
-    blue: { 400: 'bg-blue-400', 500: 'bg-blue-500', 600: 'bg-blue-600', 700: 'bg-blue-700', 800: 'bg-blue-800', 900: 'bg-blue-900' },
-    amber: { 300: 'bg-amber-300', 400: 'bg-amber-400', 500: 'bg-amber-500', 600: 'bg-amber-600', 700: 'bg-amber-700', 800: 'bg-amber-800', 900: 'bg-amber-900' },
-  };
-  const hoverColorClasses: Record<string, Record<number, string>> = {
-    green: { 500: 'hover:bg-green-500', 600: 'hover:bg-green-600', 700: 'hover:bg-green-700', 800: 'hover:bg-green-800', 900: 'hover:bg-green-900' },
-    red: { 500: 'hover:bg-red-500', 600: 'hover:bg-red-600', 700: 'hover:bg-red-700', 800: 'hover:bg-red-800', 900: 'hover:bg-red-900' },
-    blue: { 500: 'hover:bg-blue-500', 600: 'hover:bg-blue-600', 700: 'hover:bg-blue-700', 800: 'hover:bg-blue-800', 900: 'hover:bg-blue-900' },
-    amber: { 400: 'hover:bg-amber-400', 500: 'hover:bg-amber-500', 600: 'hover:bg-amber-600', 700: 'hover:bg-amber-700', 800: 'hover:bg-amber-800', 900: 'hover:bg-amber-900' },
-  };
-
-  const bgColorClass = colorClasses[color]?.[shade] || `bg-${color}-400`;
-  const hoverBgColorClass = hoverColorClasses[color]?.[hoverShade] || `hover:bg-${color}-500`;
-
-  return `${bgColorClass} ${hoverBgColorClass}`;
+const getDynamicColor = (status: TableStatus) => {
+  return statusBaseColors[status];
 };
 
 
@@ -346,7 +322,7 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
                 key={table.id}
                 className={cn(
                   'aspect-square rounded-lg flex flex-col items-center justify-center cursor-pointer transition-all duration-300 shadow-lg hover:shadow-2xl relative border-2',
-                  getDynamicColor(table.status, turnover),
+                  getDynamicColor(table.status),
                   selectedTables.includes(table.id) && 'ring-4 ring-offset-2 ring-primary border-primary',
                   selectedTable?.id === table.id && 'ring-4 ring-offset-2 ring-secondary border-secondary',
                   !selectedTables.includes(table.id) && 'border-black/50',
@@ -403,7 +379,7 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
       <Dialog open={isLayoutManagerOpen} onOpenChange={setIsLayoutManagerOpen}>
         <DialogContent>
             <DialogHeader>
-              <DialogTitle>Manage Table Layout</DialogTitle>
+              <DialogTitle>Manage Tables</DialogTitle>
               <DialogDescription>
                 Add or remove tables and manage display settings.
               </DialogDescription>
@@ -512,6 +488,7 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
     </div>
   );
 }
+
 
 
 

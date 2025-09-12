@@ -55,38 +55,14 @@ type ViewMode = 'accordion' | 'grid' | 'list';
 type VegFilter = 'All' | 'Veg' | 'Non-Veg';
 
 const statusBaseColors: Record<TableStatus, string> = {
-  Available: 'green',
-  Occupied: 'red',
-  Reserved: 'blue',
-  Cleaning: 'amber',
+  Available: 'bg-green-400 hover:bg-green-500',
+  Occupied: 'bg-red-400 hover:bg-red-500',
+  Reserved: 'bg-blue-400 hover:bg-blue-500',
+  Cleaning: 'bg-amber-300 hover:bg-amber-400',
 };
 
-const getDynamicColor = (status: TableStatus, turnover: number) => {
-  const baseShade = status === 'Cleaning' ? 300 : 400;
-  const shade = Math.min(900, baseShade + turnover * 100);
-  const color = statusBaseColors[status];
-  
-  const hoverShade = Math.min(900, shade + 100);
-
-  // Note: TailwindCSS needs to see the full class name, so we can't use template literals with variables
-  // for the color names. This is a workaround.
-  const colorClasses: Record<string, Record<number, string>> = {
-    green: { 400: 'bg-green-400', 500: 'bg-green-500', 600: 'bg-green-600', 700: 'bg-green-700', 800: 'bg-green-800', 900: 'bg-green-900' },
-    red: { 400: 'bg-red-400', 500: 'bg-red-500', 600: 'bg-red-600', 700: 'bg-red-700', 800: 'bg-red-800', 900: 'bg-red-900' },
-    blue: { 400: 'bg-blue-400', 500: 'bg-blue-500', 600: 'bg-blue-600', 700: 'bg-blue-700', 800: 'bg-blue-800', 900: 'bg-blue-900' },
-    amber: { 300: 'bg-amber-300', 400: 'bg-amber-400', 500: 'bg-amber-500', 600: 'bg-amber-600', 700: 'bg-amber-700', 800: 'bg-amber-800', 900: 'bg-amber-900' },
-  };
-  const hoverColorClasses: Record<string, Record<number, string>> = {
-    green: { 500: 'hover:bg-green-500', 600: 'hover:bg-green-600', 700: 'hover:bg-green-700', 800: 'hover:bg-green-800', 900: 'hover:bg-green-900' },
-    red: { 500: 'hover:bg-red-500', 600: 'hover:bg-red-600', 700: 'hover:bg-red-700', 800: 'hover:bg-red-800', 900: 'hover:bg-red-900' },
-    blue: { 500: 'hover:bg-blue-500', 600: 'hover:bg-blue-600', 700: 'hover:bg-blue-700', 800: 'hover:bg-blue-800', 900: 'hover:bg-blue-900' },
-    amber: { 400: 'hover:bg-amber-400', 500: 'hover:bg-amber-500', 600: 'hover:bg-amber-600', 700: 'hover:bg-amber-700', 800: 'hover:bg-amber-800', 900: 'hover:bg-amber-900' },
-  };
-
-  const bgColorClass = colorClasses[color]?.[shade] || `bg-${color}-400`;
-  const hoverBgColorClass = hoverColorClasses[color]?.[hoverShade] || `hover:bg-${color}-500`;
-
-  return `${bgColorClass} ${hoverBgColorClass}`;
+const getDynamicColor = (status: TableStatus) => {
+  return statusBaseColors[status];
 };
 
 
@@ -166,7 +142,7 @@ const TableDropTarget = ({ table, occupancyCount, handleSelectTable, children, o
             ref={drop}
             className={cn(
                 "aspect-square w-full flex-col justify-center items-center relative p-1 border-2 transition-transform duration-150 active:scale-95 group flex rounded-md cursor-pointer hover:scale-110 hover:z-10",
-                getDynamicColor(table.status, occupancyCount[table.id] || 0),
+                getDynamicColor(table.status),
                 isActive && 'ring-4 ring-offset-2 ring-green-500',
                 table.status === 'Available' || table.status === 'Occupied' ? 'text-white border-black' : 'text-black border-black/50',
                 "border-black/50"
@@ -1386,10 +1362,10 @@ export default function PosSystem({
                             isSelected && 'ring-4 ring-offset-2 ring-background'
                         )}
                         >
-                            <span className={cn("text-3xl font-bold", table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black')}>{table.id}</span>
+                            <span className={cn("text-5xl font-bold", table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black')}>{table.id}</span>
                             <div className="flex items-center gap-1">
-                                <Icon className={cn("h-4 w-4 shrink-0", table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black')} />
-                                <span className={cn("text-sm font-semibold leading-tight break-words", table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black')}>{table.status}</span>
+                                <Icon className={cn("h-5 w-5 shrink-0", table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black')} />
+                                <span className={cn("text-lg font-semibold leading-tight break-words", table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black')}>{table.status}</span>
                             </div>
                         </div>
                     </TableDropTarget>
