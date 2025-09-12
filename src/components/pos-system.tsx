@@ -1373,7 +1373,7 @@ export default function PosSystem({
               handleProcessPayment={handleProcessPayment}
               receiptPreview={receiptPreview}
           >
-            <div className="grid grid-cols-4 lg:grid-cols-5 gap-2">
+            <div className="grid grid-cols-[repeat(auto-fit,minmax(80px,1fr))] gap-2">
                 {tables.map(table => {
                     const Icon = statusIcons[table.status];
                     const isSelected = table.id === selectedTableId;
