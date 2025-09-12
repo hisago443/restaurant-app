@@ -31,25 +31,8 @@ export default function SystemSettings() {
         setIsDarkMode(resolvedTheme === 'dark');
     }, [resolvedTheme]);
 
-    const handleThemeChange = (newTheme: string) => {
-        const newMode = isDarkMode ? `dark` : `light`;
-        // In our case, next-themes handles adding 'dark' or 'light' automatically.
-        // We just need to set the base theme name.
-        setTheme(newTheme);
-    };
-
     const handleDarkModeToggle = (checked: boolean) => {
-        setIsDarkMode(checked);
-        // The theme will be like "dark" or "light", we need to set the full theme name
-        // e.g. "dark-ocean" or "light-ocean".
-        // next-themes handles this by setting the class on the html element.
-        // If we just call setTheme('dark') it will set the theme to 'dark' and override our color theme.
-        // so we need to get the base theme and append dark/light to it.
-        if (checked) {
-            setTheme('dark');
-        } else {
-            setTheme('light');
-        }
+        setTheme(checked ? 'dark' : 'light')
     }
 
 
