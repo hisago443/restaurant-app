@@ -18,6 +18,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from '@/hooks/use-toast';
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { Search, Plus, Minus, X, LayoutGrid, List, Rows, ChevronsUpDown, Palette, Shuffle, ClipboardList, Send, CheckCircle2, Users, Bookmark, Sparkles, Repeat, Edit, UserCheck, BookmarkX, Printer, Loader2, BookOpen, Trash2 as TrashIcon, MoreVertical, View, Pencil, QrCode as QrCodeIcon, MousePointerClick, Move, ShoppingCart } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -1087,14 +1088,13 @@ export default function PosSystem({
               </div>
               <span className="font-mono text-right whitespace-nowrap">₹{item.price.toFixed(2)}</span>
             </div>
-             <p className="text-xs text-muted-foreground font-mono pl-5">Code: {item.code}</p>
           </div>
           {!easyMode && (
-              <div className="flex justify-center w-full mt-auto">
+              <div className="flex justify-center w-full mt-auto pt-2">
                 <Button
                     size="sm"
                     variant="secondary"
-                    className="h-7 text-xs px-6"
+                    className="h-7 text-xs px-5"
                     onClick={(e) => {
                         e.stopPropagation();
                         handleAddButtonClick(item);
@@ -1106,6 +1106,7 @@ export default function PosSystem({
               </div>
             )}
         </CardContent>
+        <p className="absolute bottom-1 left-2 text-xs text-muted-foreground font-mono">{item.code}</p>
         <div className="absolute bottom-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
           <Popover>
             <PopoverTrigger asChild>
@@ -1434,4 +1435,5 @@ export default function PosSystem({
     
 
     
+
 
