@@ -20,7 +20,6 @@ import { useToast } from '@/hooks/use-toast';
 import { Search, Plus, Minus, X, LayoutGrid, List, Rows, ChevronsUpDown, Palette, Shuffle, ClipboardList, Send, CheckCircle2, Users, Bookmark, Sparkles, Repeat, Edit, UserCheck, BookmarkX, Printer, Loader2, BookOpen, Trash2 as TrashIcon, MoreVertical, View, Pencil, QrCode as QrCodeIcon, MousePointerClick, Move, ShoppingCart } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuLabel } from '@/components/ui/dropdown-menu';
 import { useDrag, useDrop, DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { AddItemDialog } from './add-item-dialog';
@@ -577,9 +576,9 @@ export default function PosSystem({
 
     const input: GenerateReceiptInput = {
         items: orderItems.map(item => ({ name: item.name, price: item.price, quantity: item.quantity })),
-        discount,
-        subtotal,
-        total,
+        discount: discount,
+        subtotal: subtotal,
+        total: total,
     };
     try {
         const result = await generateReceipt(input);
@@ -1274,87 +1273,18 @@ export default function PosSystem({
   };
 
   const renderTableActions = (table: Table) => {
-    const orderForTable = orders.find(o => o.tableId === table.id && o.status !== 'Completed');
-
-    const handleActionClick = (e: React.MouseEvent) => {
-        e.stopPropagation();
-    };
-
     return (
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="absolute top-0.5 right-0.5 h-7 w-7 bg-black/20 hover:bg-black/40 text-white opacity-0 group-hover:opacity-100 transition-opacity"
-            onClick={handleActionClick}
-          >
-            <MoreVertical className="h-4 w-4" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent onClick={handleActionClick} className="w-56">
-          {(showOccupancy && occupancyCount[table.id] > 0) && (
-              <>
-                <DropdownMenuLabel className="flex items-center gap-2 text-muted-foreground">
-                    <Repeat className="h-4 w-4" />
-                    <span>Turnover: {occupancyCount[table.id]} times</span>
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-              </>
-          )}
-          <DropdownMenuItem onClick={() => onViewTableDetails(table.id)}>
-            <View className="mr-2 h-4 w-4" />
-            <span>View Details</span>
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          {table.status === 'Occupied' && orderForTable && (
-            <>
-              <DropdownMenuItem onClick={() => onEditOrder(table.id)}>
-                <Pencil className="mr-2 h-4 w-4" />
-                <span>Update Order</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={handlePrintProvisionalBill}>
-                <Printer className="mr-2 h-4 w-4" />
-                <span>Print Provisional Bill</span>
-              </DropdownMenuSeparator>
-              <DropdownMenuItem onClick={() => updateTableStatus([table.id], 'Cleaning')}>
-                <Sparkles className="mr-2 h-4 w-4" />
-                <span>Mark as Cleaning</span>
-              </DropdownMenuItem>
-            </>
-          )}
-          {table.status === 'Available' && (
-            <>
-              <DropdownMenuItem onClick={() => onEditOrder(table.id)}>
-                <Users className="mr-2 h-4 w-4" />
-                <span>Create Order</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => openReservationDialog(table.id)}>
-                <Bookmark className="mr-2 h-4 w-4" />
-                <span>Reserve Table</span>
-              </DropdownMenuItem>
-            </>
-          )}
-          {table.status === 'Reserved' && (
-            <>
-              <DropdownMenuItem onClick={() => updateTableStatus([table.id], 'Occupied')}>
-                <UserCheck className="mr-2 h-4 w-4" />
-                <span>Guest Arrived</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => updateTableStatus([table.id], 'Available')}>
-                <BookmarkX className="mr-2 h-4 w-4" />
-                <span>Cancel Reservation</span>
-              </DropdownMenuItem>
-            </>
-          )}
-          {table.status === 'Cleaning' && (
-             <DropdownMenuItem onClick={() => updateTableStatus([table.id], 'Available')}>
-                <CheckCircle2 className="mr-2 h-4 w-4" />
-                <span>Mark as Available</span>
-              </DropdownMenuItem>
-          )}
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <Button
+        variant="ghost"
+        size="icon"
+        className="absolute top-0.5 right-0.5 h-7 w-7 bg-black/20 hover:bg-black/40 text-white opacity-0 group-hover:opacity-100 transition-opacity"
+        onClick={(e) => {
+            e.stopPropagation();
+            onViewTableDetails(table.id);
+        }}
+        >
+        <MoreVertical className="h-4 w-4" />
+      </Button>
     );
   };
   
@@ -1367,8 +1297,8 @@ export default function PosSystem({
           <Card className="flex flex-col flex-grow">
             <CardHeader>
               <div className="flex flex-col gap-4">
-                <div className="flex items-start gap-4">
-                    <div className="flex-1 space-y-2">
+                <div className="flex items-start justify-between gap-4">
+                    <div className="flex flex-1 flex-col gap-2">
                         <div className="flex items-center gap-2 flex-wrap">
                             <Button variant="outline" size="sm" onClick={() => setIsMenuManagerOpen(true)}>
                                 <BookOpen className="mr-2 h-4 w-4" /> Manage Menu
@@ -1393,7 +1323,7 @@ export default function PosSystem({
                                 />
                             </div>
                         </div>
-                        <div className="flex items-center gap-4 flex-wrap">
+                        <div className="flex items-center gap-2 flex-wrap">
                            <RadioGroup value={vegFilter} onValueChange={(v) => setVegFilter(v as VegFilter)} className="flex items-center gap-2">
                                 <RadioGroupItem value="All" id="filter-all" className="sr-only" />
                                 <Label htmlFor="filter-all" className="px-3 py-1.5 rounded-md cursor-pointer border data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground hover:bg-accent">All</Label>
