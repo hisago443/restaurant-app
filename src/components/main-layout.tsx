@@ -22,6 +22,7 @@ import { Separator } from '@/components/ui/separator';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 
+const PENDING_ORDER_KEY = -1;
 
 export default function MainLayout() {
   const { toast } = useToast();
@@ -71,58 +72,73 @@ export default function MainLayout() {
     setCurrentOrderItems([]);
     setDiscount(0);
     setActiveOrder(null);
+    
+    const tableIdToClear = selectedTableId === null ? PENDING_ORDER_KEY : selectedTableId;
+
+    setPendingOrders(prev => {
+        const newPending = {...prev};
+        delete newPending[tableIdToClear];
+        return newPending;
+    });
+
     if (fullReset) {
       setSelectedTableId(null);
-    }
-    // Clear pending order for the cleared table
-    if (selectedTableId) {
-        setPendingOrders(prev => {
-            const newPending = {...prev};
-            delete newPending[selectedTableId];
-            return newPending;
-        });
     }
   }, [selectedTableId]);
 
   const handleSelectTable = useCallback((tableId: number | null) => {
-    // If we are deselecting a table, and there's a pending order (not saved), store it.
-    if (selectedTableId && !activeOrder && currentOrderItems.length > 0) {
-      setPendingOrders(prev => ({ ...prev, [selectedTableId]: currentOrderItems }));
-    }
+    const currentPendingItems = pendingOrders[selectedTableId === null ? PENDING_ORDER_KEY : selectedTableId] || currentOrderItems;
     
+    // Save current work before switching
+    if (selectedTableId === null && currentOrderItems.length > 0) {
+        // We were working on an unassigned order, save it.
+        setPendingOrders(prev => ({ ...prev, [PENDING_ORDER_KEY]: currentOrderItems }));
+    } else if (selectedTableId && !activeOrder && currentOrderItems.length > 0) {
+        // We were working on a pending order for a specific table.
+        setPendingOrders(prev => ({ ...prev, [selectedTableId]: currentOrderItems }));
+    }
+
     setSelectedTableId(tableId);
 
     if (tableId === null) {
-      // If we are deselecting to no table, clear the order panel.
-      setActiveOrder(null);
-      setCurrentOrderItems([]);
-      setDiscount(0);
-      return;
+        // Deselected to no table, load the unassigned pending order if it exists
+        setActiveOrder(null);
+        setCurrentOrderItems(pendingOrders[PENDING_ORDER_KEY] || []);
+        setDiscount(0);
+        return;
     }
 
     const table = tables.find(t => t.id === tableId);
     if (!table) return;
 
-    // Check for an existing, active order for the selected table
     const existingOrder = orders.find(o => o.tableId === tableId && o.status !== 'Completed');
+
     if (existingOrder) {
-      // An active order exists, load it.
-      setActiveOrder(existingOrder);
-      setCurrentOrderItems(existingOrder.items);
-      setDiscount(0); // Reset discount for existing order
-      // Clear any temporary pending items for this table as we are loading the real one.
-      if (pendingOrders[tableId]) {
-        setPendingOrders(prev => {
-            const newPending = {...prev};
-            delete newPending[tableId];
-            return newPending;
-        });
-      }
+        // An active order exists, load it.
+        setActiveOrder(existingOrder);
+        setCurrentOrderItems(existingOrder.items);
+        setDiscount(0); 
     } else {
-      // No active order, check for pending items.
-      setActiveOrder(null);
-      setCurrentOrderItems(pendingOrders[tableId] || []);
-      setDiscount(0); // Reset discount for new/pending order
+        // No active order for this table.
+        setActiveOrder(null);
+        // Check for pending items for this table specifically
+        let itemsToLoad = pendingOrders[tableId] || [];
+        
+        // If no specific pending items, check for unassigned pending items
+        // and if the table is available to receive them.
+        if (itemsToLoad.length === 0 && (pendingOrders[PENDING_ORDER_KEY] || []).length > 0 && table.status === 'Available') {
+            itemsToLoad = pendingOrders[PENDING_ORDER_KEY] || [];
+            // Move items from unassigned to this table's pending slot
+            setPendingOrders(prev => {
+                const newPending = {...prev};
+                delete newPending[PENDING_ORDER_KEY];
+                newPending[tableId] = itemsToLoad;
+                return newPending;
+            });
+        }
+        
+        setCurrentOrderItems(itemsToLoad);
+        setDiscount(0);
     }
   }, [tables, orders, currentOrderItems, selectedTableId, activeOrder, pendingOrders]);
   
