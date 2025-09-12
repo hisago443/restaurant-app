@@ -369,7 +369,7 @@ function OrderPanel({
                 <div className="space-y-2 text-lg">
                     <div className="flex justify-between">
                         <span>Subtotal:</span>
-                        <span className="font-bold">₹{subtotal.toFixed(2)}</span>
+                        <span className="font-bold">Rs. {subtotal.toFixed(2)}</span>
                     </div>
                     {discount > 0 && (
                         <div className="flex justify-between text-accent-foreground">
@@ -1343,14 +1343,14 @@ export default function PosSystem({
                     <TableDropTarget key={table.id} table={table} occupancyCount={occupancyCount} handleSelectTable={handleSelectTable} onDropItem={handleDropItemOnTable}>
                         <div
                         className={cn(
-                            'absolute inset-0 flex flex-col items-center justify-center text-center transition-colors rounded-md p-1',
+                            'absolute inset-0 flex flex-col items-center justify-center text-center transition-colors rounded-md p-1 aspect-square h-full',
                             isSelected && 'ring-4 ring-offset-2 ring-background'
                         )}
                         >
                             <span className={cn("text-2xl font-bold", table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black')}>{table.id}</span>
                             <div className="flex items-center gap-1">
                                 <Icon className={cn("h-3 w-3 shrink-0", table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black')} />
-                                <span className={cn("text-xs font-semibold leading-tight", table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black')}>{table.status}</span>
+                                <span className={cn("text-xs font-semibold leading-tight break-words", table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black')}>{table.status}</span>
                             </div>
                         </div>
                     </TableDropTarget>

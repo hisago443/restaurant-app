@@ -13,8 +13,9 @@ import { Check } from 'lucide-react';
 
 const themes = [
     { name: 'default', label: 'Default', color: 'hsl(250 60% 65%)' },
-    { name: 'forest', label: 'Forest', color: 'hsl(140 50% 55%)' },
     { name: 'ocean', label: 'Ocean', color: 'hsl(210 70% 60%)' },
+    { name: 'sunset', label: 'Sunset', color: 'hsl(25 80% 60%)' },
+    { name: 'lavender', label: 'Lavender', color: 'hsl(260 60% 70%)' },
 ]
 
 export default function SystemSettings() {
@@ -43,7 +44,8 @@ export default function SystemSettings() {
 
     useEffect(() => {
         const body = window.document.body;
-        body.classList.remove('theme-default', 'theme-forest', 'theme-ocean');
+        // Remove all theme classes before adding the new one
+        themes.forEach(theme => body.classList.remove(`theme-${theme.name}`));
         body.classList.add(`theme-${activeTheme}`);
         localStorage.setItem('app-theme', activeTheme);
     }, [activeTheme]);
