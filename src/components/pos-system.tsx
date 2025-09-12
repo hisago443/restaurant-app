@@ -229,8 +229,9 @@ function OrderPanel({
         }),
     }));
     
-    const showQuickAssign = orderItems.length > 0 && !currentActiveTableId;
-    const orderTitle = currentActiveTableId === null ? "Takeaway" : `Table ${currentActiveTableId}`;
+    const isTakeawayMode = currentActiveTableId === null;
+    const showQuickAssign = orderItems.length > 0 && isTakeawayMode;
+    const orderTitle = isTakeawayMode ? "Takeaway" : `Table ${currentActiveTableId}`;
 
     const renderOrderItems = () => {
         const originalItemsMap = new Map(originalOrderItems.map(item => [item.name, item.quantity]));
@@ -403,17 +404,17 @@ function OrderPanel({
                         size="lg"
                         className={cn("h-12 text-base", activeOrder && "bg-blue-600 hover:bg-blue-700")}
                         onClick={handleSendToKitchen}
-                        disabled={isProcessing || orderItems.length === 0 || !currentActiveTableId}
+                        disabled={isProcessing || orderItems.length === 0}
                     >
                         {isProcessing && (activeOrder ? 'Updating KOT...' : 'Sending KOT...').includes('Sending') ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : (activeOrder ? <Printer className="mr-2 h-4 w-4" /> : <Send className="mr-2 h-4 w-4" />)}
                         {activeOrder ? 'Update KOT' : 'Send KOT to Kitchen'}
                     </Button>
                     <div className="grid grid-cols-2 gap-2">
-                        <Button size="lg" variant="outline" className="h-12 text-base" onClick={handlePrintProvisionalBill} disabled={!currentActiveTableId || orderItems.length === 0}>
+                        <Button size="lg" variant="outline" className="h-12 text-base" onClick={handlePrintProvisionalBill} disabled={orderItems.length === 0}>
                             {isProcessing && receiptPreview ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Printer className="mr-2 h-4 w-4" />}
                             Print Bill
                         </Button>
-                        <Button size="lg" className="h-12 text-base" onClick={handleProcessPayment} disabled={orderItems.length === 0 || !currentActiveTableId}>
+                        <Button size="lg" className="h-12 text-base" onClick={handleProcessPayment} disabled={orderItems.length === 0}>
                             {isProcessing && !receiptPreview ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                             Process Payment
                         </Button>
@@ -751,7 +752,7 @@ export default function PosSystem({
             </style>
           </head>
           <body>
-            <h2>${isUpdate ? 'KOT UPDATE' : 'KOT'} - Table ${order.tableId}</h2>
+            <h2>${isUpdate ? 'KOT UPDATE' : 'KOT'} - ${order.tableId === 0 ? 'Takeaway' : `Table ${order.tableId}`}</h2>
             <h3>Order ID: ${order.id}</h3>
             <hr>
             <ul>
@@ -795,48 +796,47 @@ export default function PosSystem({
       toast({ variant: 'destructive', title: 'Empty Order', description: 'Cannot send an empty order to the kitchen.' });
       return;
     }
-    if (!currentActiveTableId) {
-      toast({ variant: 'destructive', title: 'No Table Assigned', description: 'Please assign a table before sending to the kitchen.' });
-      return;
-    }
+    const isTakeaway = currentActiveTableId === null;
 
     setIsProcessing(true);
     // Use a short timeout to allow the UI to update with the loading state
     setTimeout(() => {
         if (activeOrder) {
-        const updatedOrder = { ...activeOrder, items: orderItems };
-        
-        const diffItems: OrderItem[] = [];
-        const originalItemsMap = new Map(originalOrderItems.map(item => [item.name, item.quantity]));
-        const currentItemsMap = new Map(orderItems.map(item => [item.name, item.quantity]));
+          const updatedOrder = { ...activeOrder, items: orderItems };
+          
+          const diffItems: OrderItem[] = [];
+          const originalItemsMap = new Map(originalOrderItems.map(item => [item.name, item.quantity]));
+          const currentItemsMap = new Map(orderItems.map(item => [item.name, item.quantity]));
 
-        currentItemsMap.forEach((quantity, name) => {
-            const originalQuantity = originalItemsMap.get(name) || 0;
-            if (quantity > originalQuantity) {
-            const itemDetails = orderItems.find(i => i.name === name);
-            if (itemDetails) {
-                diffItems.push({ ...itemDetails, quantity: quantity - originalQuantity });
-            }
-            }
-        });
-        
-        if (diffItems.length > 0) {
-            updateOrder(updatedOrder);
-            printKot(updatedOrder, diffItems);
-            toast({ title: 'Order Updated!', description: `KOT update sent for Table ${currentActiveTableId}.` });
-            setOriginalOrderItems([...orderItems]);
-        } else {
-            toast({ title: 'No Changes', description: 'No new items were added to the order.' });
-        }
+          currentItemsMap.forEach((quantity, name) => {
+              const originalQuantity = originalItemsMap.get(name) || 0;
+              if (quantity > originalQuantity) {
+              const itemDetails = orderItems.find(i => i.name === name);
+              if (itemDetails) {
+                  diffItems.push({ ...itemDetails, quantity: quantity - originalQuantity });
+              }
+              }
+          });
+          
+          if (diffItems.length > 0) {
+              updateOrder(updatedOrder);
+              printKot(updatedOrder, diffItems);
+              toast({ title: 'Order Updated!', description: `KOT update sent for ${isTakeaway ? 'Takeaway' : `Table ${currentActiveTableId}`}.` });
+              setOriginalOrderItems([...orderItems]);
+          } else {
+              toast({ title: 'No Changes', description: 'No new items were added to the order.' });
+          }
 
         } else {
-        const orderPayload = {
-            items: orderItems,
-            tableId: Number(currentActiveTableId),
-        };
-        addOrder(orderPayload);
-        updateTableStatus([currentActiveTableId], 'Occupied');
-        
+          const tableIdForOrder = isTakeaway ? 0 : currentActiveTableId!; // 0 for takeaway
+          const orderPayload = {
+              items: orderItems,
+              tableId: tableIdForOrder,
+          };
+          addOrder(orderPayload);
+          if (!isTakeaway) {
+              updateTableStatus([currentActiveTableId!], 'Occupied');
+          }
         }
         setIsProcessing(false);
     }, 50);
@@ -902,10 +902,6 @@ export default function PosSystem({
       toast({ variant: "destructive", title: "Empty Order", description: "Cannot process payment for an empty order." });
       return;
     }
-    if (!currentActiveTableId) {
-      toast({ variant: 'destructive', title: 'No Table Assigned', description: 'Please assign a table before processing payment.' });
-      return;
-    }
     
     setIsProcessing(true);
     await generateAIRecipt();
@@ -919,7 +915,7 @@ export default function PosSystem({
   };
   
   const handlePaymentSuccess = () => {
-    if (!currentActiveTableId) return;
+    const isTakeaway = currentActiveTableId === null;
   
     const finalReceipt = receiptPreview || getLocalReceipt();
   
@@ -931,15 +927,18 @@ export default function PosSystem({
     setIsPaymentDialogOpen(false);
     toast({ title: "Payment Successful", description: `Rs. ${total.toFixed(2)} confirmed.` });
     
+    const tableIdForBill = isTakeaway ? 0 : currentActiveTableId!;
     const billPayload: Omit<Bill, 'id' | 'timestamp'> = {
       orderItems: orderItems,
-      tableId: Number(currentActiveTableId),
+      tableId: tableIdForBill,
       total: total,
       receiptPreview: finalReceipt,
     };
     addBill(billPayload);
   
-    updateTableStatus([currentActiveTableId], 'Cleaning');
+    if (!isTakeaway && currentActiveTableId) {
+      updateTableStatus([currentActiveTableId], 'Cleaning');
+    }
     
     if (activeOrder) {
       setOrders(prevOrders => prevOrders.map(o => o.id === activeOrder.id ? {...o, status: 'Completed'} : o));
@@ -949,11 +948,11 @@ export default function PosSystem({
   };
 
   const handlePrintProvisionalBill = async () => {
-    if (!currentActiveTableId || orderItems.length === 0) {
+    if (orderItems.length === 0) {
       toast({
         variant: 'destructive',
         title: 'Cannot Print',
-        description: 'Please select a table with an active order to print a bill.',
+        description: 'There are no items in the order to print a bill.',
       });
       return;
     }
@@ -961,13 +960,15 @@ export default function PosSystem({
     setIsProcessing(true);
     await generateAIRecipt();
     setIsProcessing(false);
+    
+    const billTitle = currentActiveTableId === null ? 'Takeaway' : `Table #${currentActiveTableId}`;
   
     const printWindow = window.open('', '_blank');
     if (printWindow) {
       printWindow.document.write(`
         <html>
           <head>
-            <title>Provisional Bill for Table #${currentActiveTableId}</title>
+            <title>Provisional Bill for ${billTitle}</title>
             <style>
               body { font-family: monospace; margin: 20px; }
               pre { white-space: pre-wrap; word-wrap: break-word; }
@@ -1026,7 +1027,7 @@ export default function PosSystem({
   };
   
   const handleQuickAssign = () => {
-    if (orderItems.length > 0 && !currentActiveTableId) {
+    if (orderItems.length > 0 && currentActiveTableId === null) {
         setIsQuickAssignDialogOpen(true);
     } else {
         toast({
