@@ -664,14 +664,17 @@ export default function PosSystem({
         })).filter(category => category.subCategories.length > 0);
     }
 
-    // Veg/Non-Veg filter
     if (vegFilter !== 'All') {
-        menuToFilter = menuToFilter.map(category => ({
-            ...category,
-            subCategories: category.subCategories.filter(subCategory => {
-                return vegFilter === subCategory.name;
-            }).map(sub => ({...sub}))
-        })).filter(category => category.subCategories.length > 0);
+        return menuToFilter.map(category => {
+            const filteredSubCategories = category.subCategories
+                .filter(subCategory => subCategory.name === vegFilter)
+                .map(subCategory => ({ ...subCategory })); // Make a copy
+
+            if (filteredSubCategories.length > 0) {
+                return { ...category, subCategories: filteredSubCategories };
+            }
+            return null;
+        }).filter((category): category is MenuCategory => category !== null);
     }
 
     return menuToFilter;
@@ -1078,7 +1081,7 @@ export default function PosSystem({
           <div>
             <div className="flex justify-between items-start mb-2">
               <div className="flex items-center gap-2">
-                  <span className={cn('h-4 w-4 rounded-sm border border-black/50', isNonVeg ? 'bg-red-500' : 'bg-green-500')}></span>
+                  <span className={cn('h-4 w-4 rounded-sm border border-black', isNonVeg ? 'bg-red-500' : 'bg-green-500')}></span>
                   <span className="font-semibold pr-2">{item.name}</span>
               </div>
               <span className="font-mono text-right whitespace-nowrap">₹{item.price.toFixed(2)}</span>
@@ -1140,30 +1143,28 @@ export default function PosSystem({
   };
 
   const CategoryColorPicker = ({ categoryName }: { categoryName: string }) => (
-    <div onClick={(e) => e.stopPropagation()}>
-      <Popover>
+    <Popover>
         <PopoverTrigger asChild>
-          <div role="button" aria-label="Change category color" className="p-1">
-             <Button variant="ghost" size="icon" className="h-6 w-6" type="button">
+            <Button variant="ghost" size="icon" className="h-6 w-6">
                 <Palette className="h-4 w-4" />
-             </Button>
-          </div>
+            </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-auto p-2" onClick={(e) => e.stopPropagation()}>
-          <div className="grid grid-cols-5 gap-1">
-            {colorNames.map((name) => (
-              <div
-                key={name}
-                className={cn("h-6 w-6 rounded-full cursor-pointer", colorPalette[name].light)}
-                onClick={(e) => { e.stopPropagation(); handleSetCategoryColor(categoryName, name); }}
-              />
-            ))}
-            <Button variant="ghost" size="sm" className="col-span-5 h-8" onClick={(e) => { e.stopPropagation(); handleSetCategoryColor(categoryName, ''); }}>Reset</Button>
-          </div>
+        <PopoverContent className="w-auto p-2">
+            <div className="grid grid-cols-5 gap-1">
+                {colorNames.map((name) => (
+                    <div
+                        key={name}
+                        className={cn("h-6 w-6 rounded-full cursor-pointer", colorPalette[name].light)}
+                        onClick={() => handleSetCategoryColor(categoryName, name)}
+                    />
+                ))}
+                <Button variant="ghost" size="sm" className="col-span-5 h-8" onClick={() => handleSetCategoryColor(categoryName, '')}>
+                    Reset
+                </Button>
+            </div>
         </PopoverContent>
-      </Popover>
-    </div>
-  );
+    </Popover>
+);
 
   const renderMenuContent = () => {
     if (viewMode === 'list') {
@@ -1219,7 +1220,7 @@ export default function PosSystem({
               </TabsList>
             </div>
             {filteredMenu.map(category => (
-              <TabsContent key={category.category} value={category.category} className={cn("m-0 rounded-lg p-2", categoryColors[category.category] ? colorPalette[categoryColors[category.category]]?.light : '')}>
+              <TabsContent key={category.category} value={category.category} className={cn("m-0 rounded-lg p-2 min-h-[200px]", categoryColors[category.category] ? colorPalette[categoryColors[category.category]]?.light : '')}>
                 <div className="space-y-4">
                   {category.subCategories.map((subCategory) => (
                     <div key={subCategory.name}>
@@ -1246,8 +1247,8 @@ export default function PosSystem({
             {filteredMenu.map(category => (
                 <AccordionItem key={category.category} value={category.category} className="border-b-0">
                     <AccordionTrigger className={cn("p-3 rounded-md text-lg font-bold hover:no-underline", categoryColors[category.category] ? colorPalette[categoryColors[category.category]]?.dark : 'bg-muted')}>
-                        <div className="flex items-center justify-between w-full">
-                           <span className={cn("flex-grow text-left", "text-black")}>{category.category}</span>
+                        <span className={cn("flex-grow text-left", "text-black")}>{category.category}</span>
+                        <div onClick={(e) => e.stopPropagation()}>
                            <CategoryColorPicker categoryName={category.category} />
                         </div>
                     </AccordionTrigger>
@@ -1520,3 +1521,5 @@ export default function PosSystem({
     </DndProvider>
   );
 }
+
+    
