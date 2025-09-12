@@ -1065,7 +1065,7 @@ export default function PosSystem({
       <Card
         key={item.name}
         className={cn(
-          "group rounded-lg transition-all shadow-md hover:shadow-lg border border-black relative overflow-hidden h-full flex flex-col min-h-[110px]",
+          "group rounded-lg transition-all shadow-md hover:shadow-lg relative overflow-hidden h-full flex flex-col min-h-[110px] border border-black",
           finalColorName,
           easyMode && "cursor-pointer hover:scale-105",
           (itemStatus === 'out') && "pointer-events-none opacity-60"
@@ -1373,7 +1373,7 @@ export default function PosSystem({
               handleProcessPayment={handleProcessPayment}
               receiptPreview={receiptPreview}
           >
-            <div className="grid grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2">
+            <div className="grid grid-cols-4 lg:grid-cols-5 gap-2">
                 {tables.map(table => {
                     const Icon = statusIcons[table.status];
                     const isSelected = table.id === selectedTableId;
@@ -1396,7 +1396,7 @@ export default function PosSystem({
                 })}
                  <div
                     className={cn(
-                        "aspect-square w-full flex-col justify-center items-center relative p-1 border-2 transition-transform duration-150 active:scale-95 group flex rounded-md cursor-pointer hover:scale-110 hover:z-10 bg-muted text-muted-foreground border-dashed",
+                        "col-span-2 h-full flex-col justify-center items-center relative p-1 border-2 transition-transform duration-150 active:scale-95 group flex rounded-md cursor-pointer hover:scale-105 hover:z-10 bg-muted text-muted-foreground border-dashed",
                         selectedTableId === null && 'ring-4 ring-offset-2 ring-primary'
                     )}
                     onClick={() => handleSelectTable(null)}
