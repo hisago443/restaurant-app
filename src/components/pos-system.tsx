@@ -47,7 +47,7 @@ const colorNames = Object.keys(colorPalette);
 
 const itemStatusColors: Record<string, { light: string, dark: string, name: string }> = {
     low: { light: 'bg-yellow-200 dark:bg-yellow-900/40', dark: 'bg-yellow-300 dark:bg-yellow-800/70', name: 'Running Low' },
-    out: { light: 'bg-red-500 dark:bg-red-800/50', dark: 'bg-red-500 dark:bg-red-700/70', name: 'Out of Stock' },
+    out: { light: 'bg-red-500 dark:bg-red-800/50', dark: 'bg-red-700 dark:bg-red-700/70', name: 'Out of Stock' },
 };
 const itemStatusNames = Object.keys(itemStatusColors);
 
@@ -334,7 +334,7 @@ function OrderPanel({
                     <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
                         <ClipboardList className="w-16 h-16 text-gray-300" />
                         <p className="mt-4 text-sm font-medium text-center">
-                            Click on items to add them or drag &amp; drop here.
+                            Click on items to add them or drag & drop here.
                         </p>
                     </div>
                 ) : (
@@ -361,7 +361,7 @@ function OrderPanel({
           
             <div className="p-4 border-t space-y-4 bg-muted/30">
                 <div className="space-y-2">
-                    <Label className="font-semibold block flex items-center gap-1.5"><Move size={14} /> Drag &amp; Drop onto a Table</Label>
+                    <Label className="font-semibold block flex items-center gap-1.5"><Move size={14} /> Drag & Drop onto a Table</Label>
                     <div className="grid grid-cols-5 gap-1.5">
                         {tables.map(table => (
                             <TableDropTarget key={table.id} table={table} occupancyCount={occupancyCount} handleSelectTable={() => handleSelectTable(table.id)} onDropItem={onDropItemOnTable}>
@@ -495,7 +495,12 @@ export default function PosSystem({
         });
         setCategoryColors(defaultCategoryColors);
     }
-    setActiveAccordionItems([]);
+    // By default, open the first category in accordion view if it exists
+    if (typedMenuData.length > 0) {
+        setActiveAccordionItems([typedMenuData[0].category]);
+    } else {
+        setActiveAccordionItems([]);
+    }
   }, [typedMenuData, categoryColors, setCategoryColors]);
 
   useEffect(() => {
@@ -570,9 +575,9 @@ export default function PosSystem({
 
     const input: GenerateReceiptInput = {
         items: orderItems.map(item => ({ name: item.name, price: item.price, quantity: item.quantity })),
-        discount,
-        subtotal,
-        total,
+        discount: discount,
+        subtotal: subtotal,
+        total: total,
     };
     try {
         const result = await generateReceipt(input);
@@ -665,10 +670,9 @@ export default function PosSystem({
     }
 
     if (vegFilter !== 'All') {
-        return menuToFilter.map(category => {
+        menuToFilter = menuToFilter.map(category => {
             const filteredSubCategories = category.subCategories
-                .filter(subCategory => subCategory.name === vegFilter)
-                .map(subCategory => ({ ...subCategory })); // Make a copy
+                .filter(subCategory => subCategory.name === vegFilter);
 
             if (filteredSubCategories.length > 0) {
                 return { ...category, subCategories: filteredSubCategories };
@@ -1064,7 +1068,11 @@ export default function PosSystem({
     
     let finalColorName = categoryColorName ? colorPalette[categoryColorName]?.light : (isNonVeg ? nonVegColor : vegColor);
     if(itemStatus) {
-        finalColorName = itemStatusColors[itemStatus].light;
+        if (itemStatus === 'out') {
+            finalColorName = 'bg-red-500 dark:bg-red-800/50';
+        } else {
+            finalColorName = itemStatusColors[itemStatus].light;
+        }
     }
 
     const menuItemCard = (
@@ -1140,14 +1148,19 @@ export default function PosSystem({
   };
 
   const CategoryColorPicker = ({ categoryName }: { categoryName: string }) => (
-    <div className="p-1" onClick={(e) => e.stopPropagation()}>
+    <div
+      role="button"
+      aria-label={`Change category color for ${categoryName}`}
+      className="p-1"
+      onClick={(e) => {
+        e.stopPropagation();
+      }}
+    >
       <Popover>
         <PopoverTrigger asChild>
-            <div role="button" aria-label={`Change category color for ${categoryName}`}>
-              <Button variant="ghost" size="icon" className="h-6 w-6" type="button">
-                <Palette className="h-4 w-4" />
-              </Button>
-            </div>
+          <div role="button" className={cn(buttonVariants({ variant: "ghost", size: "icon" }), "h-6 w-6")}>
+            <Palette className="h-4 w-4" />
+          </div>
         </PopoverTrigger>
         <PopoverContent className="w-auto p-2">
           <div className="grid grid-cols-5 gap-1">
@@ -1248,7 +1261,7 @@ export default function PosSystem({
             {filteredMenu.map(category => (
                 <AccordionItem key={category.category} value={category.category} className="border-b-0">
                     <AccordionTrigger className={cn("p-3 rounded-md text-lg font-bold hover:no-underline", categoryColors[category.category] ? colorPalette[categoryColors[category.category]]?.dark : 'bg-muted')}>
-                        <span className="flex-grow text-left text-black">{category.category}</span>
+                        <div className="flex-grow text-left text-black">{category.category}</div>
                         <CategoryColorPicker categoryName={category.category} />
                     </AccordionTrigger>
                     <AccordionContent className="p-2 space-y-2">
@@ -1320,7 +1333,7 @@ export default function PosSystem({
               <DropdownMenuItem onClick={handlePrintProvisionalBill}>
                 <Printer className="mr-2 h-4 w-4" />
                 <span>Print Provisional Bill</span>
-              </DropdownMenuSeparator />
+              </DropdownMenuSeparator>
               <DropdownMenuItem onClick={() => updateTableStatus([table.id], 'Cleaning')}>
                 <Sparkles className="mr-2 h-4 w-4" />
                 <span>Mark as Cleaning</span>
@@ -1520,5 +1533,9 @@ export default function PosSystem({
   );
 }
 
+
+    
+
+    
 
     
