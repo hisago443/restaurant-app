@@ -879,15 +879,28 @@ export default function PosSystem({
       return;
     }
     
-    setIsProcessing(true);
-    await generateAIRecipt();
-    setIsProcessing(false);
-  
-    if (!receiptPreview && orderItems.length > 0) {
-        toast({ variant: 'destructive', title: 'Receipt Error', description: 'Could not generate receipt. Please try again.' });
-        return;
-    }
+    // Immediately open dialog with local receipt
+    setReceiptPreview(getLocalReceipt());
     setIsPaymentDialogOpen(true);
+
+    // Generate AI receipt in the background and update if successful
+    try {
+      const subtotal = orderItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
+      const total = subtotal * (1 - discount / 100);
+      const input: GenerateReceiptInput = {
+          items: orderItems.map(({ name, price, quantity }) => ({ name, price, quantity })),
+          discount,
+          subtotal,
+          total,
+      };
+      const result = await generateReceipt(input);
+      if (result.receiptPreview) {
+          setReceiptPreview(result.receiptPreview); // Update the preview in the already-open dialog
+      }
+    } catch (error) {
+      console.error('AI receipt generation failed, using local version:', error);
+      // No toast needed here as the user already sees the local version.
+    }
   };
   
   const handlePaymentSuccess = () => {
@@ -932,6 +945,7 @@ export default function PosSystem({
       });
       return;
     }
+    setReceiptPreview(getLocalReceipt());
     
     const billTitle = currentActiveTableId === null ? 'Takeaway' : `Table #${currentActiveTableId}`;
   
@@ -1457,4 +1471,5 @@ export default function PosSystem({
     </div>
   );
 }
+
 
