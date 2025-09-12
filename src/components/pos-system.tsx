@@ -388,17 +388,17 @@ function OrderPanel({
                 <div className="space-y-2 text-lg">
                     <div className="flex justify-between">
                         <span>Subtotal:</span>
-                        <span className="font-bold">Rs. {subtotal.toFixed(2)}</span>
+                        <span className="font-bold">₹{subtotal.toFixed(2)}</span>
                     </div>
                     {discount > 0 && (
                         <div className="flex justify-between text-accent-foreground">
                             <span>Discount ({discount}%):</span>
-                            <span className="font-bold">-Rs. {(subtotal - total).toFixed(2)}</span>
+                            <span className="font-bold">-₹{(subtotal - total).toFixed(2)}</span>
                         </div>
                     )}
                     <div className="flex justify-between font-bold text-2xl border-t pt-2 mt-2 bg-primary/20 p-2 rounded-md">
                         <span>Total:</span>
-                        <span>Rs. {total.toFixed(2)}</span>
+                        <span>₹{total.toFixed(2)}</span>
                     </div>
                 </div>
                 <div className="flex flex-col gap-2 pt-2">
@@ -528,7 +528,7 @@ export default function PosSystem({
     const pad = (str: string, len: number, char = ' ') => str.padEnd(len, char);
     const subtotal = orderItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
     const total = subtotal * (1 - discount / 100);
-    const money = (val: number) => `Rs. ${val.toFixed(2)}`;
+    const money = (val: number) => `₹${val.toFixed(2)}`;
   
     let receiptLines = [];
     receiptLines.push('*************************');
@@ -957,7 +957,7 @@ export default function PosSystem({
     }
   
     setIsPaymentDialogOpen(false);
-    toast({ title: "Payment Successful", description: `Rs. ${total.toFixed(2)} confirmed.` });
+    toast({ title: "Payment Successful", description: `₹${total.toFixed(2)} confirmed.` });
     
     const billPayload: Omit<Bill, 'id' | 'timestamp'> = {
       orderItems: orderItems,
@@ -1093,7 +1093,7 @@ export default function PosSystem({
                 <Button
                     size="sm"
                     variant="secondary"
-                    className="h-7 text-xs px-6"
+                    className="h-7 text-xs px-10"
                     onClick={(e) => {
                         e.stopPropagation();
                         handleAddButtonClick(item);
@@ -1285,7 +1285,7 @@ export default function PosSystem({
                                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                                 <Input
                                     placeholder="Search menu items..."
-                                    className="pl-10"
+                                    className="pl-10 h-10"
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
                                 />
@@ -1294,7 +1294,7 @@ export default function PosSystem({
                                 <QrCodeIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                                 <Input
                                     placeholder="Enter item code..."
-                                    className="pl-10"
+                                    className="pl-10 h-10"
                                     value={itemCodeInput}
                                     onChange={(e) => setItemCodeInput(e.target.value)}
                                     onKeyDown={handleCodeEntry}
@@ -1430,13 +1430,3 @@ export default function PosSystem({
     </DndProvider>
   );
 }
-
-    
-
-    
-
-
-
-
-    
-
