@@ -1161,7 +1161,7 @@ export default function PosSystem({
         <div className="space-y-6">
           {filteredMenu.map(category => (
              <div key={category.category}>
-               <div className="sticky top-0 bg-background/80 backdrop-blur-sm py-2 z-10 flex items-center justify-between gap-2 p-2">
+               <div className={cn("sticky top-0 backdrop-blur-sm py-2 z-10 flex items-center justify-between gap-2 p-2 rounded-md", categoryColors[category.category] ? colorPalette[categoryColors[category.category]]?.light : 'bg-background/80')}>
                 <h2 className="text-xl font-bold flex-grow text-left">
                   {category.category}
                 </h2>
