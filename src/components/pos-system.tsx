@@ -1348,8 +1348,10 @@ export default function PosSystem({
                                 isSelected && 'ring-4 ring-offset-2 ring-background'
                             )}
                             >
-                                <div className="flex items-center justify-center">
                                 <span className={cn("text-2xl font-bold", table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black')}>{table.id}</span>
+                                <div className="flex items-center gap-1">
+                                    <Icon className={cn("h-3 w-3 shrink-0", table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black')} />
+                                    <span className={cn("text-[10px] font-semibold", table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black')}>{table.status}</span>
                                 </div>
                                 {showOccupancy && turnover > 0 &&
                                     <div className="absolute bottom-1 right-1 flex items-center gap-1 bg-black/50 text-white text-xs font-bold px-1 rounded-sm">
@@ -1357,10 +1359,6 @@ export default function PosSystem({
                                         <span>{turnover}</span>
                                     </div>
                                 }
-                                <div className="absolute top-1 left-1 flex items-center gap-1 w-[calc(100%-0.5rem)] pr-4">
-                                    <Icon className={cn("h-3 w-3 shrink-0", table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black')} />
-                                    <span className={cn("text-[10px] font-semibold truncate", table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black')}>{table.status}</span>
-                                </div>
                             </div>
                             <div className="absolute inset-0 flex gap-1 items-center justify-center bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity rounded-md">
                             <Button size="sm" variant="ghost" className="h-auto p-1 text-white hover:bg-white/20" onClick={(e) => { e.stopPropagation(); onViewTableDetails(table.id); }}>
