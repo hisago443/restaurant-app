@@ -24,26 +24,9 @@ export default function SystemSettings() {
             description: "Your new settings have been applied.",
         });
     };
-    
-    const themes = [
-        { name: 'default', label: 'Default' },
-        { name: 'ocean', label: 'Ocean' },
-        { name: 'sunset', label: 'Sunset' },
-        { name: 'lavender', label: 'Lavender' },
-    ];
-
-    const currentBaseTheme = theme?.split(' ')[0] || 'default';
-    
-    const handleThemeChange = (newTheme: string) => {
-        setTheme(newTheme);
-    }
 
     const handleDarkModeToggle = (checked: boolean) => {
-        if (checked) {
-            setTheme('dark');
-        } else {
-            setTheme('light');
-        }
+        setTheme(checked ? 'dark' : 'light');
     }
 
     return (
@@ -59,24 +42,6 @@ export default function SystemSettings() {
                             checked={resolvedTheme === 'dark'}
                             onCheckedChange={handleDarkModeToggle}
                         />
-                    </div>
-                </div>
-                
-                 <div className="space-y-3 p-4 rounded-lg border">
-                    <Label className="font-bold text-base">Color Modes</Label>
-                    <p className="text-sm text-muted-foreground">Select a color scheme for buttons and accents.</p>
-                    <div className="grid grid-cols-2 gap-2 pt-2">
-                        {themes.map((themeOption) => (
-                             <Button
-                                key={themeOption.name}
-                                variant={currentBaseTheme === themeOption.name ? 'default' : 'outline'}
-                                onClick={() => handleThemeChange(themeOption.name)}
-                                className="justify-start"
-                            >
-                                {currentBaseTheme === themeOption.name && <Check className="mr-2 h-4 w-4" />}
-                                {themeOption.label}
-                            </Button>
-                        ))}
                     </div>
                 </div>
 
