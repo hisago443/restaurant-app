@@ -202,7 +202,8 @@ function OrderPanel({
     handlePrintProvisionalBill,
     handleProcessPayment,
     receiptPreview,
-    canDropOnOrder
+    canDropOnOrder,
+    canDropOnTable
 }: {
     orderItems: OrderItem[];
     originalOrderItems: OrderItem[];
@@ -366,7 +367,7 @@ function OrderPanel({
                 <div className="space-y-2">
                     <div className="grid grid-cols-5 gap-1.5">
                         {tables.map(table => (
-                            <TableDropTarget key={table.id} table={table} occupancyCount={occupancyCount} handleSelectTable={() => handleSelectTable(table.id)} onDropItem={onDropItemOnTable}>
+                            <TableDropTarget key={table.id} table={table} occupancyCount={occupancyCount} handleSelectTable={() => handleSelectTable(table.id)} onDropItem={onDropItemOnTable} canDropItem={canDropOnTable}>
                                 <div className="absolute top-1 left-1">
                                     {React.createElement(statusIcons[table.status], { className: "h-3 w-3" })}
                                 </div>
