@@ -32,20 +32,18 @@ export default function SystemSettings() {
         { name: 'lavender', label: 'Lavender' },
     ];
 
-    const currentBaseTheme = theme?.replace('dark ', '') || 'default';
+    const currentBaseTheme = theme?.split(' ')[0] || 'default';
     
     const handleThemeChange = (newTheme: string) => {
-        const isDark = resolvedTheme === 'dark';
-        if (isDark) {
-            setTheme(`dark ${newTheme}`);
-        } else {
-            setTheme(newTheme);
-        }
+        setTheme(newTheme);
     }
 
     const handleDarkModeToggle = (checked: boolean) => {
-        const newTheme = checked ? `dark ${currentBaseTheme}` : currentBaseTheme;
-        setTheme(newTheme);
+        if (checked) {
+            setTheme('dark');
+        } else {
+            setTheme('light');
+        }
     }
 
     return (
