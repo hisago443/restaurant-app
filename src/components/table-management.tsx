@@ -12,7 +12,7 @@ import type { Table, TableStatus, Order, Bill } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
-import { PlusCircle, Trash2, LayoutTemplate, Sparkles, Users, CheckCircle2, Bookmark, Printer, Repeat, Edit, SparklesIcon, UserCheck, BookmarkX, Eye } from 'lucide-react';
+import { PlusCircle, Trash2, LayoutTemplate, Sparkles, Users, CheckCircle2, Bookmark, Printer, Repeat, Edit, SparklesIcon, UserCheck, BookmarkX, Eye, X } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { format } from 'date-fns';
@@ -512,5 +512,6 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
     </div>
   );
 }
+
 
 
