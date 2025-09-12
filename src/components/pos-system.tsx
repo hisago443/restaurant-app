@@ -1366,80 +1366,82 @@ export default function PosSystem({
         <div className="md:col-span-2 xl:col-span-3 flex flex-col h-full">
           <Card className="flex flex-col flex-grow">
             <CardHeader>
-                <div className="flex flex-col gap-4">
-                    <div className="flex gap-4 items-center flex-wrap">
-                        <Button variant="outline" size="sm" onClick={() => setIsMenuManagerOpen(true)}>
-                            <BookOpen className="mr-2 h-4 w-4" /> Manage Menu
-                        </Button>
-                        <div className="relative flex-grow min-w-[200px]">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                            <Input
-                                placeholder="Search menu items..."
-                                className="pl-10"
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                            />
-                        </div>
-                        <div className="relative flex-grow min-w-[200px]">
-                            <QrCodeIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                            <Input
-                                placeholder="Enter item code..."
-                                className="pl-10"
-                                value={itemCodeInput}
-                                onChange={(e) => setItemCodeInput(e.target.value)}
-                                onKeyDown={handleCodeEntry}
-                            />
-                        </div>
-                        <div className="flex items-center space-x-2">
-                            <Switch id="easy-mode-switch" checked={easyMode} onCheckedChange={setEasyMode} />
-                            <Label htmlFor="easy-mode-switch" className="flex items-center gap-2 cursor-pointer">
-                                <MousePointerClick className="h-4 w-4" />
-                                Easy Mode
-                            </Label>
-                        </div>
-                    </div>
-                    <div className="flex justify-between items-center gap-4 flex-wrap">
-                        <RadioGroup value={vegFilter} onValueChange={(v) => setVegFilter(v as VegFilter)} className="flex items-center gap-2">
-                            <RadioGroupItem value="All" id="filter-all" className="sr-only" />
-                            <Label htmlFor="filter-all" className={cn("p-2 rounded-md cursor-pointer", vegFilter === 'All' && 'bg-primary text-primary-foreground')}>All</Label>
-                            
-                            <RadioGroupItem value="Veg" id="filter-veg" className="sr-only" />
-                            <Label htmlFor="filter-veg" className={cn("p-2 rounded-md cursor-pointer border border-green-500 text-green-600 hover:bg-green-50", vegFilter === 'Veg' && 'bg-green-500 text-white')}>Veg</Label>
-                            
-                            <RadioGroupItem value="Non-Veg" id="filter-nonveg" className="sr-only" />
-                            <Label htmlFor="filter-nonveg" className={cn("p-2 rounded-md cursor-pointer border border-red-500 text-red-600 hover:bg-red-50", vegFilter === 'Non-Veg' && 'bg-red-500 text-white')}>Non-Veg</Label>
-                        </RadioGroup>
-
-                        <div className="flex items-center gap-2 flex-wrap">
-                            <RadioGroup value={viewMode} onValueChange={(v) => setViewMode(v as ViewMode)} className="flex items-center">
-                                <RadioGroupItem value="grid" id="grid-view" className="sr-only" />
-                                <Label htmlFor="grid-view" className={cn("p-1.5 rounded-md cursor-pointer transition-colors", viewMode === 'grid' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent' )}>
-                                    <LayoutGrid className="h-5 w-5 box-content" />
-                                </Label>
-
-                                <RadioGroupItem value="accordion" id="accordion-view" className="sr-only" />
-                                <Label htmlFor="accordion-view" className={cn("p-1.5 rounded-md cursor-pointer transition-colors", viewMode === 'accordion' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent' )}>
-                                    <List className="h-5 w-5 box-content" />
-                                </Label>
-
-                                <RadioGroupItem value="list" id="list-view" className="sr-only" />
-                                <Label htmlFor="list-view" className={cn("p-1.5 rounded-md cursor-pointer transition-colors", viewMode === 'list' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent' )}>
-                                    <Rows className="h-5 w-5 box-content" />
-                                </Label>
-                            </RadioGroup>
-                            <Separator orientation="vertical" className="h-8" />
-                            <Button variant="outline" size="sm" onClick={handleShuffleColors}>
-                                <Shuffle className="mr-2 h-4 w-4" /> Colors
-                            </Button>
-                            {viewMode === 'accordion' && (
-                                <Button variant="outline" size="sm" onClick={toggleAccordion}>
-                                    <ChevronsUpDown className="mr-2 h-4 w-4" />
-                                    {allItemsOpen ? 'Collapse' : 'Expand'}
-                                </Button>
-                            )}
-                        </div>
-                    </div>
+              <div className="flex flex-col gap-4">
+                <div className="flex items-center gap-4 flex-wrap">
+                  <Button variant="outline" size="sm" onClick={() => setIsMenuManagerOpen(true)}>
+                    <BookOpen className="mr-2 h-4 w-4" /> Manage Menu
+                  </Button>
+                  <div className="relative flex-grow min-w-[200px]">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                    <Input
+                      placeholder="Search menu items..."
+                      className="pl-10"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                  </div>
+                  <div className="relative flex-grow min-w-[200px]">
+                    <QrCodeIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                    <Input
+                      placeholder="Enter item code..."
+                      className="pl-10"
+                      value={itemCodeInput}
+                      onChange={(e) => setItemCodeInput(e.target.value)}
+                      onKeyDown={handleCodeEntry}
+                    />
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Switch id="easy-mode-switch" checked={easyMode} onCheckedChange={setEasyMode} />
+                    <Label htmlFor="easy-mode-switch" className="flex items-center gap-2 cursor-pointer">
+                      <MousePointerClick className="h-4 w-4" />
+                      Easy Mode
+                    </Label>
+                  </div>
                 </div>
+                <div className="flex justify-between items-center gap-4 flex-wrap">
+                  <RadioGroup value={vegFilter} onValueChange={(v) => setVegFilter(v as VegFilter)} className="flex items-center gap-2">
+                    <Label className="p-2 rounded-md cursor-pointer data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground">
+                      <RadioGroupItem value="All" id="filter-all" className="sr-only" />
+                      All
+                    </Label>
+                    <Label className="p-2 rounded-md cursor-pointer border border-green-500 text-green-600 hover:bg-green-50 data-[state=checked]:bg-green-500 data-[state=checked]:text-white">
+                      <RadioGroupItem value="Veg" id="filter-veg" className="sr-only" />
+                      Veg
+                    </Label>
+                    <Label className="p-2 rounded-md cursor-pointer border border-red-500 text-red-600 hover:bg-red-50 data-[state=checked]:bg-red-500 data-[state=checked]:text-white">
+                      <RadioGroupItem value="Non-Veg" id="filter-nonveg" className="sr-only" />
+                      Non-Veg
+                    </Label>
+                  </RadioGroup>
+
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <RadioGroup value={viewMode} onValueChange={(v) => setViewMode(v as ViewMode)} className="flex items-center">
+                      <Label className={cn("p-1.5 rounded-md cursor-pointer transition-colors", viewMode === 'grid' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent' )}>
+                        <RadioGroupItem value="grid" id="grid-view" className="sr-only" />
+                        <LayoutGrid className="h-5 w-5 box-content" />
+                      </Label>
+                      <Label className={cn("p-1.5 rounded-md cursor-pointer transition-colors", viewMode === 'accordion' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent' )}>
+                        <RadioGroupItem value="accordion" id="accordion-view" className="sr-only" />
+                        <List className="h-5 w-5 box-content" />
+                      </Label>
+                      <Label className={cn("p-1.5 rounded-md cursor-pointer transition-colors", viewMode === 'list' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent' )}>
+                        <RadioGroupItem value="list" id="list-view" className="sr-only" />
+                        <Rows className="h-5 w-5 box-content" />
+                      </Label>
+                    </RadioGroup>
+                    <Separator orientation="vertical" className="h-8" />
+                    <Button variant="outline" size="sm" onClick={handleShuffleColors}>
+                      <Shuffle className="mr-2 h-4 w-4" /> Colors
+                    </Button>
+                    {viewMode === 'accordion' && (
+                      <Button variant="outline" size="sm" onClick={toggleAccordion}>
+                        <ChevronsUpDown className="mr-2 h-4 w-4" />
+                        {allItemsOpen ? 'Collapse' : 'Expand'}
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </div>
             </CardHeader>
             <ScrollArea className="flex-grow px-4">
                 {renderMenuContent()}
@@ -1520,3 +1522,5 @@ export default function PosSystem({
     </DndProvider>
   );
 }
+
+    
