@@ -1357,9 +1357,9 @@ export default function PosSystem({
                                         <span>{turnover}</span>
                                     </div>
                                 }
-                                <div className="absolute top-1 left-1 flex items-center gap-1">
-                                    <Icon className={cn("h-3 w-3", table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black')} />
-                                    <span className={cn("text-xs font-semibold", table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black')}>{table.status}</span>
+                                <div className="absolute top-1 left-1 flex items-center gap-1 w-[calc(100%-0.5rem)] pr-4">
+                                    <Icon className={cn("h-3 w-3 shrink-0", table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black')} />
+                                    <span className={cn("text-[10px] font-semibold truncate", table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black')}>{table.status}</span>
                                 </div>
                             </div>
                             <div className="absolute inset-0 flex gap-1 items-center justify-center bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity rounded-md">
@@ -1425,5 +1425,7 @@ export default function PosSystem({
     </div>
   );
 }
+
+    
 
     
