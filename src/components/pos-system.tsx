@@ -47,7 +47,7 @@ const colorNames = Object.keys(colorPalette);
 
 const itemStatusColors: Record<string, { light: string, dark: string, name: string }> = {
     low: { light: 'bg-yellow-200 dark:bg-yellow-900/40', dark: 'bg-yellow-300 dark:bg-yellow-800/70', name: 'Running Low' },
-    out: { light: 'bg-red-500 dark:bg-red-800/50', dark: 'bg-red-700 dark:bg-red-700/70', name: 'Out of Stock' },
+    out: { light: 'bg-red-600 dark:bg-red-800/70', dark: 'bg-red-700 dark:bg-red-700/70', name: 'Out of Stock' },
 };
 const itemStatusNames = Object.keys(itemStatusColors);
 
@@ -496,12 +496,12 @@ export default function PosSystem({
         setCategoryColors(defaultCategoryColors);
     }
     // By default, open the first category in accordion view if it exists
-    if (typedMenuData.length > 0) {
+    if (typedMenuData.length > 0 && viewMode === 'accordion') {
         setActiveAccordionItems([typedMenuData[0].category]);
     } else {
         setActiveAccordionItems([]);
     }
-  }, [typedMenuData, categoryColors, setCategoryColors]);
+  }, [typedMenuData, categoryColors, setCategoryColors, viewMode]);
 
   useEffect(() => {
     try {
@@ -575,9 +575,9 @@ export default function PosSystem({
 
     const input: GenerateReceiptInput = {
         items: orderItems.map(item => ({ name: item.name, price: item.price, quantity: item.quantity })),
-        discount: discount,
-        subtotal: subtotal,
-        total: total,
+        discount,
+        subtotal,
+        total,
     };
     try {
         const result = await generateReceipt(input);
@@ -669,11 +669,10 @@ export default function PosSystem({
         })).filter(category => category.subCategories.length > 0);
     }
 
+    // Veg/Non-Veg filter
     if (vegFilter !== 'All') {
         menuToFilter = menuToFilter.map(category => {
-            const filteredSubCategories = category.subCategories
-                .filter(subCategory => subCategory.name === vegFilter);
-
+            const filteredSubCategories = category.subCategories.filter(subCategory => subCategory.name === vegFilter);
             if (filteredSubCategories.length > 0) {
                 return { ...category, subCategories: filteredSubCategories };
             }
@@ -1069,7 +1068,7 @@ export default function PosSystem({
     let finalColorName = categoryColorName ? colorPalette[categoryColorName]?.light : (isNonVeg ? nonVegColor : vegColor);
     if(itemStatus) {
         if (itemStatus === 'out') {
-            finalColorName = 'bg-red-500 dark:bg-red-800/50';
+            finalColorName = 'bg-red-500 text-white dark:bg-red-700';
         } else {
             finalColorName = itemStatusColors[itemStatus].light;
         }
@@ -1079,7 +1078,7 @@ export default function PosSystem({
       <Card
         key={item.name}
         className={cn(
-          "group rounded-lg transition-all hover:shadow-md relative overflow-hidden h-full flex flex-col min-h-[100px]",
+          "group rounded-lg transition-all hover:shadow-md relative overflow-hidden h-full flex flex-col min-h-[110px]",
           finalColorName,
           easyMode && 'cursor-pointer hover:scale-105'
         )}
@@ -1147,38 +1146,35 @@ export default function PosSystem({
     );
   };
 
-  const CategoryColorPicker = ({ categoryName }: { categoryName: string }) => (
-    <div
-      role="button"
-      aria-label={`Change category color for ${categoryName}`}
-      className="p-1"
-      onClick={(e) => {
-        e.stopPropagation();
-      }}
-    >
-      <Popover>
-        <PopoverTrigger asChild>
-          <div role="button" className={cn(buttonVariants({ variant: "ghost", size: "icon" }), "h-6 w-6")}>
-            <Palette className="h-4 w-4" />
-          </div>
-        </PopoverTrigger>
-        <PopoverContent className="w-auto p-2">
-          <div className="grid grid-cols-5 gap-1">
-            {colorNames.map((name) => (
-              <div
-                key={name}
-                className={cn("h-6 w-6 rounded-full cursor-pointer", colorPalette[name].light)}
-                onClick={() => handleSetCategoryColor(categoryName, name)}
-              />
-            ))}
-            <Button variant="ghost" size="sm" className="col-span-5 h-8" onClick={() => handleSetCategoryColor(categoryName, '')}>
-              Reset
-            </Button>
-          </div>
-        </PopoverContent>
-      </Popover>
-    </div>
-  );
+  const CategoryColorPicker = ({ categoryName }: { categoryName: string }) => {
+    return (
+      <div onClick={(e) => e.stopPropagation()}>
+        <Popover>
+          <PopoverTrigger asChild>
+              <div role="button" aria-label={`Change category color for ${categoryName}`} className="p-1">
+                <div className={cn("h-6 w-6 flex items-center justify-center rounded-md hover:bg-white/30")}>
+                  <Palette className="h-4 w-4" />
+                </div>
+              </div>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-2">
+            <div className="grid grid-cols-5 gap-1">
+              {colorNames.map((name) => (
+                <div
+                  key={name}
+                  className={cn("h-6 w-6 rounded-full cursor-pointer", colorPalette[name].light)}
+                  onClick={() => handleSetCategoryColor(categoryName, name)}
+                />
+              ))}
+              <Button variant="ghost" size="sm" className="col-span-5 h-8" onClick={() => handleSetCategoryColor(categoryName, '')}>
+                Reset
+              </Button>
+            </div>
+          </PopoverContent>
+        </Popover>
+      </div>
+    );
+  };
 
   const renderMenuContent = () => {
     if (viewMode === 'list') {
@@ -1190,9 +1186,7 @@ export default function PosSystem({
                 <h2 className="text-xl font-bold flex-grow text-left">
                   {category.category}
                 </h2>
-                <div onClick={(e) => e.stopPropagation()}>
-                  <CategoryColorPicker categoryName={category.category} />
-                </div>
+                <CategoryColorPicker categoryName={category.category} />
               </div>
 
               <div className="space-y-4 pt-2">
@@ -1220,13 +1214,7 @@ export default function PosSystem({
                     <TabsTrigger value={category.category} className={cn("rounded-none border-b-2 border-transparent data-[state=active]:shadow-none px-4 py-2 cursor-pointer", categoryColors[category.category] ? colorPalette[categoryColors[category.category]]?.dark : '')}>
                       <span className="flex-grow text-left text-lg text-black">{category.category}</span>
                     </TabsTrigger>
-                    <div
-                      className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                      }}
-                    >
+                    <div className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
                       <CategoryColorPicker categoryName={category.category} />
                     </div>
                   </div>
@@ -1260,8 +1248,8 @@ export default function PosSystem({
         >
             {filteredMenu.map(category => (
                 <AccordionItem key={category.category} value={category.category} className="border-b-0">
-                    <AccordionTrigger className={cn("p-3 rounded-md text-lg font-bold hover:no-underline", categoryColors[category.category] ? colorPalette[categoryColors[category.category]]?.dark : 'bg-muted')}>
-                        <div className="flex-grow text-left text-black">{category.category}</div>
+                    <AccordionTrigger className={cn("p-3 rounded-md text-lg font-bold hover:no-underline flex justify-between", categoryColors[category.category] ? colorPalette[categoryColors[category.category]]?.dark : 'bg-muted')}>
+                        <span className="flex-grow text-left text-black">{category.category}</span>
                         <CategoryColorPicker categoryName={category.category} />
                     </AccordionTrigger>
                     <AccordionContent className="p-2 space-y-2">
@@ -1532,10 +1520,3 @@ export default function PosSystem({
     </DndProvider>
   );
 }
-
-
-    
-
-    
-
-    
