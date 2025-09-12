@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import * as React from 'react';
@@ -17,7 +18,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from '@/hooks/use-toast';
-import { Search, Plus, Minus, X, LayoutGrid, List, Rows, ChevronsUpDown, Palette, Shuffle, ClipboardList, Send, CheckCircle2, Users, Bookmark, Sparkles, Repeat, Edit, UserCheck, BookmarkX, Printer, Loader2, BookOpen, Trash2 as TrashIcon, QrCode as QrCodeIcon, MousePointerClick, Eye } from 'lucide-react';
+import { Search, Plus, Minus, X, LayoutGrid, List, Rows, ChevronsUpDown, Palette, Shuffle, ClipboardList, Send, CheckCircle2, Users, Bookmark, Sparkles, Repeat, Edit, UserCheck, BookmarkX, Printer, Loader2, BookOpen, Trash2 as TrashIcon, QrCode as QrCodeIcon, MousePointerClick, Eye, Hand } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useDrag, useDrop } from 'react-dnd';
@@ -186,6 +187,7 @@ function OrderPanel({
     activeOrder,
     currentActiveTableId,
     clearCurrentOrder,
+    handleQuickAssign,
     subtotal,
     total,
     discount,
@@ -205,6 +207,7 @@ function OrderPanel({
     activeOrder: Order | null;
     currentActiveTableId: number | null;
     clearCurrentOrder: (fullReset?: boolean) => void;
+    handleQuickAssign: () => void;
     subtotal: number;
     total: number;
     discount: number;
@@ -225,6 +228,8 @@ function OrderPanel({
             canDrop: !!monitor.canDrop(),
         }),
     }));
+    
+    const showQuickAssign = orderItems.length > 0 && !currentActiveTableId;
 
     const renderOrderItems = () => {
         const originalItemsMap = new Map(originalOrderItems.map(item => [item.name, item.quantity]));
@@ -383,6 +388,16 @@ function OrderPanel({
                     </div>
                 </div>
                 <div className="flex flex-col gap-2 pt-2">
+                    {showQuickAssign && (
+                        <Button 
+                            size="lg"
+                            className="h-12 text-base bg-amber-500 hover:bg-amber-600"
+                            onClick={handleQuickAssign}
+                        >
+                            <Hand className="mr-2 h-4 w-4" />
+                            Quick Assign to Table
+                        </Button>
+                    )}
                     <Button 
                         size="lg"
                         className={cn("h-12 text-base", activeOrder && "bg-blue-600 hover:bg-blue-700")}
@@ -451,6 +466,7 @@ export default function PosSystem({
   const [reservationDetails, setReservationDetails] = useState({ name: '', time: '' });
   const [tableToReserve, setTableToReserve] = useState<number | null>(null);
   const [vegFilter, setVegFilter] = useState<VegFilter>('All');
+  const [isQuickAssignDialogOpen, setIsQuickAssignDialogOpen] = useState(false);
 
 
   const typedMenuData: MenuCategory[] = menu;
@@ -1007,6 +1023,26 @@ export default function PosSystem({
     setTableToReserve(tableId);
     setIsReserveDialogOpen(true);
   };
+  
+  const handleQuickAssign = () => {
+    if (orderItems.length > 0 && !currentActiveTableId) {
+        setIsQuickAssignDialogOpen(true);
+    } else {
+        toast({
+            title: "Nothing to Assign",
+            description: "You can only use Quick Assign when there is a pending order with no table selected.",
+        });
+    }
+  };
+  
+  const handleAssignOrderToTable = (tableId: number) => {
+    setIsQuickAssignDialogOpen(false);
+    setSelectedTableId(tableId);
+    // Use a timeout to ensure the state updates before sending to kitchen
+    setTimeout(() => {
+        handleSendToKitchen();
+    }, 100);
+  }
 
 
   const renderMenuItem = (item: MenuItem, subCategoryName: string, categoryName: string) => {
@@ -1325,6 +1361,7 @@ export default function PosSystem({
               activeOrder={activeOrder}
               currentActiveTableId={currentActiveTableId}
               clearCurrentOrder={clearCurrentOrder}
+              handleQuickAssign={handleQuickAssign}
               subtotal={subtotal}
               total={total}
               discount={discount}
@@ -1400,6 +1437,29 @@ export default function PosSystem({
                 <Button onClick={handleReserveTable}>Reserve</Button>
             </DialogFooter>
         </DialogContent>
+      </Dialog>
+      <Dialog open={isQuickAssignDialogOpen} onOpenChange={setIsQuickAssignDialogOpen}>
+          <DialogContent>
+              <DialogHeader>
+                  <DialogTitle>Assign Order to Table</DialogTitle>
+                  <DialogDescription>Select an available table to assign this order to.</DialogDescription>
+              </DialogHeader>
+              <div className="grid grid-cols-4 gap-4 py-4">
+                  {tables.filter(t => t.status === 'Available').map(table => (
+                      <Button
+                          key={table.id}
+                          variant="outline"
+                          className="aspect-square h-20 text-2xl"
+                          onClick={() => handleAssignOrderToTable(table.id)}
+                      >
+                          {table.id}
+                      </Button>
+                  ))}
+                  {tables.filter(t => t.status === 'Available').length === 0 && (
+                        <p className="col-span-4 text-center text-muted-foreground">No tables are currently available.</p>
+                  )}
+              </div>
+          </DialogContent>
       </Dialog>
     </div>
   );
