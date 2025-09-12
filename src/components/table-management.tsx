@@ -104,25 +104,40 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
         .sort((a,b) => b.timestamp.getTime() - a.timestamp.getTime());
   }, [billHistory, selectedTable]);
 
-  const localUpdateTableStatus = (tableId: number, status: TableStatus) => {
-    updateTableStatus([tableId], status);
-    const updatedTable = tables.find(t => t.id === tableId);
-    if(updatedTable) {
-        setSelectedTable({...updatedTable, status});
+  const handleTableClick = (table: Table) => {
+    if (selectedTables.length > 0) {
+      // If in bulk selection mode, a click should toggle selection
+      handleCheckboxChange(table.id, !selectedTables.includes(table.id));
+      return;
     }
+
+    const currentStatus = table.status;
+    let nextStatus: TableStatus;
+
+    // Define the status cycle
+    switch (currentStatus) {
+      case 'Available':
+        nextStatus = 'Occupied';
+        break;
+      case 'Occupied':
+        nextStatus = 'Cleaning';
+        break;
+      case 'Cleaning':
+        nextStatus = 'Available';
+        break;
+      case 'Reserved':
+        // Don't cycle 'Reserved' status on simple click to avoid accidents.
+        // Instead, select it to show detailed actions.
+        setSelectedTable(table.id === selectedTable?.id ? null : table);
+        return;
+      default:
+        nextStatus = 'Available';
+        break;
+    }
+    updateTableStatus([table.id], nextStatus);
+    setSelectedTable(null); // Deselect after a quick status change
   };
 
-  const handleTableClick = (table: Table) => {
-    if (table.status === 'Cleaning') {
-        updateTableStatus([table.id], 'Available');
-        return;
-    }
-    if (selectedTable?.id === table.id) {
-       setSelectedTable(table);
-    } else {
-        setSelectedTable(table);
-    }
-  };
 
   const handleDoubleClick = (table: Table) => {
     const order = orders.find(o => o.tableId === table.id && o.status !== 'Completed');
@@ -210,37 +225,58 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
   };
 
 
-  const renderActions = (table: Table) => {
-    const orderForTable = orders.find(o => o.tableId === table.id && o.status !== 'Completed');
-    switch (table.status) {
+  const renderActionsForSelectedTable = () => {
+    if (!selectedTable) return null;
+
+    const orderForTable = orders.find(o => o.tableId === selectedTable.id && o.status !== 'Completed');
+    let actions: React.ReactNode[] = [];
+
+    switch (selectedTable.status) {
       case 'Available':
-        return (
-          <>
-            <Button onClick={() => { onCreateOrder(table.id); setSelectedTable(null); }}><Users className="mr-2 h-4 w-4" />Create Order</Button>
-            <Button variant="outline" onClick={() => { localUpdateTableStatus(table.id, 'Reserved'); setSelectedTable(null); }}><Bookmark className="mr-2 h-4 w-4" />Reserve Table</Button>
-          </>
-        );
+        actions = [
+          <Button key="create" onClick={() => { onCreateOrder(selectedTable.id); setSelectedTable(null); }}><Users className="mr-2 h-4 w-4" />Create Order</Button>,
+          <Button key="reserve" variant="outline" onClick={() => { updateTableStatus([selectedTable.id], 'Reserved'); setSelectedTable(null); }}><Bookmark className="mr-2 h-4 w-4" />Reserve Table</Button>
+        ];
+        break;
       case 'Occupied':
-        return (
-          <>
-            <Button onClick={() => { orderForTable && onEditOrder(orderForTable); setSelectedTable(null);}} disabled={!orderForTable}><Edit className="mr-2 h-4 w-4" />Update Order</Button>
-            <Button variant="outline" onClick={(e) => { handleOpenPrintDialog(e, table); setSelectedTable(null); }} disabled={!orderForTable}><Printer className="mr-2 h-4 w-4" />Print Bill</Button>
-            <Button variant="destructive" onClick={() => { localUpdateTableStatus(table.id, 'Cleaning'); setSelectedTable(null); }}><SparklesIcon className="mr-2 h-4 w-4" />Mark as Cleaning</Button>
-          </>
-        );
+        actions = [
+          <Button key="update" onClick={() => { orderForTable && onEditOrder(orderForTable); setSelectedTable(null);}} disabled={!orderForTable}><Edit className="mr-2 h-4 w-4" />Update Order</Button>,
+          <Button key="print" variant="outline" onClick={(e) => { handleOpenPrintDialog(e, selectedTable); setSelectedTable(null); }} disabled={!orderForTable}><Printer className="mr-2 h-4 w-4" />Print Bill</Button>,
+          <Button key="clean" variant="destructive" onClick={() => { updateTableStatus([selectedTable.id], 'Cleaning'); setSelectedTable(null); }}><SparklesIcon className="mr-2 h-4 w-4" />Mark as Cleaning</Button>
+        ];
+        break;
       case 'Reserved':
-        return (
-          <>
-            <Button onClick={() => { localUpdateTableStatus(table.id, 'Occupied'); setSelectedTable(null); }}><UserCheck className="mr-2 h-4 w-4" />Guest Arrived</Button>
-            <Button variant="outline" onClick={() => { localUpdateTableStatus(table.id, 'Available'); setSelectedTable(null); }}><BookmarkX className="mr-2 h-4 w-4" />Cancel Reservation</Button>
-          </>
-        );
+         actions = [
+          <Button key="arrive" onClick={() => { updateTableStatus([selectedTable.id], 'Occupied'); setSelectedTable(null); }}><UserCheck className="mr-2 h-4 w-4" />Guest Arrived</Button>,
+          <Button key="cancel" variant="outline" onClick={() => { updateTableStatus([selectedTable.id], 'Available'); setSelectedTable(null); }}><BookmarkX className="mr-2 h-4 w-4" />Cancel Reservation</Button>
+        ];
+        break;
       case 'Cleaning':
-        return <Button onClick={() => { localUpdateTableStatus(table.id, 'Available'); setSelectedTable(null); }}><CheckCircle2 className="mr-2 h-4 w-4" />Mark as Available</Button>;
-      default:
-        return null;
+        actions = [<Button key="available" onClick={() => { updateTableStatus([selectedTable.id], 'Available'); setSelectedTable(null); }}><CheckCircle2 className="mr-2 h-4 w-4" />Mark as Available</Button>];
+        break;
     }
+    
+    return (
+      <div className="mt-4 p-4 border rounded-lg bg-muted/50">
+        <div className="flex justify-between items-center">
+            <h3 className="text-lg font-semibold">Actions for Table {selectedTable.id}</h3>
+            <Button variant="ghost" size="icon" onClick={() => setSelectedTable(null)}><X className="h-4 w-4"/></Button>
+        </div>
+        <div className="flex flex-wrap gap-2 mt-2">
+            {actions}
+            <Button key="history" variant="secondary" onClick={() => {
+                // This will open the modal
+                const tableToView = selectedTable;
+                setSelectedTable(null); // Close the action bar
+                setTimeout(() => setSelectedTable(tableToView), 0); // Re-open the modal
+            }}>
+                <Eye className="mr-2 h-4 w-4" /> View History
+            </Button>
+        </div>
+      </div>
+    );
   };
+
 
   return (
     <div className="p-4">
@@ -312,6 +348,7 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
                   'aspect-square rounded-lg flex flex-col items-center justify-center cursor-pointer transition-all duration-300 shadow-lg hover:shadow-2xl relative border-2',
                   getDynamicColor(table.status, turnover),
                   selectedTables.includes(table.id) && 'ring-4 ring-offset-2 ring-primary border-primary',
+                  selectedTable?.id === table.id && 'ring-4 ring-offset-2 ring-secondary border-secondary',
                   !selectedTables.includes(table.id) && 'border-black/50',
                   hoveredStatus === table.status && 'scale-110 z-10'
                 )}
@@ -359,56 +396,9 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
               </div>
             )}
           </div>
+           {renderActionsForSelectedTable()}
         </CardContent>
       </Card>
-
-      <Dialog open={!!selectedTable} onOpenChange={(open) => { if (!open) setSelectedTable(null)}}>
-        <DialogContent>
-          {selectedTable && (
-            <>
-              <DialogHeader>
-                <DialogTitle>Table {selectedTable.id} - {selectedTable.status}</DialogTitle>
-                 <DialogDescription>
-                  Daily Turnover: {occupancyCount[selectedTable.id] || 0} times
-                </DialogDescription>
-              </DialogHeader>
-              <div className="py-4 space-y-4">
-                <div>
-                  <p className="font-semibold mb-2">Actions:</p>
-                  <div className="flex flex-wrap gap-2">
-                      {renderActions(selectedTable)}
-                  </div>
-                </div>
-                 <div>
-                    <h4 className="font-semibold mb-2">Billing History:</h4>
-                    {tableBillHistory.length > 0 ? (
-                        <div className="space-y-2 max-h-48 overflow-y-auto border rounded-md p-2">
-                            {tableBillHistory.map(bill => (
-                                <div key={bill.id} className="flex justify-between items-center text-sm p-2 bg-muted/50 rounded-md group">
-                                    <div>
-                                      <span>{format(new Date(bill.timestamp), 'Pp')}</span>
-                                      <span className="font-mono font-semibold ml-4">₹{bill.total.toFixed(2)}</span>
-                                    </div>
-                                    <Button variant="ghost" size="icon" className="h-7 w-7 opacity-0 group-hover:opacity-100" onClick={() => setSelectedBill(bill)}>
-                                      <Eye className="h-4 w-4" />
-                                    </Button>
-                                </div>
-                            ))}
-                        </div>
-                    ) : (
-                        <p className="text-sm text-muted-foreground">No bills recorded for this table yet.</p>
-                    )}
-                 </div>
-              </div>
-              <DialogFooter>
-                <DialogClose asChild>
-                  <Button type="button" variant="secondary">Close</Button>
-                </DialogClose>
-              </DialogFooter>
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
       
       <Dialog open={isLayoutManagerOpen} onOpenChange={setIsLayoutManagerOpen}>
         <DialogContent>
@@ -522,4 +512,5 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
     </div>
   );
 }
+
 
