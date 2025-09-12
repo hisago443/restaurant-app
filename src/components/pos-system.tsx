@@ -135,7 +135,7 @@ function DraggableMenuItem({ item, children, canDrag }: { item: MenuItem; childr
         collect: (monitor) => ({
             isDragging: !!monitor.isDragging(),
         }),
-    }));
+    }), [canDrag]);
 
     return (
         <div
@@ -357,17 +357,7 @@ function OrderPanel({
           
             <div className="p-4 border-t space-y-4 bg-muted/30">
                 <div className="space-y-2">
-                    <div className="grid grid-cols-5 gap-1.5">
-                        {tables.map(table => (
-                            <TableDropTarget key={table.id} table={table} occupancyCount={occupancyCount} handleSelectTable={() => handleSelectTable(table.id)} onDropItem={onDropItemOnTable}>
-                                <div className="absolute top-1 left-1">
-                                    {React.createElement(statusIcons[table.status], { className: "h-3 w-3" })}
-                                </div>
-                                <span className="text-3xl font-bold leading-none">{table.id}</span>
-                                <span className="text-xs font-bold">{table.status}</span>
-                            </TableDropTarget>
-                        ))}
-                    </div>
+                    
                 </div>
 
                 <div>
@@ -394,8 +384,8 @@ function OrderPanel({
                         </div>
                     )}
                     <div className="flex justify-between font-bold text-2xl border-t pt-2 mt-2 bg-primary/20 p-2 rounded-md">
-                        <span>Rs. Total:</span>
-                        <span>₹{total.toFixed(2)}</span>
+                        <span>Total:</span>
+                        <span>Rs. {total.toFixed(2)}</span>
                     </div>
                 </div>
                 <div className="flex flex-col gap-2 pt-2">
@@ -1077,7 +1067,7 @@ export default function PosSystem({
             </div>
           )}
         </CardContent>
-        <p className="absolute bottom-1 left-2 text-xs text-muted-foreground font-mono">{item.code}</p>
+        <p className="absolute bottom-1 left-2 text-xs text-muted-foreground font-mono">No. {item.code}</p>
         <div className="absolute bottom-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
           <Popover>
             <PopoverTrigger asChild>
