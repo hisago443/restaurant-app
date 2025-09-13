@@ -3,12 +3,12 @@
 "use client";
 
 import * as React from 'react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose, DialogDescription } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger, AlertDialogFooter, AlertDialogDescription } from "@/components/ui/alert-dialog";
-import type { Table as TableType, TableStatus, Order, Bill } from '@/lib/types';
+import type { Table as TableType, TableStatus, Order, Bill, OrderItem } from '@/lib/types';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -16,7 +16,7 @@ import { Label } from '@/components/ui/label';
 import { PlusCircle, Trash2, LayoutTemplate, Sparkles, Users, CheckCircle2, Bookmark, Printer, Repeat, Edit, SparklesIcon, UserCheck, BookmarkX, Eye, X } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
-import { format } from 'date-fns';
+import { format, isSameDay } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 
 const statusBaseColors: Record<TableStatus, string> = {
@@ -63,6 +63,8 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
   const [hoveredStatus, setHoveredStatus] = useState<TableStatus | null>(null);
   const [isPrintDialogOpen, setIsPrintDialogOpen] = useState(false);
   const [tableForPrint, setTableForPrint] = useState<TableType | null>(null);
+  const [isBillHistoryDialogOpen, setIsBillHistoryDialogOpen] = useState(false);
+  const [billsForDialog, setBillsForDialog] = useState<Bill[]>([]);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -76,22 +78,38 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
 
   const filteredTables = tables.filter(table => filter === 'All' || table.status === filter);
   
-  const tableBillHistory = React.useMemo(() => {
-    if (!selectedTable) return [];
-    return billHistory
-        .filter(bill => bill.tableId === selectedTable.id)
-        .sort((a,b) => b.timestamp.getTime() - a.timestamp.getTime());
-  }, [billHistory, selectedTable]);
+  const allTimeItemCounts = useMemo(() => {
+    const itemCounts: Record<string, number> = {};
+    billHistory.forEach(bill => {
+      bill.orderItems.forEach((item: OrderItem) => {
+        itemCounts[item.name] = (itemCounts[item.name] || 0) + item.quantity;
+      });
+    });
+    return Object.entries(itemCounts)
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count);
+  }, [billHistory]);
+
+  const topSellingItems = useMemo(() => allTimeItemCounts.slice(0, 5), [allTimeItemCounts]);
+
+  const tablePerformanceData = useMemo(() => {
+    const todaysBills = billHistory.filter(bill => isSameDay(bill.timestamp, new Date()));
+    return tables.map(table => {
+      const turnover = occupancyCount[table.id] || 0;
+      const revenue = todaysBills.filter(bill => bill.tableId === table.id).reduce((sum, bill) => sum + bill.total, 0);
+      const bills = todaysBills.filter(bill => bill.tableId === table.id);
+      return { id: table.id, turnover, revenue, bills };
+    });
+  }, [tables, billHistory, occupancyCount]);
 
   const handleTableClick = (table: TableType) => {
     if (selectedTables.length > 0) {
-      // If in bulk selection mode, a click should toggle selection
       handleCheckboxChange(table.id, !selectedTables.includes(table.id));
       return;
     }
     
     if (table.status === 'Available') {
-        updateTableStatus([table.id], 'Occupied');
+        onCreateOrder(table.id);
     } else if (table.status === 'Occupied') {
         toast({
             title: 'Payment Required',
@@ -154,6 +172,33 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
     setTableForPrint(table);
     setIsPrintDialogOpen(true);
   };
+
+  const handlePrintReceipt = (bill: Bill) => {
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(`
+        <html>
+          <head>
+            <title>Receipt for Bill #${bill.id}</title>
+            <style>
+              body { font-family: monospace; margin: 20px; }
+              pre { white-space: pre-wrap; word-wrap: break-word; }
+            </style>
+          </head>
+          <body>
+            <pre>${bill.receiptPreview}</pre>
+            <script>
+              window.onload = function() {
+                window.print();
+                window.close();
+              }
+            </script>
+          </body>
+        </html>
+      `);
+      printWindow.document.close();
+    }
+  };
   
   const handlePrint = (order: Order) => {
      const subtotal = order.items.reduce((acc, item) => acc + item.price * item.quantity, 0);
@@ -187,89 +232,13 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
     }
   };
 
-
-  const renderActionsForSelectedTable = () => {
-    if (!selectedTable) return null;
-
-    const orderForTable = orders.find(o => o.tableId === selectedTable.id && o.status !== 'Completed');
-    let actions: React.ReactNode[] = [];
-
-    switch (selectedTable.status) {
-      case 'Available':
-        actions = [
-          <Button key="create" onClick={() => { onCreateOrder(selectedTable.id); setSelectedTable(null); }}><Users className="mr-2 h-4 w-4" />Create Order</Button>,
-          <Button key="reserve" variant="outline" onClick={() => { updateTableStatus([selectedTable.id], 'Reserved'); setSelectedTable(null); }}><Bookmark className="mr-2 h-4 w-4" />Reserve Table</Button>
-        ];
-        break;
-      case 'Occupied':
-        actions = [
-          <Button key="update" onClick={() => { orderForTable && onEditOrder(orderForTable); setSelectedTable(null);}} disabled={!orderForTable}><Edit className="mr-2 h-4 w-4" />Update Order</Button>,
-          <Button key="print" variant="outline" onClick={(e) => { handleOpenPrintDialog(e, selectedTable); setSelectedTable(null); }} disabled={!orderForTable}><Printer className="mr-2 h-4 w-4" />Print Bill</Button>
-        ];
-        break;
-      case 'Reserved':
-         actions = [
-          <Button key="arrive" onClick={() => { updateTableStatus([selectedTable.id], 'Occupied'); setSelectedTable(null); }}><UserCheck className="mr-2 h-4 w-4" />Guest Arrived</Button>,
-          <Button key="cancel" variant="outline" onClick={() => { updateTableStatus([selectedTable.id], 'Available'); setSelectedTable(null); }}><BookmarkX className="mr-2 h-4 w-4" />Cancel Reservation</Button>
-        ];
-        break;
-      case 'Cleaning':
-        actions = [<Button key="available" onClick={() => { updateTableStatus([selectedTable.id], 'Available'); setSelectedTable(null); }}><CheckCircle2 className="mr-2 h-4 w-4" />Mark as Available</Button>];
-        break;
-    }
-    
-    return (
-      <div className="mt-4 p-4 border rounded-lg bg-card shadow-sm">
-        <div className="flex justify-between items-center">
-            <h3 className="text-lg font-semibold">Details for Table {selectedTable.id}</h3>
-            <Button variant="ghost" size="icon" onClick={() => setSelectedTable(null)}><X className="h-4 w-4"/></Button>
-        </div>
-        <div className="flex flex-wrap gap-2 mt-4 mb-4">
-            {actions}
-        </div>
-        <Separator />
-        <div className="mt-4">
-            <h4 className="font-semibold mb-2">Recent Bill History</h4>
-             <div className="max-h-60 overflow-y-auto">
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Bill ID</TableHead>
-                            <TableHead>Date & Time</TableHead>
-                            <TableHead className="text-right">Amount</TableHead>
-                            <TableHead className="text-center">Action</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {tableBillHistory.length > 0 ? (
-                            tableBillHistory.map(bill => (
-                                <TableRow key={bill.id}>
-                                    <TableCell>{bill.id}</TableCell>
-                                    <TableCell>{format(bill.timestamp, 'PPP p')}</TableCell>
-                                    <TableCell className="text-right font-mono">₹{bill.total.toFixed(2)}</TableCell>
-                                    <TableCell className="text-center">
-                                        <Button variant="ghost" size="icon" onClick={() => setSelectedBill(bill)}>
-                                            <Eye className="h-4 w-4" />
-                                        </Button>
-                                    </TableCell>
-                                </TableRow>
-                            ))
-                        ) : (
-                            <TableRow>
-                                <TableCell colSpan={4} className="h-24 text-center text-muted-foreground">No bill history for this table.</TableCell>
-                            </TableRow>
-                        )}
-                    </TableBody>
-                </Table>
-            </div>
-        </div>
-      </div>
-    );
+  const openBillsDialog = (bills: Bill[]) => {
+    setBillsForDialog(bills);
+    setIsBillHistoryDialogOpen(true);
   };
 
-
   return (
-    <div className="p-4">
+    <div className="p-4 space-y-6">
       <Card>
         <CardHeader>
           <div className="flex justify-between items-center gap-4 flex-wrap mb-4">
@@ -336,7 +305,6 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
                   'aspect-square rounded-lg flex flex-col items-center justify-center cursor-pointer transition-all duration-300 shadow-lg hover:shadow-2xl relative border-2',
                   getDynamicColor(table.status),
                   selectedTables.includes(table.id) && 'ring-4 ring-offset-2 ring-primary border-primary',
-                  selectedTable?.id === table.id && 'ring-4 ring-offset-2 ring-foreground border-foreground',
                   !selectedTables.includes(table.id) && 'border-black/50',
                   hoveredStatus === table.status && 'scale-110 z-10'
                 )}
@@ -384,9 +352,81 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
               </div>
             )}
           </div>
-           {renderActionsForSelectedTable()}
         </CardContent>
       </Card>
+
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 mt-6">
+        <div className="lg:col-span-4">
+            <Card>
+                <CardHeader>
+                    <CardTitle>Table Performance (Today)</CardTitle>
+                    <CardDescription>Review daily turnover and revenue for each table.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <div className="max-h-[60vh] overflow-y-auto">
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Table No.</TableHead>
+                                    <TableHead>Turnover</TableHead>
+                                    <TableHead>Total Revenue</TableHead>
+                                    <TableHead className="text-right">Actions</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {tablePerformanceData.map(p => (
+                                    <TableRow key={p.id}>
+                                        <TableCell className="font-bold text-lg">{p.id}</TableCell>
+                                        <TableCell className="font-semibold">{p.turnover}</TableCell>
+                                        <TableCell className="font-semibold text-green-600">Rs. {p.revenue.toFixed(2)}</TableCell>
+                                        <TableCell className="text-right">
+                                            <Button variant="outline" size="sm" onClick={() => openBillsDialog(p.bills)} disabled={p.bills.length === 0}>
+                                                <Eye className="mr-2 h-4 w-4" /> View Bills
+                                            </Button>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </div>
+                </CardContent>
+            </Card>
+        </div>
+        <div className="lg:col-span-1">
+            <Card>
+                <CardHeader>
+                    <CardTitle>Top Selling Items</CardTitle>
+                    <CardDescription>Today's most popular items.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Item</TableHead>
+                          <TableHead className="text-right">Sold</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {topSellingItems.length > 0 ? (
+                          topSellingItems.map(item => (
+                            <TableRow key={item.name} className="hover:bg-muted/50">
+                              <TableCell className="font-bold">{item.name}</TableCell>
+                              <TableCell className="text-right font-bold">{item.count}</TableCell>
+                            </TableRow>
+                          ))
+                        ) : (
+                          <TableRow>
+                            <TableCell colSpan={2} className="text-center text-muted-foreground">
+                              No items sold yet.
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      </TableBody>
+                    </Table>
+                </CardContent>
+            </Card>
+        </div>
+      </div>
       
       <Dialog open={isLayoutManagerOpen} onOpenChange={setIsLayoutManagerOpen}>
         <DialogContent>
@@ -483,6 +523,39 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
             })()}
         </DialogContent>
       </Dialog>
+      
+      <Dialog open={isBillHistoryDialogOpen} onOpenChange={setIsBillHistoryDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Bill History for Table {billsForDialog[0]?.tableId}</DialogTitle>
+          </DialogHeader>
+          <div className="max-h-[60vh] overflow-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Bill ID</TableHead>
+                  <TableHead>Date & Time</TableHead>
+                  <TableHead>Amount</TableHead>
+                  <TableHead className="text-center">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {billsForDialog.map(bill => (
+                  <TableRow key={bill.id}>
+                    <TableCell>{bill.id}</TableCell>
+                    <TableCell>{format(bill.timestamp, 'Pp')}</TableCell>
+                    <TableCell>Rs. {bill.total.toFixed(2)}</TableCell>
+                    <TableCell className="text-center">
+                      <Button variant="ghost" size="icon" onClick={() => setSelectedBill(bill)}><Eye className="h-4 w-4" /></Button>
+                      <Button variant="ghost" size="icon" onClick={() => handlePrintReceipt(bill)}><Printer className="h-4 w-4" /></Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={!!selectedBill} onOpenChange={() => setSelectedBill(null)}>
         <DialogContent>
@@ -509,3 +582,6 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
 
 
 
+
+
+    

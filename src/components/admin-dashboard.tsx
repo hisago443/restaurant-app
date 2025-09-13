@@ -328,47 +328,13 @@ export default function AdminDashboard({ billHistory, employees, expenses }: Adm
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-        {/* Top Selling Items */}
-        <Card className="lg:col-span-3 bg-card">
-          <CardHeader>
-            <CardTitle>Top Selling Items</CardTitle>
-            <CardDescription>Today's most popular items.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Item</TableHead>
-                  <TableHead className="text-right">Quantity Sold</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {topSellingItems.length > 0 ? (
-                  topSellingItems.map(item => (
-                    <TableRow key={item.name} className="hover:bg-muted/50">
-                      <TableCell className="font-bold">{item.name}</TableCell>
-                      <TableCell className="text-right font-bold">{item.count}</TableCell>
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={2} className="text-center text-muted-foreground">
-                      No items sold yet.
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-
         {/* Reports & Settings */}
-        <Card className="lg:col-span-4 bg-card">
+        <Card className="lg:col-span-7 bg-card">
           <CardHeader>
             <CardTitle>Reports & Settings</CardTitle>
             <CardDescription>Manage system data and configurations.</CardDescription>
           </CardHeader>
-          <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <CardContent className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             <Dialog>
               <DialogTrigger asChild>
                 <Button variant="outline" size="lg" className="justify-start gap-2 h-14 text-base">
@@ -574,7 +540,7 @@ export default function AdminDashboard({ billHistory, employees, expenses }: Adm
                   <SystemSettings />
               </DialogContent>
             </Dialog>
-             <Card className="sm:col-span-2">
+             <Card className="sm:col-span-1 md:col-span-2">
               <CardHeader>
                 <CardTitle>Email Reports</CardTitle>
                 <CardDescription>Send summary reports to the administrator.</CardDescription>
@@ -824,6 +790,8 @@ function EmployeeDialog({ open, onOpenChange, employee, onSave }: { open: boolea
         </Dialog>
     );
 }
+    
+
     
 
     
