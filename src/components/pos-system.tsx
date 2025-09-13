@@ -430,7 +430,6 @@ export default function PosSystem({
     setKeyboardMode,
 }: PosSystemProps) {
   const [searchTerm, setSearchTerm] = useState('');
-  const [itemCodeInput, setItemCodeInput] = useState('');
   const [menu, setMenu] = useState<MenuCategory[]>(menuData as MenuCategory[]);
   const [originalOrderItems, setOriginalOrderItems] = useState<OrderItem[]>([]);
   const [easyMode, setEasyMode] = useState(false);
@@ -451,7 +450,6 @@ export default function PosSystem({
   const [isQuickAssignDialogOpen, setIsQuickAssignDialogOpen] = useState(false);
 
   const searchInputRef = useRef<HTMLInputElement>(null);
-  const itemCodeInputRef = useRef<HTMLInputElement>(null);
   
   const typedMenuData: MenuCategory[] = menu;
 
@@ -475,11 +473,7 @@ export default function PosSystem({
   }, [typedMenuData, categoryColors, setCategoryColors]);
 
   useEffect(() => {
-    if (typedMenuData.length > 0 && viewMode === 'accordion') {
-        setActiveAccordionItems([typedMenuData[0].category]);
-    } else {
-        setActiveAccordionItems([]);
-    }
+    setActiveAccordionItems([]);
   }, [viewMode, typedMenuData]);
 
   useEffect(() => {
@@ -623,7 +617,7 @@ export default function PosSystem({
             ...category,
             subCategories: category.subCategories.map(subCategory => ({
                 ...subCategory,
-                items: subCategory.items.filter(item => item.name.toLowerCase().includes(lowercasedTerm))
+                items: subCategory.items.filter(item => item.name.toLowerCase().includes(lowercasedTerm) || item.code.toLowerCase().includes(lowercasedTerm))
             })).filter(subCategory => subCategory.items.length > 0)
         })).filter(category => category.subCategories.length > 0);
     }
@@ -683,7 +677,7 @@ export default function PosSystem({
   const handleCodeEntry = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       e.preventDefault();
-      const code = itemCodeInput.trim().toUpperCase();
+      const code = searchTerm.trim().toUpperCase();
       if (!code) return;
       
       const item = allMenuItems.find(i => i.code === code);
@@ -693,13 +687,9 @@ export default function PosSystem({
             title: "Item Added",
             description: `1 x ${item.name} added to the order.`,
         });
-        setItemCodeInput('');
+        setSearchTerm('');
       } else {
-        toast({
-            variant: "destructive",
-            title: "Invalid Code",
-            description: `No item found with code "${code}".`,
-        });
+        // If it's not a valid code, it's treated as a search term, which is the default behavior.
       }
     }
   };
@@ -885,13 +875,14 @@ export default function PosSystem({
       toast({ variant: "destructive", title: "Empty Order", description: "Cannot process payment for an empty order." });
       return;
     }
-    // Immediately open dialog with local receipt
+    
+    // Set local receipt first for instant dialog opening
     setReceiptPreview(getLocalReceipt());
     setIsPaymentDialogOpen(true);
-
-    // Generate AI receipt in the background and update if successful
-    generateAIRecipt().catch(error => {
-        console.error('AI receipt generation failed in background:', error);
+  
+    // Then, in the background, update with the AI-generated receipt if it resolves.
+    generateAIRecipt().catch(err => {
+      console.error("AI Receipt generation failed in background", err);
     });
   };
   
@@ -937,6 +928,8 @@ export default function PosSystem({
       });
       return;
     }
+    
+    // Use the locally generated receipt for instant printing.
     const currentReceipt = getLocalReceipt();
     setReceiptPreview(currentReceipt);
     
@@ -1027,10 +1020,12 @@ export default function PosSystem({
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Ignore keys if a dialog is open or if typing in an input/textarea
       if (document.querySelector('[role="dialog"], [role="alertdialog"]')) return;
+      
       const activeEl = document.activeElement;
-      if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA') && activeEl !== itemCodeInputRef.current) {
+      const isInputFocused = activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA');
+
+      if (isInputFocused && activeEl !== searchInputRef.current) {
         return;
       }
       
@@ -1049,7 +1044,7 @@ export default function PosSystem({
           if (table && table.status === 'Available') {
             updateTableStatus([selectedTableId], 'Occupied');
           }
-          itemCodeInputRef.current?.focus();
+          searchInputRef.current?.focus();
           setKeyboardMode('order');
         } else if (keyboardMode === 'confirm') {
           handleSendToKitchen();
@@ -1058,12 +1053,12 @@ export default function PosSystem({
       } else if (e.key === 'Escape') {
         e.preventDefault();
         if (keyboardMode === 'order') {
-          if (document.activeElement === itemCodeInputRef.current) {
-            itemCodeInputRef.current.blur();
+          if (document.activeElement === searchInputRef.current) {
+            searchInputRef.current?.blur();
             setKeyboardMode('confirm');
           }
         } else if (keyboardMode === 'confirm') {
-          itemCodeInputRef.current?.focus();
+          searchInputRef.current?.focus();
           setKeyboardMode('order');
         }
       }
@@ -1129,7 +1124,7 @@ export default function PosSystem({
             </div>
           )}
         </CardContent>
-        <p className="absolute bottom-1 left-2 text-xs text-muted-foreground font-mono">{item.code}</p>
+        <p className="absolute bottom-1 left-2 text-xs text-muted-foreground font-mono font-bold">{item.code}</p>
         <div className="absolute bottom-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
           <Popover>
             <PopoverTrigger asChild>
@@ -1304,24 +1299,14 @@ export default function PosSystem({
               <div className="flex flex-col gap-4">
                   <div className="flex justify-between items-start flex-wrap gap-4">
                       <div className="flex items-center gap-2 flex-wrap">
-                           <div className="relative min-w-[200px]">
+                           <div className="relative min-w-[300px]">
                               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                               <Input
                                   ref={searchInputRef}
-                                  placeholder="Search menu items..."
+                                  placeholder="Search by item name or enter code..."
                                   className="pl-10 h-10"
                                   value={searchTerm}
                                   onChange={(e) => setSearchTerm(e.target.value)}
-                              />
-                          </div>
-                          <div className="relative min-w-[200px]">
-                              <QrCodeIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                              <Input
-                                  ref={itemCodeInputRef}
-                                  placeholder="Enter item code..."
-                                  className="pl-10 h-10"
-                                  value={itemCodeInput}
-                                  onChange={(e) => setItemCodeInput(e.target.value)}
                                   onKeyDown={handleCodeEntry}
                                   onFocus={() => setKeyboardMode('order')}
                                   onBlur={() => {if(keyboardMode === 'order') setKeyboardMode('confirm')}}
@@ -1518,4 +1503,3 @@ export default function PosSystem({
     </div>
   );
 }
-
