@@ -100,6 +100,14 @@ export interface InventoryItem {
   unit: string;
 }
 
+export interface PendingBill {
+    id: string;
+    name: string;
+    amount: number;
+    type: 'receivable' | 'payable';
+    dueDate: Date | null;
+}
+
 export interface ActivityLogEntry {
   id: number;
   user: string;
@@ -138,5 +146,7 @@ export const GenerateReportOutputSchema = z.object({
   message: z.string(),
 });
 export type GenerateReportOutput = z.infer<typeof GenerateReportOutputSchema>;
+
+    
 
     
