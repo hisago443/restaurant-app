@@ -44,13 +44,14 @@ import {
 } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { PlusCircle, Edit, Trash2, CalendarIcon, Building, Repeat, List, ChevronsUpDown, Check, AlertTriangle, HandCoins, Landmark, Settings } from 'lucide-react';
+import { PlusCircle, Edit, Trash2, CalendarIcon, Building, Repeat, List, ChevronsUpDown, Check, AlertTriangle, HandCoins, Landmark, Settings, ChevronDown } from 'lucide-react';
 import { Calendar } from "@/components/ui/calendar";
 import { format, isSameDay, isSameMonth, isSameYear, startOfDay, isAfter } from 'date-fns';
 import type { Expense, Vendor, PendingBill } from '@/lib/types';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 interface ExpensesTrackerProps {
   expenses: Expense[];
@@ -450,6 +451,7 @@ export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <PendingBillsCard 
             title="Pending to Collect from Customers"
+            type="receivable"
             bills={pendingBills.filter(b => b.type === 'receivable')}
             onAdd={() => openPendingBillDialog('receivable', null)}
             onEdit={(bill) => openPendingBillDialog('receivable', bill)}
@@ -462,6 +464,7 @@ export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
         />
         <PendingBillsCard 
             title="Pending to Pay to Vendors"
+            type="payable"
             bills={pendingBills.filter(b => b.type === 'payable')}
             onAdd={() => openPendingBillDialog('payable', null)}
             onEdit={(bill) => openPendingBillDialog('payable', bill)}
@@ -552,8 +555,9 @@ export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
   );
 }
 
-function PendingBillsCard({ title, bills, onAdd, onEdit, onMarkPaid, totalAmount, limit, setLimit, icon, amountColor }: {
+function PendingBillsCard({ title, type, bills, onAdd, onEdit, onMarkPaid, totalAmount, limit, setLimit, icon, amountColor }: {
   title: string;
+  type: 'receivable' | 'payable';
   bills: PendingBill[];
   onAdd: () => void;
   onEdit: (bill: PendingBill) => void;
@@ -567,6 +571,16 @@ function PendingBillsCard({ title, bills, onAdd, onEdit, onMarkPaid, totalAmount
   const isOverLimit = totalAmount > limit;
   const progressValue = limit > 0 ? Math.min((totalAmount / limit) * 100, 100) : 0;
   const [isEditingLimit, setIsEditingLimit] = useState(false);
+
+  const groupedBills = useMemo(() => {
+    return bills.reduce((acc, bill) => {
+      if (!acc[bill.name]) {
+        acc[bill.name] = [];
+      }
+      acc[bill.name].push(bill);
+      return acc;
+    }, {} as Record<string, PendingBill[]>);
+  }, [bills]);
 
   return (
     <Card>
@@ -611,38 +625,61 @@ function PendingBillsCard({ title, bills, onAdd, onEdit, onMarkPaid, totalAmount
                     <TableHeader>
                         <TableRow>
                             <TableHead>Name</TableHead>
-                            <TableHead>Amount</TableHead>
-                            <TableHead>Due Date</TableHead>
+                            <TableHead>Total Amount</TableHead>
                             <TableHead className="text-right">Actions</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {bills.length > 0 ? (
-                            bills.map(bill => {
-                                const isOverdue = bill.dueDate ? isAfter(new Date(), bill.dueDate) : false;
+                        {Object.keys(groupedBills).length > 0 ? (
+                           Object.entries(groupedBills).map(([name, billGroup]) => {
+                                const totalForGroup = billGroup.reduce((sum, b) => sum + b.amount, 0);
                                 return (
-                                    <TableRow key={bill.id}>
-                                        <TableCell className="font-medium">{bill.name}</TableCell>
-                                        <TableCell className={cn("font-semibold", amountColor)}>Rs. {bill.amount.toFixed(2)}</TableCell>
-                                        <TableCell className={cn(isOverdue && "text-destructive font-semibold")}>{bill.dueDate ? format(bill.dueDate, 'PPP') : 'N/A'}</TableCell>
+                                <Collapsible key={name} asChild>
+                                  <>
+                                    <TableRow className="bg-muted/30">
+                                        <TableCell>
+                                          <CollapsibleTrigger className="flex items-center gap-2 font-medium w-full text-left">
+                                            {name}
+                                            <ChevronDown className="h-4 w-4 transition-transform [&[data-state=open]]:rotate-180" />
+                                          </CollapsibleTrigger>
+                                        </TableCell>
+                                        <TableCell className={cn("font-semibold", amountColor)}>Rs. {totalForGroup.toFixed(2)}</TableCell>
                                         <TableCell className="text-right">
-                                            <Button variant="ghost" size="icon" onClick={() => onEdit(bill)}><Edit className="h-4 w-4" /></Button>
-                                            <AlertDialog>
-                                                <AlertDialogTrigger asChild><Button variant="ghost" size="icon"><Check className="h-4 w-4 text-green-600"/></Button></AlertDialogTrigger>
-                                                <AlertDialogContent>
-                                                    <AlertDialogHeader>
-                                                        <AlertDialogTitle>Mark as Paid?</AlertDialogTitle>
-                                                        <AlertDialogDescription>This will remove the pending bill of Rs. {bill.amount.toFixed(2)} for {bill.name}. This action cannot be undone.</AlertDialogDescription>
-                                                    </AlertDialogHeader>
-                                                    <AlertDialogFooter>
-                                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                                        <AlertDialogAction onClick={() => onMarkPaid(bill.id)}>Mark as Paid</AlertDialogAction>
-                                                    </AlertDialogFooter>
-                                                </AlertDialogContent>
-                                            </AlertDialog>
+                                            {/* Actions for the whole group could go here */}
                                         </TableCell>
                                     </TableRow>
-                                );
+                                    <CollapsibleContent asChild>
+                                      <>
+                                        {billGroup.map(bill => {
+                                          const isOverdue = bill.dueDate ? isAfter(new Date(), bill.dueDate) : false;
+                                          return (
+                                            <TableRow key={bill.id}>
+                                              <TableCell className="pl-12 text-sm text-muted-foreground">{bill.dueDate ? format(bill.dueDate, 'PPP') : 'No due date'}</TableCell>
+                                              <TableCell className={cn("text-sm", amountColor)}>Rs. {bill.amount.toFixed(2)}</TableCell>
+                                              <TableCell className="text-right">
+                                                  <Button variant="ghost" size="icon" onClick={() => onEdit(bill)}><Edit className="h-4 w-4" /></Button>
+                                                  <AlertDialog>
+                                                      <AlertDialogTrigger asChild><Button variant="ghost" size="icon"><Check className="h-4 w-4 text-green-600"/></Button></AlertDialogTrigger>
+                                                      <AlertDialogContent>
+                                                          <AlertDialogHeader>
+                                                              <AlertDialogTitle>Mark as Paid?</AlertDialogTitle>
+                                                              <AlertDialogDescription>This will remove the pending bill of Rs. {bill.amount.toFixed(2)} for {bill.name}. This action cannot be undone.</AlertDialogDescription>
+                                                          </AlertDialogHeader>
+                                                          <AlertDialogFooter>
+                                                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                              <AlertDialogAction onClick={() => onMarkPaid(bill.id)}>Mark as Paid</AlertDialogAction>
+                                                          </AlertDialogFooter>
+                                                      </AlertDialogContent>
+                                                  </AlertDialog>
+                                              </TableCell>
+                                            </TableRow>
+                                          )
+                                        })}
+                                      </>
+                                    </CollapsibleContent>
+                                  </>
+                                </Collapsible>
+                                )
                             })
                         ) : (
                             <TableRow><TableCell colSpan={4} className="h-24 text-center">No pending bills.</TableCell></TableRow>
