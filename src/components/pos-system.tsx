@@ -1025,8 +1025,8 @@ export default function PosSystem({
         if (keyboardMode === 'order') {
           if (document.activeElement === searchInputRef.current) {
             searchInputRef.current?.blur();
-            setKeyboardMode('confirm');
           }
+          setKeyboardMode('confirm');
         } else if (keyboardMode === 'confirm') {
           searchInputRef.current?.focus();
           setKeyboardMode('order');
@@ -1338,7 +1338,7 @@ export default function PosSystem({
                     <TableDropTarget key={table.id} table={table} occupancyCount={occupancyCount} handleSelectTable={handleSelectTable} onDropItem={handleDropItemOnTable}>
                         <div
                         className={cn(
-                            'absolute inset-0 flex flex-col items-center justify-center text-center transition-colors rounded-md p-1 h-full aspect-square',
+                            'absolute inset-0 flex flex-col items-center justify-center text-center transition-colors rounded-md p-1 h-full',
                             isSelected && 'ring-4 ring-offset-2 ring-black'
                         )}
                         >
@@ -1456,5 +1456,6 @@ export default function PosSystem({
     </div>
   );
 }
+
 
 
