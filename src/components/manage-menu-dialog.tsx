@@ -39,9 +39,11 @@ import {
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useToast } from '@/hooks/use-toast';
-import type { MenuCategory, MenuItem } from '@/lib/types';
-import { PlusCircle, Trash2, Edit } from 'lucide-react';
+import type { MenuCategory, MenuItem, MenuItemHistory } from '@/lib/types';
+import { PlusCircle, Trash2, Edit, History } from 'lucide-react';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { format } from 'date-fns';
+import { Separator } from './ui/separator';
 
 interface EditItemDialogProps {
   isOpen: boolean;
@@ -61,8 +63,21 @@ function EditItemDialog({ isOpen, onOpenChange, item, onSave }: EditItemDialogPr
 
   const handleSave = () => {
     if (name && price) {
-      onSave(item.name, { name, price: parseFloat(price) });
-      onOpenChange(false);
+        const historyEntry: MenuItemHistory = {
+            name: item.name,
+            price: item.price,
+            changedAt: new Date(),
+        };
+
+        const updatedItem: MenuItem = {
+            ...item,
+            name,
+            price: parseFloat(price),
+            history: [...(item.history || []), historyEntry],
+        };
+
+        onSave(item.name, updatedItem);
+        onOpenChange(false);
     }
   };
 
@@ -84,6 +99,22 @@ function EditItemDialog({ isOpen, onOpenChange, item, onSave }: EditItemDialogPr
             <Label htmlFor="edit-item-price">Price</Label>
             <Input id="edit-item-price" type="number" value={price} onChange={e => setPrice(e.target.value)} />
           </div>
+        </div>
+        <Separator />
+        <div className="space-y-2">
+            <h4 className="font-medium flex items-center gap-2"><History className="h-4 w-4"/> Change History</h4>
+            {item.history && item.history.length > 0 ? (
+                 <div className="max-h-40 overflow-y-auto space-y-2 text-sm text-muted-foreground pr-2">
+                    {item.history.slice().reverse().map((record, index) => (
+                        <div key={index} className="p-2 bg-muted/50 rounded-md">
+                            <p><strong>Name:</strong> {record.name}, <strong>Price:</strong> Rs. {record.price}</p>
+                            <p className="text-xs">{format(new Date(record.changedAt), "PPP p")}</p>
+                        </div>
+                    ))}
+                 </div>
+            ) : (
+                <p className="text-sm text-muted-foreground">No previous edits recorded.</p>
+            )}
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
@@ -164,7 +195,7 @@ export function ManageMenuDialog({
           }
 
           // Add the new item
-          updatedSubCategories[targetSubCategoryIndex].items.push({ name: newItemName, price: parseFloat(newItemPrice) });
+          updatedSubCategories[targetSubCategoryIndex].items.push({ name: newItemName, price: parseFloat(newItemPrice), code: '', history: [] });
           
           return {
             ...cat,
@@ -454,5 +485,7 @@ export function ManageMenuDialog({
     </>
   );
 }
+
+    
 
     

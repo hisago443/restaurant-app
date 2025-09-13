@@ -2,10 +2,17 @@
 
 import { z } from 'zod';
 
+export interface MenuItemHistory {
+  name: string;
+  price: number;
+  changedAt: Date;
+}
+
 export interface MenuItem {
   name: string;
   price: number;
   code: string;
+  history?: MenuItemHistory[];
 }
 
 export interface MenuSubCategory {
@@ -146,6 +153,8 @@ export const GenerateReportOutputSchema = z.object({
   message: z.string(),
 });
 export type GenerateReportOutput = z.infer<typeof GenerateReportOutputSchema>;
+
+    
 
     
 

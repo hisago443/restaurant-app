@@ -44,7 +44,7 @@ import {
 } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { PlusCircle, Edit, Trash2, CalendarIcon, Building, Repeat, List, ChevronsUpDown, Check, AlertTriangle, HandCoins, Landmark } from 'lucide-react';
+import { PlusCircle, Edit, Trash2, CalendarIcon, Building, Repeat, List, ChevronsUpDown, Check, AlertTriangle, HandCoins, Landmark, Settings } from 'lucide-react';
 import { Calendar } from "@/components/ui/calendar";
 import { format, isSameDay, isSameMonth, isSameYear, startOfDay, isAfter } from 'date-fns';
 import type { Expense, Vendor, PendingBill } from '@/lib/types';
@@ -229,8 +229,8 @@ export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
   const selectedVendor = vendors.find(v => v.id === vendorId);
   const expenseCategory = selectedVendor?.category || 'Miscellaneous';
 
-  const customerPendingLimit = 2000;
-  const vendorPendingLimit = 10000;
+  const [customerPendingLimit, setCustomerPendingLimit] = useState(2000);
+  const [vendorPendingLimit, setVendorPendingLimit] = useState(10000);
   
   useEffect(() => {
     const unsubVendors = onSnapshot(collection(db, "vendors"), (snapshot) => {
@@ -258,7 +258,7 @@ export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
             duration: 10000,
         });
     }
-  }, [totalReceivable, toast]);
+  }, [totalReceivable, customerPendingLimit, toast]);
 
   useEffect(() => {
     if (totalPayable > vendorPendingLimit) {
@@ -269,7 +269,7 @@ export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
             duration: 10000,
         });
     }
-  }, [totalPayable, toast]);
+  }, [totalPayable, vendorPendingLimit, toast]);
 
 
   const resetForm = () => {
@@ -456,6 +456,7 @@ export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
             onMarkPaid={handleMarkAsPaid}
             totalAmount={totalReceivable}
             limit={customerPendingLimit}
+            setLimit={setCustomerPendingLimit}
             icon={<HandCoins className="h-6 w-6 text-green-600" />}
             amountColor="text-green-600"
         />
@@ -467,6 +468,7 @@ export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
             onMarkPaid={handleMarkAsPaid}
             totalAmount={totalPayable}
             limit={vendorPendingLimit}
+            setLimit={setVendorPendingLimit}
             icon={<Landmark className="h-6 w-6 text-red-600" />}
             amountColor="text-red-600"
         />
@@ -550,7 +552,7 @@ export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
   );
 }
 
-function PendingBillsCard({ title, bills, onAdd, onEdit, onMarkPaid, totalAmount, limit, icon, amountColor }: {
+function PendingBillsCard({ title, bills, onAdd, onEdit, onMarkPaid, totalAmount, limit, setLimit, icon, amountColor }: {
   title: string;
   bills: PendingBill[];
   onAdd: () => void;
@@ -558,11 +560,13 @@ function PendingBillsCard({ title, bills, onAdd, onEdit, onMarkPaid, totalAmount
   onMarkPaid: (billId: string) => void;
   totalAmount: number;
   limit: number;
+  setLimit: (limit: number) => void;
   icon: React.ReactNode;
   amountColor: string;
 }) {
   const isOverLimit = totalAmount > limit;
-  const progressValue = Math.min((totalAmount / limit) * 100, 100);
+  const progressValue = limit > 0 ? Math.min((totalAmount / limit) * 100, 100) : 0;
+  const [isEditingLimit, setIsEditingLimit] = useState(false);
 
   return (
     <Card>
@@ -580,8 +584,23 @@ function PendingBillsCard({ title, bills, onAdd, onEdit, onMarkPaid, totalAmount
         </CardHeader>
         <CardContent className="space-y-4">
             <div>
-                <div className="flex justify-between items-center mb-1">
-                    <span className="text-sm font-medium">Total Pending: Rs. {totalAmount.toFixed(2)} / Rs. {limit.toFixed(2)}</span>
+                 <div className="flex justify-between items-center mb-1">
+                    <span className="text-sm font-medium">
+                        Total Pending: Rs. {totalAmount.toFixed(2)} / Rs. 
+                        {isEditingLimit ? (
+                            <Input 
+                                type="number" 
+                                value={limit} 
+                                onChange={(e) => setLimit(Number(e.target.value))}
+                                onBlur={() => setIsEditingLimit(false)}
+                                onKeyDown={(e) => { if (e.key === 'Enter') setIsEditingLimit(false); }}
+                                className="inline-block w-24 h-7 ml-1"
+                                autoFocus
+                            />
+                        ) : (
+                            <span onClick={() => setIsEditingLimit(true)} className="cursor-pointer">{limit.toFixed(2)}</span>
+                        )}
+                    </span>
                     {isOverLimit && <AlertTriangle className="h-5 w-5 text-destructive" />}
                 </div>
                 <Progress value={progressValue} indicatorClassName={cn(isOverLimit ? "bg-destructive" : "bg-primary")} />
@@ -644,6 +663,7 @@ function AddOrEditPendingBillDialog({ open, onOpenChange, onSave, bill, type, ve
   type: 'receivable' | 'payable';
   vendors: Vendor[];
 }) {
+  const { toast } = useToast();
   const [name, setName] = useState('');
   const [vendorId, setVendorId] = useState<string | undefined>(undefined);
   const [amount, setAmount] = useState('');
@@ -729,6 +749,8 @@ function AddOrEditPendingBillDialog({ open, onOpenChange, onSave, bill, type, ve
     </Dialog>
   );
 }
+
+    
 
     
 
