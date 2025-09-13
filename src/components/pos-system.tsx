@@ -447,6 +447,8 @@ export default function PosSystem({
   const [tableToReserve, setTableToReserve] = useState<number | null>(null);
   const [vegFilter, setVegFilter] = useState<VegFilter>('All');
   const [isQuickAssignDialogOpen, setIsQuickAssignDialogOpen] = useState(false);
+  const [isEasyModeAlertOpen, setIsEasyModeAlertOpen] = useState(false);
+  const hasSeenEasyModeAlert = useRef(false);
 
   const searchInputRef = useRef<HTMLInputElement>(null);
   
@@ -487,13 +489,19 @@ export default function PosSystem({
     }
   }, []);
   
-  useEffect(() => {
-    try {
-      localStorage.setItem('easyMode', JSON.stringify(easyMode));
-    } catch (e) {
-      console.error("Could not save 'easyMode' to localStorage", e);
+  const handleEasyModeChange = (checked: boolean) => {
+    if (checked && !hasSeenEasyModeAlert.current) {
+        setIsEasyModeAlertOpen(true);
+    } else {
+        setEasyMode(checked);
     }
-  }, [easyMode]);
+  };
+
+  const confirmEasyMode = () => {
+    setEasyMode(true);
+    hasSeenEasyModeAlert.current = true;
+    setIsEasyModeAlertOpen(false);
+  };
   
   const getLocalReceipt = useCallback(() => {
     if (orderItems.length === 0) return '';
@@ -533,38 +541,6 @@ export default function PosSystem({
   
     return receiptLines.join('\n');
   }, [orderItems, discount]);
-  
-  const generateAIRecipt = useCallback(async () => {
-    if (orderItems.length === 0) {
-        setReceiptPreview('');
-        return;
-    }
-    const localReceipt = getLocalReceipt();
-    setReceiptPreview(localReceipt); // Set local receipt immediately
-
-    const subtotal = orderItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
-    const total = subtotal * (1 - discount / 100);
-
-    const input: GenerateReceiptInput = {
-        items: orderItems.map(({ name, price, quantity }) => ({ name, price, quantity })),
-        discount,
-        subtotal,
-        total,
-    };
-    try {
-        const result = await generateReceipt(input);
-        if (result.receiptPreview) {
-            setReceiptPreview(result.receiptPreview);
-        }
-    } catch (error) {
-        console.error('AI receipt generation failed, using local version:', error);
-        toast({
-            variant: "default",
-            title: "AI Assistant Offline",
-            description: "Displaying standard receipt format.",
-        });
-    }
-  }, [orderItems, discount, getLocalReceipt, toast]);
 
 
   useEffect(() => {
@@ -812,7 +788,7 @@ export default function PosSystem({
         }
         setIsProcessing(false);
     }, 50);
-  }, [activeOrder, orderItems, currentActiveTableId, toast, addOrder, updateOrder, originalOrderItems, updateTableStatus, onOrderCreated, setOriginalOrderItems]);
+  }, [activeOrder, orderItems, currentActiveTableId, toast, addOrder, updateOrder, originalOrderItems, updateTableStatus, onOrderCreated]);
   
     const handleDropItemOnTable = (tableId: number, item: MenuItem) => {
       if (!easyMode) return;
@@ -878,11 +854,6 @@ export default function PosSystem({
     // Set local receipt first for instant dialog opening
     setReceiptPreview(getLocalReceipt());
     setIsPaymentDialogOpen(true);
-  
-    // Then, in the background, update with the AI-generated receipt if it resolves.
-    generateAIRecipt().catch(err => {
-      console.error("AI Receipt generation failed in background", err);
-    });
   };
   
   const handlePaymentSuccess = () => {
@@ -1273,7 +1244,7 @@ export default function PosSystem({
                               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                               <Input
                                   ref={searchInputRef}
-                                  placeholder="Search by item name or enter code..."
+                                  placeholder="Search by name or enter code..."
                                   className="pl-10 h-10"
                                   value={searchTerm}
                                   onChange={(e) => setSearchTerm(e.target.value)}
@@ -1295,7 +1266,7 @@ export default function PosSystem({
                       </div>
                       <div className="flex items-center gap-2">
                           <div className="flex items-center space-x-2">
-                              <Switch id="easy-mode-switch" checked={easyMode} onCheckedChange={setEasyMode} />
+                              <Switch id="easy-mode-switch" checked={easyMode} onCheckedChange={handleEasyModeChange} />
                               <Label htmlFor="easy-mode-switch" className="flex items-center gap-2 cursor-pointer">
                                   <MousePointerClick className="h-4 w-4" />
                                   Easy Mode
@@ -1466,7 +1437,24 @@ export default function PosSystem({
               </div>
           </DialogContent>
       </Dialog>
+      <AlertDialog open={isEasyModeAlertOpen} onOpenChange={setIsEasyModeAlertOpen}>
+        <AlertDialogContent>
+            <AlertDialogHeader>
+                <AlertDialogTitle>Enable Easy Mode?</AlertDialogTitle>
+                <AlertDialogDescription>
+                    In "Easy Mode", every click on a menu item instantly adds 1 quantity to the order. This is faster but can lead to accidental clicks.
+                    <br/><br/>
+                    Are you sure you want to enable this mode?
+                </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+                <AlertDialogCancel onClick={() => setEasyMode(false)}>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={confirmEasyMode}>Enable</AlertDialogAction>
+            </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
+
 
