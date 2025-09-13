@@ -377,30 +377,30 @@ export default function MainLayout() {
       </header>
        <DndProvider backend={HTML5Backend}>
         <Tabs value={activeTab} onValueChange={handleTabChange} orientation={navPosition === 'left' ? 'vertical' : 'horizontal'} className={cn("h-full", navPosition === 'top' ? 'flex flex-col' : 'flex')}>
-          <div className={cn("flex justify-center border-b kitchen-tabs", navPosition === 'left' && "flex-col justify-start border-b-0 border-r")}>
+          <div className={cn("flex justify-center border-b kitchen-tabs", navPosition === 'left' && "flex-col justify-start items-start border-b-0 border-r")}>
              <TabsList className={cn("m-2 p-0 h-auto bg-transparent", navPosition === 'left' && "flex-col h-full items-start w-auto")}>
               <TabsTrigger value="pos" className="px-4 py-2 text-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md flex items-center gap-2">
-                  <Utensils /> <span className={cn(navPosition === 'left' && 'w-24 text-left')}>Main</span>
+                  <Utensils /> <span className={cn(navPosition === 'left' && 'w-32 text-left')}>Main</span>
               </TabsTrigger>
               <Separator orientation={navPosition === 'top' ? 'vertical' : 'horizontal'} className={cn(navPosition === 'top' ? "h-6 mx-1" : "w-full my-1")} />
               <TabsTrigger value="tables" className="px-4 py-2 text-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md flex items-center gap-2">
-                <LayoutGrid /> <span className={cn(navPosition === 'left' && 'w-24 text-left')}>Tables</span>
+                <LayoutGrid /> <span className={cn(navPosition === 'left' && 'w-32 text-left')}>Tables</span>
               </TabsTrigger>
               <Separator orientation={navPosition === 'top' ? 'vertical' : 'horizontal'} className={cn(navPosition === 'top' ? "h-6 mx-1" : "w-full my-1")} />
               <TabsTrigger value="kitchen" className="px-4 py-2 text-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md flex items-center gap-2">
-                <Soup /> <span className={cn(navPosition === 'left' && 'w-24 text-left')}>Kitchen & Inventory</span>
+                <Soup /> <span className={cn(navPosition === 'left' && 'w-32 text-left')}>Kitchen & Inventory</span>
               </TabsTrigger>
               <Separator orientation={navPosition === 'top' ? 'vertical' : 'horizontal'} className={cn(navPosition === 'top' ? "h-6 mx-1" : "w-full my-1")} />
               <TabsTrigger value="staff" className="px-4 py-2 text-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md flex items-center gap-2">
-                <Users /> <span className={cn(navPosition === 'left' && 'w-24 text-left')}>Staff</span>
+                <Users /> <span className={cn(navPosition === 'left' && 'w-32 text-left')}>Staff</span>
               </TabsTrigger>
               <Separator orientation={navPosition === 'top' ? 'vertical' : 'horizontal'} className={cn(navPosition === 'top' ? "h-6 mx-1" : "w-full my-1")} />
               <TabsTrigger value="expenses" className="px-4 py-2 text-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md flex items-center gap-2">
-                <Receipt /> <span className={cn(navPosition === 'left' && 'w-24 text-left')}>Expenses</span>
+                <Receipt /> <span className={cn(navPosition === 'left' && 'w-32 text-left')}>Expenses</span>
               </TabsTrigger>
               <Separator orientation={navPosition === 'top' ? 'vertical' : 'horizontal'} className={cn(navPosition === 'top' ? "h-6 mx-1" : "w-full my-1")} />
               <TabsTrigger value="admin" className="px-4 py-2 text-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md flex items-center gap-2">
-                <Shield /> <span className={cn(navPosition === 'left' && 'w-24 text-left')}>Admin</span>
+                <Shield /> <span className={cn(navPosition === 'left' && 'w-32 text-left')}>Admin</span>
               </TabsTrigger>
               <Separator orientation={navPosition === 'top' ? 'vertical' : 'horizontal'} className={cn(navPosition === 'top' ? "h-6 mx-1" : "w-full my-1", navPosition === 'left' && "mt-auto")} />
                 <TooltipProvider>
