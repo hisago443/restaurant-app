@@ -2,7 +2,7 @@
 
 "use client";
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Utensils, LayoutGrid, Soup, Users, Shield, Receipt, Package, History, PanelTop, PanelLeft } from 'lucide-react';
 import { isSameDay } from 'date-fns';
@@ -53,6 +53,13 @@ export default function MainLayout() {
   
   const [categoryColors, setCategoryColors] = useState<Record<string, string>>({});
   const [keyboardMode, setKeyboardMode] = useState<'table' | 'order' | 'confirm'>('table');
+  const mainRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    // Focus the main area on mount to enable keyboard shortcuts immediately
+    mainRef.current?.focus();
+  }, []);
+
 
   useEffect(() => {
     try {
@@ -371,7 +378,7 @@ export default function MainLayout() {
        <DndProvider backend={HTML5Backend}>
         <Tabs value={activeTab} onValueChange={handleTabChange} orientation={navPosition === 'left' ? 'vertical' : 'horizontal'} className={cn("h-full", navPosition === 'top' ? 'flex flex-col' : 'flex')}>
           <div className={cn("flex justify-center border-b kitchen-tabs", navPosition === 'left' && "flex-col justify-start border-b-0 border-r")}>
-            <TabsList className={cn("m-2 p-0 h-auto bg-transparent", navPosition === 'left' && "flex-col h-full items-start w-auto")}>
+             <TabsList className={cn("m-2 p-0 h-auto bg-transparent", navPosition === 'left' && "flex-col h-full items-start w-auto")}>
               <TabsTrigger value="pos" className="px-4 py-2 text-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md flex items-center gap-2">
                   <Utensils /> <span className={cn(navPosition === 'left' && 'w-24 text-left')}>Main</span>
               </TabsTrigger>
@@ -411,7 +418,7 @@ export default function MainLayout() {
             </TabsList>
           </div>
           
-          <main className="flex-grow overflow-auto">
+          <main ref={mainRef} className="flex-grow overflow-auto focus:outline-none" tabIndex={-1}>
             <TabsContent value="pos" className="m-0 p-0 h-full">
                 <PosSystem 
                   tables={tables}
