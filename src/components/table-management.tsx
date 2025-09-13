@@ -17,6 +17,7 @@ import { PlusCircle, Trash2, LayoutTemplate, Sparkles, Users, CheckCircle2, Book
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { format } from 'date-fns';
+import { useToast } from '@/hooks/use-toast';
 
 const statusBaseColors: Record<TableStatus, string> = {
   Available: 'bg-green-400 hover:bg-green-500',
@@ -62,6 +63,7 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
   const [hoveredStatus, setHoveredStatus] = useState<TableStatus | null>(null);
   const [isPrintDialogOpen, setIsPrintDialogOpen] = useState(false);
   const [tableForPrint, setTableForPrint] = useState<TableType | null>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
     if (initialSelectedTableId) {
@@ -90,6 +92,12 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
     
     if (table.status === 'Available') {
         updateTableStatus([table.id], 'Occupied');
+    } else if (table.status === 'Occupied') {
+        toast({
+            title: 'Payment Required',
+            description: 'Please process the payment for this table before changing its status.',
+            variant: 'default',
+        });
     }
   };
 
@@ -492,6 +500,7 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
     </div>
   );
 }
+
 
 
 
