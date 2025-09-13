@@ -391,7 +391,7 @@ export default function MainLayout() {
        <DndProvider backend={HTML5Backend}>
         <Tabs value={activeTab} onValueChange={handleTabChange} orientation={navPosition === 'left' ? 'vertical' : 'horizontal'} className={cn("h-full", navPosition === 'top' ? 'flex flex-col' : 'flex')}>
           <div className={cn("flex justify-center border-b kitchen-tabs", navPosition === 'left' && "flex-col justify-start items-start border-b-0 border-r")}>
-             <TabsList className={cn("m-2 p-0 h-auto bg-transparent", navPosition === 'left' && "flex-col h-full items-start w-auto")}>
+             <TabsList className={cn("m-2 p-0 h-auto bg-transparent", navPosition === 'left' && "flex-col items-start w-auto")}>
               <TabsTrigger value="pos" className="px-4 py-2 text-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md flex items-center gap-2">
                   <Utensils /> <span className={cn(navPosition === 'left' && 'w-32 text-left')}>Main</span>
               </TabsTrigger>
