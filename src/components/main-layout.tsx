@@ -369,9 +369,23 @@ export default function MainLayout() {
           <Logo className="h-6 w-6" />
           <span className="text-lg">Up & Above Assistant</span>
         </div>
-        <div className="text-sm text-foreground text-center font-semibold bg-muted p-2 rounded-lg shadow-inner">
-          <div>{formattedDate}</div>
-          <div>{formattedTime}</div>
+        <div className="flex items-center gap-4">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                  <Button variant="ghost" size="icon" onClick={toggleNavPosition} className='rounded-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground flex items-center gap-2'>
+                      {navPosition === 'top' ? <PanelLeft className="h-5 w-5" /> : <PanelTop className="h-5 w-5" />}
+                  </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Change Nav Position</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+          <div className="text-sm text-foreground text-center font-semibold bg-muted p-2 rounded-lg shadow-inner">
+            <div>{formattedDate}</div>
+            <div>{formattedTime}</div>
+          </div>
         </div>
       </header>
        <DndProvider backend={HTML5Backend}>
@@ -401,19 +415,6 @@ export default function MainLayout() {
               <TabsTrigger value="admin" className="px-4 py-2 text-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md flex items-center gap-2">
                 <Shield /> <span className={cn(navPosition === 'left' && 'w-32 text-left')}>Admin</span>
               </TabsTrigger>
-              <Separator orientation={navPosition === 'top' ? 'vertical' : 'horizontal'} className={cn(navPosition === 'top' ? "h-6 mx-1" : "w-full my-1", navPosition === 'left' && "mt-auto")} />
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                        <Button variant="ghost" size="icon" onClick={toggleNavPosition} className='rounded-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground flex items-center gap-2'>
-                            {navPosition === 'top' ? <PanelLeft className="h-5 w-5" /> : <PanelTop className="h-5 w-5" />}
-                        </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Change Nav Position</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
             </TabsList>
           </div>
           
