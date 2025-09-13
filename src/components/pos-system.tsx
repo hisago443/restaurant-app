@@ -3,7 +3,7 @@
 "use client";
 
 import * as React from 'react';
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { addDoc, collection, doc, getDocs, setDoc, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Button } from '@/components/ui/button';
@@ -97,6 +97,8 @@ interface PosSystemProps {
   setCategoryColors: React.Dispatch<React.SetStateAction<Record<string, string>>>;
   onViewTableDetails: (tableId: number) => void;
   onEditOrder: (tableId: number) => void;
+  keyboardMode: 'table' | 'order' | 'confirm';
+  setKeyboardMode: (mode: 'table' | 'order' | 'confirm') => void;
 }
 
 const ItemTypes = {
@@ -190,8 +192,8 @@ function OrderPanel({
     setDiscount: (discount: number) => void;
     isProcessing: boolean;
     handleSendToKitchen: () => void;
-    handlePrintProvisionalBill: () => Promise<void>;
-    handleProcessPayment: () => Promise<void>;
+    handlePrintProvisionalBill: () => void;
+    handleProcessPayment: () => void;
     receiptPreview: string;
     children: React.ReactNode;
 }) {
@@ -387,7 +389,7 @@ function OrderPanel({
                     </Button>
                     <div className="grid grid-cols-2 gap-2">
                         <Button size="lg" variant="outline" className="h-12 text-base" onClick={handlePrintProvisionalBill} disabled={orderItems.length === 0}>
-                            {isProcessing && receiptPreview ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Printer className="mr-2 h-4 w-4" />}
+                            <Printer className="mr-2 h-4 w-4" />
                             Print Bill
                         </Button>
                         <Button size="lg" className="h-12 text-base" onClick={handleProcessPayment} disabled={isProcessing || orderItems.length === 0}>
@@ -424,6 +426,8 @@ export default function PosSystem({
     setCategoryColors,
     onViewTableDetails,
     onEditOrder,
+    keyboardMode,
+    setKeyboardMode,
 }: PosSystemProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [itemCodeInput, setItemCodeInput] = useState('');
@@ -446,7 +450,9 @@ export default function PosSystem({
   const [vegFilter, setVegFilter] = useState<VegFilter>('All');
   const [isQuickAssignDialogOpen, setIsQuickAssignDialogOpen] = useState(false);
 
-
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const itemCodeInputRef = useRef<HTMLInputElement>(null);
+  
   const typedMenuData: MenuCategory[] = menu;
 
   const currentActiveTableId = useMemo(() => {
@@ -676,6 +682,7 @@ export default function PosSystem({
   
   const handleCodeEntry = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
+      e.preventDefault();
       const code = itemCodeInput.trim().toUpperCase();
       if (!code) return;
       
@@ -767,7 +774,7 @@ export default function PosSystem({
     setActiveOrder(updatedOrder);
   };
 
-  const handleSendToKitchen = () => {
+  const handleSendToKitchen = useCallback(() => {
     if (orderItems.length === 0) {
       toast({ variant: 'destructive', title: 'Empty Order', description: 'Cannot send an empty order to the kitchen.' });
       return;
@@ -816,7 +823,7 @@ export default function PosSystem({
         }
         setIsProcessing(false);
     }, 50);
-  };
+  }, [activeOrder, orderItems, currentActiveTableId, toast, addOrder, updateOrder, originalOrderItems, updateTableStatus, onOrderCreated, setOriginalOrderItems]);
   
     const handleDropItemOnTable = (tableId: number, item: MenuItem) => {
       if (!easyMode) return;
@@ -873,34 +880,19 @@ export default function PosSystem({
   };
 
 
-  const handleProcessPayment = async () => {
+  const handleProcessPayment = () => {
     if (orderItems.length === 0) {
       toast({ variant: "destructive", title: "Empty Order", description: "Cannot process payment for an empty order." });
       return;
     }
-    
     // Immediately open dialog with local receipt
     setReceiptPreview(getLocalReceipt());
     setIsPaymentDialogOpen(true);
 
     // Generate AI receipt in the background and update if successful
-    try {
-      const subtotal = orderItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
-      const total = subtotal * (1 - discount / 100);
-      const input: GenerateReceiptInput = {
-          items: orderItems.map(({ name, price, quantity }) => ({ name, price, quantity })),
-          discount,
-          subtotal,
-          total,
-      };
-      const result = await generateReceipt(input);
-      if (result.receiptPreview) {
-          setReceiptPreview(result.receiptPreview); // Update the preview in the already-open dialog
-      }
-    } catch (error) {
-      console.error('AI receipt generation failed, using local version:', error);
-      // No toast needed here as the user already sees the local version.
-    }
+    generateAIRecipt().catch(error => {
+        console.error('AI receipt generation failed in background:', error);
+    });
   };
   
   const handlePaymentSuccess = () => {
@@ -936,7 +928,7 @@ export default function PosSystem({
     clearCurrentOrder(true);
   };
 
-  const handlePrintProvisionalBill = async () => {
+  const handlePrintProvisionalBill = () => {
     if (orderItems.length === 0) {
       toast({
         variant: 'destructive',
@@ -945,7 +937,8 @@ export default function PosSystem({
       });
       return;
     }
-    setReceiptPreview(getLocalReceipt());
+    const currentReceipt = getLocalReceipt();
+    setReceiptPreview(currentReceipt);
     
     const billTitle = currentActiveTableId === null ? 'Takeaway' : `Table #${currentActiveTableId}`;
   
@@ -961,7 +954,7 @@ export default function PosSystem({
             </style>
           </head>
           <body>
-            <pre>${receiptPreview}</pre>
+            <pre>${currentReceipt}</pre>
             <script>
               window.onload = function() {
                 window.print();
@@ -1030,7 +1023,57 @@ export default function PosSystem({
     setTimeout(() => {
         handleSendToKitchen();
     }, 100);
-  }
+  };
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ignore keys if a dialog is open or if typing in an input/textarea
+      if (document.querySelector('[role="dialog"], [role="alertdialog"]')) return;
+      const activeEl = document.activeElement;
+      if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA') && activeEl !== itemCodeInputRef.current) {
+        return;
+      }
+      
+      const isNumberKey = e.key >= '0' && e.key <= '9';
+
+      if (keyboardMode === 'table' && isNumberKey) {
+        e.preventDefault();
+        const tableNum = e.key === '0' ? 10 : parseInt(e.key, 10);
+        if (tableNum > 0 && tableNum <= tables.length) {
+          handleSelectTable(tableNum);
+        }
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        if (keyboardMode === 'table' && selectedTableId) {
+          const table = tables.find(t => t.id === selectedTableId);
+          if (table && table.status === 'Available') {
+            updateTableStatus([selectedTableId], 'Occupied');
+          }
+          itemCodeInputRef.current?.focus();
+          setKeyboardMode('order');
+        } else if (keyboardMode === 'confirm') {
+          handleSendToKitchen();
+          setKeyboardMode('table');
+        }
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        if (keyboardMode === 'order') {
+          if (document.activeElement === itemCodeInputRef.current) {
+            itemCodeInputRef.current.blur();
+            setKeyboardMode('confirm');
+          }
+        } else if (keyboardMode === 'confirm') {
+          itemCodeInputRef.current?.focus();
+          setKeyboardMode('order');
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [keyboardMode, selectedTableId, tables, handleSelectTable, updateTableStatus, handleSendToKitchen, setKeyboardMode]);
 
 
   const renderMenuItem = (item: MenuItem, subCategoryName: string, categoryName: string) => {
@@ -1264,6 +1307,7 @@ export default function PosSystem({
                            <div className="relative min-w-[200px]">
                               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                               <Input
+                                  ref={searchInputRef}
                                   placeholder="Search menu items..."
                                   className="pl-10 h-10"
                                   value={searchTerm}
@@ -1273,11 +1317,14 @@ export default function PosSystem({
                           <div className="relative min-w-[200px]">
                               <QrCodeIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                               <Input
+                                  ref={itemCodeInputRef}
                                   placeholder="Enter item code..."
                                   className="pl-10 h-10"
                                   value={itemCodeInput}
                                   onChange={(e) => setItemCodeInput(e.target.value)}
                                   onKeyDown={handleCodeEntry}
+                                  onFocus={() => setKeyboardMode('order')}
+                                  onBlur={() => {if(keyboardMode === 'order') setKeyboardMode('confirm')}}
                               />
                           </div>
                            <RadioGroup value={vegFilter} onValueChange={(v) => setVegFilter(v as VegFilter)} className="flex items-center gap-2">
@@ -1471,5 +1518,4 @@ export default function PosSystem({
     </div>
   );
 }
-
 

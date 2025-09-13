@@ -46,6 +46,7 @@ export default function MainLayout() {
   const [pendingOrders, setPendingOrders] = useState<Record<number, OrderItem[]>>({});
   
   const [categoryColors, setCategoryColors] = useState<Record<string, string>>({});
+  const [keyboardMode, setKeyboardMode] = useState<'table' | 'order' | 'confirm'>('table');
 
   useEffect(() => {
     try {
@@ -82,7 +83,7 @@ export default function MainLayout() {
     });
 
     if (fullReset) {
-      setSelectedTableId(null);
+      setSelectedTableId(1);
     }
   }, [selectedTableId]);
 
@@ -103,6 +104,7 @@ export default function MainLayout() {
         setActiveOrder(null);
         setCurrentOrderItems(pendingOrders[PENDING_ORDER_KEY] || []);
         setDiscount(0);
+        setKeyboardMode('order');
         return;
     }
 
@@ -128,7 +130,7 @@ export default function MainLayout() {
             // Atomically move items from unassigned to this table's pending slot
             setPendingOrders(prev => {
                 const newPending = {...prev};
-                delete newPending[PENDING_ORDER_KEY]; // Clear unassigned
+                delete newPending[PENDEND_ORDER_KEY]; // Clear unassigned
                 newPending[tableId] = itemsToLoad; // Assign to new table
                 return newPending;
             });
@@ -137,6 +139,7 @@ export default function MainLayout() {
         setCurrentOrderItems(itemsToLoad);
         setDiscount(0);
     }
+    setKeyboardMode('table');
 }, [tables, orders, activeOrder, currentOrderItems, selectedTableId, pendingOrders]);
   
   useEffect(() => {
@@ -409,6 +412,8 @@ export default function MainLayout() {
                   setCategoryColors={setCategoryColors}
                   onViewTableDetails={handleViewTableDetails}
                   onEditOrder={handleEditOrderFromShortcut}
+                  keyboardMode={keyboardMode}
+                  setKeyboardMode={setKeyboardMode}
                 />
             </TabsContent>
             <TabsContent value="tables" className="m-0 p-0">
