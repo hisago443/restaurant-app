@@ -254,7 +254,7 @@ export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
         toast({
             variant: "destructive",
             title: "Customer Pending Limit Exceeded",
-            description: `Total amount to collect (₹${totalReceivable.toFixed(2)}) has exceeded the ₹${customerPendingLimit.toFixed(2)} limit.`,
+            description: `Total amount to collect (Rs. ${totalReceivable.toFixed(2)}) has exceeded the Rs. ${customerPendingLimit.toFixed(2)} limit.`,
             duration: 10000,
         });
     }
@@ -265,7 +265,7 @@ export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
         toast({
             variant: "destructive",
             title: "Vendor Payment Limit Exceeded",
-            description: `Total amount to pay (₹${totalPayable.toFixed(2)}) has exceeded the ₹${vendorPendingLimit.toFixed(2)} limit.`,
+            description: `Total amount to pay (Rs. ${totalPayable.toFixed(2)}) has exceeded the Rs. ${vendorPendingLimit.toFixed(2)} limit.`,
             duration: 10000,
         });
     }
@@ -457,6 +457,7 @@ export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
             totalAmount={totalReceivable}
             limit={customerPendingLimit}
             icon={<HandCoins className="h-6 w-6 text-green-600" />}
+            amountColor="text-green-600"
         />
         <PendingBillsCard 
             title="Pending to Pay to Vendors"
@@ -467,6 +468,7 @@ export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
             totalAmount={totalPayable}
             limit={vendorPendingLimit}
             icon={<Landmark className="h-6 w-6 text-red-600" />}
+            amountColor="text-red-600"
         />
       </div>
 
@@ -535,7 +537,7 @@ export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
   );
 }
 
-function PendingBillsCard({ title, bills, onAdd, onEdit, onMarkPaid, totalAmount, limit, icon }: {
+function PendingBillsCard({ title, bills, onAdd, onEdit, onMarkPaid, totalAmount, limit, icon, amountColor }: {
   title: string;
   bills: PendingBill[];
   onAdd: () => void;
@@ -544,6 +546,7 @@ function PendingBillsCard({ title, bills, onAdd, onEdit, onMarkPaid, totalAmount
   totalAmount: number;
   limit: number;
   icon: React.ReactNode;
+  amountColor: string;
 }) {
   const isOverLimit = totalAmount > limit;
   const progressValue = Math.min((totalAmount / limit) * 100, 100);
@@ -565,7 +568,7 @@ function PendingBillsCard({ title, bills, onAdd, onEdit, onMarkPaid, totalAmount
         <CardContent className="space-y-4">
             <div>
                 <div className="flex justify-between items-center mb-1">
-                    <span className="text-sm font-medium">Total Pending: ₹{totalAmount.toFixed(2)} / ₹{limit.toFixed(2)}</span>
+                    <span className="text-sm font-medium">Total Pending: Rs. {totalAmount.toFixed(2)} / Rs. {limit.toFixed(2)}</span>
                     {isOverLimit && <AlertTriangle className="h-5 w-5 text-destructive" />}
                 </div>
                 <Progress value={progressValue} indicatorClassName={cn(isOverLimit ? "bg-destructive" : "bg-primary")} />
@@ -588,7 +591,7 @@ function PendingBillsCard({ title, bills, onAdd, onEdit, onMarkPaid, totalAmount
                                 return (
                                     <TableRow key={bill.id}>
                                         <TableCell className="font-medium">{bill.name}</TableCell>
-                                        <TableCell>₹{bill.amount.toFixed(2)}</TableCell>
+                                        <TableCell className={cn("font-semibold", amountColor)}>Rs. {bill.amount.toFixed(2)}</TableCell>
                                         <TableCell className={cn(isOverdue && "text-destructive font-semibold")}>{bill.dueDate ? format(bill.dueDate, 'PPP') : 'N/A'}</TableCell>
                                         <TableCell className="text-right">
                                             <Button variant="ghost" size="icon" onClick={() => onEdit(bill)}><Edit className="h-4 w-4" /></Button>
@@ -597,7 +600,7 @@ function PendingBillsCard({ title, bills, onAdd, onEdit, onMarkPaid, totalAmount
                                                 <AlertDialogContent>
                                                     <AlertDialogHeader>
                                                         <AlertDialogTitle>Mark as Paid?</AlertDialogTitle>
-                                                        <AlertDialogDescription>This will remove the pending bill of ₹{bill.amount.toFixed(2)} for {bill.name}. This action cannot be undone.</AlertDialogDescription>
+                                                        <AlertDialogDescription>This will remove the pending bill of Rs. {bill.amount.toFixed(2)} for {bill.name}. This action cannot be undone.</AlertDialogDescription>
                                                     </AlertDialogHeader>
                                                     <AlertDialogFooter>
                                                         <AlertDialogCancel>Cancel</AlertDialogCancel>
@@ -713,5 +716,7 @@ function AddOrEditPendingBillDialog({ open, onOpenChange, onSave, bill, type, ve
     </Dialog>
   );
 }
+
+    
 
     
