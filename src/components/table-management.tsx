@@ -88,8 +88,9 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
       return;
     }
     
-    // If not in bulk mode, clicking a table shows its details.
-    setSelectedTable(table.id === selectedTable?.id ? null : table);
+    if (table.status === 'Available') {
+        updateTableStatus([table.id], 'Occupied');
+    }
   };
 
 
@@ -195,8 +196,7 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
       case 'Occupied':
         actions = [
           <Button key="update" onClick={() => { orderForTable && onEditOrder(orderForTable); setSelectedTable(null);}} disabled={!orderForTable}><Edit className="mr-2 h-4 w-4" />Update Order</Button>,
-          <Button key="print" variant="outline" onClick={(e) => { handleOpenPrintDialog(e, selectedTable); setSelectedTable(null); }} disabled={!orderForTable}><Printer className="mr-2 h-4 w-4" />Print Bill</Button>,
-          <Button key="clean" variant="destructive" onClick={() => { updateTableStatus([selectedTable.id], 'Cleaning'); setSelectedTable(null); }}><SparklesIcon className="mr-2 h-4 w-4" />Mark as Cleaning</Button>
+          <Button key="print" variant="outline" onClick={(e) => { handleOpenPrintDialog(e, selectedTable); setSelectedTable(null); }} disabled={!orderForTable}><Printer className="mr-2 h-4 w-4" />Print Bill</Button>
         ];
         break;
       case 'Reserved':
@@ -492,6 +492,7 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
     </div>
   );
 }
+
 
 
 
