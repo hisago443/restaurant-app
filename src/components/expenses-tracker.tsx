@@ -532,7 +532,20 @@ export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
       
        <AddOrEditVendorDialog open={isVendorAddDialogOpen} onOpenChange={setIsVendorAddDialogOpen} onSave={handleSaveVendor} existingVendor={editingVendor}/>
        <ManageVendorsDialog open={isVendorManageDialogOpen} onOpenChange={setIsVendorManageDialogOpen} vendors={vendors} onEditVendor={(v) => { setIsVendorManageDialogOpen(false); setTimeout(() => openAddVendorDialog(v), 150)}} onDeleteVendor={handleDeleteVendor}/>
-       <AddOrEditPendingBillDialog open={isPendingBillDialogOpen} onOpenChange={setIsPendingBillDialogOpen} onSave={handleSavePendingBill} bill={editingPendingBill} type={pendingBillType} vendors={vendors} />
+       <AddOrEditPendingBillDialog 
+          key={editingPendingBill ? editingPendingBill.id : 'add-bill'}
+          open={isPendingBillDialogOpen} 
+          onOpenChange={(open) => {
+            if (!open) {
+                setEditingPendingBill(null);
+            }
+            setIsPendingBillDialogOpen(open);
+          }}
+          onSave={handleSavePendingBill} 
+          bill={editingPendingBill} 
+          type={pendingBillType} 
+          vendors={vendors} 
+        />
     </div>
   );
 }
@@ -716,6 +729,8 @@ function AddOrEditPendingBillDialog({ open, onOpenChange, onSave, bill, type, ve
     </Dialog>
   );
 }
+
+    
 
     
 
