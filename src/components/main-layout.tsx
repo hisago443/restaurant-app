@@ -130,7 +130,7 @@ export default function MainLayout() {
             // Atomically move items from unassigned to this table's pending slot
             setPendingOrders(prev => {
                 const newPending = {...prev};
-                delete newPending[PENDEND_ORDER_KEY]; // Clear unassigned
+                delete newPending[PENDING_ORDER_KEY]; // Clear unassigned
                 newPending[tableId] = itemsToLoad; // Assign to new table
                 return newPending;
             });
@@ -140,7 +140,7 @@ export default function MainLayout() {
         setDiscount(0);
     }
     setKeyboardMode('table');
-}, [tables, orders, activeOrder, currentOrderItems, selectedTableId, pendingOrders]);
+}, [tables, orders, activeOrder, currentOrderItems, selectedTableId, pendingOrders, setKeyboardMode]);
   
   useEffect(() => {
     // Fetch initial tables with default status
