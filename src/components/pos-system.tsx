@@ -51,7 +51,7 @@ const itemStatusColors: Record<string, { light: string, dark: string, name: stri
 const itemStatusNames = Object.keys(itemStatusColors);
 
 
-type ViewMode = 'accordion' | 'grid' | 'list';
+type ViewMode = 'accordion' | 'grid';
 type VegFilter = 'All' | 'Veg' | 'Non-Veg';
 
 const statusBaseColors: Record<TableStatus, string> = {
@@ -146,8 +146,7 @@ const TableDropTarget = ({ table, occupancyCount, handleSelectTable, children, o
                 "aspect-square flex-col justify-center items-center relative p-1 border-2 transition-transform duration-150 active:scale-95 group flex rounded-md cursor-pointer hover:scale-110 hover:z-10",
                 getDynamicColor(table.status),
                 isActive && 'ring-4 ring-offset-2 ring-green-500',
-                table.status === 'Available' || table.status === 'Occupied' ? 'text-white border-black' : 'text-black border-black/50',
-                "border-black/50"
+                table.status === 'Available' || table.status === 'Occupied' ? 'text-white border-black/50' : 'text-black border-black/50',
             )}
             onClick={() => handleSelectTable(table.id)}
         >
@@ -1090,7 +1089,7 @@ export default function PosSystem({
       <Card
         key={item.name}
         className={cn(
-          "group rounded-lg transition-all shadow-md hover:shadow-lg relative overflow-hidden h-full flex flex-col min-h-[110px] border border-black",
+          "group rounded-lg transition-all shadow-md hover:shadow-lg relative overflow-hidden h-full flex flex-col min-h-[110px]",
           finalColorName,
           easyMode && "cursor-pointer hover:scale-105",
           (itemStatus === 'out') && "pointer-events-none opacity-60"
@@ -1182,35 +1181,6 @@ export default function PosSystem({
   };
 
   const renderMenuContent = () => {
-    if (viewMode === 'list') {
-      return (
-        <div className="space-y-6">
-          {filteredMenu.map(category => (
-             <div key={category.category}>
-               <div className={cn("sticky top-0 backdrop-blur-sm py-2 z-10 flex items-center justify-between gap-2 p-2 rounded-md", categoryColors[category.category] ? colorPalette[categoryColors[category.category]]?.light : 'bg-background/80')}>
-                <h2 className="text-xl font-bold flex-grow text-left">
-                  {category.category}
-                </h2>
-                <div onClick={(e) => e.stopPropagation()}>
-                    <CategoryColorPicker categoryName={category.category} />
-                </div>
-              </div>
-
-              <div className="space-y-4 pt-2">
-                {category.subCategories.map((subCategory) => (
-                  <div key={subCategory.name}>
-                    <h3 className="text-md font-semibold mb-2 text-muted-foreground pl-2">{subCategory.name}</h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-                      {subCategory.items.map((item) => renderMenuItem(item, subCategory.name, category.category))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-      );
-    }
     if (viewMode === 'grid') {
         return (
           <Tabs defaultValue={filteredMenu.length > 0 ? filteredMenu[0].category : undefined} className="w-full">
@@ -1341,10 +1311,6 @@ export default function PosSystem({
                                   <RadioGroupItem value="accordion" id="accordion-view" className="sr-only" />
                                   <List className="h-5 w-5 box-content" />
                               </Label>
-                              <Label className={cn("p-1.5 rounded-md cursor-pointer transition-colors", viewMode === 'list' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent' )}>
-                                  <RadioGroupItem value="list" id="list-view" className="sr-only" />
-                                  <Rows className="h-5 w-5 box-content" />
-                              </Label>
                           </RadioGroup>
                       </div>
                   </div>
@@ -1402,7 +1368,7 @@ export default function PosSystem({
                         <div
                         className={cn(
                             'absolute inset-0 flex flex-col items-center justify-center text-center transition-colors rounded-md p-1 h-full aspect-square',
-                            isSelected && 'ring-4 ring-offset-2 ring-background'
+                            isSelected && 'ring-4 ring-offset-2 ring-black'
                         )}
                         >
                             {hasPendingItems && (
@@ -1503,3 +1469,4 @@ export default function PosSystem({
     </div>
   );
 }
+
