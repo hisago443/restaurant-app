@@ -366,23 +366,12 @@ export default function MainLayout() {
           <div>{formattedDate}</div>
           <div>{formattedTime}</div>
         </div>
-         <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-                <Button variant="outline" size="icon" onClick={toggleNavPosition}>
-                    {navPosition === 'top' ? <PanelLeft className="h-5 w-5" /> : <PanelTop className="h-5 w-5" />}
-                </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Change Nav Position</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+         <div></div>
       </header>
        <DndProvider backend={HTML5Backend}>
         <Tabs value={activeTab} onValueChange={handleTabChange} orientation={navPosition === 'left' ? 'vertical' : 'horizontal'} className={cn("h-full", navPosition === 'top' ? 'flex flex-col' : 'flex')}>
           <div className={cn("flex justify-center border-b kitchen-tabs", navPosition === 'left' && "flex-col justify-start border-b-0 border-r")}>
-            <TabsList className={cn("m-2 p-0 h-auto bg-transparent", navPosition === 'left' && "flex-col h-full items-stretch w-auto")}>
+            <TabsList className={cn("m-2 p-0 h-auto bg-transparent", navPosition === 'left' && "flex-col h-full items-start w-auto")}>
               <TabsTrigger value="pos" className="px-4 py-2 text-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md flex items-center gap-2">
                   <Utensils /> <span className={cn(navPosition === 'left' && 'w-24 text-left')}>Main</span>
               </TabsTrigger>
@@ -406,6 +395,19 @@ export default function MainLayout() {
               <TabsTrigger value="admin" className="px-4 py-2 text-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md flex items-center gap-2">
                 <Shield /> <span className={cn(navPosition === 'left' && 'w-24 text-left')}>Admin</span>
               </TabsTrigger>
+              <Separator orientation={navPosition === 'top' ? 'vertical' : 'horizontal'} className={cn(navPosition === 'top' ? "h-6 mx-1" : "w-full my-1", navPosition === 'left' && "mt-auto")} />
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                        <Button variant="ghost" size="icon" onClick={toggleNavPosition} className='rounded-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground flex items-center gap-2'>
+                            {navPosition === 'top' ? <PanelLeft className="h-5 w-5" /> : <PanelTop className="h-5 w-5" />}
+                        </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Change Nav Position</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
             </TabsList>
           </div>
           
