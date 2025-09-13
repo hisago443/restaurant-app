@@ -598,7 +598,7 @@ function PendingBillsCard({ title, bills, onAdd, onEdit, onMarkPaid, totalAmount
                                 autoFocus
                             />
                         ) : (
-                            <span onClick={() => setIsEditingLimit(true)} className="cursor-pointer">{limit.toFixed(2)}</span>
+                            <span onClick={() => setIsEditingLimit(true)} className="cursor-pointer font-semibold underline decoration-dashed">{limit.toFixed(2)}</span>
                         )}
                     </span>
                     {isOverLimit && <AlertTriangle className="h-5 w-5 text-destructive" />}
@@ -749,11 +749,5 @@ function AddOrEditPendingBillDialog({ open, onOpenChange, onSave, bill, type, ve
     </Dialog>
   );
 }
-
-    
-
-    
-
-    
 
     
