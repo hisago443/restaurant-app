@@ -373,7 +373,6 @@ export default function MainLayout() {
           <div>{formattedDate}</div>
           <div>{formattedTime}</div>
         </div>
-         <div></div>
       </header>
        <DndProvider backend={HTML5Backend}>
         <Tabs value={activeTab} onValueChange={handleTabChange} orientation={navPosition === 'left' ? 'vertical' : 'horizontal'} className={cn("h-full", navPosition === 'top' ? 'flex flex-col' : 'flex')}>
