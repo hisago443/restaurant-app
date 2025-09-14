@@ -55,6 +55,85 @@ interface TableManagementProps {
   onCreateOrder: (tableId: number) => void;
 }
 
+function CancelReservationDialog({
+  isOpen,
+  onOpenChange,
+  tables,
+  updateTableStatus,
+}: {
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
+  tables: TableType[];
+  updateTableStatus: (tableIds: number[], status: TableStatus, reservationDetails?: TableType['reservationDetails']) => void;
+}) {
+  const { toast } = useToast();
+  const [selectedTableToCancel, setSelectedTableToCancel] = useState<string>('');
+  
+  const reservedTables = tables.filter(t => t.status === 'Reserved');
+
+  const handleCancelReservation = () => {
+    if (!selectedTableToCancel) {
+      toast({
+        variant: 'destructive',
+        title: 'No Table Selected',
+        description: 'Please select a reservation to cancel.',
+      });
+      return;
+    }
+
+    const tableId = parseInt(selectedTableToCancel, 10);
+    updateTableStatus([tableId], 'Available', undefined);
+
+    toast({
+      title: 'Reservation Cancelled',
+      description: `The reservation for Table ${tableId} has been cancelled.`,
+    });
+    
+    setSelectedTableToCancel('');
+    onOpenChange(false);
+  };
+  
+  return (
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Cancel a Reservation</DialogTitle>
+          <DialogDescription>
+            Select a reserved table to cancel its booking.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4 py-4">
+            <Label htmlFor="cancel-reservation-select">Select Reservation</Label>
+            <Select value={selectedTableToCancel} onValueChange={setSelectedTableToCancel}>
+              <SelectTrigger id="cancel-reservation-select">
+                <SelectValue placeholder="Select a reserved table..." />
+              </SelectTrigger>
+              <SelectContent>
+                {reservedTables.length > 0 ? (
+                  reservedTables.map(table => (
+                    <SelectItem key={table.id} value={String(table.id)}>
+                      Table {table.id} - {table.reservationDetails?.name} at {table.reservationDetails?.time}
+                    </SelectItem>
+                  ))
+                ) : (
+                  <div className="px-2 py-4 text-center text-sm text-muted-foreground">
+                    No tables are currently reserved.
+                  </div>
+                )}
+              </SelectContent>
+            </Select>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Close</Button>
+          <Button variant="destructive" onClick={handleCancelReservation} disabled={!selectedTableToCancel}>
+            Confirm Cancellation
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
 export default function TableManagement({ tables, orders, billHistory, updateTableStatus, addTable, removeLastTable, occupancyCount, onEditOrder, showOccupancy, setShowOccupancy, initialSelectedTableId, onCreateOrder }: TableManagementProps) {
   const [selectedTable, setSelectedTable] = useState<TableType | null>(null);
   const [selectedBill, setSelectedBill] = useState<Bill | null>(null);
@@ -73,6 +152,7 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
   const [reservationMobile, setReservationMobile] = useState('');
   const [reservationTime, setReservationTime] = useState({ hour: '12', minute: '00', period: 'PM' });
   const [reservationTableId, setReservationTableId] = useState<string>('');
+  const [isCancelReservationDialogOpen, setIsCancelReservationDialogOpen] = useState(false);
 
   useEffect(() => {
     if (initialSelectedTableId) {
@@ -499,6 +579,7 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
               </div>
             </div>
             <Button className="w-full" onClick={handleReserveTable}>Reserve Table</Button>
+            <Button variant="destructive" className="w-full" onClick={() => setIsCancelReservationDialogOpen(true)}>Cancel Reservation</Button>
           </CardContent>
         </Card>
       </div>
@@ -685,8 +766,13 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
         </AlertDialogContent>
       </AlertDialog>
 
+      <CancelReservationDialog 
+        isOpen={isCancelReservationDialogOpen}
+        onOpenChange={setIsCancelReservationDialogOpen}
+        tables={tables}
+        updateTableStatus={updateTableStatus}
+      />
+
     </div>
   );
 }
-
-    
