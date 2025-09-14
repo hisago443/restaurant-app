@@ -9,12 +9,17 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { CalendarIcon } from 'lucide-react';
+import { CalendarIcon, Trash2 } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { Separator } from './ui/separator';
+
+interface Partner {
+    name: string;
+    mobile: string;
+}
 
 export default function SystemSettings() {
     const { toast } = useToast();
@@ -23,7 +28,36 @@ export default function SystemSettings() {
     const [restaurantLocation, setRestaurantLocation] = useState("");
     const [dateOfOpening, setDateOfOpening] = useState<Date | undefined>();
     const [hasPartners, setHasPartners] = useState(false);
-    const [partnerDetails, setPartnerDetails] = useState("");
+    
+    const [partners, setPartners] = useState<Partner[]>([]);
+    const [currentPartnerName, setCurrentPartnerName] = useState('');
+    const [currentPartnerMobile, setCurrentPartnerMobile] = useState('');
+
+    const handleAddPartner = () => {
+        if (currentPartnerName && currentPartnerMobile) {
+            if (partners.some(p => p.mobile === currentPartnerMobile)) {
+                toast({
+                    variant: 'destructive',
+                    title: 'Partner exists',
+                    description: 'A partner with this mobile number is already added.',
+                });
+                return;
+            }
+            setPartners([...partners, { name: currentPartnerName, mobile: currentPartnerMobile }]);
+            setCurrentPartnerName('');
+            setCurrentPartnerMobile('');
+        } else {
+            toast({
+                variant: 'destructive',
+                title: 'Missing Details',
+                description: 'Please provide both a name and a mobile number.',
+            });
+        }
+    };
+
+    const handleRemovePartner = (mobile: string) => {
+        setPartners(partners.filter(p => p.mobile !== mobile));
+    };
 
     const handleSave = () => {
         toast({
@@ -92,14 +126,44 @@ export default function SystemSettings() {
                     {hasPartners && (
                         <>
                             <Separator />
-                            <div className="space-y-2">
-                                <Label htmlFor="partner-details">Partner Details</Label>
-                                <Textarea 
-                                    id="partner-details"
-                                    value={partnerDetails}
-                                    onChange={(e) => setPartnerDetails(e.target.value)}
-                                    placeholder="e.g., John Doe - 50%, Jane Smith - 50%"
-                                />
+                            <div className="space-y-4">
+                                <Label>Partner Details</Label>
+                                {partners.length > 0 && (
+                                    <div className="space-y-2 rounded-md border p-2">
+                                        {partners.map((partner, index) => (
+                                            <div key={index} className="flex items-center justify-between">
+                                                <div>
+                                                    <p className="font-medium">{partner.name}</p>
+                                                    <p className="text-sm text-muted-foreground">{partner.mobile}</p>
+                                                </div>
+                                                <Button variant="ghost" size="icon" className="text-destructive" onClick={() => handleRemovePartner(partner.mobile)}>
+                                                    <Trash2 className="h-4 w-4" />
+                                                </Button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                                <div className="flex items-end gap-2">
+                                    <div className="flex-grow space-y-1">
+                                        <Label htmlFor="partner-name" className="text-xs">Partner Name</Label>
+                                        <Input 
+                                            id="partner-name"
+                                            value={currentPartnerName}
+                                            onChange={(e) => setCurrentPartnerName(e.target.value)}
+                                            placeholder="e.g., Jane Smith"
+                                        />
+                                    </div>
+                                    <div className="flex-grow space-y-1">
+                                        <Label htmlFor="partner-mobile" className="text-xs">Mobile No.</Label>
+                                        <Input 
+                                            id="partner-mobile"
+                                            value={currentPartnerMobile}
+                                            onChange={(e) => setCurrentPartnerMobile(e.target.value)}
+                                            placeholder="e.g., 9876543210"
+                                        />
+                                    </div>
+                                    <Button variant="secondary" onClick={handleAddPartner}>Add</Button>
+                                </div>
                             </div>
                         </>
                     )}
