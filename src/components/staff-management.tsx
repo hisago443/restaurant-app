@@ -457,9 +457,6 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
                       })}
                   </CardContent>
                 </Card>
-                <Button size="lg" className="w-full h-14 text-base" onClick={() => openAdvanceDialog(null, undefined)} disabled={isDateLocked}>
-                    <Banknote className="mr-4 h-6 w-6" /> Add Salary Advance
-                </Button>
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between">
                         <CardTitle>Advances for {format(selectedDate, 'PPP')}</CardTitle>
@@ -504,6 +501,9 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
                         </div>
                     </CardContent>
                 </Card>
+                <Button size="lg" className="w-full h-14 text-base" onClick={() => openAdvanceDialog(null, undefined)} disabled={isDateLocked}>
+                    <Banknote className="mr-4 h-6 w-6" /> Add Salary Advance
+                </Button>
             </div>
           </div>
         </TabsContent>
@@ -940,13 +940,13 @@ function EmployeeSummaryDialog({ open, onOpenChange, employee, attendance, advan
                     {/* Right Column: Financials */}
                     <div className="space-y-4">
                         <h3 className="font-semibold text-lg border-b pb-2">Financial Report</h3>
-                        <div className="grid grid-cols-2 gap-2">
-                           <Card className="p-3 bg-blue-100 dark:bg-blue-900/30 col-span-2">
+                        <div className="grid grid-cols-3 gap-2">
+                           <Card className="p-3 bg-blue-100 dark:bg-blue-900/30">
                                 <CardDescription className="text-sm text-blue-800 dark:text-blue-200">Base Salary</CardDescription>
                                 <CardTitle className="text-2xl">Rs. {employee.salary.toLocaleString()}</CardTitle>
                             </Card>
                             <Card className="p-3 bg-red-100 dark:bg-red-900/30">
-                                <CardDescription className="text-sm text-red-800 dark:text-red-200">Advance Taken</CardDescription>
+                                <CardDescription className="text-sm text-red-800 dark:text-red-200">Advance</CardDescription>
                                 <CardTitle className="text-2xl">Rs. {summary.totalAdvance.toLocaleString()}</CardTitle>
                             </Card>
                             <Card className="p-3 bg-green-100 dark:bg-green-900/30">
