@@ -357,9 +357,9 @@ function OrderPanel({
                     <div className="flex-1 grid grid-cols-3 gap-2 min-w-[320px]">
                         <Button variant={orderType === 'Dine-In' ? 'default' : 'outline'} onClick={() => setOrderType('Dine-In')} className="h-12 text-base"><Users className="mr-2 h-5 w-5"/>Dine-In</Button>
                         <Button variant={orderType === 'Takeaway' ? 'default' : 'outline'} onClick={() => setOrderType('Takeaway')} className="h-12 text-base"><ShoppingBag className="mr-2 h-5 w-5"/>Takeaway</Button>
-                        <Button variant={orderType === 'Home Delivery' ? 'default' : 'outline'} onClick={() => setOrderType('Home Delivery')} className="h-12 text-base px-2">
+                        <Button variant={orderType === 'Home Delivery' ? 'default' : 'outline'} onClick={() => setOrderType('Home Delivery')} className="h-12 text-base px-2 flex-nowrap whitespace-nowrap">
                             <Bike className="mr-2 h-5 w-5"/>
-                            Home Delivery
+                            <span>Home Delivery</span>
                         </Button>
                     </div>
                 </div>
@@ -963,25 +963,6 @@ export default function PosSystem({
       printWindow.document.close();
     }
   };
-
-  const addOrder = (order: Omit<Order, 'id' | 'status'>, kitchenItems: OrderItem[], barItems: OrderItem[]) => {
-    const newOrder: Order = {
-      ...order,
-      id: `K${(orders.length + 1).toString().padStart(3, '0')}`,
-      status: 'In Preparation', 
-    };
-    onOrderCreated(newOrder);
-    if (kitchenItems.length > 0) printKot(newOrder, kitchenItems, 'Kitchen');
-    if (barItems.length > 0) printKot(newOrder, barItems, 'Bar');
-    setOriginalOrderItems(newOrder.items);
-  };
-  
-  const updateOrder = (updatedOrder: Order) => {
-    setOrders(prevOrders => {
-      return prevOrders.map(o => (o.id === updatedOrder.id ? updatedOrder : o));
-    });
-    setActiveOrder(updatedOrder);
-  };
   
     const processOrder = (type: 'Kitchen' | 'Bar') => {
         if (orderItems.length === 0) {
@@ -1014,7 +995,9 @@ export default function PosSystem({
         const beverageItems = orderItems.filter(item => beverageItemNames.has(item.name));
         
         const itemsForKOT = type === 'Kitchen' ? foodItems : beverageItems;
-        const itemsToPrint = activeOrder ? getDiff(itemsForKOT, originalOrderItems.filter(item => type === 'Kitchen' ? !beverageItemNames.has(item.name) : beverageItemNames.has(item.name))) : itemsForKOT;
+        const originalItemsForKOT = originalOrderItems.filter(item => type === 'Kitchen' ? !beverageItemNames.has(item.name) : beverageItemNames.has(item.name));
+        
+        const itemsToPrint = activeOrder ? getDiff(itemsForKOT, originalItemsForKOT) : itemsForKOT;
         
         if (itemsToPrint.length === 0) {
             toast({ title: 'No Changes', description: `No new ${type.toLowerCase()} items to send.` });
@@ -1044,13 +1027,25 @@ export default function PosSystem({
                     ...(orderType === 'Home Delivery' && { deliveryDetails: homeDeliveryDetails }),
                 };
                 onOrderCreated(finalOrder);
-                if (orderType === 'Dine-In') {
-                  updateTableStatus([currentActiveTableId!], 'Occupied');
+                if (orderType === 'Dine-In' && currentActiveTableId) {
+                  updateTableStatus([currentActiveTableId], 'Occupied');
                 }
             }
             
             printKot(finalOrder, itemsToPrint, type);
-            setOriginalOrderItems([...orderItems]);
+
+            // Update originalOrderItems only with the items sent
+            const updatedOriginals = [...originalOrderItems];
+            itemsForKOT.forEach(sentItem => {
+                const existingIndex = updatedOriginals.findIndex(orig => orig.name === sentItem.name);
+                if (existingIndex > -1) {
+                    updatedOriginals[existingIndex] = { ...sentItem };
+                } else {
+                    updatedOriginals.push({ ...sentItem });
+                }
+            });
+            setOriginalOrderItems(updatedOriginals);
+
             toast({ title: `KOT Sent!`, description: `Order update sent to ${type}.` });
             setIsProcessing(false);
         }, 50);
@@ -1871,6 +1866,7 @@ export default function PosSystem({
 
 
     
+
 
 
 
