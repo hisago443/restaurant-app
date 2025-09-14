@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import * as React from 'react';
@@ -76,6 +77,7 @@ const statusIcons: Record<TableStatus, React.ElementType> = {
 };
 
 interface PosSystemProps {
+  venueName: string;
   tables: Table[];
   orders: Order[];
   setOrders: React.Dispatch<React.SetStateAction<Order[]>>;
@@ -591,6 +593,7 @@ function HomeDeliveryDialog({
 }
 
 export default function PosSystem({ 
+    venueName,
     tables, 
     orders, 
     setOrders, 
@@ -664,7 +667,7 @@ export default function PosSystem({
   
     let receiptLines = [];
     receiptLines.push('*************************');
-    receiptLines.push('    Up & Above Cafe    ');
+    receiptLines.push(`    ${venueName}    `);
     receiptLines.push('*************************');
     receiptLines.push('');
     
@@ -707,7 +710,7 @@ export default function PosSystem({
     receiptLines.push('*************************');
   
     return receiptLines.join('\n');
-  }, [orderItems, discount, orderType, homeDeliveryDetails]);
+  }, [orderItems, discount, orderType, homeDeliveryDetails, venueName]);
 
   const filteredMenu = useMemo(() => {
     let menuToFilter = typedMenuData;
@@ -1032,14 +1035,18 @@ export default function PosSystem({
             }
             
             printKot(finalOrder, itemsToPrint, type);
-
-            // Correctly update originalOrderItems
+            
             setOriginalOrderItems(prevOriginals => {
-                const newOriginals = new Map(prevOriginals.map(item => [item.name, item]));
+                const newOriginalsMap = new Map(prevOriginals.map(item => [item.name, item]));
                 itemsForKOT.forEach(sentItem => {
-                    newOriginals.set(sentItem.name, { ...sentItem });
+                    const existing = newOriginalsMap.get(sentItem.name);
+                    if (existing) {
+                        existing.quantity = sentItem.quantity;
+                    } else {
+                        newOriginalsMap.set(sentItem.name, { ...sentItem });
+                    }
                 });
-                return Array.from(newOriginals.values());
+                return Array.from(newOriginalsMap.values());
             });
 
             toast({ title: `KOT Sent!`, description: `Order update sent to ${type}.` });

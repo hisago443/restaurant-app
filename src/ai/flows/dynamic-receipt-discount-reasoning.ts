@@ -13,6 +13,7 @@ import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
 const GenerateReceiptInputSchema = z.object({
+  venueName: z.string().describe('The name of the restaurant/cafe.'),
   items: z.array(
     z.object({
       name: z.string().describe('Name of the item.'),
@@ -44,7 +45,7 @@ const prompt = ai.definePrompt({
   prompt: `You are a point-of-sale (POS) assistant for a cafe. Your task is to generate a receipt preview. The receipt must be well-formatted, easy to read, and professional.
 
 The receipt should have the following structure:
-1. A header (e.g., Cafe Name).
+1. A header, which is the name of the venue: {{{venueName}}}.
 2. A section for "Order Details" with a numbered list of items. Each line should show: quantity, item name, and the total price for that line item (quantity * price).
 3. A summary section showing the "Subtotal", "Discount" (only if applicable), and the final "Total".
 4. A footer (e.g., a thank you message).
@@ -56,6 +57,7 @@ The receipt should have the following structure:
 - **CRITICAL**: If the discount percentage is 0, you MUST NOT show the "Discount" line in the summary.
 
 **Order Data:**
+- **Venue Name**: {{{venueName}}}
 - **Items**: I will provide an array of item objects. For each item, you must calculate the line total (item.price * item.quantity).
 - **Discount Percentage**: {{discount}}%
 - **Subtotal**: ₹{{subtotal}}
@@ -67,7 +69,7 @@ The receipt should have the following structure:
 {{/each}}
 
 
-**Example of a correctly formatted receipt with a discount:**
+**Example of a correctly formatted receipt with a discount (using "Up & Above Cafe" as venue name):**
 *************************
     Up & Above Cafe
 *************************
@@ -85,7 +87,7 @@ Total:                 ₹241.20
    Thank you for dining!
 *************************
 
-**Example of a correctly formatted receipt without a discount:**
+**Example of a correctly formatted receipt without a discount (using "Up & Above Cafe" as venue name):**
 *************************
     Up & Above Cafe
 *************************
@@ -102,7 +104,7 @@ Total:                 ₹175.00
    Thank you for dining!
 *************************
 
-Now, please generate the receipt for the provided order data.
+Now, please generate the receipt for the provided order data, using {{{venueName}}} as the header.
 `,
 });
 

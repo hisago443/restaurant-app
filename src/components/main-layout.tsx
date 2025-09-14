@@ -6,7 +6,7 @@ import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Utensils, LayoutGrid, Soup, Users, Shield, Receipt, Package, History, PanelTop, PanelLeft } from 'lucide-react';
 import { isSameDay } from 'date-fns';
-import { collection, onSnapshot, doc, setDoc, getDocs, writeBatch } from 'firebase/firestore';
+import { collection, onSnapshot, doc, setDoc, getDocs, writeBatch, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 import type { Table, TableStatus, Order, Bill, Employee, OrderItem, Expense, InventoryItem } from '@/lib/types';
@@ -48,6 +48,7 @@ export default function MainLayout() {
   const [vendorCreditLimit, setVendorCreditLimit] = useState(50000);
   const [showSetupWizard, setShowSetupWizard] = useState(false);
   const [isCheckingSetup, setIsCheckingSetup] = useState(true);
+  const [venueName, setVenueName] = useState('Up & Above Assistant');
 
   useEffect(() => {
     try {
@@ -63,6 +64,30 @@ export default function MainLayout() {
       setIsCheckingSetup(false);
     }
   }, []);
+
+  useEffect(() => {
+    const fetchVenueName = async () => {
+      try {
+        const venueDoc = await getDoc(doc(db, "settings", "venue"));
+        if (venueDoc.exists()) {
+          setVenueName(venueDoc.data().name || 'Up & Above Assistant');
+        }
+      } catch (error) {
+        console.error("Error fetching venue name:", error);
+      }
+    };
+    fetchVenueName();
+    
+    // Also listen for real-time updates
+    const unsub = onSnapshot(doc(db, "settings", "venue"), (doc) => {
+        if (doc.exists()) {
+            setVenueName(doc.data().name || 'Up & Above Assistant');
+        }
+    });
+
+    return () => unsub();
+  }, []);
+
 
   useEffect(() => {
     try {
@@ -435,7 +460,7 @@ export default function MainLayout() {
       <header className="flex items-center justify-between h-16 px-6 border-b shrink-0">
         <div className="flex items-center gap-2 font-semibold">
           <Logo className="h-6 w-6" />
-          <span className="text-lg">Up & Above Assistant</span>
+          <span className="text-lg">{venueName}</span>
         </div>
         <div className="flex items-center gap-4">
           <TooltipProvider>
@@ -489,6 +514,7 @@ export default function MainLayout() {
           <main ref={mainRef} className="flex-grow overflow-auto focus:outline-none" tabIndex={-1}>
             <TabsContent value="pos" className="m-0 p-0 h-full">
                 <PosSystem 
+                  venueName={venueName}
                   tables={tables}
                   orders={orders}
                   setOrders={setOrders}
