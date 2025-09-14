@@ -983,7 +983,7 @@ export default function PosSystem({
     setActiveOrder(updatedOrder);
   };
   
-    const handleSendOrder = useCallback((type: 'Kitchen' | 'Bar') => {
+    const processOrder = (type: 'Kitchen' | 'Bar') => {
         if (orderItems.length === 0) {
             toast({ variant: 'destructive', title: 'Empty Order', description: 'Cannot send an empty order.' });
             return;
@@ -994,76 +994,70 @@ export default function PosSystem({
             toast({ variant: 'destructive', title: 'Missing Delivery Info', description: 'Please enter customer name and mobile.' });
             return;
         }
-        
-        const beverageCategory = menu.find(c => c.category === 'Beverages');
-        const beverageItemNames = beverageCategory ? beverageCategory.subCategories.flatMap(sc => sc.items.map(i => i.name)) : [];
 
-        const isBeverage = (item: OrderItem) => beverageItemNames.includes(item.name);
-        const foodItems = orderItems.filter(item => !isBeverage(item));
-        const beverageItems = orderItems.filter(item => isBeverage(item));
+        const beverageCategory = menu.find(c => c.category === 'Beverages');
+        const beverageItemNames = beverageCategory ? new Set(beverageCategory.subCategories.flatMap(sc => sc.items.map(i => i.name))) : new Set();
+
+        const getDiff = (currentItems: OrderItem[], originalItems: OrderItem[]) => {
+            const diff: OrderItem[] = [];
+            const originalMap = new Map(originalItems.map(item => [item.name, item.quantity]));
+            currentItems.forEach(item => {
+                const originalQty = originalMap.get(item.name) || 0;
+                if (item.quantity > originalQty) {
+                    diff.push({ ...item, quantity: item.quantity - originalQty });
+                }
+            });
+            return diff;
+        };
+
+        const foodItems = orderItems.filter(item => !beverageItemNames.has(item.name));
+        const beverageItems = orderItems.filter(item => beverageItemNames.has(item.name));
+        
+        const itemsForKOT = type === 'Kitchen' ? foodItems : beverageItems;
+        const itemsToPrint = activeOrder ? getDiff(itemsForKOT, originalOrderItems.filter(item => type === 'Kitchen' ? !beverageItemNames.has(item.name) : beverageItemNames.has(item.name))) : itemsForKOT;
+        
+        if (itemsToPrint.length === 0) {
+            toast({ title: 'No Changes', description: `No new ${type.toLowerCase()} items to send.` });
+            return;
+        }
 
         setIsProcessing(true);
+
         setTimeout(() => {
+            let finalOrder: Order;
             if (activeOrder) {
-                const updatedOrder = { ...activeOrder, items: orderItems };
-                
-                const getDiff = (currentItems: OrderItem[], originalItems: OrderItem[]) => {
-                    const diff: OrderItem[] = [];
-                    const originalMap = new Map(originalItems.map(item => [item.name, item.quantity]));
-                    currentItems.forEach(item => {
-                        const originalQty = originalMap.get(item.name) || 0;
-                        if (item.quantity > originalQty) {
-                            diff.push({ ...item, quantity: item.quantity - originalQty });
-                        }
-                    });
-                    return diff;
-                }
-
-                const kitchenDiff = getDiff(foodItems, originalOrderItems);
-                const barDiff = getDiff(beverageItems, originalOrderItems);
-                
-                if (type === 'Kitchen' && kitchenDiff.length > 0) {
-                    printKot(updatedOrder, kitchenDiff, 'Kitchen');
-                } else if (type === 'Bar' && barDiff.length > 0) {
-                    printKot(updatedOrder, barDiff, 'Bar');
-                } else {
-                    toast({ title: 'No Changes', description: `No new ${type.toLowerCase()} items to send.` });
-                    setIsProcessing(false);
-                    return;
-                }
-                
-                updateOrder(updatedOrder);
-                setOriginalOrderItems([...orderItems]);
-                toast({ title: 'Order Updated!', description: `KOT update sent to ${type}.` });
-
-            } else { // New order
+                finalOrder = { ...activeOrder, items: orderItems };
+                updateOrder(finalOrder);
+            } else {
                 let tableIdForOrder: number;
                 switch(orderType) {
                     case 'Dine-In': tableIdForOrder = currentActiveTableId!; break;
                     case 'Takeaway': tableIdForOrder = 0; break;
                     case 'Home Delivery': tableIdForOrder = -1; break;
                 }
-
-                const orderPayload: Omit<Order, 'id' | 'status'> = {
-                  items: orderItems,
-                  tableId: tableIdForOrder,
-                  ...(orderType === 'Home Delivery' && { deliveryDetails: homeDeliveryDetails }),
+                
+                finalOrder = {
+                    items: orderItems,
+                    tableId: tableIdForOrder,
+                    id: `K${(orders.length + 1).toString().padStart(3, '0')}`,
+                    status: 'In Preparation',
+                    ...(orderType === 'Home Delivery' && { deliveryDetails: homeDeliveryDetails }),
                 };
-                
-                addOrder(orderPayload, foodItems, beverageItems);
-                
+                onOrderCreated(finalOrder);
                 if (orderType === 'Dine-In') {
                   updateTableStatus([currentActiveTableId!], 'Occupied');
                 }
-                toast({ title: 'Order Sent!', description: `New KOT sent.` });
             }
+            
+            printKot(finalOrder, itemsToPrint, type);
+            setOriginalOrderItems([...orderItems]);
+            toast({ title: `KOT Sent!`, description: `Order update sent to ${type}.` });
             setIsProcessing(false);
         }, 50);
-    }, [activeOrder, orderItems, currentActiveTableId, toast, addOrder, updateOrder, originalOrderItems, updateTableStatus, onOrderCreated, orderType, homeDeliveryDetails, menu]);
+    };
 
-
-  const handleSendToKitchen = () => handleSendOrder('Kitchen');
-  const handleSendToBar = () => handleSendOrder('Bar');
+    const handleSendToKitchen = () => processOrder('Kitchen');
+    const handleSendToBar = () => processOrder('Bar');
 
   const handleDropItemOnTable = (tableId: number, item: MenuItem) => {
       if (!easyMode) return;
@@ -1271,7 +1265,7 @@ export default function PosSystem({
     setSelectedTableId(tableId);
     // Use a timeout to ensure the state updates before sending to kitchen
     setTimeout(() => {
-        handleSendOrder('Kitchen'); // Default to kitchen
+        handleSendToKitchen(); // Default to kitchen
     }, 100);
   };
 
@@ -1358,7 +1352,7 @@ export default function PosSystem({
           searchInputRef.current?.focus();
           setKeyboardMode('order');
         } else if (keyboardMode === 'confirm') {
-          handleSendOrder('Kitchen');
+          handleSendToKitchen();
           setKeyboardMode('table');
         }
       } else if (e.key === 'Escape') {
@@ -1379,7 +1373,7 @@ export default function PosSystem({
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [keyboardMode, selectedTableId, tables, handleSelectTable, updateTableStatus, handleSendOrder, setKeyboardMode]);
+  }, [keyboardMode, selectedTableId, tables, handleSelectTable, updateTableStatus, handleSendToKitchen, setKeyboardMode]);
 
 
   const renderMenuItem = (item: MenuItem, subCategoryName: string, categoryName: string) => {
@@ -1388,8 +1382,8 @@ export default function PosSystem({
     const itemStatus = menuItemStatus[item.name];
     const categoryStatus = menuCategoryStatus[categoryName];
     
-    let finalItemColor, isDisabled = false;
     let finalItemBg = 'bg-background';
+    let isDisabled = false;
 
     if (categoryStatus === 'out' || itemStatus === 'out') {
         finalItemBg = itemStatusColors.out.light;
@@ -1587,7 +1581,7 @@ export default function PosSystem({
                             </Popover>
                         </div>
                     </AccordionTrigger>
-                    <AccordionContent className={cn("p-2 space-y-2 bg-background")}>
+                    <AccordionContent className={cn("p-2 space-y-2", "bg-background")}>
                         {category.subCategories.map(subCategory => (
                             <div key={subCategory.name}>
                                 <h3 className="text-md font-semibold mb-2 text-muted-foreground pl-2">{subCategory.name}</h3>
@@ -1877,6 +1871,7 @@ export default function PosSystem({
 
 
     
+
 
 
 
