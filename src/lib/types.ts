@@ -1,5 +1,4 @@
 
-
 import { z } from 'zod';
 
 export interface MenuItemHistory {
@@ -105,14 +104,6 @@ export interface InventoryItem {
   stock: number;
   capacity: number;
   unit: string;
-}
-
-export interface PendingBill {
-    id: string;
-    name: string;
-    amount: number;
-    type: 'receivable' | 'payable';
-    dueDate: Date | null;
 }
 
 export interface ActivityLogEntry {

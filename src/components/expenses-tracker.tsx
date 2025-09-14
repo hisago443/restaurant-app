@@ -47,7 +47,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { PlusCircle, Edit, Trash2, CalendarIcon, Building, Repeat, List, ChevronsUpDown, Check, AlertTriangle, HandCoins, Landmark, Settings, ChevronDown } from 'lucide-react';
 import { Calendar } from "@/components/ui/calendar";
 import { format, isSameDay, isSameMonth, isSameYear, startOfDay, isAfter } from 'date-fns';
-import type { Expense, Vendor, PendingBill } from '@/lib/types';
+import type { Expense, Vendor } from '@/lib/types';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
@@ -212,13 +212,9 @@ function ManageVendorsDialog({
 export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
   const { toast } = useToast();
   const [vendors, setVendors] = useState<Vendor[]>([]);
-  const [pendingBills, setPendingBills] = useState<PendingBill[]>([]);
   const [isVendorAddDialogOpen, setIsVendorAddDialogOpen] = useState(false);
   const [isVendorManageDialogOpen, setIsVendorManageDialogOpen] = useState(false);
-  const [isPendingBillDialogOpen, setIsPendingBillDialogOpen] = useState(false);
   const [editingVendor, setEditingVendor] = useState<Vendor | null>(null);
-  const [editingPendingBill, setEditingPendingBill] = useState<PendingBill | null>(null);
-  const [pendingBillType, setPendingBillType] = useState<'receivable' | 'payable'>('receivable');
 
   // Form state for Expenses
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
@@ -229,48 +225,15 @@ export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
   
   const selectedVendor = vendors.find(v => v.id === vendorId);
   const expenseCategory = selectedVendor?.category || 'Miscellaneous';
-
-  const [customerPendingLimit, setCustomerPendingLimit] = useState(2000);
-  const [vendorPendingLimit, setVendorPendingLimit] = useState(10000);
   
   useEffect(() => {
     const unsubVendors = onSnapshot(collection(db, "vendors"), (snapshot) => {
         setVendors(snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as Vendor)));
     });
-    const unsubPendingBills = onSnapshot(collection(db, "pendingBills"), (snapshot) => {
-        const data = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id, dueDate: doc.data().dueDate?.toDate() } as PendingBill));
-        setPendingBills(data);
-    });
     return () => {
         unsubVendors();
-        unsubPendingBills();
     };
   }, []);
-
-  const totalReceivable = useMemo(() => pendingBills.filter(b => b.type === 'receivable').reduce((sum, b) => sum + b.amount, 0), [pendingBills]);
-  const totalPayable = useMemo(() => pendingBills.filter(b => b.type === 'payable').reduce((sum, b) => sum + b.amount, 0), [pendingBills]);
-
-  useEffect(() => {
-    if (totalReceivable > customerPendingLimit) {
-        toast({
-            variant: "destructive",
-            title: "Customer Pending Limit Exceeded",
-            description: `Total amount to collect (Rs. ${totalReceivable.toFixed(2)}) has exceeded the Rs. ${customerPendingLimit.toFixed(2)} limit.`,
-            duration: 10000,
-        });
-    }
-  }, [totalReceivable, customerPendingLimit, toast]);
-
-  useEffect(() => {
-    if (totalPayable > vendorPendingLimit) {
-        toast({
-            variant: "destructive",
-            title: "Vendor Payment Limit Exceeded",
-            description: `Total amount to pay (Rs. ${totalPayable.toFixed(2)}) has exceeded the Rs. ${vendorPendingLimit.toFixed(2)} limit.`,
-            duration: 10000,
-        });
-    }
-  }, [totalPayable, vendorPendingLimit, toast]);
 
 
   const resetForm = () => {
@@ -358,35 +321,6 @@ export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
     setIsVendorAddDialogOpen(true);
   }
   
-  const openPendingBillDialog = (type: 'receivable' | 'payable', bill: PendingBill | null) => {
-    setPendingBillType(type);
-    setEditingPendingBill(bill);
-    setIsPendingBillDialogOpen(true);
-  }
-  
-  const handleSavePendingBill = async (billData: Omit<PendingBill, 'id'>) => {
-    try {
-        if (editingPendingBill?.id) {
-            await updateDoc(doc(db, "pendingBills", editingPendingBill.id), billData);
-            toast({ title: "Pending bill updated." });
-        } else {
-            await addDoc(collection(db, "pendingBills"), billData);
-            toast({ title: "Pending bill added." });
-        }
-    } catch(e) {
-        toast({ variant: "destructive", title: "Save failed." });
-    }
-  }
-  
-  const handleMarkAsPaid = async (billId: string) => {
-    try {
-        await deleteDoc(doc(db, "pendingBills", billId));
-        toast({ title: "Bill marked as paid." });
-    } catch(e) {
-        toast({ variant: "destructive", title: "Operation failed." });
-    }
-  }
-
   const now = new Date();
   const dailyExpenses = expenses.filter(e => isSameDay(e.date, now)).reduce((sum, expense) => sum + expense.amount, 0);
   const monthlyExpenses = expenses.filter(e => isSameMonth(e.date, now) && isSameYear(e.date, now)).reduce((sum, expense) => sum + expense.amount, 0);
@@ -448,37 +382,6 @@ export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
       
       <Separator />
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <PendingBillsCard 
-            title="Pending to Collect from Customers"
-            type="receivable"
-            bills={pendingBills.filter(b => b.type === 'receivable')}
-            onAdd={() => openPendingBillDialog('receivable', null)}
-            onEdit={(bill) => openPendingBillDialog('receivable', bill)}
-            onMarkPaid={handleMarkAsPaid}
-            totalAmount={totalReceivable}
-            limit={customerPendingLimit}
-            setLimit={setCustomerPendingLimit}
-            icon={<HandCoins className="h-6 w-6 text-green-600" />}
-            amountColor="text-green-600"
-        />
-        <PendingBillsCard 
-            title="Pending to Pay to Vendors"
-            type="payable"
-            bills={pendingBills.filter(b => b.type === 'payable')}
-            onAdd={() => openPendingBillDialog('payable', null)}
-            onEdit={(bill) => openPendingBillDialog('payable', bill)}
-            onMarkPaid={handleMarkAsPaid}
-            totalAmount={totalPayable}
-            limit={vendorPendingLimit}
-            setLimit={setVendorPendingLimit}
-            icon={<Landmark className="h-6 w-6 text-red-600" />}
-            amountColor="text-red-600"
-        />
-      </div>
-
-      <Separator />
-
       <Card>
         <CardHeader>
           <CardTitle>Expense History</CardTitle>
@@ -537,257 +440,6 @@ export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
       
        <AddOrEditVendorDialog open={isVendorAddDialogOpen} onOpenChange={setIsVendorAddDialogOpen} onSave={handleSaveVendor} existingVendor={editingVendor}/>
        <ManageVendorsDialog open={isVendorManageDialogOpen} onOpenChange={setIsVendorManageDialogOpen} vendors={vendors} onEditVendor={(v) => { setIsVendorManageDialogOpen(false); setTimeout(() => openAddVendorDialog(v), 150)}} onDeleteVendor={handleDeleteVendor}/>
-       <AddOrEditPendingBillDialog 
-          key={editingPendingBill ? editingPendingBill.id : 'add-bill'}
-          open={isPendingBillDialogOpen} 
-          onOpenChange={(open) => {
-            if (!open) {
-                setEditingPendingBill(null);
-            }
-            setIsPendingBillDialogOpen(open);
-          }}
-          onSave={handleSavePendingBill} 
-          bill={editingPendingBill} 
-          type={pendingBillType} 
-          vendors={vendors} 
-        />
     </div>
   );
 }
-
-function PendingBillsCard({ title, type, bills, onAdd, onEdit, onMarkPaid, totalAmount, limit, setLimit, icon, amountColor }: {
-  title: string;
-  type: 'receivable' | 'payable';
-  bills: PendingBill[];
-  onAdd: () => void;
-  onEdit: (bill: PendingBill) => void;
-  onMarkPaid: (billId: string) => void;
-  totalAmount: number;
-  limit: number;
-  setLimit: (limit: number) => void;
-  icon: React.ReactNode;
-  amountColor: string;
-}) {
-  const isOverLimit = totalAmount > limit;
-  const progressValue = limit > 0 ? Math.min((totalAmount / limit) * 100, 100) : 0;
-  const [isEditingLimit, setIsEditingLimit] = useState(false);
-
-  const groupedBills = useMemo(() => {
-    return bills.reduce((acc, bill) => {
-      if (!acc[bill.name]) {
-        acc[bill.name] = [];
-      }
-      acc[bill.name].push(bill);
-      return acc;
-    }, {} as Record<string, PendingBill[]>);
-  }, [bills]);
-
-  return (
-    <Card>
-        <CardHeader>
-            <div className="flex justify-between items-start">
-                <div>
-                    <div className="flex items-center gap-3">
-                        {icon}
-                        <CardTitle>{title}</CardTitle>
-                    </div>
-                    <CardDescription>Track and manage unsettled amounts.</CardDescription>
-                </div>
-                <Button onClick={onAdd}><PlusCircle className="mr-2 h-4 w-4" /> Add New</Button>
-            </div>
-        </CardHeader>
-        <CardContent className="space-y-4">
-            <div>
-                 <div className="flex justify-between items-center mb-1">
-                    <span className="text-sm font-medium">
-                        Total Pending: Rs. {totalAmount.toFixed(2)} / Rs. 
-                        {isEditingLimit ? (
-                            <Input 
-                                type="number" 
-                                value={limit} 
-                                onChange={(e) => setLimit(Number(e.target.value))}
-                                onBlur={() => setIsEditingLimit(false)}
-                                onKeyDown={(e) => { if (e.key === 'Enter') setIsEditingLimit(false); }}
-                                className="inline-block w-24 h-7 ml-1"
-                                autoFocus
-                            />
-                        ) : (
-                            <span onClick={() => setIsEditingLimit(true)} className="cursor-pointer font-semibold underline decoration-dashed">{limit.toFixed(2)}</span>
-                        )}
-                    </span>
-                    {isOverLimit && <AlertTriangle className="h-5 w-5 text-destructive" />}
-                </div>
-                <Progress value={progressValue} indicatorClassName={cn(isOverLimit ? "bg-destructive" : "bg-primary")} />
-            </div>
-
-            <div className="max-h-60 overflow-y-auto pr-2">
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Name</TableHead>
-                            <TableHead>Total Amount</TableHead>
-                            <TableHead className="text-right">Actions</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {Object.keys(groupedBills).length > 0 ? (
-                           Object.entries(groupedBills).map(([name, billGroup]) => {
-                                const totalForGroup = billGroup.reduce((sum, b) => sum + b.amount, 0);
-                                return (
-                                <Collapsible key={name}>
-                                  
-                                    <TableRow className="bg-muted/30">
-                                        <TableCell>
-                                          <CollapsibleTrigger asChild>
-                                            <div className="flex items-center gap-2 font-medium w-full text-left cursor-pointer">
-                                              {name}
-                                              <ChevronDown className="h-4 w-4 transition-transform [&[data-state=open]]:rotate-180" />
-                                            </div>
-                                          </CollapsibleTrigger>
-                                        </TableCell>
-                                        <TableCell className={cn("font-semibold", amountColor)}>Rs. {totalForGroup.toFixed(2)}</TableCell>
-                                        <TableCell className="text-right">
-                                            {/* Actions for the whole group could go here */}
-                                        </TableCell>
-                                    </TableRow>
-                                    <CollapsibleContent asChild>
-                                      <>
-                                        {billGroup.map(bill => {
-                                          const isOverdue = bill.dueDate ? isAfter(new Date(), bill.dueDate) : false;
-                                          return (
-                                            <TableRow key={bill.id}>
-                                              <TableCell className="pl-12 text-sm text-muted-foreground">{bill.dueDate ? format(bill.dueDate, 'PPP') : 'No due date'}</TableCell>
-                                              <TableCell className={cn("text-sm", amountColor)}>Rs. {bill.amount.toFixed(2)}</TableCell>
-                                              <TableCell className="text-right">
-                                                  <Button variant="ghost" size="icon" onClick={() => onEdit(bill)}><Edit className="h-4 w-4" /></Button>
-                                                  <AlertDialog>
-                                                      <AlertDialogTrigger asChild><Button variant="ghost" size="icon"><Check className="h-4 w-4 text-green-600"/></Button></AlertDialogTrigger>
-                                                      <AlertDialogContent>
-                                                          <AlertDialogHeader>
-                                                              <AlertDialogTitle>Mark as Paid?</AlertDialogTitle>
-                                                              <AlertDialogDescription>This will remove the pending bill of Rs. {bill.amount.toFixed(2)} for {bill.name}. This action cannot be undone.</AlertDialogDescription>
-                                                          </AlertDialogHeader>
-                                                          <AlertDialogFooter>
-                                                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                                              <AlertDialogAction onClick={() => onMarkPaid(bill.id)}>Mark as Paid</AlertDialogAction>
-                                                          </AlertDialogFooter>
-                                                      </AlertDialogContent>
-                                                  </AlertDialog>
-                                              </TableCell>
-                                            </TableRow>
-                                          )
-                                        })}
-                                      </>
-                                    </CollapsibleContent>
-                                  
-                                </Collapsible>
-                                )
-                            })
-                        ) : (
-                            <TableRow><TableCell colSpan={4} className="h-24 text-center">No pending bills.</TableCell></TableRow>
-                        )}
-                    </TableBody>
-                </Table>
-            </div>
-        </CardContent>
-    </Card>
-  )
-}
-
-function AddOrEditPendingBillDialog({ open, onOpenChange, onSave, bill, type, vendors }: {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onSave: (bill: Omit<PendingBill, 'id'>) => void;
-  bill: PendingBill | null;
-  type: 'receivable' | 'payable';
-  vendors: Vendor[];
-}) {
-  const { toast } = useToast();
-  const [name, setName] = useState('');
-  const [vendorId, setVendorId] = useState<string | undefined>(undefined);
-  const [amount, setAmount] = useState('');
-  const [dueDate, setDueDate] = useState<Date | undefined>();
-
-  useEffect(() => {
-    if (bill) {
-      setName(bill.name);
-      setAmount(String(bill.amount));
-      setDueDate(bill.dueDate);
-      if (type === 'payable') {
-        const vendor = vendors.find(v => v.name === bill.name);
-        setVendorId(vendor?.id);
-      }
-    } else {
-      setName('');
-      setAmount('');
-      setDueDate(undefined);
-      setVendorId(undefined);
-    }
-  }, [bill, open, type, vendors]);
-
-  const handleSave = () => {
-    if (!name || !amount) {
-        toast({ variant: "destructive", title: "Name and Amount are required." });
-        return;
-    }
-    onSave({ name, amount: parseFloat(amount), type, dueDate: dueDate || null });
-    onOpenChange(false);
-  };
-  
-  const handleVendorChange = (id: string) => {
-    setVendorId(id);
-    const vendor = vendors.find(v => v.id === id);
-    if(vendor) setName(vendor.name);
-  }
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>{bill ? 'Edit' : 'Add'} Pending Bill</DialogTitle>
-          <DialogDescription>
-            {type === 'receivable' ? 'Record a pending payment from a customer.' : 'Record a pending payment to a vendor.'}
-          </DialogDescription>
-        </DialogHeader>
-        <div className="space-y-4 py-4">
-          <div className="space-y-2">
-            <Label>{type === 'receivable' ? 'Customer Name' : 'Vendor Name'}</Label>
-            {type === 'payable' ? (
-                <Select onValueChange={handleVendorChange} value={vendorId}>
-                    <SelectTrigger><SelectValue placeholder="Select a vendor..." /></SelectTrigger>
-                    <SelectContent>
-                        {vendors.map(v => <SelectItem key={v.id} value={v.id}>{v.name}</SelectItem>)}
-                    </SelectContent>
-                </Select>
-            ) : (
-                <Input placeholder="e.g., John Doe" value={name} onChange={e => setName(e.target.value)} />
-            )}
-          </div>
-          <div className="space-y-2">
-            <Label>Amount (Rs.)</Label>
-            <Input type="number" placeholder="e.g., 500" value={amount} onChange={e => setAmount(e.target.value)} />
-          </div>
-          <div className="space-y-2">
-            <Label>Due Date (Optional)</Label>
-            <Popover>
-                <PopoverTrigger asChild>
-                    <Button variant={"outline"} className="w-full justify-start text-left font-normal">
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {dueDate ? format(dueDate, "PPP") : <span>Pick a date</span>}
-                    </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={dueDate} onSelect={setDueDate} initialFocus /></PopoverContent>
-            </Popover>
-          </div>
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button onClick={handleSave}>Save Bill</Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-    
-    
