@@ -422,11 +422,11 @@ export default function AdminDashboard({
                                             <TableCell>{employee.role}</TableCell>
                                             <TableCell>{employee.salary.toLocaleString()}</TableCell>
                                             <TableCell className="text-right">
-                                            <Button variant="ghost" size="icon">
-                                                <Eye className="h-4 w-4" />
-                                            </Button>
                                             <Button variant="ghost" size="icon" onClick={() => openEditEmployeeDialog(employee)}>
                                                 <Edit className="h-4 w-4" />
+                                            </Button>
+                                            <Button variant="ghost" size="icon">
+                                                <Eye className="h-4 w-4" />
                                             </Button>
                                             <AlertDialog>
                                                 <AlertDialogTrigger asChild>
@@ -647,6 +647,8 @@ function EmployeeDialog({ open, onOpenChange, employee, onSave }: { open: boolea
         </Dialog>
     );
 }
+    
+
     
 
     
