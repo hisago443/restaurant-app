@@ -635,7 +635,7 @@ function PendingBillsCard({ title, type, bills, onAdd, onEdit, onMarkPaid, total
                                 const totalForGroup = billGroup.reduce((sum, b) => sum + b.amount, 0);
                                 return (
                                 <Collapsible key={name} asChild>
-                                  <>
+                                  <React.Fragment>
                                     <TableRow className="bg-muted/30">
                                         <TableCell>
                                           <CollapsibleTrigger className="flex items-center gap-2 font-medium w-full text-left">
@@ -649,7 +649,7 @@ function PendingBillsCard({ title, type, bills, onAdd, onEdit, onMarkPaid, total
                                         </TableCell>
                                     </TableRow>
                                     <CollapsibleContent asChild>
-                                      <>
+                                      <React.Fragment>
                                         {billGroup.map(bill => {
                                           const isOverdue = bill.dueDate ? isAfter(new Date(), bill.dueDate) : false;
                                           return (
@@ -675,9 +675,9 @@ function PendingBillsCard({ title, type, bills, onAdd, onEdit, onMarkPaid, total
                                             </TableRow>
                                           )
                                         })}
-                                      </>
+                                      </React.Fragment>
                                     </CollapsibleContent>
-                                  </>
+                                  </React.Fragment>
                                 </Collapsible>
                                 )
                             })
