@@ -249,6 +249,16 @@ export default function InventoryManagement({ inventory }: InventoryManagementPr
                     <TooltipProvider>
                       <Tooltip>
                           <TooltipTrigger asChild>
+                              <Button variant="ghost" className="h-8" onClick={() => handleStockChange(item.id, item.capacity / 2)}>
+                                  HALF
+                              </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                              <p>Fill to Half Capacity</p>
+                          </TooltipContent>
+                      </Tooltip>
+                      <Tooltip>
+                          <TooltipTrigger asChild>
                               <Button variant="ghost" className="h-8" onClick={() => handleStockChange(item.id, item.capacity)}>
                                   FULL
                               </Button>
