@@ -321,16 +321,6 @@ export default function AdminDashboard({
                    <SalesReport bills={billHistory} />
                 </CardContent>
             </Card>
-
-            <Card>
-                <CardHeader>
-                    <CardTitle>Activity Log</CardTitle>
-                    <CardDescription>Recent activities across the system.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <ActivityLog />
-                </CardContent>
-            </Card>
         </div>
 
         {/* Right Column */}
