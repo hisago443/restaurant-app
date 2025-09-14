@@ -940,20 +940,19 @@ function EmployeeSummaryDialog({ open, onOpenChange, employee, attendance, advan
                     {/* Right Column: Financials */}
                     <div className="space-y-4">
                         <h3 className="font-semibold text-lg border-b pb-2">Financial Report</h3>
-                        <div className="space-y-2">
-                            <div className="flex justify-between items-baseline p-2 bg-blue-50 dark:bg-blue-900/20 rounded-md">
-                                <p>Base Salary:</p>
-                                <p className="font-semibold text-lg text-blue-600">Rs. {employee.salary.toLocaleString()}</p>
-                            </div>
-                            <div className="flex justify-between items-baseline p-2 bg-red-50 dark:bg-red-900/20 rounded-md">
-                                <p>Total Advance Taken:</p>
-                                <p className="font-semibold text-lg text-red-600">- Rs. {summary.totalAdvance.toLocaleString()}</p>
-                            </div>
-                            <Separator />
-                            <div className="flex justify-between items-baseline p-3 bg-green-100 dark:bg-green-900/30 rounded-md">
-                                <p className="font-bold text-lg">Remaining Salary:</p>
-                                <p className="font-bold text-xl text-green-700">Rs. {summary.remainingSalary.toLocaleString()}</p>
-                            </div>
+                        <div className="grid grid-cols-2 gap-2">
+                           <Card className="p-3 bg-blue-100 dark:bg-blue-900/30 col-span-2">
+                                <CardDescription className="text-sm text-blue-800 dark:text-blue-200">Base Salary</CardDescription>
+                                <CardTitle className="text-2xl">Rs. {employee.salary.toLocaleString()}</CardTitle>
+                            </Card>
+                            <Card className="p-3 bg-red-100 dark:bg-red-900/30">
+                                <CardDescription className="text-sm text-red-800 dark:text-red-200">Advance Taken</CardDescription>
+                                <CardTitle className="text-2xl">Rs. {summary.totalAdvance.toLocaleString()}</CardTitle>
+                            </Card>
+                            <Card className="p-3 bg-green-100 dark:bg-green-900/30">
+                                <CardDescription className="text-sm text-green-800 dark:text-green-200">Remaining</CardDescription>
+                                <CardTitle className="text-2xl">Rs. {summary.remainingSalary.toLocaleString()}</CardTitle>
+                            </Card>
                         </div>
                         <Separator />
                          <div className="space-y-2">
