@@ -1010,7 +1010,7 @@ export default function PosSystem({
             let finalOrder: Order;
             if (activeOrder) {
                 finalOrder = { ...activeOrder, items: orderItems };
-                updateOrder(finalOrder);
+                setOrders(prev => prev.map(o => o.id === finalOrder.id ? finalOrder : o));
             } else {
                 let tableIdForOrder: number;
                 switch(orderType) {
@@ -1866,6 +1866,7 @@ export default function PosSystem({
 
 
     
+
 
 
 
