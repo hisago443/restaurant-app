@@ -3,7 +3,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from 'react';
-import { BarChart, Book, Download, TrendingUp, Settings, Package, User, ShoppingCart, History, Mail, Receipt, Edit, Trash2, Building, Users, CreditCard, PlusCircle, Eye } from 'lucide-react';
+import { BarChart, Book, Download, TrendingUp, Settings, Package, User, ShoppingCart, History, Mail, Receipt, Edit, Trash2, Building, Users, CreditCard, PlusCircle, Eye, Repeat } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -42,6 +42,7 @@ interface AdminDashboardProps {
   setCustomerCreditLimit: (limit: number) => void;
   vendorCreditLimit: number;
   setVendorCreditLimit: (limit: number) => void;
+  onRerunSetup: () => void;
 }
 
 export default function AdminDashboard({ 
@@ -53,6 +54,7 @@ export default function AdminDashboard({
     setCustomerCreditLimit,
     vendorCreditLimit,
     setVendorCreditLimit,
+    onRerunSetup,
 }: AdminDashboardProps) {
   const { toast } = useToast();
   const [isReportLoading, setIsReportLoading] = useState(false);
@@ -530,18 +532,9 @@ export default function AdminDashboard({
                      <Separator />
                      <div className="space-y-4 pt-4">
                         <CardTitle className="text-base flex items-center gap-2"><Settings /> System Settings</CardTitle>
-                         <Dialog>
-                            <DialogTrigger asChild>
-                                <Button variant="outline" className="w-full">Manage System Settings</Button>
-                            </DialogTrigger>
-                            <DialogContent>
-                                <DialogHeader>
-                                    <DialogTitle>System Settings</DialogTitle>
-                                    <DialogDescription>Manage general application settings.</DialogDescription>
-                                </DialogHeader>
-                                <SystemSettings />
-                            </DialogContent>
-                        </Dialog>
+                        <Button variant="outline" className="w-full" onClick={onRerunSetup}>
+                          <Repeat className="mr-2 h-4 w-4" /> Rerun Setup Wizard
+                        </Button>
                      </div>
                 </CardContent>
             </Card>
@@ -647,8 +640,3 @@ function EmployeeDialog({ open, onOpenChange, employee, onSave }: { open: boolea
         </Dialog>
     );
 }
-    
-
-    
-
-    

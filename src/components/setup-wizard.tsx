@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useState } from 'react';
@@ -47,6 +48,7 @@ export default function SetupWizard({ onComplete }: SetupWizardProps) {
 
   // Form State
   const [venueName, setVenueName] = useState('');
+  const [venueLocation, setVenueLocation] = useState('');
   const [venueCategory, setVenueCategory] = useState('');
   const [dateOfOpening, setDateOfOpening] = useState<Date | undefined>();
   const [rent, setRent] = useState('');
@@ -126,6 +128,7 @@ export default function SetupWizard({ onComplete }: SetupWizardProps) {
       // Save Venue Details (we'll store them in a 'settings' collection for simplicity)
       batch.set(doc(db, "settings", "venue"), {
         name: venueName,
+        location: venueLocation,
         category: venueCategory,
         dateOfOpening: dateOfOpening || null,
         rent: rent ? parseFloat(rent) : 0,
@@ -179,6 +182,10 @@ export default function SetupWizard({ onComplete }: SetupWizardProps) {
           <div className="space-y-2">
             <Label htmlFor="venue-name">Venue Name</Label>
             <Input id="venue-name" placeholder="e.g., The Cozy Corner Cafe" value={venueName} onChange={e => setVenueName(e.target.value)} />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="venue-location">Restaurant Location</Label>
+            <Input id="venue-location" placeholder="e.g., Bir, Himachal Pradesh" value={venueLocation} onChange={e => setVenueLocation(e.target.value)} />
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">

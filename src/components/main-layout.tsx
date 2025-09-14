@@ -571,6 +571,7 @@ export default function MainLayout() {
                 setCustomerCreditLimit={setCustomerCreditLimit}
                 vendorCreditLimit={vendorCreditLimit}
                 setVendorCreditLimit={setVendorCreditLimit}
+                onRerunSetup={() => setShowSetupWizard(true)}
               />
             </TabsContent>
           </main>
@@ -579,5 +580,3 @@ export default function MainLayout() {
     </div>
   );
 }
-
-    
