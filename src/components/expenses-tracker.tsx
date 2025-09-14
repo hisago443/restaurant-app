@@ -341,7 +341,8 @@ function PendingBillsCard({
   bills,
   type,
   onAddTransaction,
-  onMarkAsPaid,
+  onClearAll,
+  onSettleTransaction,
   totalLimit,
 }: {
   title: string;
@@ -349,7 +350,8 @@ function PendingBillsCard({
   bills: PendingBill[];
   type: 'customer' | 'vendor';
   onAddTransaction: (name: string, amount: number, mobile?: string, dueDate?: Date) => void;
-  onMarkAsPaid: (name: string) => void;
+  onClearAll: (billId: string) => void;
+  onSettleTransaction: (billId: string, transactionId: string, amount: number) => void;
   totalLimit: number;
 }) {
   const [isAddBillOpen, setIsAddBillOpen] = useState(false);
@@ -387,46 +389,59 @@ function PendingBillsCard({
       </CardHeader>
       <CardContent>
         <div className="max-h-96 overflow-y-auto space-y-2">
-          {Object.entries(bills.reduce((acc, bill) => {
-            if (!acc[bill.name]) {
-              acc[bill.name] = { transactions: [] };
-            }
-            acc[bill.name].transactions.push(...bill.transactions);
-            return acc;
-          }, {} as Record<string, { transactions: PendingBillTransaction[] }>)).map(([name, data]) => {
-            const totalForName = data.transactions.reduce((sum, t) => sum + t.amount, 0);
+          {bills.map((bill) => {
+            const totalForName = bill.transactions.reduce((sum, t) => sum + t.amount, 0);
             return (
-              <Collapsible key={name} className="p-2 border rounded-lg">
+              <Collapsible key={bill.id} className="p-2 border rounded-lg">
                 <div className="flex items-center justify-between">
                   <CollapsibleTrigger className="flex flex-grow items-center gap-2 text-left">
                      <ChevronsUpDown className="h-4 w-4" />
-                     <span className="font-medium">{name}</span>
+                     <span className="font-medium">{bill.name}</span>
                      <span className={cn("font-semibold text-sm", type === 'customer' ? 'text-green-600' : 'text-red-600')}>
                         (Rs. {totalForName.toFixed(2)})
                       </span>
                   </CollapsibleTrigger>
                    <AlertDialog>
                       <AlertDialogTrigger asChild>
-                          <Button variant="ghost" size="sm">Mark as Paid</Button>
+                          <Button variant="ghost" size="sm">Clear All</Button>
                       </AlertDialogTrigger>
                       <AlertDialogContent>
                           <AlertDialogHeader>
                               <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                              <AlertDialogDescription>This will mark all pending bills for {name} as paid and clear their balance. This action cannot be undone.</AlertDialogDescription>
+                              <AlertDialogDescription>This will mark all pending bills for {bill.name} as paid and clear their balance. This action cannot be undone.</AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
                               <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => onMarkAsPaid(name)}>Confirm</AlertDialogAction>
+                              <AlertDialogAction onClick={() => onClearAll(bill.id)}>Confirm</AlertDialogAction>
                           </AlertDialogFooter>
                       </AlertDialogContent>
                   </AlertDialog>
                 </div>
                 
-                <CollapsibleContent className="mt-2 space-y-1 pr-2 max-h-40 overflow-y-auto">
-                  {data.transactions.map(tx => (
-                    <div key={tx.id} className="flex justify-between items-center p-1.5 bg-muted/50 rounded-md text-sm">
-                      <span>{format(tx.date, 'PPP')}</span>
-                      <span className={cn("font-semibold", type === 'customer' ? 'text-green-700' : 'text-red-700')}>Rs. {tx.amount.toFixed(2)}</span>
+                <CollapsibleContent className="mt-2 space-y-1 pr-2 max-h-48 overflow-y-auto">
+                  {bill.transactions.map(tx => (
+                    <div key={tx.id} className="flex justify-between items-center p-1.5 bg-muted/50 rounded-md text-sm group">
+                      <div>
+                        <span>{format(tx.date, 'PPP')}</span>
+                        <span className={cn("font-semibold ml-4", type === 'customer' ? 'text-green-700' : 'text-red-700')}>Rs. {tx.amount.toFixed(2)}</span>
+                      </div>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                           <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100 h-7">Settle</Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                            <AlertDialogHeader>
+                                <AlertDialogTitle>Settle this transaction?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  This will settle the transaction of Rs. {tx.amount.toFixed(2)} for {bill.name}. This cannot be undone.
+                                </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => onSettleTransaction(bill.id, tx.id, tx.amount)}>Settle</AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     </div>
                   ))}
                 </CollapsibleContent>
@@ -575,17 +590,20 @@ export default function ExpensesTracker({ expenses, customerCreditLimit, vendorC
   }
   
   const handleAddPendingTransaction = async (name: string, amount: number, type: 'customer' | 'vendor', mobile?: string, dueDate?: Date) => {
-    const existingBill = pendingBills.find(b => b.name.toLowerCase() === name.toLowerCase() && b.type === type);
+    const existingBillQuery = query(collection(db, 'pendingBills'), where('name', '==', name), where('type', '==', type));
+    const querySnapshot = await getDocs(existingBillQuery);
+    
     const newTransaction: PendingBillTransaction = {
-      id: doc(collection(db, 'pendingBills')).id, // just for unique key
+      id: doc(collection(db, 'some-subcollection')).id, // Firestore auto-ID
       amount,
       date: new Date(),
       description: '',
     };
 
-    if (existingBill) {
-      const docRef = doc(db, 'pendingBills', existingBill.id);
-      await updateDoc(docRef, {
+    if (!querySnapshot.empty) {
+      const existingBillDoc = querySnapshot.docs[0];
+      const existingBill = existingBillDoc.data() as PendingBill;
+      await updateDoc(existingBillDoc.ref, {
         transactions: [...existingBill.transactions, newTransaction]
       });
     } else {
@@ -600,36 +618,85 @@ export default function ExpensesTracker({ expenses, customerCreditLimit, vendorC
     toast({ title: 'Pending bill added.' });
   };
   
-  const handleMarkAsPaid = async (name: string, type: 'customer' | 'vendor') => {
-    const bill = pendingBills.find(b => b.name === name && b.type === type);
-    if (!bill) return;
+  const handleClearAllPendingBillsForPerson = async (billId: string) => {
+    const billDocRef = doc(db, 'pendingBills', billId);
+    const billSnapshot = await getDoc(billDocRef);
 
-    if (type === 'vendor') {
+    if (!billSnapshot.exists()) {
+      toast({ variant: "destructive", title: "Error", description: "Bill not found." });
+      return;
+    }
+
+    const bill = billSnapshot.data() as PendingBill;
+
+    if (bill.type === 'vendor') {
       const totalPaid = bill.transactions.reduce((sum, tx) => sum + tx.amount, 0);
-      const vendor = vendors.find(v => v.name.toLowerCase() === name.toLowerCase());
+      const vendor = vendors.find(v => v.name.toLowerCase() === bill.name.toLowerCase());
       
       const expenseData = {
           date: new Date(),
           category: vendor?.category || 'Vendor Payment',
-          description: `Cleared pending bills for ${name}.`,
+          description: `Cleared all pending bills for ${bill.name}.`,
           amount: totalPaid,
           vendorId: vendor?.id || null,
       };
 
       try {
         await addDoc(collection(db, "expenses"), expenseData);
-        toast({ title: "Expense Recorded", description: `An expense of Rs. ${totalPaid.toFixed(2)} for ${name} has been recorded.` });
+        toast({ title: "Expense Recorded", description: `An expense of Rs. ${totalPaid.toFixed(2)} for ${bill.name} has been recorded.` });
       } catch (error) {
         toast({ variant: "destructive", title: "Error recording expense" });
-        return; // Stop if we can't record the expense
+        return; 
       }
     }
 
     try {
-      await deleteDoc(doc(db, 'pendingBills', bill.id));
-      toast({ title: `${name}'s pending bills have been cleared.` });
+      await deleteDoc(billDocRef);
+      toast({ title: `${bill.name}'s pending bills have been cleared.` });
     } catch (error) {
         toast({ variant: "destructive", title: "Error clearing bill" });
+    }
+  };
+
+  const handleSettleTransaction = async (billId: string, transactionId: string, amount: number) => {
+    const billDocRef = doc(db, 'pendingBills', billId);
+    const billSnapshot = await getDoc(billDocRef);
+    if (!billSnapshot.exists()) {
+      toast({ variant: "destructive", title: "Error", description: "Bill not found." });
+      return;
+    }
+
+    const bill = billSnapshot.data() as PendingBill;
+    const updatedTransactions = bill.transactions.filter(tx => tx.id !== transactionId);
+
+    if (bill.type === 'vendor') {
+      const vendor = vendors.find(v => v.name.toLowerCase() === bill.name.toLowerCase());
+      const expenseData = {
+        date: new Date(),
+        category: vendor?.category || 'Vendor Payment',
+        description: `Settled transaction for ${bill.name}.`,
+        amount: amount,
+        vendorId: vendor?.id || null,
+      };
+      try {
+        await addDoc(collection(db, "expenses"), expenseData);
+        toast({ title: "Expense Recorded", description: `An expense of Rs. ${amount.toFixed(2)} has been recorded.` });
+      } catch (error) {
+        toast({ variant: "destructive", title: "Error recording expense" });
+        return;
+      }
+    }
+
+    try {
+      if (updatedTransactions.length === 0) {
+        await deleteDoc(billDocRef);
+        toast({ title: "Transaction Settled", description: `${bill.name}'s final pending bill has been cleared.` });
+      } else {
+        await updateDoc(billDocRef, { transactions: updatedTransactions });
+        toast({ title: "Transaction Settled" });
+      }
+    } catch (error) {
+      toast({ variant: "destructive", title: "Error settling transaction" });
     }
   };
 
@@ -649,7 +716,8 @@ export default function ExpensesTracker({ expenses, customerCreditLimit, vendorC
           bills={pendingBills.filter(b => b.type === 'customer')}
           type="customer"
           onAddTransaction={(name, amount, mobile, dueDate) => handleAddPendingTransaction(name, amount, 'customer', mobile, dueDate)}
-          onMarkAsPaid={(name) => handleMarkAsPaid(name, 'customer')}
+          onClearAll={(billId) => handleClearAllPendingBillsForPerson(billId)}
+          onSettleTransaction={(billId, txId, amount) => handleSettleTransaction(billId, txId, amount)}
           totalLimit={customerCreditLimit}
         />
         <PendingBillsCard
@@ -658,7 +726,8 @@ export default function ExpensesTracker({ expenses, customerCreditLimit, vendorC
           bills={pendingBills.filter(b => b.type === 'vendor')}
           type="vendor"
           onAddTransaction={(name, amount, mobile, dueDate) => handleAddPendingTransaction(name, amount, 'vendor', mobile, dueDate)}
-          onMarkAsPaid={(name) => handleMarkAsPaid(name, 'vendor')}
+          onClearAll={(billId) => handleClearAllPendingBillsForPerson(billId)}
+          onSettleTransaction={(billId, txId, amount) => handleSettleTransaction(billId, txId, amount)}
           totalLimit={vendorCreditLimit}
         />
       </div>
@@ -779,9 +848,5 @@ export default function ExpensesTracker({ expenses, customerCreditLimit, vendorC
     </div>
   );
 }
-
-    
-
-    
 
     
