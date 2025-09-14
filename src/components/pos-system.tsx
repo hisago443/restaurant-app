@@ -1039,7 +1039,9 @@ export default function PosSystem({
                 handleSelectTable(nextTableId);
             }
         }
-      } else if (e.key === 'Enter') {
+      } 
+      
+      if (e.key === 'Enter') {
         e.preventDefault();
         if (keyboardMode === 'table' && selectedTableId) {
           const table = tables.find(t => t.id === selectedTableId);
@@ -1166,8 +1168,24 @@ export default function PosSystem({
                 {filteredMenu.map(category => (
                   <div key={category.category} className="relative group p-1">
                     <TabsTrigger value={category.category} className={cn("rounded-none border-b-2 border-transparent data-[state=active]:shadow-none px-4 py-2 cursor-pointer", categoryColors[category.category] ? colorPalette[categoryColors[category.category]]?.dark : '')}>
-                      <span className="flex-grow text-left text-lg text-black">{category.category}</span>
+                        <span className="flex-grow text-left text-lg text-black">{category.category}</span>
                     </TabsTrigger>
+                    <div className="absolute top-1 right-2 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
+                        <Popover>
+                            <PopoverTrigger asChild>
+                                <div role="button" className="p-1 rounded-md hover:bg-black/10">
+                                    <Palette className="h-4 w-4" />
+                                </div>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-2">
+                                <div className="grid grid-cols-3 gap-1">
+                                    {colorNames.map(name => (
+                                        <div key={name} className={cn("h-6 w-6 rounded-sm cursor-pointer", colorPalette[name].dark)} onClick={() => setCategoryColors(prev => ({...prev, [category.category]: name}))}></div>
+                                    ))}
+                                </div>
+                            </PopoverContent>
+                        </Popover>
+                    </div>
                   </div>
                 ))}
               </TabsList>
@@ -1199,8 +1217,24 @@ export default function PosSystem({
         >
             {filteredMenu.map(category => (
                 <AccordionItem key={category.category} value={category.category} className="border-b-0">
-                     <AccordionTrigger className={cn("p-3 rounded-md text-lg font-bold hover:no-underline flex justify-between items-center", categoryColors[category.category] ? colorPalette[categoryColors[category.category]]?.dark : 'bg-muted')}>
+                     <AccordionTrigger className={cn("p-3 rounded-md text-lg font-bold hover:no-underline flex justify-between items-center relative group", categoryColors[category.category] ? colorPalette[categoryColors[category.category]]?.dark : 'bg-muted')}>
                         <span className="flex-grow text-left text-black">{category.category}</span>
+                        <div className="absolute top-1/2 -translate-y-1/2 right-10 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
+                            <Popover>
+                                <PopoverTrigger asChild>
+                                    <div role="button" className="p-1 rounded-md hover:bg-black/10">
+                                        <Palette className="h-4 w-4" />
+                                    </div>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-2">
+                                    <div className="grid grid-cols-3 gap-1">
+                                        {colorNames.map(name => (
+                                            <div key={name} className={cn("h-6 w-6 rounded-sm cursor-pointer", colorPalette[name].dark)} onClick={() => setCategoryColors(prev => ({...prev, [category.category]: name}))}></div>
+                                        ))}
+                                    </div>
+                                </PopoverContent>
+                            </Popover>
+                        </div>
                     </AccordionTrigger>
                     <AccordionContent className="p-2 space-y-2">
                         {category.subCategories.map(subCategory => (
@@ -1454,6 +1488,7 @@ export default function PosSystem({
     </div>
   );
 }
+
 
 
 
