@@ -47,6 +47,7 @@ export default function MainLayout() {
   const [customerCreditLimit, setCustomerCreditLimit] = useState(10000);
   const [vendorCreditLimit, setVendorCreditLimit] = useState(50000);
   const [showSetupWizard, setShowSetupWizard] = useState(false);
+  const [isCheckingSetup, setIsCheckingSetup] = useState(true);
 
   useEffect(() => {
     try {
@@ -58,6 +59,8 @@ export default function MainLayout() {
       console.error("Could not access localStorage", e);
       // Fallback for environments where localStorage is not available
       setShowSetupWizard(true); 
+    } finally {
+      setIsCheckingSetup(false);
     }
   }, []);
 
@@ -418,6 +421,10 @@ export default function MainLayout() {
     setShowSetupWizard(false);
   }
 
+
+  if (isCheckingSetup) {
+    return null; // or a loading spinner
+  }
 
   if (showSetupWizard) {
     return <SetupWizard onComplete={handleSetupComplete} />;
