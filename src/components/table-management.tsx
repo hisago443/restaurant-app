@@ -109,13 +109,16 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
     }
     
     if (table.status === 'Available') {
-        onCreateOrder(table.id);
+      updateTableStatus([table.id], 'Occupied');
     } else if (table.status === 'Occupied') {
         toast({
             title: 'Payment Required',
-            description: 'Please process the payment for this table before changing its status.',
+            description: 'Please process the payment for this table first.',
             variant: 'default',
         });
+    } else {
+        // For 'Cleaning' or 'Reserved', clicking could make it available
+        updateTableStatus([table.id], 'Available');
     }
   };
 
@@ -583,5 +586,7 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
 
 
 
+
+    
 
     
