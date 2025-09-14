@@ -219,7 +219,7 @@ function AddOrEditPendingBillDialog({
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSave: (name: string, amount: number, dueDate?: Date) => void;
+  onSave: (name: string, amount: number, mobile?: string, dueDate?: Date) => void;
   existingNames: string[];
   type: 'customer' | 'vendor';
 }) {
@@ -228,6 +228,7 @@ function AddOrEditPendingBillDialog({
   const [newName, setNewName] = useState('');
   const [amount, setAmount] = useState('');
   const [dueDate, setDueDate] = useState<Date | undefined>();
+  const [mobile, setMobile] = useState('');
 
   useEffect(() => {
     if (open) {
@@ -236,6 +237,7 @@ function AddOrEditPendingBillDialog({
       setNewName('');
       setAmount('');
       setDueDate(undefined);
+      setMobile('');
     }
   }, [open]);
 
@@ -245,7 +247,7 @@ function AddOrEditPendingBillDialog({
       alert('Please provide a name and amount.');
       return;
     }
-    onSave(finalName, parseFloat(amount), dueDate);
+    onSave(finalName, parseFloat(amount), mobile, dueDate);
     onOpenChange(false);
   };
 
@@ -296,6 +298,14 @@ function AddOrEditPendingBillDialog({
               </Select>
             )}
           </div>
+
+          {isNew && (
+            <div className="space-y-2">
+              <Label htmlFor="mobile">Mobile No. (Optional)</Label>
+              <Input id="mobile" placeholder="e.g., 9876543210" value={mobile} onChange={e => setMobile(e.target.value)} />
+            </div>
+          )}
+
           <div className="space-y-2">
             <Label htmlFor="amount">Amount (Rs.)</Label>
             <Input id="amount" type="number" placeholder="e.g., 500" value={amount} onChange={e => setAmount(e.target.value)} />
@@ -338,7 +348,7 @@ function PendingBillsCard({
   icon: React.ElementType;
   bills: PendingBill[];
   type: 'customer' | 'vendor';
-  onAddTransaction: (name: string, amount: number, dueDate?: Date) => void;
+  onAddTransaction: (name: string, amount: number, mobile?: string, dueDate?: Date) => void;
   onMarkAsPaid: (name: string) => void;
   totalLimit: number;
 }) {
@@ -564,7 +574,7 @@ export default function ExpensesTracker({ expenses, customerCreditLimit, vendorC
     setIsVendorAddDialogOpen(true);
   }
   
-    const handleAddPendingTransaction = async (name: string, amount: number, type: 'customer' | 'vendor', dueDate?: Date) => {
+  const handleAddPendingTransaction = async (name: string, amount: number, type: 'customer' | 'vendor', mobile?: string, dueDate?: Date) => {
     const existingBill = pendingBills.find(b => b.name.toLowerCase() === name.toLowerCase() && b.type === type);
     const newTransaction: PendingBillTransaction = {
       id: doc(collection(db, 'pendingBills')).id, // just for unique key
@@ -583,6 +593,7 @@ export default function ExpensesTracker({ expenses, customerCreditLimit, vendorC
         name,
         type,
         transactions: [newTransaction],
+        ...(mobile && { mobile }),
       };
       await addDoc(collection(db, 'pendingBills'), newBill);
     }
@@ -637,7 +648,7 @@ export default function ExpensesTracker({ expenses, customerCreditLimit, vendorC
           icon={HandCoins}
           bills={pendingBills.filter(b => b.type === 'customer')}
           type="customer"
-          onAddTransaction={(name, amount, dueDate) => handleAddPendingTransaction(name, amount, 'customer', dueDate)}
+          onAddTransaction={(name, amount, mobile, dueDate) => handleAddPendingTransaction(name, amount, 'customer', mobile, dueDate)}
           onMarkAsPaid={(name) => handleMarkAsPaid(name, 'customer')}
           totalLimit={customerCreditLimit}
         />
@@ -646,7 +657,7 @@ export default function ExpensesTracker({ expenses, customerCreditLimit, vendorC
           icon={Landmark}
           bills={pendingBills.filter(b => b.type === 'vendor')}
           type="vendor"
-          onAddTransaction={(name, amount, dueDate) => handleAddPendingTransaction(name, amount, 'vendor', dueDate)}
+          onAddTransaction={(name, amount, mobile, dueDate) => handleAddPendingTransaction(name, amount, 'vendor', mobile, dueDate)}
           onMarkAsPaid={(name) => handleMarkAsPaid(name, 'vendor')}
           totalLimit={vendorCreditLimit}
         />

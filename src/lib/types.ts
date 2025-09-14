@@ -126,6 +126,7 @@ export interface PendingBill {
   name: string;
   type: 'customer' | 'vendor';
   transactions: PendingBillTransaction[];
+  mobile?: string;
 }
 
 // Zod schema for serializable Bill
