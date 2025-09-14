@@ -71,7 +71,7 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
 
   const [reservationName, setReservationName] = useState('');
   const [reservationMobile, setReservationMobile] = useState('');
-  const [reservationTime, setReservationTime] = useState('');
+  const [reservationTime, setReservationTime] = useState({ hour: '12', minute: '00', period: 'PM' });
   const [reservationTableId, setReservationTableId] = useState<string>('');
 
   useEffect(() => {
@@ -237,19 +237,21 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
   };
   
   const handleReserveTable = () => {
-    if (!reservationName || !reservationTime || !reservationTableId) {
+    const { hour, minute, period } = reservationTime;
+    if (!reservationName || !hour || !minute || !period || !reservationTableId) {
       toast({
         variant: 'destructive',
         title: 'Missing Information',
-        description: 'Please provide guest name, arrival time, and select a table.',
+        description: 'Please provide guest name, a valid arrival time, and select a table.',
       });
       return;
     }
 
+    const formattedTime = `${hour}:${minute} ${period}`;
     const reservationDetails = {
       name: reservationName,
       mobile: reservationMobile,
-      time: reservationTime,
+      time: formattedTime,
     };
     
     updateTableStatus([parseInt(reservationTableId)], 'Reserved', reservationDetails);
@@ -262,7 +264,7 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
     // Reset form
     setReservationName('');
     setReservationMobile('');
-    setReservationTime('');
+    setReservationTime({ hour: '12', minute: '00', period: 'PM' });
     setReservationTableId('');
   };
 
@@ -370,7 +372,7 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
                         <span>{turnover}</span>
                     </div>
                 }
-                <div className={cn("absolute top-1 right-1 transition-opacity", (selectedTables.length > 0 || table.status === 'Reserved') ? "opacity-100" : "opacity-0 group-hover:opacity-100")}>
+                <div className={cn("absolute top-1 right-1 transition-opacity", (selectedTables.length > 0 || table.status === 'Reserved' || hoveredStatus) ? "opacity-100" : "opacity-0 group-hover:opacity-100")}>
                   <Checkbox 
                     className="bg-white/50 border-gray-500 data-[state=checked]:bg-primary"
                     checked={selectedTables.includes(table.id)}
@@ -451,9 +453,34 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
               <Input id="guest-mobile" value={reservationMobile} onChange={(e) => setReservationMobile(e.target.value)} />
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="arrival-time">Time of Arrival</Label>
-                <Input id="arrival-time" type="time" value={reservationTime} onChange={(e) => setReservationTime(e.target.value)} />
+               <div className="space-y-2">
+                <Label>Time of Arrival</Label>
+                <div className="flex items-center gap-1">
+                  <Select value={reservationTime.hour} onValueChange={(v) => setReservationTime(p => ({...p, hour: v}))}>
+                    <SelectTrigger><SelectValue/></SelectTrigger>
+                    <SelectContent>
+                      {Array.from({length: 12}, (_, i) => (
+                        <SelectItem key={i+1} value={String(i+1).padStart(2, '0')}>{String(i+1).padStart(2, '0')}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <span className="font-bold">:</span>
+                  <Select value={reservationTime.minute} onValueChange={(v) => setReservationTime(p => ({...p, minute: v}))}>
+                    <SelectTrigger><SelectValue/></SelectTrigger>
+                    <SelectContent>
+                      {Array.from({length: 60}, (_, i) => (
+                        <SelectItem key={i} value={String(i).padStart(2, '0')}>{String(i).padStart(2, '0')}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Select value={reservationTime.period} onValueChange={(v) => setReservationTime(p => ({...p, period: v}))}>
+                    <SelectTrigger><SelectValue/></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="AM">AM</SelectItem>
+                      <SelectItem value="PM">PM</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="table-no">Table No.</Label>
