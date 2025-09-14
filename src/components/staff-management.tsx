@@ -424,10 +424,10 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
                                           <span className="font-semibold text-base">{employee.name}</span>
                                           <p className="text-xs text-muted-foreground font-mono">{employee.id}</p>
                                       </div>
-                                      <Button variant="ghost" size="icon" onClick={() => openAdvanceDialog(null, employee)} disabled={isDateLocked} className="ml-4">
-                                          <Banknote className="h-5 w-5 text-primary" />
-                                      </Button>
                                   </div>
+                                  <Button variant="ghost" size="icon" onClick={() => openAdvanceDialog(null, employee)} disabled={isDateLocked}>
+                                      <Banknote className="h-5 w-5 text-primary" />
+                                  </Button>
                                   <div className="flex items-center gap-1">
                                       {(Object.keys(attendanceStatusConfig) as AttendanceStatus[]).map(status => {
                                           const isSelected = attendanceRecord?.status === status;
@@ -987,3 +987,4 @@ function EmployeeSummaryDialog({ open, onOpenChange, employee, attendance, advan
     
 
     
+
