@@ -179,7 +179,6 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
 
   const handleMarkAttendance = async (employeeId: string, status: AttendanceStatus) => {
     if (isDateLocked) {
-      toast({ variant: 'destructive', title: 'Date Locked', description: 'Cannot change attendance for a past date.' });
       return;
     }
     const dateKey = format(selectedDate, 'yyyy-MM-dd');
@@ -485,7 +484,6 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
                       <TableHead className="font-bold text-foreground text-base">Base Salary</TableHead>
                       <TableHead className="font-bold text-foreground text-base border-l">Advance Taken</TableHead>
                       <TableHead className="font-bold text-foreground text-base border-l">Remaining Salary</TableHead>
-                      <TableHead className="text-right font-bold text-foreground text-base border-l">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -511,30 +509,6 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
                             <div className="bg-green-50 dark:bg-green-900/30 h-full py-4 px-4">
                                 <span className="font-semibold text-green-600">Rs. {summary?.remainingSalary.toLocaleString() || employee.salary}</span>
                             </div>
-                          </TableCell>
-                           <TableCell className="text-right border-l">
-                            <Button variant="ghost" size="icon" onClick={() => openEmployeeDialog(employee)}>
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button variant="ghost" size="icon" className="text-destructive">
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    This action cannot be undone. This will permanently delete {employee.name}'s record.
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                  <AlertDialogAction onClick={() => handleDeleteEmployee(employee.id)}>Delete</AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
                           </TableCell>
                         </TableRow>
                       );
@@ -879,5 +853,7 @@ function EmployeeSummaryDialog({ open, onOpenChange, employee, attendance, advan
     )
 }
 
+
+    
 
     
