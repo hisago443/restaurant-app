@@ -457,6 +457,9 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
                       })}
                   </CardContent>
                 </Card>
+                 <Button size="lg" className="w-full h-14 text-base" onClick={() => openAdvanceDialog(null, undefined)} disabled={isDateLocked}>
+                    <Banknote className="mr-4 h-6 w-6" /> Add Salary Advance
+                </Button>
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between">
                         <CardTitle>Advances for {format(selectedDate, 'PPP')}</CardTitle>
@@ -501,9 +504,6 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
                         </div>
                     </CardContent>
                 </Card>
-                <Button size="lg" className="w-full h-14 text-base" onClick={() => openAdvanceDialog(null, undefined)} disabled={isDateLocked}>
-                    <Banknote className="mr-4 h-6 w-6" /> Add Salary Advance
-                </Button>
             </div>
           </div>
         </TabsContent>
@@ -981,6 +981,8 @@ function EmployeeSummaryDialog({ open, onOpenChange, employee, attendance, advan
         </Dialog>
     )
 }
+
+    
 
     
 
