@@ -255,15 +255,17 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
                 <span>Manage Tables</span>
               </Button>
               <Separator orientation="vertical" className="h-8" />
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="select-all"
-                  onCheckedChange={(checked) => handleSelectAllTables(Boolean(checked))}
-                  checked={selectedTables.length === filteredTables.length && filteredTables.length > 0}
-                  disabled={filteredTables.length === 0}
-                />
-                <Label htmlFor="select-all">Select All ({selectedTables.length})</Label>
-              </div>
+              {selectedTables.length > 0 && (
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="select-all"
+                    onCheckedChange={(checked) => handleSelectAllTables(Boolean(checked))}
+                    checked={selectedTables.length === filteredTables.length && filteredTables.length > 0}
+                    disabled={filteredTables.length === 0}
+                  />
+                  <Label htmlFor="select-all">Select All ({selectedTables.length})</Label>
+                </div>
+              )}
             </div>
           </div>
           <div className="flex items-center gap-2 flex-wrap p-4 border-t border-b">
