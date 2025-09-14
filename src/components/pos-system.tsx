@@ -346,10 +346,13 @@ function OrderPanel({
             </ScrollArea>
             
             <div id="table-grid-container" className="p-4 border-t space-y-4">
-              <div className="grid grid-cols-3 gap-2">
-                    <Button variant={orderType === 'Dine-In' ? 'default' : 'outline'} onClick={() => setOrderType('Dine-In')} className="h-12 text-base"><Users className="mr-2 h-5 w-5"/>Dine-In</Button>
-                    <Button variant={orderType === 'Takeaway' ? 'default' : 'outline'} onClick={() => setOrderType('Takeaway')} className="h-12 text-base"><ShoppingBag className="mr-2 h-5 w-5"/>Takeaway</Button>
-                    <Button variant={orderType === 'Home Delivery' ? 'default' : 'outline'} onClick={() => setOrderType('Home Delivery')} className="h-12 text-base"><Bike className="mr-2 h-5 w-5"/>Home Delivery</Button>
+               <div className="flex items-center gap-4">
+                <Label className="font-semibold">Order Type:</Label>
+                <div className="grid grid-cols-3 gap-2 flex-grow">
+                        <Button variant={orderType === 'Dine-In' ? 'default' : 'outline'} onClick={() => setOrderType('Dine-In')} className="h-12 text-base"><Users className="mr-2 h-5 w-5"/>Dine-In</Button>
+                        <Button variant={orderType === 'Takeaway' ? 'default' : 'outline'} onClick={() => setOrderType('Takeaway')} className="h-12 text-base"><ShoppingBag className="mr-2 h-5 w-5"/>Takeaway</Button>
+                        <Button variant={orderType === 'Home Delivery' ? 'default' : 'outline'} onClick={() => setOrderType('Home Delivery')} className="h-12 text-base"><Bike className="mr-2 h-5 w-5"/>Home Delivery</Button>
+                </div>
               </div>
               {orderType === 'Dine-In' && children}
             </div>
@@ -632,7 +635,7 @@ export default function PosSystem({
     typedMenuData.flatMap(cat => cat.subCategories.flatMap(sub => sub.items)),
     [typedMenuData]
   );
-
+  
   const filteredMenu = useMemo(() => {
     let menuToFilter = typedMenuData;
 
@@ -658,6 +661,10 @@ export default function PosSystem({
 
     return menuToFilter;
   }, [searchTerm, vegFilter, typedMenuData]);
+
+  useEffect(() => {
+    setActiveAccordionItems(searchTerm ? filteredMenu.map(c => c.category) : []);
+  }, [searchTerm, viewMode, filteredMenu]);
   
   useEffect(() => {
     if (orderType === 'Home Delivery' && orderItems.length > 0) {
@@ -677,10 +684,6 @@ export default function PosSystem({
         setCategoryColors(defaultCategoryColors);
     }
   }, [typedMenuData, categoryColors, setCategoryColors]);
-
-  useEffect(() => {
-    setActiveAccordionItems(searchTerm ? filteredMenu.map(c => c.category) : []);
-  }, [searchTerm, viewMode, filteredMenu]);
 
   useEffect(() => {
     try {
@@ -1752,6 +1755,7 @@ export default function PosSystem({
     </div>
   );
 }
+
 
 
 
