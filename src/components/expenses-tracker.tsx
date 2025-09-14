@@ -331,12 +331,12 @@ export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
     <div className="p-4 space-y-6">
        <Card>
           <CardHeader>
-              <CardTitle>{editingExpense ? 'Edit Expense' : 'Add New Expense'}</CardTitle>
-              <CardDescription>{editingExpense ? `Updating expense record for ${format(editingExpense.date, 'PPP')}` : 'Record a new business expense.'}</CardDescription>
+              <CardTitle>Add New Expense</CardTitle>
+              <CardDescription>Record a new business expense.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
-                <div className="space-y-2">
+                <div className="space-y-2 lg:col-span-1">
                     <Label>Date</Label>
                     <Popover>
                         <PopoverTrigger asChild>
