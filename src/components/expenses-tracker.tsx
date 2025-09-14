@@ -55,6 +55,8 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 
 interface ExpensesTrackerProps {
   expenses: Expense[];
+  customerCreditLimit: number;
+  vendorCreditLimit: number;
 }
 
 function AddOrEditVendorDialog({
@@ -435,7 +437,7 @@ function PendingBillsCard({
 }
 
 
-export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
+export default function ExpensesTracker({ expenses, customerCreditLimit, vendorCreditLimit }: ExpensesTrackerProps) {
   const { toast } = useToast();
   const [vendors, setVendors] = useState<Vendor[]>([]);
   const [pendingBills, setPendingBills] = useState<PendingBill[]>([]);
@@ -464,6 +466,7 @@ export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
           id: doc.id,
           name: data.name,
           type: data.type,
+          creditLimit: data.creditLimit,
           transactions: (data.transactions || []).map((tx: any) => ({...tx, date: tx.date.toDate()})),
         } as PendingBill;
       });
@@ -612,7 +615,7 @@ export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
           type="customer"
           onAddTransaction={(name, amount, dueDate) => handleAddPendingTransaction(name, amount, 'customer', dueDate)}
           onMarkAsPaid={(name) => handleMarkAsPaid(name, 'customer')}
-          totalLimit={10000}
+          totalLimit={customerCreditLimit}
         />
         <PendingBillsCard
           title="To Pay to Vendors"
@@ -621,7 +624,7 @@ export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
           type="vendor"
           onAddTransaction={(name, amount, dueDate) => handleAddPendingTransaction(name, amount, 'vendor', dueDate)}
           onMarkAsPaid={(name) => handleMarkAsPaid(name, 'vendor')}
-          totalLimit={50000}
+          totalLimit={vendorCreditLimit}
         />
       </div>
 

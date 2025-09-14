@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from 'react';
-import { BarChart, Book, Download, TrendingUp, Settings, Package, User, ShoppingCart, History, Mail, Receipt, Edit, Trash2, Building, Users } from 'lucide-react';
+import { BarChart, Book, Download, TrendingUp, Settings, Package, User, ShoppingCart, History, Mail, Receipt, Edit, Trash2, Building, Users, CreditCard } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -43,9 +43,21 @@ interface AdminDashboardProps {
   billHistory: Bill[];
   employees: Employee[];
   expenses: Expense[];
+  customerCreditLimit: number;
+  setCustomerCreditLimit: (limit: number) => void;
+  vendorCreditLimit: number;
+  setVendorCreditLimit: (limit: number) => void;
 }
 
-export default function AdminDashboard({ billHistory, employees, expenses }: AdminDashboardProps) {
+export default function AdminDashboard({ 
+    billHistory, 
+    employees, 
+    expenses,
+    customerCreditLimit,
+    setCustomerCreditLimit,
+    vendorCreditLimit,
+    setVendorCreditLimit,
+}: AdminDashboardProps) {
   const { toast } = useToast();
   const [isReportLoading, setIsReportLoading] = useState(false);
   const [autoSendDaily, setAutoSendDaily] = useState(false);
@@ -563,10 +575,38 @@ export default function AdminDashboard({ billHistory, employees, expenses }: Adm
                       <Label htmlFor="auto-daily">Auto-send Daily Report</Label>
                     </div>
                      <div className="flex items-center space-x-2">
-                      <Switch id="auto-monthly" checked={autoSendMonthly} onCheckedChange={setAutoSendMonthly} />
+                      <Switch id="auto-monthly" checked={autoSendMonthly} onCheckedChange={setAutosendMonthly} />
                       <Label htmlFor="auto-monthly">Auto-send Monthly Report</Label>
                     </div>
                   </div>
+              </CardContent>
+            </Card>
+             <Card className="sm:col-span-1 md:col-span-1">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2"><CreditCard /> Financial Settings</CardTitle>
+                <CardDescription>Set overall credit limits.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="customer-limit">Customer Credit Limit (Rs.)</Label>
+                  <Input
+                    id="customer-limit"
+                    type="number"
+                    value={customerCreditLimit}
+                    onChange={(e) => setCustomerCreditLimit(Number(e.target.value))}
+                    placeholder="e.g., 10000"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="vendor-limit">Vendor Credit Limit (Rs.)</Label>
+                  <Input
+                    id="vendor-limit"
+                    type="number"
+                    value={vendorCreditLimit}
+                    onChange={(e) => setVendorCreditLimit(Number(e.target.value))}
+                    placeholder="e.g., 50000"
+                  />
+                </div>
               </CardContent>
             </Card>
           </CardContent>

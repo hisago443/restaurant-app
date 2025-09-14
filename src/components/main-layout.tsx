@@ -43,7 +43,35 @@ export default function MainLayout() {
   const [activeTab, setActiveTab] = useState('pos');
   const [initialTableForManagement, setInitialTableForManagement] = useState<number | null>(null);
   const [navPosition, setNavPosition] = useState<NavPosition>('top');
+  const [customerCreditLimit, setCustomerCreditLimit] = useState(10000);
+  const [vendorCreditLimit, setVendorCreditLimit] = useState(50000);
 
+  useEffect(() => {
+    try {
+      const savedCustomerLimit = localStorage.getItem('customerCreditLimit');
+      const savedVendorLimit = localStorage.getItem('vendorCreditLimit');
+      if (savedCustomerLimit) setCustomerCreditLimit(JSON.parse(savedCustomerLimit));
+      if (savedVendorLimit) setVendorCreditLimit(JSON.parse(savedVendorLimit));
+    } catch (e) {
+      console.error("Could not parse credit limits from localStorage", e);
+    }
+  }, []);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('customerCreditLimit', JSON.stringify(customerCreditLimit));
+    } catch (e) {
+      console.error("Could not save customer credit limit to localStorage", e);
+    }
+  }, [customerCreditLimit]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('vendorCreditLimit', JSON.stringify(vendorCreditLimit));
+    } catch (e) {
+      console.error("Could not save vendor credit limit to localStorage", e);
+    }
+  }, [vendorCreditLimit]);
 
   // Lifted state for POS
   const [selectedTableId, setSelectedTableId] = useState<number | null>(1);
@@ -486,13 +514,21 @@ export default function MainLayout() {
               />
             </TabsContent>
             <TabsContent value="expenses" className="m-0 p-0">
-              <ExpensesTracker expenses={expenses} />
+              <ExpensesTracker 
+                expenses={expenses} 
+                customerCreditLimit={customerCreditLimit}
+                vendorCreditLimit={vendorCreditLimit}
+              />
             </TabsContent>
             <TabsContent value="admin" className="m-0 p-0">
               <AdminDashboard 
                 billHistory={billHistory} 
                 employees={employees} 
                 expenses={expenses}
+                customerCreditLimit={customerCreditLimit}
+                setCustomerCreditLimit={setCustomerCreditLimit}
+                vendorCreditLimit={vendorCreditLimit}
+                setVendorCreditLimit={setVendorCreditLimit}
               />
             </TabsContent>
           </main>
