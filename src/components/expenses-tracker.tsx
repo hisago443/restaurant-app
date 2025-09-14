@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { collection, addDoc, doc, updateDoc, deleteDoc, onSnapshot, serverTimestamp, writeBatch, getDocs, query, where, documentId } from 'firebase/firestore';
+import { collection, addDoc, doc, updateDoc, deleteDoc, onSnapshot, serverTimestamp, writeBatch, getDocs, query, where, documentId, setDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -47,7 +47,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { PlusCircle, Edit, Trash2, CalendarIcon, Building, Repeat, List, ChevronsUpDown, Check, AlertTriangle, HandCoins, Landmark, Settings, ChevronDown } from 'lucide-react';
 import { Calendar } from "@/components/ui/calendar";
 import { format, isSameDay, isSameMonth, isSameYear, startOfDay, isAfter } from 'date-fns';
-import type { Expense, Vendor } from '@/lib/types';
+import type { Expense, Vendor, PendingBill, PendingBillTransaction } from '@/lib/types';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
@@ -208,10 +208,228 @@ function ManageVendorsDialog({
   );
 }
 
+function AddOrEditPendingBillDialog({
+  open,
+  onOpenChange,
+  onSave,
+  existingNames,
+  type,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSave: (name: string, amount: number, dueDate?: Date) => void;
+  existingNames: string[];
+  type: 'customer' | 'vendor';
+}) {
+  const [isNew, setIsNew] = useState(true);
+  const [selectedName, setSelectedName] = useState('');
+  const [newName, setNewName] = useState('');
+  const [amount, setAmount] = useState('');
+  const [dueDate, setDueDate] = useState<Date | undefined>();
+
+  useEffect(() => {
+    if (open) {
+      setIsNew(true);
+      setSelectedName('');
+      setNewName('');
+      setAmount('');
+      setDueDate(undefined);
+    }
+  }, [open]);
+
+  const handleSave = () => {
+    const finalName = isNew ? newName : selectedName;
+    if (!finalName || !amount) {
+      alert('Please provide a name and amount.');
+      return;
+    }
+    onSave(finalName, parseFloat(amount), dueDate);
+    onOpenChange(false);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Add Pending Bill</DialogTitle>
+          <DialogDescription>
+            Record a new transaction for a {type}.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4 py-4">
+          <div className="space-y-2">
+            <Label>Select or Add {type === 'customer' ? 'Customer' : 'Vendor'}</Label>
+            <div className="flex items-center gap-4">
+              <Button variant={isNew ? "secondary" : "outline"} onClick={() => setIsNew(false)}>Existing</Button>
+              <Button variant={!isNew ? "secondary" : "outline"} onClick={() => setIsNew(true)}>New</Button>
+            </div>
+            {isNew ? (
+              <Input
+                placeholder={`New ${type} name`}
+                value={newName}
+                onChange={e => setNewName(e.target.value)}
+              />
+            ) : (
+              <Select onValueChange={setSelectedName} value={selectedName}>
+                <SelectTrigger>
+                  <SelectValue placeholder={`Select existing ${type}`} />
+                </SelectTrigger>
+                <SelectContent>
+                  {existingNames.map(name => (
+                    <SelectItem key={name} value={name}>{name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="amount">Amount (Rs.)</Label>
+            <Input id="amount" type="number" placeholder="e.g., 500" value={amount} onChange={e => setAmount(e.target.value)} />
+          </div>
+          <div className="space-y-2">
+            <Label>Due Date (Optional)</Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant={"outline"} className="w-full justify-start text-left font-normal">
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {dueDate ? format(dueDate, "PPP") : <span>Pick a date</span>}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0">
+                <Calendar mode="single" selected={dueDate} onSelect={setDueDate} />
+              </PopoverContent>
+            </Popover>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button onClick={handleSave}>Save Bill</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+
+function PendingBillsCard({
+  title,
+  icon,
+  bills,
+  type,
+  onAddTransaction,
+  onSetLimit,
+  onMarkAsPaid,
+}: {
+  title: string;
+  icon: React.ElementType;
+  bills: PendingBill[];
+  type: 'customer' | 'vendor';
+  onAddTransaction: (name: string, amount: number, dueDate?: Date) => void;
+  onSetLimit: (name: string, limit: number) => void;
+  onMarkAsPaid: (name: string) => void;
+}) {
+  const [isAddBillOpen, setIsAddBillOpen] = useState(false);
+  
+  const totalPending = useMemo(() => bills.reduce((total, bill) => {
+    return total + bill.transactions.reduce((sum, t) => sum + t.amount, 0);
+  }, 0), [bills]);
+
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex justify-between items-center">
+          <CardTitle className="flex items-center gap-2">
+            {React.createElement(icon, { className: "h-6 w-6" })}
+            {title}
+          </CardTitle>
+          <Button onClick={() => setIsAddBillOpen(true)}>
+            <PlusCircle className="mr-2 h-4 w-4" /> Add Bill
+          </Button>
+        </div>
+        <CardDescription>
+          Total Pending: <span className={cn("font-bold", type === 'customer' ? 'text-green-600' : 'text-red-600')}>Rs. {totalPending.toFixed(2)}</span>
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="max-h-96 overflow-y-auto space-y-2">
+          {Object.entries(bills.reduce((acc, bill) => {
+            if (!acc[bill.name]) {
+              acc[bill.name] = { limit: bill.creditLimit, transactions: [] };
+            }
+            acc[bill.name].transactions.push(...bill.transactions);
+            return acc;
+          }, {} as Record<string, { limit: number; transactions: PendingBillTransaction[] }>)).map(([name, data]) => {
+            const totalForName = data.transactions.reduce((sum, t) => sum + t.amount, 0);
+            const progress = data.limit > 0 ? (totalForName / data.limit) * 100 : 0;
+            return (
+              <Collapsible key={name} className="p-2 border rounded-lg">
+                <div className="flex items-center justify-between">
+                  <CollapsibleTrigger className="flex flex-grow items-center gap-2 text-left">
+                     <ChevronsUpDown className="h-4 w-4" />
+                     <span className="font-medium">{name}</span>
+                  </CollapsibleTrigger>
+                   <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                          <Button variant="ghost" size="sm">Mark as Paid</Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                          <AlertDialogHeader>
+                              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                              <AlertDialogDescription>This will mark all pending bills for {name} as paid and clear their balance. This action cannot be undone.</AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => onMarkAsPaid(name)}>Confirm</AlertDialogAction>
+                          </AlertDialogFooter>
+                      </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+                <div className="space-y-1 mt-2 px-2">
+                  <div className="flex justify-between items-center text-sm">
+                      <span className={cn("font-bold", type === 'customer' ? 'text-green-600' : 'text-red-600')}>
+                        Rs. {totalForName.toFixed(2)}
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <span>Limit: Rs.</span>
+                        <Input 
+                          type="number" 
+                          defaultValue={data.limit}
+                          onBlur={(e) => onSetLimit(name, parseFloat(e.target.value) || 0)}
+                          className="w-24 h-8"
+                        />
+                      </div>
+                  </div>
+                  <Progress value={progress} indicatorClassName={progress > 100 ? "bg-red-500" : (type === 'customer' ? 'bg-green-500' : 'bg-red-500')} />
+                </div>
+                <CollapsibleContent className="mt-2 space-y-1 pr-2 max-h-40 overflow-y-auto">
+                  {data.transactions.map(tx => (
+                    <div key={tx.id} className="flex justify-between items-center p-1.5 bg-muted/50 rounded-md text-sm">
+                      <span>{format(tx.date, 'PPP')}</span>
+                      <span className={cn("font-semibold", type === 'customer' ? 'text-green-700' : 'text-red-700')}>Rs. {tx.amount.toFixed(2)}</span>
+                    </div>
+                  ))}
+                </CollapsibleContent>
+              </Collapsible>
+            )
+          })}
+        </div>
+        <AddOrEditPendingBillDialog
+            open={isAddBillOpen}
+            onOpenChange={setIsAddBillOpen}
+            onSave={onAddTransaction}
+            existingNames={bills.map(b => b.name)}
+            type={type}
+        />
+      </CardContent>
+    </Card>
+  );
+}
+
 
 export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
   const { toast } = useToast();
   const [vendors, setVendors] = useState<Vendor[]>([]);
+  const [pendingBills, setPendingBills] = useState<PendingBill[]>([]);
   const [isVendorAddDialogOpen, setIsVendorAddDialogOpen] = useState(false);
   const [isVendorManageDialogOpen, setIsVendorManageDialogOpen] = useState(false);
   const [editingVendor, setEditingVendor] = useState<Vendor | null>(null);
@@ -230,8 +448,23 @@ export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
     const unsubVendors = onSnapshot(collection(db, "vendors"), (snapshot) => {
         setVendors(snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as Vendor)));
     });
+     const unsubPendingBills = onSnapshot(collection(db, 'pendingBills'), (snapshot) => {
+      const bills = snapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          name: data.name,
+          type: data.type,
+          creditLimit: data.creditLimit,
+          transactions: data.transactions.map((tx: any) => ({...tx, date: tx.date.toDate()})),
+        } as PendingBill;
+      });
+      setPendingBills(bills);
+    });
+
     return () => {
         unsubVendors();
+        unsubPendingBills();
     };
   }, []);
 
@@ -321,6 +554,50 @@ export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
     setIsVendorAddDialogOpen(true);
   }
   
+    const handleAddPendingTransaction = async (name: string, amount: number, type: 'customer' | 'vendor', dueDate?: Date) => {
+    const existingBill = pendingBills.find(b => b.name.toLowerCase() === name.toLowerCase() && b.type === type);
+    const newTransaction: PendingBillTransaction = {
+      id: doc(collection(db, 'pendingBills')).id, // just for unique key
+      amount,
+      date: new Date(),
+      description: '',
+    };
+
+    if (existingBill) {
+      const docRef = doc(db, 'pendingBills', existingBill.id);
+      await updateDoc(docRef, {
+        transactions: [...existingBill.transactions, newTransaction]
+      });
+    } else {
+      const newBill: Omit<PendingBill, 'id'> = {
+        name,
+        type,
+        creditLimit: type === 'customer' ? 2000 : 10000, // Default limits
+        transactions: [newTransaction],
+      };
+      await addDoc(collection(db, 'pendingBills'), newBill);
+    }
+    toast({ title: 'Pending bill added.' });
+  };
+  
+    const handleSetCreditLimit = async (name: string, limit: number, type: 'customer' | 'vendor') => {
+    const bill = pendingBills.find(b => b.name === name && b.type === type);
+    if (bill) {
+      const docRef = doc(db, 'pendingBills', bill.id);
+      await updateDoc(docRef, { creditLimit: limit });
+      toast({ title: `Credit limit for ${name} updated to Rs. ${limit}` });
+    }
+  };
+
+  const handleMarkAsPaid = async (name: string, type: 'customer' | 'vendor') => {
+    const bill = pendingBills.find(b => b.name === name && b.type === type);
+    if (bill) {
+      await deleteDoc(doc(db, 'pendingBills', bill.id));
+      toast({ title: `${name}'s pending bills have been cleared.` });
+    }
+  };
+
+
   const now = new Date();
   const dailyExpenses = expenses.filter(e => isSameDay(e.date, now)).reduce((sum, expense) => sum + expense.amount, 0);
   const monthlyExpenses = expenses.filter(e => isSameMonth(e.date, now) && isSameYear(e.date, now)).reduce((sum, expense) => sum + expense.amount, 0);
@@ -329,6 +606,29 @@ export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
 
   return (
     <div className="p-4 space-y-6">
+       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <PendingBillsCard
+          title="To Collect from Customers"
+          icon={HandCoins}
+          bills={pendingBills.filter(b => b.type === 'customer')}
+          type="customer"
+          onAddTransaction={(name, amount, dueDate) => handleAddPendingTransaction(name, amount, 'customer', dueDate)}
+          onSetLimit={(name, limit) => handleSetCreditLimit(name, limit, 'customer')}
+          onMarkAsPaid={(name) => handleMarkAsPaid(name, 'customer')}
+        />
+        <PendingBillsCard
+          title="To Pay to Vendors"
+          icon={Landmark}
+          bills={pendingBills.filter(b => b.type === 'vendor')}
+          type="vendor"
+          onAddTransaction={(name, amount, dueDate) => handleAddPendingTransaction(name, amount, 'vendor', dueDate)}
+          onSetLimit={(name, limit) => handleSetCreditLimit(name, limit, 'vendor')}
+          onMarkAsPaid={(name) => handleMarkAsPaid(name, 'vendor')}
+        />
+      </div>
+
+      <Separator />
+
        <Card>
           <CardHeader>
               <CardTitle>Add New Expense</CardTitle>
@@ -443,3 +743,5 @@ export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
     </div>
   );
 }
+
+    

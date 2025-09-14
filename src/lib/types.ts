@@ -114,6 +114,21 @@ export interface ActivityLogEntry {
   type: 'Auth' | 'Order' | 'Payment' | 'Report' | 'POS';
 }
 
+export interface PendingBillTransaction {
+  id: string;
+  amount: number;
+  date: Date;
+  description?: string;
+}
+
+export interface PendingBill {
+  id: string;
+  name: string;
+  type: 'customer' | 'vendor';
+  creditLimit: number;
+  transactions: PendingBillTransaction[];
+}
+
 // Zod schema for serializable Bill
 export const BillSchema = z.object({
   id: z.string(),
@@ -146,8 +161,3 @@ export const GenerateReportOutputSchema = z.object({
 export type GenerateReportOutput = z.infer<typeof GenerateReportOutputSchema>;
 
     
-
-    
-
-    
-
