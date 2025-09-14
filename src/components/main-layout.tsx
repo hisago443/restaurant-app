@@ -478,6 +478,7 @@ export default function MainLayout() {
                   onEditOrder={handleEditOrderFromShortcut}
                   keyboardMode={keyboardMode}
                   setKeyboardMode={setKeyboardMode}
+                  billHistory={billHistory}
                 />
             </TabsContent>
             <TabsContent value="tables" className="m-0 p-0">

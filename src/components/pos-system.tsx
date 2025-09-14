@@ -18,7 +18,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from '@/hooks/use-toast';
-import { Search, Plus, Minus, X, LayoutGrid, List, Rows, ChevronsUpDown, Palette, Shuffle, ClipboardList, Send, CheckCircle2, Users, Bookmark, Sparkles, Repeat, Edit, UserCheck, BookmarkX, Printer, Loader2, BookOpen, Trash2 as TrashIcon, QrCode as QrCodeIcon, MousePointerClick, Eye, Hand, ShoppingBag } from 'lucide-react';
+import { Search, Plus, Minus, X, LayoutGrid, List, Rows, ChevronsUpDown, Palette, Shuffle, ClipboardList, Send, CheckCircle2, Users, Bookmark, Sparkles, Repeat, Edit, UserCheck, BookmarkX, Printer, Loader2, BookOpen, Trash2 as TrashIcon, QrCode as QrCodeIcon, MousePointerClick, Eye, Hand, ShoppingBag, BarChart } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useDrag, useDrop } from 'react-dnd';
@@ -99,6 +99,7 @@ interface PosSystemProps {
   onEditOrder: (tableId: number) => void;
   keyboardMode: 'table' | 'order' | 'confirm';
   setKeyboardMode: (mode: 'table' | 'order' | 'confirm') => void;
+  billHistory: Bill[];
 }
 
 const ItemTypes = {
@@ -402,6 +403,80 @@ function OrderPanel({
     );
 }
 
+function ItemStatusDialog({
+  isOpen,
+  onOpenChange,
+  topSellingItems,
+  lowStockItems,
+  outOfStockItems
+}: {
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
+  topSellingItems: { name: string; count: number }[];
+  lowStockItems: MenuItem[];
+  outOfStockItems: MenuItem[];
+}) {
+  return (
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Item Status Overview</DialogTitle>
+          <DialogDescription>
+            A quick look at your menu's performance and stock levels.
+          </DialogDescription>
+        </DialogHeader>
+        <Tabs defaultValue="top-selling" className="w-full">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="top-selling">Top Selling</TabsTrigger>
+            <TabsTrigger value="low-stock">Running Low</TabsTrigger>
+            <TabsTrigger value="out-of-stock">Out of Stock</TabsTrigger>
+          </TabsList>
+          <TabsContent value="top-selling" className="mt-4 max-h-80 overflow-y-auto">
+            {topSellingItems.length > 0 ? (
+              <ul className="space-y-2">
+                {topSellingItems.map((item, index) => (
+                  <li key={item.name} className="flex justify-between items-center p-2 bg-muted/50 rounded-md">
+                    <span className="font-medium">{index + 1}. {item.name}</span>
+                    <span className="font-bold">{item.count} sold</span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-center text-muted-foreground pt-8">No sales data available yet.</p>
+            )}
+          </TabsContent>
+          <TabsContent value="low-stock" className="mt-4 max-h-80 overflow-y-auto">
+            {lowStockItems.length > 0 ? (
+              <ul className="space-y-2">
+                {lowStockItems.map(item => (
+                  <li key={item.name} className="p-2 bg-yellow-100 dark:bg-yellow-900/30 rounded-md font-medium text-yellow-800 dark:text-yellow-200">
+                    {item.name}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-center text-muted-foreground pt-8">No items are marked as running low.</p>
+            )}
+          </TabsContent>
+          <TabsContent value="out-of-stock" className="mt-4 max-h-80 overflow-y-auto">
+            {outOfStockItems.length > 0 ? (
+              <ul className="space-y-2">
+                {outOfStockItems.map(item => (
+                  <li key={item.name} className="p-2 bg-red-100 dark:bg-red-900/30 rounded-md font-medium text-red-800 dark:text-red-200">
+                    {item.name}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-center text-muted-foreground pt-8">No items are marked as out of stock.</p>
+            )}
+          </TabsContent>
+        </Tabs>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export default function PosSystem({ 
     tables, 
     orders, 
@@ -427,6 +502,7 @@ export default function PosSystem({
     onEditOrder,
     keyboardMode,
     setKeyboardMode,
+    billHistory,
 }: PosSystemProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [menu, setMenu] = useState<MenuCategory[]>(menuData as MenuCategory[]);
@@ -448,6 +524,7 @@ export default function PosSystem({
   const [vegFilter, setVegFilter] = useState<VegFilter>('All');
   const [isQuickAssignDialogOpen, setIsQuickAssignDialogOpen] = useState(false);
   const [isEasyModeAlertOpen, setIsEasyModeAlertOpen] = useState(false);
+  const [isItemStatusDialogOpen, setIsItemStatusDialogOpen] = useState(false);
   const hasSeenEasyModeAlert = useRef(false);
 
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -984,6 +1061,22 @@ export default function PosSystem({
     }, 100);
   };
 
+  const topSellingItems = useMemo(() => {
+    const itemCounts: Record<string, number> = {};
+    billHistory.forEach(bill => {
+      bill.orderItems.forEach((item: OrderItem) => {
+        itemCounts[item.name] = (itemCounts[item.name] || 0) + item.quantity;
+      });
+    });
+    return Object.entries(itemCounts)
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 10);
+  }, [billHistory]);
+
+  const lowStockItems = useMemo(() => allMenuItems.filter(item => menuItemStatus[item.name] === 'low'), [allMenuItems, menuItemStatus]);
+  const outOfStockItems = useMemo(() => allMenuItems.filter(item => menuItemStatus[item.name] === 'out'), [allMenuItems, menuItemStatus]);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (document.querySelector('[role="dialog"], [role="alertdialog"]')) return;
@@ -1318,6 +1411,9 @@ export default function PosSystem({
                       </div>
                   </div>
                    <div className="flex justify-end items-center gap-2">
+                      <Button variant="outline" size="sm" onClick={() => setIsItemStatusDialogOpen(true)}>
+                          <BarChart className="mr-2 h-4 w-4" /> Item Status
+                      </Button>
                       <Button variant="outline" size="sm" onClick={() => setIsMenuManagerOpen(true)}>
                           <BookOpen className="mr-2 h-4 w-4" /> Manage Menu
                       </Button>
@@ -1485,9 +1581,17 @@ export default function PosSystem({
             </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      <ItemStatusDialog
+        isOpen={isItemStatusDialogOpen}
+        onOpenChange={setIsItemStatusDialogOpen}
+        topSellingItems={topSellingItems}
+        lowStockItems={lowStockItems}
+        outOfStockItems={outOfStockItems}
+      />
     </div>
   );
 }
+
 
 
 
