@@ -633,12 +633,6 @@ export default function PosSystem({
     [typedMenuData]
   );
   
-  useEffect(() => {
-    if (searchTerm && viewMode === 'accordion') {
-      setActiveAccordionItems(filteredMenu.map(c => c.category));
-    }
-  }, [searchTerm, viewMode]);
-
   const filteredMenu = useMemo(() => {
     let menuToFilter = typedMenuData;
 
@@ -664,6 +658,12 @@ export default function PosSystem({
 
     return menuToFilter;
   }, [searchTerm, vegFilter, typedMenuData]);
+
+  useEffect(() => {
+    if (searchTerm && viewMode === 'accordion') {
+      setActiveAccordionItems(filteredMenu.map(c => c.category));
+    }
+  }, [searchTerm, viewMode, filteredMenu]);
 
   const currentActiveTableId = useMemo(() => {
     return orderType === 'Dine-In' ? selectedTableId : null;
@@ -1820,6 +1820,7 @@ export default function PosSystem({
 
 
     
+
 
 
 
