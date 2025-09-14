@@ -1,13 +1,10 @@
+
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { ClipboardList } from 'lucide-react';
 
-const logs = [
-  { id: 1, user: 'Admin', action: 'Logged In', timestamp: '2024-07-27 10:00:12', type: 'Auth' },
-  { id: 2, user: 'Jane Smith', action: 'Updated order K003 to "Completed"', timestamp: '2024-07-27 10:05:45', type: 'Order' },
-  { id: 3, user: 'John Doe', action: 'Processed payment for table 5', timestamp: '2024-07-27 10:12:30', type: 'Payment' },
-  { id: 4, user: 'Admin', action: 'Generated sales report', timestamp: '2024-07-27 10:15:00', type: 'Report' },
-  { id: 5, user: 'Mike Johnson', action: 'Cleared order', timestamp: '2024-07-27 10:20:00', type: 'POS' },
+const logs: any[] = [
 ];
 
 const typeColors: Record<string, string> = {
@@ -23,17 +20,24 @@ export default function ActivityLog() {
     <Card className="border-none shadow-none">
       <CardContent className="p-0">
         <ScrollArea className="h-96">
-          <div className="space-y-4">
-            {logs.map(log => (
-              <div key={log.id} className="flex items-center justify-between p-2 rounded-md bg-muted/50">
-                <div>
-                  <p className="font-medium">{log.user}: <span className="font-normal">{log.action}</span></p>
-                  <p className="text-xs text-muted-foreground">{log.timestamp}</p>
+          {logs.length > 0 ? (
+            <div className="space-y-4">
+              {logs.map(log => (
+                <div key={log.id} className="flex items-center justify-between p-2 rounded-md bg-muted/50">
+                  <div>
+                    <p className="font-medium">{log.user}: <span className="font-normal">{log.action}</span></p>
+                    <p className="text-xs text-muted-foreground">{log.timestamp}</p>
+                  </div>
+                  <Badge className={typeColors[log.type]}>{log.type}</Badge>
                 </div>
-                <Badge className={typeColors[log.type]}>{log.type}</Badge>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center h-full text-muted-foreground pt-16">
+              <ClipboardList className="w-16 h-16 text-gray-300" />
+              <p className="mt-4 text-sm font-medium">No activity recorded yet.</p>
+            </div>
+          )}
         </ScrollArea>
       </CardContent>
     </Card>

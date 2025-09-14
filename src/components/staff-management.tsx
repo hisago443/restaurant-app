@@ -43,7 +43,7 @@ interface StaffManagementProps {
 
 export default function StaffManagement({ employees: initialEmployees }: StaffManagementProps) {
   const { toast } = useToast();
-  const [employees, setEmployees] = useState<Employee[]>(initialEmployees);
+  const [employees, setEmployees] = useState<Employee[]>([]);
   const [advances, setAdvances] = useState<Advance[]>([]);
   const [attendance, setAttendance] = useState<Attendance[]>([]);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -981,10 +981,3 @@ function EmployeeSummaryDialog({ open, onOpenChange, employee, attendance, advan
         </Dialog>
     )
 }
-
-    
-
-    
-
-    
-
