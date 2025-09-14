@@ -260,8 +260,20 @@ function AddOrEditPendingBillDialog({
           <div className="space-y-2">
             <Label>Select or Add {type === 'customer' ? 'Customer' : 'Vendor'}</Label>
             <div className="flex items-center gap-4">
-              <Button variant={isNew ? "secondary" : "outline"} onClick={() => setIsNew(false)}>Existing</Button>
-              <Button variant={!isNew ? "secondary" : "outline"} onClick={() => setIsNew(true)}>New</Button>
+              <Button 
+                variant={!isNew ? "default" : "outline"} 
+                onClick={() => setIsNew(false)}
+                className={cn(!isNew && "bg-primary text-primary-foreground")}
+              >
+                Existing
+              </Button>
+              <Button 
+                variant={isNew ? "default" : "outline"} 
+                onClick={() => setIsNew(true)}
+                className={cn(isNew && "bg-primary text-primary-foreground")}
+              >
+                New
+              </Button>
             </div>
             {isNew ? (
               <Input
