@@ -457,10 +457,7 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
                       })}
                   </CardContent>
                 </Card>
-                <Button size="lg" className="w-full h-14 text-base" onClick={() => openAdvanceDialog(null, undefined)} disabled={isDateLocked}>
-                    <Banknote className="mr-4 h-6 w-6" /> Add Salary Advance
-                </Button>
-                 <Card>
+                <Card>
                     <CardHeader className="flex flex-row items-center justify-between">
                         <CardTitle>Advances for {format(selectedDate, 'PPP')}</CardTitle>
                         {totalAdvanceForDay > 0 && (
@@ -504,6 +501,9 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
                         </div>
                     </CardContent>
                 </Card>
+                <Button size="lg" className="w-full h-14 text-base" onClick={() => openAdvanceDialog(null, undefined)} disabled={isDateLocked}>
+                    <Banknote className="mr-4 h-6 w-6" /> Add Salary Advance
+                </Button>
             </div>
           </div>
         </TabsContent>
@@ -845,8 +845,10 @@ function EmployeeSummaryDialog({ open, onOpenChange, employee, attendance, advan
     attendance: Attendance[];
     advances: Advance[];
 }) {
-    const summary = useMemo(() => {
-        if (!employee) return null;
+    const [showDates, setShowDates] = useState<'absent' | 'half-day' | null>(null);
+
+    const { summary, absentDates, halfDayDates } = useMemo(() => {
+        if (!employee) return { summary: null, absentDates: [], halfDayDates: [] };
         
         const now = new Date();
         const currentMonth = getMonth(now);
@@ -863,24 +865,36 @@ function EmployeeSummaryDialog({ open, onOpenChange, employee, attendance, advan
             getYear(a.date) === currentYear
         );
 
-        const presentDays = monthlyAttendance.filter(a => a.status === 'Present').length;
-        const absentDays = monthlyAttendance.filter(a => a.status === 'Absent').length;
-        const halfDays = monthlyAttendance.filter(a => a.status === 'Half-day').length;
+        const absentRecords = monthlyAttendance.filter(a => a.status === 'Absent');
+        const halfDayRecords = monthlyAttendance.filter(a => a.status === 'Half-day');
 
         const totalAdvance = monthlyAdvances.reduce((sum, a) => sum + a.amount, 0);
         const remainingSalary = employee.salary - totalAdvance;
 
         return {
-            presentDays,
-            absentDays,
-            halfDays,
-            totalAdvance,
-            remainingSalary,
+            summary: {
+                presentDays: monthlyAttendance.filter(a => a.status === 'Present').length,
+                absentDays: absentRecords.length,
+                halfDays: halfDayRecords.length,
+                totalAdvance,
+                remainingSalary,
+            },
+            absentDates: absentRecords.map(a => a.date),
+            halfDayDates: halfDayRecords.map(a => a.date),
         }
-
     }, [employee, attendance, advances]);
+    
+    useEffect(() => {
+        if (open) {
+            setShowDates(null);
+        }
+    }, [open]);
 
     if (!employee || !summary) return null;
+    
+    const handleCardClick = (type: 'absent' | 'half-day') => {
+        setShowDates(current => current === type ? null : type);
+    }
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
@@ -897,15 +911,25 @@ function EmployeeSummaryDialog({ open, onOpenChange, employee, attendance, advan
                             <p className="text-sm text-green-800 dark:text-green-200">Present</p>
                             <p className="text-2xl font-bold">{summary.presentDays}</p>
                         </div>
-                         <div className="p-3 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg">
+                         <div className="p-3 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg cursor-pointer" onClick={() => handleCardClick('half-day')}>
                             <p className="text-sm text-yellow-800 dark:text-yellow-200">Half-days</p>
                             <p className="text-2xl font-bold">{summary.halfDays}</p>
                         </div>
-                        <div className="p-3 bg-red-100 dark:bg-red-900/30 rounded-lg">
+                        <div className="p-3 bg-red-100 dark:bg-red-900/30 rounded-lg cursor-pointer" onClick={() => handleCardClick('absent')}>
                             <p className="text-sm text-red-800 dark:text-red-200">Absent</p>
                             <p className="text-2xl font-bold">{summary.absentDays}</p>
                         </div>
                     </div>
+                    {showDates && (
+                        <div className="p-3 bg-muted/50 rounded-lg">
+                            <h4 className="font-semibold mb-2">{showDates === 'absent' ? 'Absent Dates' : 'Half-day Dates'}:</h4>
+                            <div className="grid grid-cols-3 gap-1 text-sm">
+                                {(showDates === 'absent' ? absentDates : halfDayDates).map(date => (
+                                    <span key={date.toISOString()}>{format(date, 'MMM d')}</span>
+                                ))}
+                            </div>
+                        </div>
+                    )}
                     <Separator />
                      <div className="space-y-2">
                         <div className="flex justify-between items-baseline">
@@ -945,3 +969,5 @@ function EmployeeSummaryDialog({ open, onOpenChange, employee, attendance, advan
 
 
     
+
+      
