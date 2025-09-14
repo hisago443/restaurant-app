@@ -36,17 +36,17 @@ const vegColor = 'bg-green-100 dark:bg-green-900/30';
 const nonVegColor = 'bg-rose-100 dark:bg-rose-900/30';
 
 const colorPalette: Record<string, {light: string, dark: string}> = {
-    amber: { light: 'bg-amber-100 dark:bg-amber-900/40', dark: 'bg-amber-200 dark:bg-amber-800/70' },
-    lime: { light: 'bg-lime-100 dark:bg-lime-900/40', dark: 'bg-lime-200 dark:bg-lime-800/70' },
-    purple: { light: 'bg-purple-100 dark:bg-purple-900/40', dark: 'bg-purple-200 dark:bg-purple-800/70' },
-    teal: { light: 'bg-teal-100 dark:bg-teal-900/40', dark: 'bg-teal-200 dark:bg-teal-800/70' },
-    orange: { light: 'bg-orange-100 dark:bg-orange-900/40', dark: 'bg-orange-200 dark:bg-orange-800/70' },
-    cyan: { light: 'bg-cyan-100 dark:bg-cyan-900/40', dark: 'bg-cyan-200 dark:bg-cyan-800/70' },
+    amber: { light: 'bg-amber-100 dark:bg-amber-900/40', dark: 'bg-amber-500 dark:bg-amber-800/70' },
+    lime: { light: 'bg-lime-100 dark:bg-lime-900/40', dark: 'bg-lime-500 dark:bg-lime-800/70' },
+    purple: { light: 'bg-purple-100 dark:bg-purple-900/40', dark: 'bg-purple-500 dark:bg-purple-800/70' },
+    teal: { light: 'bg-teal-100 dark:bg-teal-900/40', dark: 'bg-teal-500 dark:bg-teal-800/70' },
+    orange: { light: 'bg-orange-100 dark:bg-orange-900/40', dark: 'bg-orange-500 dark:bg-orange-800/70' },
+    cyan: { light: 'bg-cyan-100 dark:bg-cyan-900/40', dark: 'bg-cyan-500 dark:bg-cyan-800/70' },
 };
 const colorNames = Object.keys(colorPalette);
 
 const itemStatusColors: Record<string, { light: string, dark: string, name: string }> = {
-    low: { light: 'bg-yellow-200 dark:bg-yellow-900/40', dark: 'bg-yellow-300 dark:bg-yellow-800/70', name: 'Running Low' },
+    low: { light: 'bg-yellow-200 dark:bg-yellow-900/40', dark: 'bg-yellow-500 dark:bg-yellow-800/70', name: 'Running Low' },
     out: { light: 'bg-red-500 text-white dark:bg-red-700/70', dark: 'bg-red-600 dark:bg-red-700/70', name: 'Out of Stock' },
 };
 const itemStatusNames = Object.keys(itemStatusColors);
@@ -1473,15 +1473,16 @@ export default function PosSystem({
                                         </div>
                                     </PopoverTrigger>
                                     <PopoverContent className="w-auto p-2">
-                                    <div className="flex flex-col gap-1">
+                                    <div className="grid grid-cols-2 gap-1">
                                         {itemStatusNames.map((name) => (
                                             <Button key={name} variant="outline" className="w-full justify-start gap-2" onClick={(e) => { e.stopPropagation(); setCategoryStatus(category.category, name); }}>
                                                 <span className={cn("h-3 w-3 rounded-sm", itemStatusColors[name].light)} />
                                                 {itemStatusColors[name].name}
                                             </Button>
                                         ))}
-                                        <Button variant="ghost" size="sm" className="h-8" onClick={(e) => { e.stopPropagation(); setCategoryStatus(category.category, ''); }}>Reset</Button>
                                     </div>
+                                    <Separator className="my-2" />
+                                    <Button variant="ghost" size="sm" className="w-full h-8" onClick={(e) => { e.stopPropagation(); setCategoryStatus(category.category, ''); }}>Reset</Button>
                                     </PopoverContent>
                                 </Popover>
                             </div>
@@ -1494,7 +1495,7 @@ export default function PosSystem({
               const status = menuCategoryStatus[category.category];
               const statusConfig = status ? itemStatusColors[status] : null;
               return (
-              <TabsContent key={category.category} value={category.category} className={cn("m-0 rounded-lg p-2 min-h-[200px] bg-background", statusConfig ? statusConfig.light : '')}>
+              <TabsContent key={category.category} value={category.category} className={cn("m-0 rounded-lg p-2 min-h-[200px]", statusConfig ? statusConfig.light : 'bg-background')}>
                 <div className="space-y-4">
                   {category.subCategories.map((subCategory) => (
                     <div key={subCategory.name}>
@@ -1525,7 +1526,7 @@ export default function PosSystem({
                 const colorClass = colorName ? colorPalette[colorName]?.dark : 'bg-muted';
                 return (
                 <AccordionItem key={category.category} value={category.category} className="border-b-0">
-                     <AccordionTrigger className={cn("p-3 rounded-md text-lg font-bold hover:no-underline flex justify-between items-center relative group", statusConfig ? statusConfig.dark.replace('dark:', '') : colorClass )}>
+                     <AccordionTrigger className={cn("p-3 rounded-md text-lg font-bold hover:no-underline flex justify-between items-center relative group", statusConfig ? statusConfig.dark : colorClass )}>
                         {renderCategoryHeader(category)}
                         <div className="absolute top-1/2 -translate-y-1/2 right-10 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
                             <Popover>
@@ -1535,20 +1536,21 @@ export default function PosSystem({
                                     </div>
                                 </PopoverTrigger>
                                 <PopoverContent className="w-auto p-2">
-                                <div className="flex flex-col gap-1">
+                                <div className="grid grid-cols-2 gap-1">
                                     {itemStatusNames.map((name) => (
                                         <Button key={name} variant="outline" className="w-full justify-start gap-2" onClick={(e) => { e.stopPropagation(); setCategoryStatus(category.category, name); }}>
                                             <span className={cn("h-3 w-3 rounded-sm", itemStatusColors[name].light)} />
                                             {itemStatusColors[name].name}
                                         </Button>
                                     ))}
-                                    <Button variant="ghost" size="sm" className="h-8" onClick={(e) => { e.stopPropagation(); setCategoryStatus(category.category, ''); }}>Reset</Button>
                                 </div>
+                                <Separator className="my-2" />
+                                <Button variant="ghost" size="sm" className="w-full h-8" onClick={(e) => { e.stopPropagation(); setCategoryStatus(category.category, ''); }}>Reset</Button>
                                 </PopoverContent>
                             </Popover>
                         </div>
                     </AccordionTrigger>
-                    <AccordionContent className={cn("p-2 space-y-2 bg-background", statusConfig ? statusConfig.light : '')}>
+                    <AccordionContent className={cn("p-2 space-y-2 bg-background")}>
                         {category.subCategories.map(subCategory => (
                             <div key={subCategory.name}>
                                 <h3 className="text-md font-semibold mb-2 text-muted-foreground pl-2">{subCategory.name}</h3>
@@ -1564,7 +1566,7 @@ export default function PosSystem({
     );
   };
   
-  const allItemsOpen = activeAccordionItems.length === filteredMenu.length && filteredMenu.length > 0;
+    const allItemsOpen = activeAccordionItems.length === filteredMenu.length && filteredMenu.length > 0;
   
   const toggleAccordion = () => {
     if (allItemsOpen) {
@@ -1821,3 +1823,4 @@ export default function PosSystem({
 
 
     
+
