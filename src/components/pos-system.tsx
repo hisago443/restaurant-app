@@ -347,13 +347,13 @@ function OrderPanel({
             
             <div id="table-grid-container" className="p-4 border-t space-y-4">
                <div className="flex items-center gap-2 flex-wrap">
-                <Label className="font-semibold text-sm shrink-0">Order Type:</Label>
-                <div className="grid grid-cols-3 gap-2 flex-grow min-w-[280px]">
+                    <Label className="font-semibold text-sm shrink-0">Order Type:</Label>
+                    <div className="flex-1 grid grid-cols-3 gap-2 min-w-[280px]">
                         <Button variant={orderType === 'Dine-In' ? 'default' : 'outline'} onClick={() => setOrderType('Dine-In')} className="h-12 text-base"><Users className="mr-2 h-5 w-5"/>Dine-In</Button>
                         <Button variant={orderType === 'Takeaway' ? 'default' : 'outline'} onClick={() => setOrderType('Takeaway')} className="h-12 text-base"><ShoppingBag className="mr-2 h-5 w-5"/>Takeaway</Button>
                         <Button variant={orderType === 'Home Delivery' ? 'default' : 'outline'} onClick={() => setOrderType('Home Delivery')} className="h-12 text-base"><Bike className="mr-2 h-5 w-5"/>Home Delivery</Button>
+                    </div>
                 </div>
-              </div>
               {orderType === 'Dine-In' && children}
             </div>
           
@@ -659,15 +659,15 @@ export default function PosSystem({
     return menuToFilter;
   }, [searchTerm, vegFilter, typedMenuData]);
 
-  const currentActiveTableId = useMemo(() => {
-    return orderType === 'Dine-In' ? selectedTableId : null;
-  }, [selectedTableId, orderType]);
-
   useEffect(() => {
     if (searchTerm) {
       setActiveAccordionItems(filteredMenu.map(c => c.category));
     }
   }, [searchTerm, viewMode, filteredMenu]);
+
+  const currentActiveTableId = useMemo(() => {
+    return orderType === 'Dine-In' ? selectedTableId : null;
+  }, [selectedTableId, orderType]);
   
   useEffect(() => {
     if (orderType === 'Home Delivery' && orderItems.length > 0) {
@@ -676,7 +676,7 @@ export default function PosSystem({
     if (orderType !== 'Dine-In') {
         setSelectedTableId(null);
     }
-  }, [orderType]);
+  }, [orderType, orderItems.length, setSelectedTableId]);
 
   useEffect(() => {
     const defaultCategoryColors: Record<string, string> = {};
@@ -1349,6 +1349,8 @@ export default function PosSystem({
     
     const itemStatus = menuItemStatus[item.name];
     const categoryStatus = menuCategoryStatus[categoryName];
+    const colorName = categoryColors[categoryName];
+    const colorClass = colorName ? colorPalette[colorName]?.light : '';
 
     let finalItemColor, isDisabled = false;
 
@@ -1358,7 +1360,7 @@ export default function PosSystem({
     } else if (categoryStatus === 'low' || itemStatus === 'low') {
         finalItemColor = itemStatusColors.low.light;
     } else {
-        finalItemColor = isNonVeg ? nonVegColor : vegColor;
+        finalItemColor = isNonVeg ? nonVegColor : (colorClass || vegColor);
     }
     
     const menuItemCard = (
@@ -1491,10 +1493,8 @@ export default function PosSystem({
             {filteredMenu.map(category => {
               const status = menuCategoryStatus[category.category];
               const statusConfig = status ? itemStatusColors[status] : null;
-              const colorName = categoryColors[category.category];
-              const colorClass = colorName ? colorPalette[colorName]?.light : '';
               return (
-              <TabsContent key={category.category} value={category.category} className={cn("m-0 rounded-lg p-2 min-h-[200px]", statusConfig ? statusConfig.light : colorClass)}>
+              <TabsContent key={category.category} value={category.category} className={cn("m-0 rounded-lg p-2 min-h-[200px] bg-background", statusConfig ? statusConfig.light : '')}>
                 <div className="space-y-4">
                   {category.subCategories.map((subCategory) => (
                     <div key={subCategory.name}>
@@ -1522,7 +1522,7 @@ export default function PosSystem({
                 const status = menuCategoryStatus[category.category];
                 const statusConfig = status ? itemStatusColors[status] : null;
                 const colorName = categoryColors[category.category];
-                const colorClass = colorName ? colorPalette[colorName]?.light : 'bg-muted';
+                const colorClass = colorName ? colorPalette[colorName]?.dark : 'bg-muted';
                 return (
                 <AccordionItem key={category.category} value={category.category} className="border-b-0">
                      <AccordionTrigger className={cn("p-3 rounded-md text-lg font-bold hover:no-underline flex justify-between items-center relative group", statusConfig ? statusConfig.dark.replace('dark:', '') : colorClass )}>
@@ -1548,7 +1548,7 @@ export default function PosSystem({
                             </Popover>
                         </div>
                     </AccordionTrigger>
-                    <AccordionContent className={cn("p-2 space-y-2", statusConfig ? statusConfig.light : colorClass)}>
+                    <AccordionContent className={cn("p-2 space-y-2 bg-background", statusConfig ? statusConfig.light : '')}>
                         {category.subCategories.map(subCategory => (
                             <div key={subCategory.name}>
                                 <h3 className="text-md font-semibold mb-2 text-muted-foreground pl-2">{subCategory.name}</h3>
