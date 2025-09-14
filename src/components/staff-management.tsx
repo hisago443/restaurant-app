@@ -175,7 +175,6 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
   const openAdvanceDialog = (advance: Advance | null, employee?: Employee) => {
     setEditingAdvance(advance);
     if (!advance && employee) {
-      // Pre-fill employee for new advance from dropdown
       setEditingAdvance({ employeeId: employee.id } as Advance);
     }
     setIsAdvanceDialogOpen(true);
@@ -322,6 +321,18 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
     });
   }, [employees, advances]);
 
+  const dailyAttendanceSummary = useMemo(() => {
+    const summary = {
+      'Present': 0,
+      'Absent': 0,
+      'Half-day': 0,
+    };
+    attendanceForSelectedDate.forEach(att => {
+      summary[att.status]++;
+    });
+    return summary;
+  }, [attendanceForSelectedDate]);
+
 
   return (
     <div className="p-4 space-y-4">
@@ -366,46 +377,24 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
                   </div>
               </Card>
               <Card>
-                <CardHeader className="flex flex-row items-center justify-between">
-                    <CardTitle>Advances for {format(selectedDate, 'PPP')}</CardTitle>
-                    {totalAdvanceForDay > 0 && (
-                        <div className="px-3 py-1 bg-red-100 dark:bg-red-900/30 rounded-md text-red-700 dark:text-red-200">
-                          <span className="font-bold">Total: Rs. {totalAdvanceForDay.toLocaleString()}</span>
-                        </div>
-                    )}
+                <CardHeader>
+                    <CardTitle>Daily Attendance Summary</CardTitle>
+                    <CardDescription>For {format(selectedDate, 'PPP')}</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <div className="max-h-48 overflow-y-auto pt-2">
-                        {advancesForSelectedDate.length > 0 ? (
-                            <div className="space-y-2">
-                                {advancesForSelectedDate.map(advance => {
-                                    const employee = employees.find(e => e.id === advance.employeeId);
-                                    return (
-                                    <div key={advance.id} className="flex justify-between items-center p-2 bg-muted/50 rounded-lg group">
-                                        <div className='flex items-center gap-2'>
-                                            <span className={cn("h-2.5 w-2.5 rounded-full", employee?.color)} />
-                                            <div>
-                                                <p className="font-medium">{employee?.name}</p>
-                                            </div>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <div className="px-3 py-1 bg-red-100 dark:bg-red-900/30 rounded-md text-red-700 dark:text-red-200">
-                                              <span className="font-bold">Rs. {advance.amount.toLocaleString()}</span>
-                                            </div>
-                                            {!isDateLocked &&
-                                              <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100" onClick={() => openAdvanceDialog(advance, undefined)}>
-                                                  <Edit className="h-4 w-4"/>
-                                              </Button>
-                                            }
-                                        </div>
-                                    </div>
-                                )})}
-                            </div>
-                        ) : (
-                            <div className="h-full flex items-center justify-center py-4">
-                                <p className="text-muted-foreground text-sm">No advances on this date.</p>
-                            </div>
-                        )}
+                    <div className="grid grid-cols-3 gap-4 text-center">
+                        <div className="p-3 bg-green-100 dark:bg-green-900/30 rounded-lg">
+                            <p className="text-sm text-green-800 dark:text-green-200">Present</p>
+                            <p className="text-3xl font-bold">{dailyAttendanceSummary['Present']}</p>
+                        </div>
+                        <div className="p-3 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg">
+                            <p className="text-sm text-yellow-800 dark:text-yellow-200">Half-day</p>
+                            <p className="text-3xl font-bold">{dailyAttendanceSummary['Half-day']}</p>
+                        </div>
+                        <div className="p-3 bg-red-100 dark:bg-red-900/30 rounded-lg">
+                            <p className="text-sm text-red-800 dark:text-red-200">Absent</p>
+                            <p className="text-3xl font-bold">{dailyAttendanceSummary['Absent']}</p>
+                        </div>
                     </div>
                 </CardContent>
               </Card>
@@ -424,7 +413,7 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
                                       <span className={cn("h-3 w-3 rounded-full", employee.color)} />
                                       <span className="font-semibold text-base">{employee.name}</span>
                                   </div>
-                                  <div className="flex items-center gap-2">
+                                  <div className="flex items-center gap-1">
                                       {(Object.keys(attendanceStatusConfig) as AttendanceStatus[]).map(status => {
                                           const isSelected = attendanceRecord?.status === status;
                                           const config = attendanceStatusConfig[status];
@@ -433,10 +422,10 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
                                                   key={status}
                                                   variant={isSelected ? 'default' : 'outline'}
                                                   onClick={() => handleMarkAttendance(employee.id, status)}
-                                                  className={cn("h-10 w-28", isSelected && config.className)}
+                                                  className={cn("h-10 w-24", isSelected && config.className)}
                                                   disabled={isDateLocked}
                                               >
-                                                  {React.createElement(config.icon, {className: "mr-2 h-4 w-4"})}
+                                                  <config.icon className="mr-2 h-4 w-4"/>
                                                   {config.label}
                                               </Button>
                                           )
@@ -459,6 +448,50 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
                 <Button size="lg" className="w-full h-14 text-base" onClick={() => openAdvanceDialog(null, undefined)} disabled={isDateLocked}>
                     <Banknote className="mr-4 h-6 w-6" /> Add Salary Advance
                 </Button>
+                 <Card>
+                    <CardHeader className="flex flex-row items-center justify-between">
+                        <CardTitle>Advances for {format(selectedDate, 'PPP')}</CardTitle>
+                        {totalAdvanceForDay > 0 && (
+                            <div className="px-3 py-1 bg-red-100 dark:bg-red-900/30 rounded-md text-red-700 dark:text-red-200">
+                            <span className="font-bold">Total: Rs. {totalAdvanceForDay.toLocaleString()}</span>
+                            </div>
+                        )}
+                    </CardHeader>
+                    <CardContent>
+                        <div className="max-h-48 overflow-y-auto pt-2">
+                            {advancesForSelectedDate.length > 0 ? (
+                                <div className="space-y-2">
+                                    {advancesForSelectedDate.map(advance => {
+                                        const employee = employees.find(e => e.id === advance.employeeId);
+                                        return (
+                                        <div key={advance.id} className="flex justify-between items-center p-2 bg-muted/50 rounded-lg group">
+                                            <div className='flex items-center gap-2'>
+                                                <span className={cn("h-2.5 w-2.5 rounded-full", employee?.color)} />
+                                                <div>
+                                                    <p className="font-medium">{employee?.name}</p>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <div className="px-3 py-1 bg-red-100 dark:bg-red-900/30 rounded-md text-red-700 dark:text-red-200">
+                                                <span className="font-bold">Rs. {advance.amount.toLocaleString()}</span>
+                                                </div>
+                                                {!isDateLocked &&
+                                                <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100" onClick={() => openAdvanceDialog(advance, undefined)}>
+                                                    <Edit className="h-4 w-4"/>
+                                                </Button>
+                                                }
+                                            </div>
+                                        </div>
+                                    )})}
+                                </div>
+                            ) : (
+                                <div className="h-full flex items-center justify-center py-4">
+                                    <p className="text-muted-foreground text-sm">No advances on this date.</p>
+                                </div>
+                            )}
+                        </div>
+                    </CardContent>
+                </Card>
             </div>
           </div>
         </TabsContent>
@@ -870,3 +903,4 @@ function EmployeeSummaryDialog({ open, onOpenChange, employee, attendance, advan
     
 
     
+
