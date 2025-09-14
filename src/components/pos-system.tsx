@@ -606,6 +606,7 @@ export default function PosSystem({
   const [activeAccordionItems, setActiveAccordionItems] = useState<string[]>([]);
   const [viewMode, setViewMode] = useState<ViewMode>('accordion');
   const [menuItemStatus, setMenuItemStatus] = useState<Record<string, string>>({});
+  const [menuCategoryStatus, setMenuCategoryStatus] = useState<Record<string, string>>({});
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
   const [isAddItemDialogOpen, setIsAddItemDialogOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -626,10 +627,6 @@ export default function PosSystem({
   const searchInputRef = useRef<HTMLInputElement>(null);
   
   const typedMenuData: MenuCategory[] = menu;
-
-  const currentActiveTableId = useMemo(() => {
-    return orderType === 'Dine-In' ? selectedTableId : null;
-  }, [selectedTableId, orderType]);
   
   const allMenuItems: MenuItem[] = useMemo(() => 
     typedMenuData.flatMap(cat => cat.subCategories.flatMap(sub => sub.items)),
@@ -661,6 +658,10 @@ export default function PosSystem({
 
     return menuToFilter;
   }, [searchTerm, vegFilter, typedMenuData]);
+
+  const currentActiveTableId = useMemo(() => {
+    return orderType === 'Dine-In' ? selectedTableId : null;
+  }, [selectedTableId, orderType]);
 
   useEffect(() => {
     if (searchTerm) {
@@ -793,6 +794,10 @@ export default function PosSystem({
   
   const setItemStatus = (itemName: string, status: string) => {
     setMenuItemStatus(prev => ({ ...prev, [itemName]: status }));
+  };
+
+  const setCategoryStatus = (categoryName: string, status: string) => {
+    setMenuCategoryStatus(prev => ({ ...prev, [categoryName]: status }));
   };
   
   const handleShuffleColors = () => {
@@ -1343,25 +1348,27 @@ export default function PosSystem({
     const isNonVeg = subCategoryName.toLowerCase().includes('non-veg');
     
     const itemStatus = menuItemStatus[item.name];
-    const categoryColorName = categoryColors[categoryName];
-    
-    let finalColorName;
-    if (itemStatus === 'out') {
-      finalColorName = itemStatusColors.out.light;
-    } else if (itemStatus === 'low') {
-      finalColorName = itemStatusColors.low.light;
-    } else {
-        finalColorName = categoryColorName ? colorPalette[categoryColorName]?.light : (isNonVeg ? nonVegColor : vegColor);
-    }
+    const categoryStatus = menuCategoryStatus[categoryName];
 
+    let finalItemColor, isDisabled = false;
+
+    if (categoryStatus === 'out' || itemStatus === 'out') {
+        finalItemColor = itemStatusColors.out.light;
+        isDisabled = true;
+    } else if (categoryStatus === 'low' || itemStatus === 'low') {
+        finalItemColor = itemStatusColors.low.light;
+    } else {
+        finalItemColor = isNonVeg ? nonVegColor : vegColor;
+    }
+    
     const menuItemCard = (
       <Card
         key={item.name}
         className={cn(
           "group rounded-lg transition-all shadow-md hover:shadow-lg relative overflow-hidden h-full flex flex-col min-h-[110px]",
-          finalColorName,
+          finalItemColor,
           easyMode && "cursor-pointer hover:scale-105",
-          (itemStatus === 'out') && "pointer-events-none opacity-60"
+          isDisabled && "pointer-events-none opacity-60"
         )}
         onClick={() => handleItemClick(item)}
       >
@@ -1417,11 +1424,33 @@ export default function PosSystem({
     );
 
     return (
-        <DraggableMenuItem key={item.name} item={item} canDrag={easyMode && itemStatus !== 'out'}>
+        <DraggableMenuItem key={item.name} item={item} canDrag={easyMode && !isDisabled}>
             {menuItemCard}
         </DraggableMenuItem>
     );
   };
+  
+    const renderCategoryHeader = (category: MenuCategory) => {
+    const status = menuCategoryStatus[category.category];
+    const statusConfig = status ? itemStatusColors[status] : null;
+
+    let bgColor = 'bg-muted';
+    if (statusConfig) {
+        bgColor = statusConfig.dark.replace('dark:', '');
+    }
+    
+    return (
+        <div className="flex-grow text-left text-black flex items-center gap-2">
+            <span>{category.category}</span>
+            {statusConfig && (
+                <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-black/10 text-black">
+                    {statusConfig.name}
+                </span>
+            )}
+        </div>
+    );
+};
+
 
   const renderMenuContent = () => {
     if (viewMode === 'grid') {
@@ -1429,33 +1458,44 @@ export default function PosSystem({
           <Tabs defaultValue={filteredMenu.length > 0 ? filteredMenu[0].category : undefined} className="w-full">
             <div className="flex justify-center">
               <TabsList className="mb-4 flex-wrap h-auto bg-transparent border-b rounded-none p-0">
-                {filteredMenu.map(category => (
-                  <div key={category.category} className="relative group p-1">
-                    <TabsTrigger value={category.category} className={cn("rounded-none border-b-2 border-transparent data-[state=active]:shadow-none px-4 py-2 cursor-pointer", categoryColors[category.category] ? colorPalette[categoryColors[category.category]]?.dark : '')}>
-                        <span className="flex-grow text-left text-lg text-black">{category.category}</span>
-                    </TabsTrigger>
-                    <div className="absolute top-1 right-2 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
-                        <Popover>
-                            <PopoverTrigger asChild>
-                                <div role="button" className="p-1 rounded-md hover:bg-black/10">
-                                    <Palette className="h-4 w-4" />
-                                </div>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-2">
-                                <div className="grid grid-cols-3 gap-1">
-                                    {colorNames.map(name => (
-                                        <div key={name} className={cn("h-6 w-6 rounded-sm cursor-pointer", colorPalette[name].dark)} onClick={() => setCategoryColors(prev => ({...prev, [category.category]: name}))}></div>
-                                    ))}
-                                </div>
-                            </PopoverContent>
-                        </Popover>
-                    </div>
-                  </div>
-                ))}
+                {filteredMenu.map(category => {
+                    const status = menuCategoryStatus[category.category];
+                    const statusConfig = status ? itemStatusColors[status] : null;
+                    return (
+                        <div key={category.category} className="relative group p-1">
+                            <TabsTrigger value={category.category} className={cn("rounded-none border-b-2 border-transparent data-[state=active]:shadow-none px-4 py-2 cursor-pointer", statusConfig ? statusConfig.dark : 'data-[state=active]:border-primary')}>
+                                {renderCategoryHeader(category)}
+                            </TabsTrigger>
+                            <div className="absolute top-1 right-2 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                        <div role="button" className="p-1 rounded-md hover:bg-black/10">
+                                            <Palette className="h-4 w-4" />
+                                        </div>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-2">
+                                    <div className="flex flex-col gap-1">
+                                        {itemStatusNames.map((name) => (
+                                            <Button key={name} variant="outline" className="w-full justify-start gap-2" onClick={(e) => { e.stopPropagation(); setCategoryStatus(category.category, name); }}>
+                                                <span className={cn("h-3 w-3 rounded-sm", itemStatusColors[name].light)} />
+                                                {itemStatusColors[name].name}
+                                            </Button>
+                                        ))}
+                                        <Button variant="ghost" size="sm" className="h-8" onClick={(e) => { e.stopPropagation(); setCategoryStatus(category.category, ''); }}>Reset</Button>
+                                    </div>
+                                    </PopoverContent>
+                                </Popover>
+                            </div>
+                        </div>
+                    )
+                })}
               </TabsList>
             </div>
-            {filteredMenu.map(category => (
-              <TabsContent key={category.category} value={category.category} className={cn("m-0 rounded-lg p-2 min-h-[200px]", categoryColors[category.category] ? colorPalette[categoryColors[category.category]]?.light : '')}>
+            {filteredMenu.map(category => {
+              const status = menuCategoryStatus[category.category];
+              const statusConfig = status ? itemStatusColors[status] : null;
+              return (
+              <TabsContent key={category.category} value={category.category} className={cn("m-0 rounded-lg p-2 min-h-[200px]", statusConfig ? statusConfig.light : '')}>
                 <div className="space-y-4">
                   {category.subCategories.map((subCategory) => (
                     <div key={subCategory.name}>
@@ -1467,7 +1507,7 @@ export default function PosSystem({
                   ))}
                 </div>
               </TabsContent>
-            ))}
+            )})}
           </Tabs>
         );
       }
@@ -1479,10 +1519,13 @@ export default function PosSystem({
             onValueChange={setActiveAccordionItems}
             className="w-full space-y-2"
         >
-            {filteredMenu.map(category => (
+            {filteredMenu.map(category => {
+                const status = menuCategoryStatus[category.category];
+                const statusConfig = status ? itemStatusColors[status] : null;
+                return (
                 <AccordionItem key={category.category} value={category.category} className="border-b-0">
-                     <AccordionTrigger className={cn("p-3 rounded-md text-lg font-bold hover:no-underline flex justify-between items-center relative group", categoryColors[category.category] ? colorPalette[categoryColors[category.category]]?.dark : 'bg-muted')}>
-                        <span className="flex-grow text-left text-black">{category.category}</span>
+                     <AccordionTrigger className={cn("p-3 rounded-md text-lg font-bold hover:no-underline flex justify-between items-center relative group", statusConfig ? statusConfig.dark : 'bg-muted')}>
+                        {renderCategoryHeader(category)}
                         <div className="absolute top-1/2 -translate-y-1/2 right-10 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
                             <Popover>
                                 <PopoverTrigger asChild>
@@ -1491,11 +1534,15 @@ export default function PosSystem({
                                     </div>
                                 </PopoverTrigger>
                                 <PopoverContent className="w-auto p-2">
-                                    <div className="grid grid-cols-3 gap-1">
-                                        {colorNames.map(name => (
-                                            <div key={name} className={cn("h-6 w-6 rounded-sm cursor-pointer", colorPalette[name].dark)} onClick={() => setCategoryColors(prev => ({...prev, [category.category]: name}))}></div>
-                                        ))}
-                                    </div>
+                                <div className="flex flex-col gap-1">
+                                    {itemStatusNames.map((name) => (
+                                        <Button key={name} variant="outline" className="w-full justify-start gap-2" onClick={(e) => { e.stopPropagation(); setCategoryStatus(category.category, name); }}>
+                                            <span className={cn("h-3 w-3 rounded-sm", itemStatusColors[name].light)} />
+                                            {itemStatusColors[name].name}
+                                        </Button>
+                                    ))}
+                                    <Button variant="ghost" size="sm" className="h-8" onClick={(e) => { e.stopPropagation(); setCategoryStatus(category.category, ''); }}>Reset</Button>
+                                </div>
                                 </PopoverContent>
                             </Popover>
                         </div>
@@ -1511,7 +1558,7 @@ export default function PosSystem({
                         ))}
                     </AccordionContent>
                 </AccordionItem>
-            ))}
+            )})}
         </Accordion>
     );
   };
@@ -1757,6 +1804,7 @@ export default function PosSystem({
     </div>
   );
 }
+
 
 
 
