@@ -552,7 +552,7 @@ export default function PosSystem({
 
   useEffect(() => {
     setActiveAccordionItems([]);
-  }, [viewMode, typedMenuData]);
+  }, [viewMode]);
 
   useEffect(() => {
     try {
@@ -680,6 +680,15 @@ export default function PosSystem({
 
     return menuToFilter;
 }, [searchTerm, vegFilter, typedMenuData]);
+
+  useEffect(() => {
+    if (searchTerm && viewMode === 'accordion' && filteredMenu.length > 0) {
+      setActiveAccordionItems(filteredMenu.map(c => c.category));
+    } else if (!searchTerm) {
+      setActiveAccordionItems([]);
+    }
+  }, [searchTerm, filteredMenu, viewMode]);
+
 
   const subtotal = useMemo(() => orderItems.reduce((acc, item) => acc + item.price * item.quantity, 0), [orderItems]);
   const total = useMemo(() => subtotal * (1 - discount / 100), [subtotal, discount]);
@@ -1591,6 +1600,7 @@ export default function PosSystem({
     </div>
   );
 }
+
 
 
 
