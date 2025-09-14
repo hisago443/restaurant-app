@@ -14,9 +14,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { PlusCircle, Edit, Trash2, Check, X, CircleSlash, Pencil, UserCheck, UserX, UserMinus, Banknote } from 'lucide-react';
+import { PlusCircle, Edit, Trash2, Check, X, CircleSlash, Pencil, UserCheck, UserX, UserMinus, Banknote, Eye } from 'lucide-react';
 import type { Employee, Advance, Attendance, AttendanceStatus } from '@/lib/types';
-import { format, isSameDay, startOfDay } from 'date-fns';
+import { format, isSameDay, startOfDay, isToday, isPast, getMonth, getYear, getDaysInMonth } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { Textarea } from '@/components/ui/textarea';
@@ -50,13 +50,17 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
   const [isAdvanceDialogOpen, setIsAdvanceDialogOpen] = useState(false);
   const [isNotesDialogOpen, setIsNotesDialogOpen] = useState(false);
   const [isEmployeeDialogOpen, setIsEmployeeDialogOpen] = useState(false);
+  const [isSummaryDialogOpen, setIsSummaryDialogOpen] = useState(false);
   
   const [editingAdvance, setEditingAdvance] = useState<Advance | null>(null);
   const [editingAttendance, setEditingAttendance] = useState<Attendance | null>(null);
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
+  const [summaryEmployee, setSummaryEmployee] = useState<Employee | null>(null);
 
   const [showAdvancesOnCalendar, setShowAdvancesOnCalendar] = useState(false);
   const [showAbsencesOnCalendar, setShowAbsencesOnCalendar] = useState(false);
+
+  const isDateLocked = isPast(selectedDate) && !isToday(selectedDate);
 
   useEffect(() => {
     const unsubEmployees = onSnapshot(collection(db, "employees"), (snapshot) => {
@@ -173,6 +177,10 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
   }
 
   const handleMarkAttendance = async (employeeId: string, status: AttendanceStatus) => {
+    if (isDateLocked) {
+      toast({ variant: 'destructive', title: 'Date Locked', description: 'Cannot change attendance for a past date.' });
+      return;
+    }
     const dateKey = format(selectedDate, 'yyyy-MM-dd');
     const attendanceId = `${employeeId}_${dateKey}`;
     const attendanceDocRef = doc(db, 'attendance', attendanceId);
@@ -218,6 +226,11 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
     } else {
         toast({ variant: 'destructive', title: 'Mark Attendance First', description: 'You must mark attendance before adding a note.' })
     }
+  }
+  
+  const openSummaryDialog = (employee: Employee) => {
+    setSummaryEmployee(employee);
+    setIsSummaryDialogOpen(true);
   }
 
   const advancesByEmployee = useMemo(() => {
@@ -352,9 +365,11 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
                                             <div className="px-3 py-1 bg-red-100 dark:bg-red-900/30 rounded-md text-red-700 dark:text-red-200">
                                               <span className="font-bold">Rs. {advance.amount.toLocaleString()}</span>
                                             </div>
-                                            <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100" onClick={() => openAdvanceDialog(advance)}>
-                                                <Edit className="h-4 w-4"/>
-                                            </Button>
+                                            {!isDateLocked &&
+                                              <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100" onClick={() => openAdvanceDialog(advance)}>
+                                                  <Edit className="h-4 w-4"/>
+                                              </Button>
+                                            }
                                         </div>
                                     </div>
                                 )})}
@@ -372,6 +387,7 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
                 <Card>
                   <CardHeader>
                     <CardTitle>Staff Attendance for {format(selectedDate, 'PPP')}</CardTitle>
+                    {isDateLocked && <CardDescription className="text-destructive font-bold">Attendance for past dates is locked.</CardDescription>}
                   </CardHeader>
                   <CardContent className="space-y-3">
                       {employees.map(employee => {
@@ -381,6 +397,9 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
                                   <div className="flex-grow flex items-center gap-3">
                                       <span className={cn("h-3 w-3 rounded-full", employee.color)} />
                                       <span className="font-semibold text-base">{employee.name}</span>
+                                       <Button variant="outline" size="sm" className="h-7" onClick={() => openSummaryDialog(employee)}>
+                                          <Eye className="mr-2 h-4 w-4" /> View
+                                      </Button>
                                   </div>
                                   <div className="flex items-center gap-2">
                                       {(Object.keys(attendanceStatusConfig) as AttendanceStatus[]).map(status => {
@@ -392,6 +411,7 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
                                                   variant={isSelected ? 'default' : 'outline'}
                                                   onClick={() => handleMarkAttendance(employee.id, status)}
                                                   className={cn("h-10 w-28", isSelected && config.className)}
+                                                  disabled={isDateLocked}
                                               >
                                                   {React.createElement(config.icon, {className: "mr-2 h-4 w-4"})}
                                                   {config.label}
@@ -401,11 +421,11 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
                                       <TooltipProvider>
                                           <Tooltip>
                                           <TooltipTrigger asChild>
-                                              <Button variant="ghost" size="icon" onClick={() => openNotesDialog(employee.id)}>
+                                              <Button variant="ghost" size="icon" onClick={() => openNotesDialog(employee.id)} disabled={!attendanceRecord}>
                                               <Pencil className="h-4 w-4" />
                                               </Button>
                                           </TooltipTrigger>
-                                          <TooltipContent>Add/Edit Note</TooltipContent>
+                                          <TooltipContent>{isDateLocked ? 'View Note' : 'Add/Edit Note'}</TooltipContent>
                                           </Tooltip>
                                       </TooltipProvider>
                                   </div>
@@ -414,7 +434,7 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
                       })}
                   </CardContent>
                 </Card>
-                <Button size="lg" className="w-full h-14 text-base" onClick={() => openAdvanceDialog(null)}>
+                <Button size="lg" className="w-full h-14 text-base" onClick={() => openAdvanceDialog(null)} disabled={isDateLocked}>
                     <Banknote className="mr-4 h-6 w-6" /> Add Salary Advance
                 </Button>
             </div>
@@ -425,8 +445,8 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
             <CardHeader>
               <div className='flex justify-between items-center'>
                 <div>
-                  <CardTitle>Employees &amp; Advances</CardTitle>
-                  <CardDescription>Manage staff salary and advance information.</CardDescription>
+                  <CardTitle>Employees List</CardTitle>
+                  <CardDescription>Manage staff information.</CardDescription>
                 </div>
                 <Button onClick={() => openEmployeeDialog(null)}><PlusCircle className="mr-2 h-4 w-4" /> Add Employee</Button>
               </div>
@@ -436,31 +456,31 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="border-r">ID</TableHead>
-                      <TableHead className="border-r">Employee</TableHead>
-                      <TableHead className="border-r">Role</TableHead>
-                      <TableHead className="border-r">Salary</TableHead>
-                      <TableHead className="border-r">Total Advance</TableHead>
-                      <TableHead>Remaining</TableHead>
+                      <TableHead>ID</TableHead>
+                      <TableHead>Employee</TableHead>
+                      <TableHead>Role</TableHead>
+                      <TableHead>Base Salary</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {employees.map((employee, index) => {
-                      const totalAdvance = (advancesByEmployee[employee.id] || []).reduce((sum, a) => sum + a.amount, 0);
-                      const remainingSalary = employee.salary - totalAdvance;
                       return (
                         <TableRow key={employee.id} className={cn(index % 2 === 0 ? 'bg-muted/50' : 'bg-background')}>
-                          <TableCell className="font-mono text-xs border-r">{employee.id}</TableCell>
-                          <TableCell className="border-r">
+                          <TableCell className="font-mono text-xs">{employee.id}</TableCell>
+                          <TableCell>
                             <div className="flex items-center gap-2 font-medium">
                               <span className={cn('h-2 w-2 rounded-full', employee.color)} />
                               {employee.name}
                             </div>
                           </TableCell>
-                          <TableCell className="border-r">{employee.role}</TableCell>
-                          <TableCell className="font-semibold text-blue-600 border-r">Rs. {employee.salary.toLocaleString()}</TableCell>
-                          <TableCell className="font-semibold text-red-600 border-r">Rs. {totalAdvance.toLocaleString()}</TableCell>
-                          <TableCell className="font-bold text-green-600">Rs. {remainingSalary.toLocaleString()}</TableCell>
+                          <TableCell>{employee.role}</TableCell>
+                          <TableCell className="font-semibold text-blue-600">Rs. {employee.salary.toLocaleString()}</TableCell>
+                          <TableCell className="text-right">
+                              <Button variant="outline" size="sm" onClick={() => openSummaryDialog(employee)}>
+                                  <Eye className="mr-2 h-4 w-4" /> View Summary
+                              </Button>
+                          </TableCell>
                         </TableRow>
                       );
                     })}
@@ -486,6 +506,7 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
         onOpenChange={setIsNotesDialogOpen}
         attendance={editingAttendance}
         onSave={handleSaveNote}
+        readOnly={isDateLocked}
       />
 
       <EmployeeDialog
@@ -499,6 +520,15 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
             setEditingEmployee(null);
         }}
       />
+      {summaryEmployee && 
+        <EmployeeSummaryDialog
+            open={isSummaryDialogOpen}
+            onOpenChange={setIsSummaryDialogOpen}
+            employee={summaryEmployee}
+            attendance={attendance}
+            advances={advancesByEmployee[summaryEmployee.id] || []}
+        />
+      }
     </div>
   );
 }
@@ -589,11 +619,13 @@ function NotesDialog({
   onOpenChange,
   attendance,
   onSave,
+  readOnly
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   attendance: Attendance | null;
   onSave: (note: string) => void;
+  readOnly: boolean;
 }) {
   const [note, setNote] = useState('');
   
@@ -607,7 +639,7 @@ function NotesDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Add/Edit Note</DialogTitle>
+            <DialogTitle>{readOnly ? 'View Note' : 'Add/Edit Note'}</DialogTitle>
             {attendance && <DialogDescription>For attendance on {format(attendance.date, 'PPP')}</DialogDescription>}
           </DialogHeader>
           <div className="py-4">
@@ -616,11 +648,12 @@ function NotesDialog({
               value={note}
               onChange={(e) => setNote(e.target.value)}
               rows={4}
+              readOnly={readOnly}
             />
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-            <Button onClick={() => onSave(note)}>Save Note</Button>
+            {!readOnly && <Button onClick={() => onSave(note)}>Save Note</Button>}
           </DialogFooter>
         </DialogContent>
     </Dialog>
@@ -698,16 +731,95 @@ function EmployeeDialog({ open, onOpenChange, employee, onSave }: { open: boolea
     );
 }
 
+function EmployeeSummaryDialog({ open, onOpenChange, employee, attendance, advances }: {
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
+    employee: Employee | null;
+    attendance: Attendance[];
+    advances: Advance[];
+}) {
+    const summary = useMemo(() => {
+        if (!employee) return null;
+        
+        const now = new Date();
+        const currentMonth = getMonth(now);
+        const currentYear = getYear(now);
 
+        const monthlyAttendance = attendance.filter(a => 
+            a.employeeId === employee.id &&
+            getMonth(a.date) === currentMonth &&
+            getYear(a.date) === currentYear
+        );
 
+        const monthlyAdvances = advances.filter(a => 
+            getMonth(a.date) === currentMonth &&
+            getYear(a.date) === currentYear
+        );
 
+        const presentDays = monthlyAttendance.filter(a => a.status === 'Present').length;
+        const absentDays = monthlyAttendance.filter(a => a.status === 'Absent').length;
+        const halfDays = monthlyAttendance.filter(a => a.status === 'Half-day').length;
 
-    
+        const totalAdvance = monthlyAdvances.reduce((sum, a) => sum + a.amount, 0);
+        const remainingSalary = employee.salary - totalAdvance;
 
-    
+        return {
+            presentDays,
+            absentDays,
+            halfDays,
+            totalAdvance,
+            remainingSalary,
+        }
 
-    
+    }, [employee, attendance, advances]);
 
+    if (!employee || !summary) return null;
 
-
-    
+    return (
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                    <DialogTitle>Monthly Summary for {employee.name}</DialogTitle>
+                    <DialogDescription>
+                        {format(new Date(), 'MMMM yyyy')}
+                    </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                    <div className="grid grid-cols-3 gap-4 text-center">
+                        <div className="p-3 bg-green-100 dark:bg-green-900/30 rounded-lg">
+                            <p className="text-sm text-green-800 dark:text-green-200">Present</p>
+                            <p className="text-2xl font-bold">{summary.presentDays}</p>
+                        </div>
+                         <div className="p-3 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg">
+                            <p className="text-sm text-yellow-800 dark:text-yellow-200">Half-days</p>
+                            <p className="text-2xl font-bold">{summary.halfDays}</p>
+                        </div>
+                        <div className="p-3 bg-red-100 dark:bg-red-900/30 rounded-lg">
+                            <p className="text-sm text-red-800 dark:text-red-200">Absent</p>
+                            <p className="text-2xl font-bold">{summary.absentDays}</p>
+                        </div>
+                    </div>
+                    <Separator />
+                     <div className="space-y-2">
+                        <div className="flex justify-between items-baseline">
+                            <p>Base Salary:</p>
+                            <p className="font-semibold text-lg text-blue-600">Rs. {employee.salary.toLocaleString()}</p>
+                        </div>
+                         <div className="flex justify-between items-baseline">
+                            <p>Total Advance Taken:</p>
+                            <p className="font-semibold text-lg text-red-600">Rs. {summary.totalAdvance.toLocaleString()}</p>
+                        </div>
+                        <Separator />
+                         <div className="flex justify-between items-baseline">
+                            <p className="font-bold text-lg">Remaining Salary:</p>
+                            <p className="font-bold text-xl text-green-600">Rs. {summary.remainingSalary.toLocaleString()}</p>
+                        </div>
+                    </div>
+                </div>
+                 <DialogFooter>
+                    <Button onClick={() => onOpenChange(false)}>Close</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    )
+}
