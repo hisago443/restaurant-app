@@ -333,7 +333,7 @@ function OrderPanel({
                 )}
             </ScrollArea>
             
-            <div className="p-4 border-t">
+            <div id="table-grid-container" className="p-4 border-t">
               {children}
             </div>
           
@@ -997,11 +997,47 @@ export default function PosSystem({
       
       const isNumberKey = e.key >= '0' && e.key <= '9';
 
-      if (keyboardMode === 'table' && isNumberKey) {
+      if (keyboardMode === 'table') {
         e.preventDefault();
-        const tableNum = e.key === '0' ? 10 : parseInt(e.key, 10);
-        if (tableNum > 0 && tableNum <= tables.length) {
-          handleSelectTable(tableNum);
+        
+        if (isNumberKey) {
+            const tableNum = e.key === '0' ? 10 : parseInt(e.key, 10);
+            if (tableNum > 0 && tableNum <= tables.length) {
+              handleSelectTable(tableNum);
+            }
+        } else if (e.key.startsWith('Arrow')) {
+            const tableGrid = document.getElementById('table-grid-container')?.querySelector('.grid');
+            if (!tableGrid || selectedTableId === null) return;
+
+            const gridStyle = window.getComputedStyle(tableGrid);
+            const gridTemplateColumns = gridStyle.getPropertyValue('grid-template-columns');
+            const numColumns = gridTemplateColumns.split(' ').length;
+            
+            const sortedTables = [...tables].sort((a,b) => a.id - b.id);
+            const currentIndex = sortedTables.findIndex(t => t.id === selectedTableId);
+            if (currentIndex === -1) return;
+
+            let nextIndex = -1;
+
+            switch (e.key) {
+                case 'ArrowLeft':
+                    if (currentIndex > 0) nextIndex = currentIndex - 1;
+                    break;
+                case 'ArrowRight':
+                    if (currentIndex < sortedTables.length - 1) nextIndex = currentIndex + 1;
+                    break;
+                case 'ArrowUp':
+                    if (currentIndex >= numColumns) nextIndex = currentIndex - numColumns;
+                    break;
+                case 'ArrowDown':
+                    if (currentIndex < sortedTables.length - numColumns) nextIndex = currentIndex + numColumns;
+                    break;
+            }
+
+            if (nextIndex !== -1 && nextIndex < sortedTables.length) {
+                const nextTableId = sortedTables[nextIndex].id;
+                handleSelectTable(nextTableId);
+            }
         }
       } else if (e.key === 'Enter') {
         e.preventDefault();
@@ -1418,6 +1454,7 @@ export default function PosSystem({
     </div>
   );
 }
+
 
 
 
