@@ -743,59 +743,6 @@ export default function ExpensesTracker({ expenses, customerCreditLimit, vendorC
 
       <Separator />
 
-       <Card>
-          <CardHeader>
-              <CardTitle>Add New Expense</CardTitle>
-              <CardDescription>Record a new business expense.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
-                <div className="space-y-2 lg:col-span-1">
-                    <Label>Date</Label>
-                    <Popover>
-                        <PopoverTrigger asChild>
-                            <Button variant={"outline"} className="w-full justify-start text-left font-normal">
-                                <CalendarIcon className="mr-2 h-4 w-4" />
-                                {date ? format(date, "PPP") : <span>Pick a date</span>}
-                            </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={date} onSelect={setDate} initialFocus /></PopoverContent>
-                    </Popover>
-                </div>
-                <div className="space-y-2">
-                    <Label htmlFor="vendor">Vendor</Label>
-                    <Select onValueChange={(value) => setVendorId(value === 'none' ? undefined : value)} value={vendorId || 'none'}>
-                      <SelectTrigger id="vendor"><SelectValue placeholder="None" /></SelectTrigger>
-                      <SelectContent>
-                          <SelectItem value="none">None</SelectItem>
-                          {vendors.map(v => <SelectItem key={v.id} value={v.id}>{v.name}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                </div>
-                <div className="space-y-2">
-                    <Label>Vendor Category</Label>
-                    <Input value={expenseCategory} readOnly className="bg-muted" />
-                </div>
-                <div className="space-y-2">
-                    <Label htmlFor="description">Description (Optional)</Label>
-                    <Input id="description" placeholder="e.g., Weekly vegetable purchase" value={description} onChange={e => setDescription(e.target.value)} />
-                </div>
-                <div className="space-y-2">
-                    <Label htmlFor="amount">Amount (Rs.)</Label>
-                    <Input id="amount" type="number" placeholder="e.g., 5000" value={amount} onChange={e => setAmount(e.target.value)} />
-                </div>
-            </div>
-            <div className="flex justify-end gap-2 pt-4">
-                {editingExpense && <Button variant="outline" onClick={resetForm}><Repeat className="mr-2 h-4 w-4" />Cancel Edit</Button>}
-                <Button onClick={handleSaveExpense}><PlusCircle className="mr-2 h-4 w-4" /> {editingExpense ? 'Update Expense' : 'Save Expense'}</Button>
-                <Button variant="secondary" onClick={() => openAddVendorDialog(null)}><Building className="mr-2 h-4 w-4" /> Add Vendor</Button>
-                <Button variant="secondary" onClick={() => setIsVendorManageDialogOpen(true)}><List className="mr-2 h-4 w-4" /> Show Vendors</Button>
-            </div>
-          </CardContent>
-      </Card>
-      
-      <Separator />
-
       <Card>
         <CardHeader>
           <CardTitle>Expense History</CardTitle>
@@ -852,6 +799,59 @@ export default function ExpensesTracker({ expenses, customerCreditLimit, vendorC
         </CardContent>
       </Card>
       
+      <Separator />
+
+       <Card>
+          <CardHeader>
+              <CardTitle>Add New Expense</CardTitle>
+              <CardDescription>Record a new business expense.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
+                <div className="space-y-2 lg:col-span-1">
+                    <Label>Date</Label>
+                    <Popover>
+                        <PopoverTrigger asChild>
+                            <Button variant={"outline"} className="w-full justify-start text-left font-normal">
+                                <CalendarIcon className="mr-2 h-4 w-4" />
+                                {date ? format(date, "PPP") : <span>Pick a date</span>}
+                            </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={date} onSelect={setDate} initialFocus /></PopoverContent>
+                    </Popover>
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="vendor">Vendor</Label>
+                    <Select onValueChange={(value) => setVendorId(value === 'none' ? undefined : value)} value={vendorId || 'none'}>
+                      <SelectTrigger id="vendor"><SelectValue placeholder="None" /></SelectTrigger>
+                      <SelectContent>
+                          <SelectItem value="none">None</SelectItem>
+                          {vendors.map(v => <SelectItem key={v.id} value={v.id}>{v.name}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                </div>
+                <div className="space-y-2">
+                    <Label>Vendor Category</Label>
+                    <Input value={expenseCategory} readOnly className="bg-muted" />
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="description">Description (Optional)</Label>
+                    <Input id="description" placeholder="e.g., Weekly vegetable purchase" value={description} onChange={e => setDescription(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="amount">Amount (Rs.)</Label>
+                    <Input id="amount" type="number" placeholder="e.g., 5000" value={amount} onChange={e => setAmount(e.target.value)} />
+                </div>
+            </div>
+            <div className="flex justify-end gap-2 pt-4">
+                {editingExpense && <Button variant="outline" onClick={resetForm}><Repeat className="mr-2 h-4 w-4" />Cancel Edit</Button>}
+                <Button onClick={handleSaveExpense}><PlusCircle className="mr-2 h-4 w-4" /> {editingExpense ? 'Update Expense' : 'Save Expense'}</Button>
+                <Button variant="secondary" onClick={() => openAddVendorDialog(null)}><Building className="mr-2 h-4 w-4" /> Add Vendor</Button>
+                <Button variant="secondary" onClick={() => setIsVendorManageDialogOpen(true)}><List className="mr-2 h-4 w-4" /> Show Vendors</Button>
+            </div>
+          </CardContent>
+      </Card>
+
        <AddOrEditVendorDialog open={isVendorAddDialogOpen} onOpenChange={setIsVendorAddDialogOpen} onSave={handleSaveVendor} existingVendor={editingVendor}/>
        <ManageVendorsDialog open={isVendorManageDialogOpen} onOpenChange={setIsVendorManageDialogOpen} vendors={vendors} onEditVendor={(v) => { setIsVendorManageDialogOpen(false); setTimeout(() => openAddVendorDialog(v), 150)}} onDeleteVendor={handleDeleteVendor}/>
     </div>
