@@ -483,8 +483,8 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
         </CardContent>
       </Card>
       
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 mt-6">
-        <Card className="lg:col-span-4">
+      <div className="grid grid-cols-1 lg:grid-cols-10 gap-6 mt-6">
+        <Card className="lg:col-span-7">
             <CardHeader>
                 <CardTitle>Table Performance (Today)</CardTitle>
                 <CardDescription>Review daily turnover and revenue for each table.</CardDescription>
@@ -518,7 +518,7 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
                 </div>
             </CardContent>
         </Card>
-        <Card className="lg:col-span-1">
+        <Card className="lg:col-span-3">
           <CardHeader>
             <CardTitle className="flex items-center gap-2"><BookMarked /> Reserve a Table</CardTitle>
             <CardDescription>Book a table for a future date or time.</CardDescription>
