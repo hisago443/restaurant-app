@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { collection, addDoc, doc, updateDoc, deleteDoc, onSnapshot, serverTimestamp, writeBatch, getDocs, query, where, documentId, setDoc } from 'firebase/firestore';
+import { collection, addDoc, doc, updateDoc, deleteDoc, onSnapshot, serverTimestamp, writeBatch, getDocs, query, where, documentId, setDoc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 import {
