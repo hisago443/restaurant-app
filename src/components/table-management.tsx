@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import * as React from 'react';
@@ -68,6 +67,7 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
   const [isBillHistoryDialogOpen, setIsBillHistoryDialogOpen] = useState(false);
   const [billsForDialog, setBillsForDialog] = useState<Bill[]>([]);
   const { toast } = useToast();
+  const [reservedTableAction, setReservedTableAction] = useState<TableType | null>(null);
 
   const [reservationName, setReservationName] = useState('');
   const [reservationMobile, setReservationMobile] = useState('');
@@ -110,8 +110,10 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
             description: 'Please process the payment for this table first.',
             variant: 'default',
         });
+    } else if (table.status === 'Reserved') {
+        setReservedTableAction(table);
     } else {
-        // For 'Cleaning' or 'Reserved', clicking could make it available
+        // For 'Cleaning'
         updateTableStatus([table.id], 'Available', undefined);
     }
   };
@@ -340,7 +342,7 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
                 onClick={() => handleTableClick(table)}
                 onDoubleClick={() => handleDoubleClick(table)}
               >
-                <div className="absolute top-1 left-1">
+                <div className="absolute top-1 left-1 flex flex-col gap-1">
                     {table.status === 'Occupied' && (
                         <Button
                             variant="secondary"
@@ -351,6 +353,16 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
                             <Printer className="h-4 w-4 text-black" />
                         </Button>
                     )}
+                     {table.status === 'Reserved' && (
+                        <>
+                          <Button variant="secondary" size="icon" className="h-7 w-7 bg-green-500 hover:bg-green-600" onClick={(e) => { e.stopPropagation(); updateTableStatus([table.id], 'Occupied'); }}>
+                            <UserCheck className="h-4 w-4 text-white" />
+                          </Button>
+                           <Button variant="secondary" size="icon" className="h-7 w-7 bg-red-500 hover:bg-red-600" onClick={(e) => { e.stopPropagation(); updateTableStatus([table.id], 'Available', undefined); }}>
+                            <BookmarkX className="h-4 w-4 text-white" />
+                          </Button>
+                        </>
+                    )}
                 </div>
                   {showOccupancy && turnover > 0 &&
                     <div className="absolute bottom-1 left-1 flex items-center gap-1 bg-black/50 text-white text-xs font-bold p-1 rounded-md">
@@ -358,7 +370,7 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
                         <span>{turnover}</span>
                     </div>
                 }
-                <div className={cn("absolute top-1 right-1 transition-opacity", selectedTables.length > 0 ? "opacity-100" : "opacity-0 group-hover:opacity-100")}>
+                <div className={cn("absolute top-1 right-1 transition-opacity", selectedTables.length > 0 || table.status === 'Reserved' ? "opacity-100" : "opacity-0 group-hover:opacity-100")}>
                   <Checkbox 
                     className="bg-white/50 border-gray-500 data-[state=checked]:bg-primary"
                     checked={selectedTables.includes(table.id)}
@@ -606,7 +618,48 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
           </pre>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={!!reservedTableAction} onOpenChange={() => setReservedTableAction(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Reservation for Table {reservedTableAction?.id}</AlertDialogTitle>
+            <AlertDialogDescription>
+              Guest: {reservedTableAction?.reservationDetails?.name || 'N/A'} at {reservedTableAction?.reservationDetails?.time || 'N/A'}.
+              <br/>
+              What would you like to do?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Close</AlertDialogCancel>
+             <Button
+              variant="destructive"
+              onClick={() => {
+                if(reservedTableAction) {
+                  updateTableStatus([reservedTableAction.id], 'Available', undefined);
+                  setReservedTableAction(null);
+                }
+              }}
+            >
+              <BookmarkX className="mr-2 h-4 w-4" />
+              Cancel Reservation
+            </Button>
+            <AlertDialogAction
+              onClick={() => {
+                if (reservedTableAction) {
+                  updateTableStatus([reservedTableAction.id], 'Occupied');
+                  setReservedTableAction(null);
+                }
+              }}
+            >
+              <UserCheck className="mr-2 h-4 w-4" />
+              Guest Has Arrived
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
     </div>
   );
 }
 
+    
