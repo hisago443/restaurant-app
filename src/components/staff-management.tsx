@@ -572,13 +572,18 @@ function AddOrEditAdvanceDialog({
   const [employeeId, setEmployeeId] = useState('');
   const [amount, setAmount] = useState('');
   
+  const selectedEmployee = useMemo(() => employees.find(e => e.id === employeeId), [employees, employeeId]);
+  const isEditingFromAttendance = !!(existingAdvance && !existingAdvance.id);
+
   useEffect(() => {
-    if (existingAdvance) {
-      setEmployeeId(existingAdvance.employeeId);
-      setAmount(String(existingAdvance.amount || ''));
-    } else {
-      setEmployeeId('');
-      setAmount('');
+    if (open) {
+      if (existingAdvance) {
+        setEmployeeId(existingAdvance.employeeId);
+        setAmount(String(existingAdvance.amount || ''));
+      } else {
+        setEmployeeId('');
+        setAmount('');
+      }
     }
   }, [existingAdvance, open]);
 
@@ -604,23 +609,33 @@ function AddOrEditAdvanceDialog({
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
-          <div className="space-y-2">
-            <Label>Employee</Label>
-            <div className="grid grid-cols-3 gap-2">
-                {employees.map(e => (
-                    <Button 
-                        key={e.id}
-                        variant={employeeId === e.id ? 'default' : 'outline'}
-                        onClick={() => setEmployeeId(e.id)}
-                        disabled={!!existingAdvance?.amount}
-                        className="flex items-center justify-start gap-2"
-                    >
-                        <span className={cn("h-2 w-2 rounded-full", e.color)} />
-                        {e.name}
-                    </Button>
-                ))}
+          {isEditingFromAttendance && selectedEmployee ? (
+            <div className="space-y-2">
+                <Label>Employee</Label>
+                <div className="p-2 border rounded-md bg-muted flex items-center gap-2">
+                    <span className={cn("h-2 w-2 rounded-full", selectedEmployee.color)} />
+                    <span className="font-medium">{selectedEmployee.name}</span>
+                </div>
             </div>
-          </div>
+          ) : (
+            <div className="space-y-2">
+                <Label>Employee</Label>
+                <div className="grid grid-cols-3 gap-2">
+                    {employees.map(e => (
+                        <Button 
+                            key={e.id}
+                            variant={employeeId === e.id ? 'default' : 'outline'}
+                            onClick={() => setEmployeeId(e.id)}
+                            disabled={!!existingAdvance?.amount}
+                            className="flex items-center justify-start gap-2"
+                        >
+                            <span className={cn("h-2 w-2 rounded-full", e.color)} />
+                            {e.name}
+                        </Button>
+                    ))}
+                </div>
+            </div>
+          )}
           <div className="space-y-2">
             <Label htmlFor="amount">Amount (Rs.)</Label>
             <Input id="amount" type="number" placeholder="e.g., 2000" value={amount} onChange={e => setAmount(e.target.value)} />
@@ -845,6 +860,8 @@ function EmployeeSummaryDialog({ open, onOpenChange, employee, attendance, advan
     )
 }
 
+
+    
 
     
 
