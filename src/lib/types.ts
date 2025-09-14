@@ -30,6 +30,16 @@ export interface OrderItem extends MenuItem {
 
 export type TableStatus = 'Available' | 'Occupied' | 'Reserved' | 'Cleaning';
 
+export interface HomeDeliveryDetails {
+    name: string;
+    mobile: string;
+    houseNo?: string;
+    street?: string;
+    landmark?: string;
+    pincode: string;
+    additionalInfo?: string;
+}
+
 export interface Table {
   id: number;
   status: TableStatus;
@@ -43,8 +53,9 @@ export interface Table {
 export interface Order {
   id: string;
   items: OrderItem[];
-  tableId: number;
+  tableId: number; // For Dine-in, 0 for Takeaway, -1 for Home Delivery
   status: 'Pending' | 'In Preparation' | 'Completed';
+  deliveryDetails?: HomeDeliveryDetails;
 }
 
 export interface Bill {
@@ -54,6 +65,7 @@ export interface Bill {
   total: number;
   receiptPreview: string;
   timestamp: Date;
+  deliveryDetails?: HomeDeliveryDetails;
 }
 
 
