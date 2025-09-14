@@ -351,9 +351,9 @@ function OrderPanel({
                     <div className="flex-1 grid grid-cols-3 gap-2 min-w-[280px]">
                         <Button variant={orderType === 'Dine-In' ? 'default' : 'outline'} onClick={() => setOrderType('Dine-In')} className="h-12 text-base"><Users className="mr-2 h-5 w-5"/>Dine-In</Button>
                         <Button variant={orderType === 'Takeaway' ? 'default' : 'outline'} onClick={() => setOrderType('Takeaway')} className="h-12 text-base"><ShoppingBag className="mr-2 h-5 w-5"/>Takeaway</Button>
-                        <Button variant={orderType === 'Home Delivery' ? 'default' : 'outline'} onClick={() => setOrderType('Home Delivery')} className="h-12 text-base flex-col sm:flex-row leading-tight py-1">
-                            <Bike className="mr-0 sm:mr-2 h-5 w-5"/>
-                            <span>Home<br className="sm:hidden"/> Delivery</span>
+                        <Button variant={orderType === 'Home Delivery' ? 'default' : 'outline'} onClick={() => setOrderType('Home Delivery')} className="h-12 text-base px-2">
+                            <Bike className="mr-2 h-5 w-5"/>
+                            Home Delivery
                         </Button>
                     </div>
                 </div>
@@ -457,7 +457,7 @@ function ItemStatusDialog({
             {topSellingItems.length > 0 ? (
               <ul className="space-y-2">
                 {topSellingItems.map((item, index) => (
-                  <li key={item.name} className="flex justify-between items-center p-2 bg-muted/50 rounded-md">
+                  <li key={item.name} className="flex justify-between items-center p-2 rounded-md">
                     <span className="font-medium">{index + 1}. {item.name}</span>
                     <span className="font-bold">{item.count} sold</span>
                   </li>
@@ -471,7 +471,7 @@ function ItemStatusDialog({
             {lowStockItems.length > 0 ? (
               <ul className="space-y-2">
                 {lowStockItems.map(item => (
-                  <li key={item.name} className="p-2 bg-muted/50 rounded-md font-medium">
+                  <li key={item.name} className="p-2 rounded-md font-medium">
                     {item.name}
                   </li>
                 ))}
@@ -484,7 +484,7 @@ function ItemStatusDialog({
             {outOfStockItems.length > 0 ? (
               <ul className="space-y-2">
                 {outOfStockItems.map(item => (
-                  <li key={item.name} className="p-2 bg-muted/50 rounded-md font-medium">
+                  <li key={item.name} className="p-2 rounded-md font-medium">
                     {item.name}
                   </li>
                 ))}
@@ -1824,6 +1824,7 @@ export default function PosSystem({
 
 
     
+
 
 
 
