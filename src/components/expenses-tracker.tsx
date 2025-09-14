@@ -344,6 +344,7 @@ function PendingBillsCard({
   onClearAll,
   onSettleTransaction,
   totalLimit,
+  allNames = [],
 }: {
   title: string;
   icon: React.ElementType;
@@ -353,6 +354,7 @@ function PendingBillsCard({
   onClearAll: (billId: string) => void;
   onSettleTransaction: (billId: string, transactionId: string, amount: number) => void;
   totalLimit: number;
+  allNames?: string[];
 }) {
   const [isAddBillOpen, setIsAddBillOpen] = useState(false);
   
@@ -361,6 +363,12 @@ function PendingBillsCard({
   }, 0), [bills]);
   
   const totalProgress = totalLimit > 0 ? (totalPending / totalLimit) * 100 : 0;
+  
+  const existingNames = useMemo(() => {
+    const billNames = new Set(bills.map(b => b.name));
+    allNames.forEach(name => billNames.add(name));
+    return Array.from(billNames);
+  }, [bills, allNames]);
 
   return (
     <Card>
@@ -453,7 +461,7 @@ function PendingBillsCard({
             open={isAddBillOpen}
             onOpenChange={setIsAddBillOpen}
             onSave={onAddTransaction}
-            existingNames={[...new Set(bills.map(b => b.name))]}
+            existingNames={existingNames}
             type={type}
         />
       </CardContent>
@@ -729,6 +737,7 @@ export default function ExpensesTracker({ expenses, customerCreditLimit, vendorC
           onClearAll={(billId) => handleClearAllPendingBillsForPerson(billId)}
           onSettleTransaction={(billId, txId, amount) => handleSettleTransaction(billId, txId, amount)}
           totalLimit={vendorCreditLimit}
+          allNames={vendors.map(v => v.name)}
         />
       </div>
 
@@ -848,5 +857,7 @@ export default function ExpensesTracker({ expenses, customerCreditLimit, vendorC
     </div>
   );
 }
+
+    
 
     
