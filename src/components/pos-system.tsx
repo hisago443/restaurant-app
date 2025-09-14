@@ -36,12 +36,12 @@ const vegColor = 'bg-green-100 dark:bg-green-900/30';
 const nonVegColor = 'bg-rose-100 dark:bg-rose-900/30';
 
 const colorPalette: Record<string, {light: string, dark: string}> = {
-    amber: { light: 'bg-amber-100 dark:bg-amber-900/50', dark: 'bg-amber-200 dark:bg-amber-900/50' },
-    lime: { light: 'bg-lime-100 dark:bg-lime-900/50', dark: 'bg-lime-200 dark:bg-lime-900/50' },
-    purple: { light: 'bg-purple-100 dark:bg-purple-900/50', dark: 'bg-purple-200 dark:bg-purple-900/50' },
-    teal: { light: 'bg-teal-100 dark:bg-teal-900/50', dark: 'bg-teal-200 dark:bg-teal-900/50' },
-    orange: { light: 'bg-orange-100 dark:bg-orange-900/50', dark: 'bg-orange-200 dark:bg-orange-900/50' },
-    cyan: { light: 'bg-cyan-100 dark:bg-cyan-900/50', dark: 'bg-cyan-200 dark:bg-cyan-900/50' },
+    amber: { light: 'bg-amber-100 dark:bg-amber-900/50', dark: 'bg-amber-200 dark:bg-amber-800/50' },
+    lime: { light: 'bg-lime-100 dark:bg-lime-900/50', dark: 'bg-lime-200 dark:bg-lime-800/50' },
+    purple: { light: 'bg-purple-100 dark:bg-purple-900/50', dark: 'bg-purple-200 dark:bg-purple-800/50' },
+    teal: { light: 'bg-teal-100 dark:bg-teal-900/50', dark: 'bg-teal-200 dark:bg-teal-800/50' },
+    orange: { light: 'bg-orange-100 dark:bg-orange-900/50', dark: 'bg-orange-200 dark:bg-orange-800/50' },
+    cyan: { light: 'bg-cyan-100 dark:bg-cyan-900/50', dark: 'bg-cyan-200 dark:bg-cyan-800/50' },
 };
 const colorNames = Object.keys(colorPalette);
 
@@ -347,11 +347,14 @@ function OrderPanel({
             
             <div id="table-grid-container" className="p-4 border-t space-y-4">
                <div className="flex items-center gap-2 flex-wrap">
-                    <Label className="font-semibold text-sm shrink-0">Order Type:</Label>
+                    <Label className="font-semibold text-sm shrink-0 whitespace-nowrap">Order Type:</Label>
                     <div className="flex-1 grid grid-cols-3 gap-2 min-w-[280px]">
                         <Button variant={orderType === 'Dine-In' ? 'default' : 'outline'} onClick={() => setOrderType('Dine-In')} className="h-12 text-base"><Users className="mr-2 h-5 w-5"/>Dine-In</Button>
                         <Button variant={orderType === 'Takeaway' ? 'default' : 'outline'} onClick={() => setOrderType('Takeaway')} className="h-12 text-base"><ShoppingBag className="mr-2 h-5 w-5"/>Takeaway</Button>
-                        <Button variant={orderType === 'Home Delivery' ? 'default' : 'outline'} onClick={() => setOrderType('Home Delivery')} className="h-12 text-base"><Bike className="mr-2 h-5 w-5"/>Home Delivery</Button>
+                        <Button variant={orderType === 'Home Delivery' ? 'default' : 'outline'} onClick={() => setOrderType('Home Delivery')} className="h-12 text-base flex-col sm:flex-row leading-tight py-1">
+                            <Bike className="mr-0 sm:mr-2 h-5 w-5"/>
+                            <span>Home<br className="sm:hidden"/> Delivery</span>
+                        </Button>
                     </div>
                 </div>
               {orderType === 'Dine-In' && children}
@@ -446,15 +449,15 @@ function ItemStatusDialog({
         </DialogHeader>
         <Tabs defaultValue="top-selling" className="w-full">
           <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="top-selling">Top Selling</TabsTrigger>
-            <TabsTrigger value="low-stock">Running Low</TabsTrigger>
-            <TabsTrigger value="out-of-stock">Out of Stock</TabsTrigger>
+            <TabsTrigger value="top-selling" className="data-[state=active]:bg-green-500 data-[state=active]:text-white">Top Selling</TabsTrigger>
+            <TabsTrigger value="low-stock" className="data-[state=active]:bg-yellow-500 data-[state=active]:text-black">Running Low</TabsTrigger>
+            <TabsTrigger value="out-of-stock" className="data-[state=active]:bg-red-500 data-[state=active]:text-white">Out of Stock</TabsTrigger>
           </TabsList>
           <TabsContent value="top-selling" className="mt-4 max-h-80 overflow-y-auto">
             {topSellingItems.length > 0 ? (
               <ul className="space-y-2">
                 {topSellingItems.map((item, index) => (
-                  <li key={item.name} className="flex justify-between items-center p-2 bg-green-100 dark:bg-green-900/30 rounded-md">
+                  <li key={item.name} className="flex justify-between items-center p-2 bg-muted/50 rounded-md">
                     <span className="font-medium">{index + 1}. {item.name}</span>
                     <span className="font-bold">{item.count} sold</span>
                   </li>
@@ -468,7 +471,7 @@ function ItemStatusDialog({
             {lowStockItems.length > 0 ? (
               <ul className="space-y-2">
                 {lowStockItems.map(item => (
-                  <li key={item.name} className="p-2 bg-yellow-100 dark:bg-yellow-900/30 rounded-md font-medium text-yellow-800 dark:text-yellow-200">
+                  <li key={item.name} className="p-2 bg-muted/50 rounded-md font-medium">
                     {item.name}
                   </li>
                 ))}
@@ -481,7 +484,7 @@ function ItemStatusDialog({
             {outOfStockItems.length > 0 ? (
               <ul className="space-y-2">
                 {outOfStockItems.map(item => (
-                  <li key={item.name} className="p-2 bg-red-100 dark:bg-red-900/30 rounded-md font-medium text-red-800 dark:text-red-200">
+                  <li key={item.name} className="p-2 bg-muted/50 rounded-md font-medium">
                     {item.name}
                   </li>
                 ))}
@@ -633,6 +636,61 @@ export default function PosSystem({
     [typedMenuData]
   );
   
+  const getLocalReceipt = useCallback(() => {
+    if (orderItems.length === 0) return '';
+  
+    const pad = (str: string, len: number, char = ' ') => str.padEnd(len, char);
+    const subtotal = orderItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
+    const total = subtotal * (1 - discount / 100);
+    const money = (val: number) => `₹${val.toFixed(2)}`;
+  
+    let receiptLines = [];
+    receiptLines.push('*************************');
+    receiptLines.push('    Up & Above Cafe    ');
+    receiptLines.push('*************************');
+    receiptLines.push('');
+    
+    if (orderType === 'Home Delivery') {
+      receiptLines.push('--- HOME DELIVERY ---');
+      receiptLines.push(`To: ${homeDeliveryDetails.name}`);
+      receiptLines.push(`Contact: ${homeDeliveryDetails.mobile}`);
+      let address = `${homeDeliveryDetails.houseNo || ''} ${homeDeliveryDetails.street || ''}`;
+      if (address.trim()) receiptLines.push(`Address: ${address.trim()}`);
+      if (homeDeliveryDetails.pincode) receiptLines.push(`Pincode: ${homeDeliveryDetails.pincode}`);
+      if (homeDeliveryDetails.landmark) receiptLines.push(`Landmark: ${homeDeliveryDetails.landmark}`);
+      receiptLines.push('-------------------------');
+    } else if (orderType === 'Takeaway') {
+      receiptLines.push('--- TAKEAWAY ORDER ---');
+      receiptLines.push('-------------------------');
+    }
+    
+    receiptLines.push('');
+    receiptLines.push('Order Details:');
+    orderItems.forEach((item, index) => {
+      const lineTotal = item.price * item.quantity;
+      const qtyName = `${item.quantity} x ${item.name}`;
+      const priceStr = money(lineTotal);
+      const line = `${pad(`${index + 1}. ${qtyName}`, 25)} ${priceStr.padStart(10)}`;
+      receiptLines.push(line);
+    });
+    receiptLines.push('');
+    receiptLines.push('-------------------------');
+    receiptLines.push(`${pad('Subtotal:', 25)} ${money(subtotal).padStart(10)}`);
+  
+    if (discount > 0) {
+      const discountAmount = subtotal * (discount / 100);
+      receiptLines.push(`${pad(`Discount (${discount}%):`, 25)} ${money(-discountAmount).padStart(10)}`);
+      receiptLines.push('-------------------------');
+    }
+  
+    receiptLines.push(`${pad('Total:', 25)} ${`Rs. ${total.toFixed(2)}`.padStart(10)}`);
+    receiptLines.push('');
+    receiptLines.push('   Thank you for dining!   ');
+    receiptLines.push('*************************');
+  
+    return receiptLines.join('\n');
+  }, [orderItems, discount, orderType, homeDeliveryDetails]);
+
   const filteredMenu = useMemo(() => {
     let menuToFilter = typedMenuData;
 
@@ -714,60 +772,6 @@ export default function PosSystem({
     setIsEasyModeAlertOpen(false);
   };
   
-  const getLocalReceipt = useCallback(() => {
-    if (orderItems.length === 0) return '';
-  
-    const pad = (str: string, len: number, char = ' ') => str.padEnd(len, char);
-    const subtotal = orderItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
-    const total = subtotal * (1 - discount / 100);
-    const money = (val: number) => `₹${val.toFixed(2)}`;
-  
-    let receiptLines = [];
-    receiptLines.push('*************************');
-    receiptLines.push('    Up & Above Cafe    ');
-    receiptLines.push('*************************');
-    receiptLines.push('');
-    
-    if (orderType === 'Home Delivery') {
-      receiptLines.push('--- HOME DELIVERY ---');
-      receiptLines.push(`To: ${homeDeliveryDetails.name}`);
-      receiptLines.push(`Contact: ${homeDeliveryDetails.mobile}`);
-      let address = `${homeDeliveryDetails.houseNo || ''} ${homeDeliveryDetails.street || ''}`;
-      if (address.trim()) receiptLines.push(`Address: ${address.trim()}`);
-      if (homeDeliveryDetails.pincode) receiptLines.push(`Pincode: ${homeDeliveryDetails.pincode}`);
-      if (homeDeliveryDetails.landmark) receiptLines.push(`Landmark: ${homeDeliveryDetails.landmark}`);
-      receiptLines.push('-------------------------');
-    } else if (orderType === 'Takeaway') {
-      receiptLines.push('--- TAKEAWAY ORDER ---');
-      receiptLines.push('-------------------------');
-    }
-    
-    receiptLines.push('');
-    receiptLines.push('Order Details:');
-    orderItems.forEach((item, index) => {
-      const lineTotal = item.price * item.quantity;
-      const qtyName = `${item.quantity} x ${item.name}`;
-      const priceStr = money(lineTotal);
-      const line = `${pad(`${index + 1}. ${qtyName}`, 25)} ${priceStr.padStart(10)}`;
-      receiptLines.push(line);
-    });
-    receiptLines.push('');
-    receiptLines.push('-------------------------');
-    receiptLines.push(`${pad('Subtotal:', 25)} ${money(subtotal).padStart(10)}`);
-  
-    if (discount > 0) {
-      const discountAmount = subtotal * (discount / 100);
-      receiptLines.push(`${pad(`Discount (${discount}%):`, 25)} ${money(-discountAmount).padStart(10)}`);
-      receiptLines.push('-------------------------');
-    }
-  
-    receiptLines.push(`${pad('Total:', 25)} ${`Rs. ${total.toFixed(2)}`.padStart(10)}`);
-    receiptLines.push('');
-    receiptLines.push('   Thank you for dining!   ');
-    receiptLines.push('*************************');
-  
-    return receiptLines.join('\n');
-  }, [orderItems, discount, orderType, homeDeliveryDetails]);
 
 
   useEffect(() => {
@@ -1820,6 +1824,7 @@ export default function PosSystem({
 
 
     
+
 
 
 
