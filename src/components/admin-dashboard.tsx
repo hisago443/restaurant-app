@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useState, useEffect, useMemo } from 'react';
@@ -575,7 +576,7 @@ export default function AdminDashboard({
                       <Label htmlFor="auto-daily">Auto-send Daily Report</Label>
                     </div>
                      <div className="flex items-center space-x-2">
-                      <Switch id="auto-monthly" checked={autoSendMonthly} onCheckedChange={setAutosendMonthly} />
+                      <Switch id="auto-monthly" checked={autoSendMonthly} onCheckedChange={setAutoSendMonthly} />
                       <Label htmlFor="auto-monthly">Auto-send Monthly Report</Label>
                     </div>
                   </div>
@@ -835,3 +836,4 @@ function EmployeeDialog({ open, onOpenChange, employee, onSave }: { open: boolea
     
 
     
+
