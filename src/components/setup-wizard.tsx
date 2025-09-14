@@ -12,7 +12,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Checkbox } from '@/components/ui/checkbox';
 import { format } from 'date-fns';
 import { CalendarIcon, PlusCircle, Trash2, ArrowLeft, ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -45,7 +44,6 @@ const colors = ['bg-blue-500', 'bg-green-500', 'bg-yellow-500', 'bg-purple-500',
 export default function SetupWizard({ onComplete }: SetupWizardProps) {
   const { toast } = useToast();
   const [currentStep, setCurrentStep] = useState(1);
-  const [dontShowAgain, setDontShowAgain] = useState(false);
 
   // Form State
   const [venueName, setVenueName] = useState('');
@@ -105,13 +103,6 @@ export default function SetupWizard({ onComplete }: SetupWizardProps) {
   };
   
   const handleSkip = () => {
-    if (dontShowAgain) {
-      try {
-        localStorage.setItem('setupComplete', 'true');
-      } catch (e) {
-        console.error("Could not access localStorage", e);
-      }
-    }
     onComplete();
   };
 
@@ -162,12 +153,10 @@ export default function SetupWizard({ onComplete }: SetupWizardProps) {
 
       toast({ title: "Setup Complete!", description: "Your business details have been saved." });
       
-      if (dontShowAgain) {
-        try {
-          localStorage.setItem('setupComplete', 'true');
-        } catch (e) {
-          console.error("Could not access localStorage", e);
-        }
+      try {
+        localStorage.setItem('setupComplete', 'true');
+      } catch (e) {
+        console.error("Could not access localStorage", e);
       }
       onComplete();
 
@@ -358,14 +347,8 @@ export default function SetupWizard({ onComplete }: SetupWizardProps) {
                     </Button>
                 )}
             </div>
-            <div className="flex justify-between items-center w-full mt-4">
+            <div className="flex justify-center w-full mt-4">
                 <Button variant="link" onClick={handleSkip}>Skip for now</Button>
-                <div className="flex items-center space-x-2">
-                    <Checkbox id="dont-show-again" checked={dontShowAgain} onCheckedChange={(checked) => setDontShowAgain(Boolean(checked))} />
-                    <Label htmlFor="dont-show-again" className="text-sm text-muted-foreground">
-                        Don't show this again
-                    </Label>
-                </div>
             </div>
         </CardFooter>
       </Card>
