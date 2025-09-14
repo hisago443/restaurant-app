@@ -267,208 +267,203 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
 
   return (
     <div className="p-4 space-y-6">
-      <div className="grid grid-cols-1 lg:grid-cols-10 gap-6">
-        <div className="lg:col-span-7">
-          <Card>
-            <CardHeader>
-              <div className="flex justify-between items-center gap-4 flex-wrap mb-4">
-                <div>
-                  <CardTitle>Table Management</CardTitle>
-                  <CardDescription>Oversee and manage all tables in your restaurant.</CardDescription>
-                </div>
-                <div className="flex items-center gap-4">
-                  <Button variant="secondary" onClick={() => setIsLayoutManagerOpen(true)}>
-                    <LayoutTemplate className="mr-2 h-4 w-4" /> 
-                    <span>Manage Tables</span>
-                  </Button>
-                  {selectedTables.length > 0 && (
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id="select-all"
-                        onCheckedChange={(checked) => handleSelectAllTables(Boolean(checked))}
-                        checked={selectedTables.length === filteredTables.length && filteredTables.length > 0}
-                        disabled={filteredTables.length === 0}
-                      />
-                      <Label htmlFor="select-all">Select All ({selectedTables.length})</Label>
-                    </div>
-                  )}
-                </div>
-              </div>
-              <div className="flex items-center gap-2 flex-wrap p-4 border-t border-b">
-                  <span className="text-sm font-semibold text-muted-foreground mr-2">{selectedTables.length > 0 ? 'Change selected to:' : 'Filter by:'}</span>
-                  <Button 
-                    variant={filter === 'All' ? 'default' : 'outline'}
-                    onClick={() => handleStatusButtonClick('All')}
-                  >
-                    All ({tables.length})
-                  </Button>
-                  {(Object.keys(statusBaseColors) as TableStatus[]).map(status => {
-                      const Icon = statusIcons[status];
-                      return (
-                        <Button
-                          key={status}
-                          onClick={() => handleStatusButtonClick(status)}
-                          onMouseEnter={() => setHoveredStatus(status)}
-                          onMouseLeave={() => setHoveredStatus(null)}
-                          variant={filter === status ? 'default' : 'outline'}
-                           className={cn(
-                            'transition-all',
-                             filter !== status && getDynamicColor(status),
-                             filter !== status && (status === 'Available' || status === 'Occupied' ? 'text-white' : 'text-black'),
-                          )}
-                        >
-                            <Icon className="mr-2 h-4 w-4" />
-                            {status} ({tables.filter(t => t.status === status).length})
-                        </Button>
-                      );
-                  })}
-              </div>
-            </CardHeader>
-            <CardContent className="pt-6">
-              <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-8 gap-4">
-                {filteredTables.map(table => {
-                  const Icon = statusIcons[table.status];
-                  const turnover = occupancyCount[table.id] || 0;
-                  return (
-                  <div
-                    key={table.id}
-                    className={cn(
-                      'group aspect-square rounded-lg flex flex-col items-center justify-center cursor-pointer transition-all duration-300 shadow-lg hover:shadow-2xl relative border-2 p-1',
-                      getDynamicColor(table.status),
-                      selectedTables.includes(table.id) && 'ring-4 ring-offset-2 ring-primary border-primary',
-                      !selectedTables.includes(table.id) && 'border-black/50',
-                      hoveredStatus === table.status && 'scale-110 z-10'
-                    )}
-                    onClick={() => handleTableClick(table)}
-                    onDoubleClick={() => handleDoubleClick(table)}
-                  >
-                    <div className="absolute top-1 left-1">
-                        {table.status === 'Occupied' && (
-                            <Button
-                                variant="secondary"
-                                size="icon"
-                                className="h-7 w-7 bg-white/30 hover:bg-white/50"
-                                onClick={(e) => handleOpenPrintDialog(e, table)}
-                            >
-                                <Printer className="h-4 w-4 text-black" />
-                            </Button>
-                        )}
-                    </div>
-                     {showOccupancy && turnover > 0 &&
-                        <div className="absolute bottom-1 left-1 flex items-center gap-1 bg-black/50 text-white text-xs font-bold p-1 rounded-md">
-                            <Repeat className="h-3 w-3" />
-                            <span>{turnover}</span>
-                        </div>
-                    }
-                    <div className={cn("absolute top-1 right-1 transition-opacity", selectedTables.length > 0 ? "opacity-100" : "opacity-0 group-hover:opacity-100")}>
-                      <Checkbox 
-                        className="bg-white/50 border-gray-500 data-[state=checked]:bg-primary"
-                        checked={selectedTables.includes(table.id)}
-                        onCheckedChange={(checked) => handleCheckboxChange(table.id, Boolean(checked))}
-                        onClick={(e) => e.stopPropagation()}
-                      />
-                    </div>
-                    <div className="text-center">
-                        <span className={cn("text-6xl font-bold", table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black')}>{table.id}</span>
-                        <div className="flex items-center justify-center gap-1">
-                          {React.createElement(Icon, { className: cn("h-4 w-4", table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black') })}
-                          <span className={cn("text-base font-semibold leading-tight", table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black')}>{table.status}</span>
-                        </div>
-                        {table.status === 'Reserved' && table.reservationDetails && (
-                          <div className="text-xs text-black font-bold mt-1 max-w-full truncate">
-                            for {table.reservationDetails.name} at {table.reservationDetails.time}
-                          </div>
-                        )}
-                    </div>
-                  </div>
-                )})}
-                 {filteredTables.length === 0 && (
-                  <div className="col-span-full text-center text-muted-foreground py-16">
-                    No tables with status "{filter}".
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-         <div className="lg:col-span-3">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2"><BookMarked /> Reserve a Table</CardTitle>
-              <CardDescription>Book a table for a future date or time.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="guest-name">Guest Name</Label>
-                <Input id="guest-name" placeholder="John Doe" value={reservationName} onChange={(e) => setReservationName(e.target.value)} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="guest-mobile">Mobile No. (Optional)</Label>
-                <Input id="guest-mobile" placeholder="9876543210" value={reservationMobile} onChange={(e) => setReservationMobile(e.target.value)} />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="arrival-time">Time of Arrival</Label>
-                  <Input id="arrival-time" type="time" value={reservationTime} onChange={(e) => setReservationTime(e.target.value)} />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="table-no">Table No.</Label>
-                  <Select value={reservationTableId} onValueChange={setReservationTableId}>
-                    <SelectTrigger id="table-no">
-                      <SelectValue placeholder="Select Table" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {availableTables.map(table => (
-                        <SelectItem key={table.id} value={String(table.id)}>
-                          Table {table.id}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <Button className="w-full" onClick={handleReserveTable}>Reserve Table</Button>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-
-
-      <Card className="mt-6">
+      <Card>
         <CardHeader>
-            <CardTitle>Table Performance (Today)</CardTitle>
-            <CardDescription>Review daily turnover and revenue for each table.</CardDescription>
-        </CardHeader>
-        <CardContent>
-            <div className="max-h-[60vh] overflow-y-auto">
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Table No.</TableHead>
-                            <TableHead>Turnover</TableHead>
-                            <TableHead>Total Revenue</TableHead>
-                            <TableHead className="text-right">Actions</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {tablePerformanceData.map(p => (
-                            <TableRow key={p.id}>
-                                <TableCell className="font-bold text-lg">{p.id}</TableCell>
-                                <TableCell className="font-semibold">{p.turnover}</TableCell>
-                                <TableCell className="font-semibold text-green-600">Rs. {p.revenue.toFixed(2)}</TableCell>
-                                <TableCell className="text-right">
-                                    <Button variant="outline" size="sm" onClick={() => openBillsDialog(p.bills)} disabled={p.bills.length === 0}>
-                                        <Eye className="mr-2 h-4 w-4" /> View Bills
-                                    </Button>
-                                </TableCell>
-                            </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
+          <div className="flex justify-between items-center gap-4 flex-wrap mb-4">
+            <div>
+              <CardTitle>Table Management</CardTitle>
+              <CardDescription>Oversee and manage all tables in your restaurant.</CardDescription>
             </div>
+            <div className="flex items-center gap-4">
+              <Button variant="secondary" onClick={() => setIsLayoutManagerOpen(true)}>
+                <LayoutTemplate className="mr-2 h-4 w-4" /> 
+                <span>Manage Tables</span>
+              </Button>
+              {selectedTables.length > 0 && (
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="select-all"
+                    onCheckedChange={(checked) => handleSelectAllTables(Boolean(checked))}
+                    checked={selectedTables.length === filteredTables.length && filteredTables.length > 0}
+                    disabled={filteredTables.length === 0}
+                  />
+                  <Label htmlFor="select-all">Select All ({selectedTables.length})</Label>
+                </div>
+              )}
+            </div>
+          </div>
+          <div className="flex items-center gap-2 flex-wrap p-4 border-t border-b">
+              <span className="text-sm font-semibold text-muted-foreground mr-2">{selectedTables.length > 0 ? 'Change selected to:' : 'Filter by:'}</span>
+              <Button 
+                variant={filter === 'All' ? 'default' : 'outline'}
+                onClick={() => handleStatusButtonClick('All')}
+              >
+                All ({tables.length})
+              </Button>
+              {(Object.keys(statusBaseColors) as TableStatus[]).map(status => {
+                  const Icon = statusIcons[status];
+                  return (
+                    <Button
+                      key={status}
+                      onClick={() => handleStatusButtonClick(status)}
+                      onMouseEnter={() => setHoveredStatus(status)}
+                      onMouseLeave={() => setHoveredStatus(null)}
+                      variant={filter === status ? 'default' : 'outline'}
+                        className={cn(
+                        'transition-all',
+                          filter !== status && getDynamicColor(status),
+                          filter !== status && (status === 'Available' || status === 'Occupied' ? 'text-white' : 'text-black'),
+                      )}
+                    >
+                        <Icon className="mr-2 h-4 w-4" />
+                        {status} ({tables.filter(t => t.status === status).length})
+                    </Button>
+                  );
+              })}
+          </div>
+        </CardHeader>
+        <CardContent className="pt-6">
+          <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-8 gap-4">
+            {filteredTables.map(table => {
+              const Icon = statusIcons[table.status];
+              const turnover = occupancyCount[table.id] || 0;
+              return (
+              <div
+                key={table.id}
+                className={cn(
+                  'group aspect-square rounded-lg flex flex-col items-center justify-center cursor-pointer transition-all duration-300 shadow-lg hover:shadow-2xl relative border-2 p-1',
+                  getDynamicColor(table.status),
+                  selectedTables.includes(table.id) && 'ring-4 ring-offset-2 ring-primary border-primary',
+                  !selectedTables.includes(table.id) && 'border-black/50',
+                  hoveredStatus === table.status && 'scale-110 z-10'
+                )}
+                onClick={() => handleTableClick(table)}
+                onDoubleClick={() => handleDoubleClick(table)}
+              >
+                <div className="absolute top-1 left-1">
+                    {table.status === 'Occupied' && (
+                        <Button
+                            variant="secondary"
+                            size="icon"
+                            className="h-7 w-7 bg-white/30 hover:bg-white/50"
+                            onClick={(e) => handleOpenPrintDialog(e, table)}
+                        >
+                            <Printer className="h-4 w-4 text-black" />
+                        </Button>
+                    )}
+                </div>
+                  {showOccupancy && turnover > 0 &&
+                    <div className="absolute bottom-1 left-1 flex items-center gap-1 bg-black/50 text-white text-xs font-bold p-1 rounded-md">
+                        <Repeat className="h-3 w-3" />
+                        <span>{turnover}</span>
+                    </div>
+                }
+                <div className={cn("absolute top-1 right-1 transition-opacity", selectedTables.length > 0 ? "opacity-100" : "opacity-0 group-hover:opacity-100")}>
+                  <Checkbox 
+                    className="bg-white/50 border-gray-500 data-[state=checked]:bg-primary"
+                    checked={selectedTables.includes(table.id)}
+                    onCheckedChange={(checked) => handleCheckboxChange(table.id, Boolean(checked))}
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                </div>
+                <div className="text-center">
+                    <span className={cn("text-6xl font-bold", table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black')}>{table.id}</span>
+                    <div className="flex items-center justify-center gap-1">
+                      {React.createElement(Icon, { className: cn("h-4 w-4", table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black') })}
+                      <span className={cn("text-base font-semibold leading-tight", table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black')}>{table.status}</span>
+                    </div>
+                    {table.status === 'Reserved' && table.reservationDetails && (
+                      <div className="text-xs text-black font-bold mt-1 max-w-full truncate">
+                        for {table.reservationDetails.name} at {table.reservationDetails.time}
+                      </div>
+                    )}
+                </div>
+              </div>
+            )})}
+              {filteredTables.length === 0 && (
+              <div className="col-span-full text-center text-muted-foreground py-16">
+                No tables with status "{filter}".
+              </div>
+            )}
+          </div>
         </CardContent>
       </Card>
       
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+        <Card>
+            <CardHeader>
+                <CardTitle>Table Performance (Today)</CardTitle>
+                <CardDescription>Review daily turnover and revenue for each table.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <div className="max-h-[60vh] overflow-y-auto">
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Table No.</TableHead>
+                                <TableHead>Turnover</TableHead>
+                                <TableHead>Total Revenue</TableHead>
+                                <TableHead className="text-right">Actions</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {tablePerformanceData.map(p => (
+                                <TableRow key={p.id}>
+                                    <TableCell className="font-bold text-lg">{p.id}</TableCell>
+                                    <TableCell className="font-semibold">{p.turnover}</TableCell>
+                                    <TableCell className="font-semibold text-green-600">Rs. {p.revenue.toFixed(2)}</TableCell>
+                                    <TableCell className="text-right">
+                                        <Button variant="outline" size="sm" onClick={() => openBillsDialog(p.bills)} disabled={p.bills.length === 0}>
+                                            <Eye className="mr-2 h-4 w-4" /> View Bills
+                                        </Button>
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </div>
+            </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2"><BookMarked /> Reserve a Table</CardTitle>
+            <CardDescription>Book a table for a future date or time.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="guest-name">Guest Name</Label>
+              <Input id="guest-name" placeholder="John Doe" value={reservationName} onChange={(e) => setReservationName(e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="guest-mobile">Mobile No. (Optional)</Label>
+              <Input id="guest-mobile" placeholder="9876543210" value={reservationMobile} onChange={(e) => setReservationMobile(e.target.value)} />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="arrival-time">Time of Arrival</Label>
+                <Input id="arrival-time" type="time" value={reservationTime} onChange={(e) => setReservationTime(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="table-no">Table No.</Label>
+                <Select value={reservationTableId} onValueChange={setReservationTableId}>
+                  <SelectTrigger id="table-no">
+                    <SelectValue placeholder="Select Table" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableTables.map(table => (
+                      <SelectItem key={table.id} value={String(table.id)}>
+                        Table {table.id}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <Button className="w-full" onClick={handleReserveTable}>Reserve Table</Button>
+          </CardContent>
+        </Card>
+      </div>
+
       <Dialog open={isLayoutManagerOpen} onOpenChange={setIsLayoutManagerOpen}>
         <DialogContent>
             <DialogHeader>
@@ -614,3 +609,4 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
     </div>
   );
 }
+
