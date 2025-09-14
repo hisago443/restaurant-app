@@ -3,7 +3,7 @@
 
 import { useState } from 'react';
 import { db } from '@/lib/firebase';
-import { collection, writeBatch, doc, setDoc } from 'firebase/firestore';
+import { collection, writeBatch, doc, getDocs, deleteDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -112,6 +112,15 @@ export default function SetupWizard({ onComplete }: SetupWizardProps) {
   const handleFinish = async () => {
     toast({ title: "Saving your setup...", description: "Please wait." });
     try {
+
+      // Clear existing data
+      const collectionsToClear = ['employees', 'vendors'];
+      for (const coll of collectionsToClear) {
+        const querySnapshot = await getDocs(collection(db, coll));
+        const deletePromises = querySnapshot.docs.map(doc => deleteDoc(doc.ref));
+        await Promise.all(deletePromises);
+      }
+      
       const batch = writeBatch(db);
 
       // Save Venue Details (we'll store them in a 'settings' collection for simplicity)
@@ -153,11 +162,6 @@ export default function SetupWizard({ onComplete }: SetupWizardProps) {
 
       toast({ title: "Setup Complete!", description: "Your business details have been saved." });
       
-      try {
-        localStorage.setItem('setupComplete', 'true');
-      } catch (e) {
-        console.error("Could not access localStorage", e);
-      }
       onComplete();
 
     } catch (error) {
