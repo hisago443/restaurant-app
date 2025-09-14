@@ -1,7 +1,7 @@
 
 "use client"
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { db } from '@/lib/firebase';
 import { collection, doc, addDoc, updateDoc, deleteDoc, onSnapshot } from 'firebase/firestore';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -39,19 +39,21 @@ function AddOrEditItemDialog({
   const [capacity, setCapacity] = useState('');
   const [unit, setUnit] = useState('');
 
-  useState(() => {
-    if (existingItem) {
-      setName(existingItem.name);
-      setCategory(existingItem.category || '');
-      setStock(String(existingItem.stock));
-      setCapacity(String(existingItem.capacity));
-      setUnit(existingItem.unit);
-    } else {
-      setName('');
-      setCategory('');
-      setStock('');
-      setCapacity('');
-      setUnit('');
+  useEffect(() => {
+    if (open) {
+      if (existingItem) {
+        setName(existingItem.name);
+        setCategory(existingItem.category || '');
+        setStock(String(existingItem.stock));
+        setCapacity(String(existingItem.capacity));
+        setUnit(existingItem.unit);
+      } else {
+        setName('');
+        setCategory('');
+        setStock('');
+        setCapacity('');
+        setUnit('');
+      }
     }
   }, [existingItem, open]);
 
@@ -166,11 +168,12 @@ export default function InventoryManagement({ inventory }: InventoryManagementPr
     }
   }
 
-  const getStockColor = (stock: number) => {
-    if (stock <= 1) {
+  const getStockColor = (stock: number, capacity: number) => {
+    const percentage = capacity > 0 ? (stock / capacity) * 100 : 0;
+    if (percentage <= 10) {
       return "bg-red-500";
     }
-    if (stock <= 5) {
+    if (percentage <= 25) {
       return "bg-yellow-500";
     }
     return "bg-primary";
@@ -223,7 +226,7 @@ export default function InventoryManagement({ inventory }: InventoryManagementPr
                       <Progress
                         value={(item.stock / item.capacity) * 100}
                         className="w-full h-3"
-                        indicatorClassName={getStockColor(item.stock)}
+                        indicatorClassName={getStockColor(item.stock, item.capacity)}
                       />
                       <div className="flex items-center gap-1">
                         <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => handleStockChange(item.id, item.stock - 5)}>-5</Button>
@@ -266,14 +269,6 @@ export default function InventoryManagement({ inventory }: InventoryManagementPr
                           <TooltipContent>
                               <p>Fill to Capacity</p>
                           </TooltipContent>
-                      </Tooltip>
-                      <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button variant="ghost" size="icon" onClick={() => handleOpenDialog(item)}>
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent><p>Edit Item</p></TooltipContent>
                       </Tooltip>
                       <Tooltip>
                           <TooltipTrigger asChild>
