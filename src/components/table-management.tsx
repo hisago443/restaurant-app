@@ -307,7 +307,7 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
               <div
                 key={table.id}
                 className={cn(
-                  'aspect-square rounded-lg flex flex-col items-center justify-center cursor-pointer transition-all duration-300 shadow-lg hover:shadow-2xl relative border-2',
+                  'group aspect-square rounded-lg flex flex-col items-center justify-center cursor-pointer transition-all duration-300 shadow-lg hover:shadow-2xl relative border-2',
                   getDynamicColor(table.status),
                   selectedTables.includes(table.id) && 'ring-4 ring-offset-2 ring-primary border-primary',
                   !selectedTables.includes(table.id) && 'border-black/50',
@@ -334,7 +334,7 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
                         <span>{turnover}</span>
                     </div>
                 }
-                <div className="absolute top-1 right-1">
+                <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity">
                   <Checkbox 
                     className="bg-white/50 border-gray-500 data-[state=checked]:bg-primary"
                     checked={selectedTables.includes(table.id)}
@@ -592,3 +592,4 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
     
 
     
+
