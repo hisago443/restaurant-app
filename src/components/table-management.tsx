@@ -370,7 +370,7 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
                         <span>{turnover}</span>
                     </div>
                 }
-                <div className={cn("absolute top-1 right-1 transition-opacity", selectedTables.length > 0 || table.status === 'Reserved' ? "opacity-100" : "opacity-0 group-hover:opacity-100")}>
+                <div className={cn("absolute top-1 right-1 transition-opacity", (selectedTables.length > 0 || table.status === 'Reserved') ? "opacity-100" : "opacity-0 group-hover:opacity-100")}>
                   <Checkbox 
                     className="bg-white/50 border-gray-500 data-[state=checked]:bg-primary"
                     checked={selectedTables.includes(table.id)}
@@ -444,11 +444,11 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="guest-name">Guest Name</Label>
-              <Input id="guest-name" placeholder="John Doe" value={reservationName} onChange={(e) => setReservationName(e.target.value)} />
+              <Input id="guest-name" value={reservationName} onChange={(e) => setReservationName(e.target.value)} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="guest-mobile">Mobile No. (Optional)</Label>
-              <Input id="guest-mobile" placeholder="9876543210" value={reservationMobile} onChange={(e) => setReservationMobile(e.target.value)} />
+              <Input id="guest-mobile" value={reservationMobile} onChange={(e) => setReservationMobile(e.target.value)} />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
