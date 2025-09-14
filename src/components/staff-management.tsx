@@ -441,22 +441,13 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
                                               </Button>
                                           )
                                       })}
-                                       <DropdownMenu>
-                                          <DropdownMenuTrigger asChild>
-                                              <Button variant="ghost" size="icon">
-                                                  <Pencil className="h-4 w-4" />
-                                              </Button>
-                                          </DropdownMenuTrigger>
-                                          <DropdownMenuContent>
-                                              <DropdownMenuItem onClick={() => openNotesDialog(employee.id)} disabled={!attendanceRecord}>
-                                                  Add/Edit Note
-                                              </DropdownMenuItem>
-                                              <DropdownMenuItem onClick={() => openAdvanceDialog(null, employee)} disabled={isDateLocked}>
-                                                  Add Advance
-                                              </DropdownMenuItem>
-                                          </DropdownMenuContent>
-                                      </DropdownMenu>
-                                       <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openSummaryDialog(employee)}>
+                                      <Button variant="ghost" size="icon" onClick={() => openNotesDialog(employee.id)} disabled={!attendanceRecord}>
+                                          <Pencil className="h-4 w-4" />
+                                      </Button>
+                                      <Button variant="ghost" size="icon" onClick={() => openAdvanceDialog(null, employee)} disabled={isDateLocked}>
+                                          <Banknote className="h-4 w-4" />
+                                      </Button>
+                                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openSummaryDialog(employee)}>
                                           <Eye className="h-4 w-4" />
                                       </Button>
                                   </div>
@@ -490,7 +481,7 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
                       <TableHead className="font-bold text-foreground text-base">ID</TableHead>
                       <TableHead className="font-bold text-foreground text-base">Employee</TableHead>
                       <TableHead className="font-bold text-foreground text-base">Role</TableHead>
-                      <TableHead className="font-bold text-foreground text-base">Base Salary</TableHead>
+                      <TableHead className="border-l font-bold text-foreground text-base">Base Salary</TableHead>
                       <TableHead className="border-l font-bold text-foreground text-base">Advance Taken</TableHead>
                       <TableHead className="border-l font-bold text-foreground text-base">Remaining Salary</TableHead>
                     </TableRow>
@@ -508,7 +499,7 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
                             </div>
                           </TableCell>
                           <TableCell>{employee.role}</TableCell>
-                          <TableCell className="font-semibold text-blue-600">Rs. {employee.salary.toLocaleString()}</TableCell>
+                           <TableCell className="border-l bg-blue-50 dark:bg-blue-900/20 font-semibold text-blue-600">Rs. {employee.salary.toLocaleString()}</TableCell>
                            <TableCell className="border-l bg-red-50 dark:bg-red-900/20 font-semibold text-red-600">Rs. {summary?.totalAdvance.toLocaleString()}</TableCell>
                           <TableCell className="border-l bg-green-50 dark:bg-green-900/20 font-bold text-green-700">Rs. {summary?.remainingSalary.toLocaleString()}</TableCell>
                         </TableRow>
@@ -854,6 +845,8 @@ function EmployeeSummaryDialog({ open, onOpenChange, employee, attendance, advan
     )
 }
 
+
+    
 
     
 
