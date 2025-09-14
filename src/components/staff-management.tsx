@@ -387,7 +387,6 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
                 <Card>
                   <CardHeader>
                     <CardTitle>Staff Attendance for {format(selectedDate, 'PPP')}</CardTitle>
-                    {isDateLocked && <CardDescription className="text-destructive font-bold">Attendance for past dates is locked.</CardDescription>}
                   </CardHeader>
                   <CardContent className="space-y-3">
                       {employees.map(employee => {
