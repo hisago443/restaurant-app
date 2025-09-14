@@ -442,7 +442,7 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
                                               </Button>
                                           )
                                       })}
-                                      <Button variant="ghost" size="icon" onClick={() => openNotesDialog(employee.id)} disabled={!attendanceRecord}>
+                                       <Button variant="ghost" size="icon" onClick={() => openNotesDialog(employee.id)} disabled={!attendanceRecord}>
                                           <Pencil className="h-4 w-4" />
                                       </Button>
                                       <Button variant="ghost" size="icon" onClick={() => openAdvanceDialog(null, employee)} disabled={isDateLocked}>
@@ -457,6 +457,9 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
                       })}
                   </CardContent>
                 </Card>
+                <Button size="lg" className="w-full h-14 text-base" onClick={() => openAdvanceDialog(null, undefined)} disabled={isDateLocked}>
+                    <Banknote className="mr-4 h-6 w-6" /> Add Salary Advance
+                </Button>
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between">
                         <CardTitle>Advances for {format(selectedDate, 'PPP')}</CardTitle>
@@ -501,9 +504,6 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
                         </div>
                     </CardContent>
                 </Card>
-                <Button size="lg" className="w-full h-14 text-base" onClick={() => openAdvanceDialog(null, undefined)} disabled={isDateLocked}>
-                    <Banknote className="mr-4 h-6 w-6" /> Add Salary Advance
-                </Button>
             </div>
           </div>
         </TabsContent>
@@ -644,7 +644,7 @@ function AddOrEditAdvanceDialog({
   const [amount, setAmount] = useState('');
   
   const selectedEmployee = useMemo(() => employees.find(e => e.id === employeeId), [employees, employeeId]);
-  const isEditingFromAttendance = !!(existingAdvance && !existingAdvance.id);
+  const isQuickAdd = !!(existingAdvance && !existingAdvance.id);
 
   useEffect(() => {
     if (open) {
@@ -680,7 +680,7 @@ function AddOrEditAdvanceDialog({
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
-          {isEditingFromAttendance && selectedEmployee ? (
+          {isQuickAdd && selectedEmployee ? (
             <div className="space-y-2">
                 <Label>Employee</Label>
                 <div className="p-2 border rounded-md bg-muted flex items-center gap-2">
@@ -691,20 +691,21 @@ function AddOrEditAdvanceDialog({
           ) : (
             <div className="space-y-2">
                 <Label>Employee</Label>
-                <div className="grid grid-cols-3 gap-2">
-                    {employees.map(e => (
-                        <Button 
-                            key={e.id}
-                            variant={employeeId === e.id ? 'default' : 'outline'}
-                            onClick={() => setEmployeeId(e.id)}
-                            disabled={!!existingAdvance?.amount}
-                            className="flex items-center justify-start gap-2"
-                        >
-                            <span className={cn("h-2 w-2 rounded-full", e.color)} />
-                            {e.name}
-                        </Button>
-                    ))}
-                </div>
+                 <Select value={employeeId} onValueChange={setEmployeeId} disabled={!!existingAdvance?.id}>
+                    <SelectTrigger>
+                        <SelectValue placeholder="Select Employee" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {employees.map(e => (
+                            <SelectItem key={e.id} value={e.id}>
+                                <div className="flex items-center gap-2">
+                                    <span className={cn("h-2 w-2 rounded-full", e.color)} />
+                                    {e.name}
+                                </div>
+                            </SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
             </div>
           )}
           <div className="space-y-2">
@@ -845,8 +846,8 @@ function EmployeeSummaryDialog({ open, onOpenChange, employee, attendance, advan
     attendance: Attendance[];
     advances: Advance[];
 }) {
-    const { summary, absentDates, halfDayDates } = useMemo(() => {
-        if (!employee) return { summary: null, absentDates: [], halfDayDates: [] };
+    const { summary, absentDates, halfDayDates, monthlyAdvances } = useMemo(() => {
+        if (!employee) return { summary: null, absentDates: [], halfDayDates: [], monthlyAdvances: [] };
         
         const now = new Date();
         const currentMonth = getMonth(now);
@@ -858,7 +859,7 @@ function EmployeeSummaryDialog({ open, onOpenChange, employee, attendance, advan
             getYear(a.date) === currentYear
         );
 
-        const monthlyAdvances = advances.filter(a => 
+        const employeeMonthlyAdvances = advances.filter(a => 
             getMonth(a.date) === currentMonth &&
             getYear(a.date) === currentYear
         );
@@ -866,7 +867,7 @@ function EmployeeSummaryDialog({ open, onOpenChange, employee, attendance, advan
         const absentRecords = monthlyAttendance.filter(a => a.status === 'Absent');
         const halfDayRecords = monthlyAttendance.filter(a => a.status === 'Half-day');
 
-        const totalAdvance = monthlyAdvances.reduce((sum, a) => sum + a.amount, 0);
+        const totalAdvance = employeeMonthlyAdvances.reduce((sum, a) => sum + a.amount, 0);
         const remainingSalary = employee.salary - totalAdvance;
 
         return {
@@ -879,6 +880,7 @@ function EmployeeSummaryDialog({ open, onOpenChange, employee, attendance, advan
             },
             absentDates: absentRecords.map(a => a.date),
             halfDayDates: halfDayRecords.map(a => a.date),
+            monthlyAdvances: employeeMonthlyAdvances,
         }
     }, [employee, attendance, advances]);
 
@@ -886,62 +888,90 @@ function EmployeeSummaryDialog({ open, onOpenChange, employee, attendance, advan
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-md">
+            <DialogContent className="max-w-2xl">
                 <DialogHeader>
                     <DialogTitle>Monthly Summary for {employee.name}</DialogTitle>
                     <DialogDescription>
                         {format(new Date(), 'MMMM yyyy')}
                     </DialogDescription>
                 </DialogHeader>
-                <div className="space-y-4 py-4">
-                    <div className="grid grid-cols-3 gap-4 text-center">
-                        <div className="p-3 bg-green-100 dark:bg-green-900/30 rounded-lg">
-                            <p className="text-sm text-green-800 dark:text-green-200">Present</p>
-                            <p className="text-2xl font-bold">{summary.presentDays}</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-4">
+                    {/* Left Column: Attendance */}
+                    <div className="space-y-4">
+                        <h3 className="font-semibold text-lg border-b pb-2">Attendance Report</h3>
+                        <div className="grid grid-cols-3 gap-2 text-center">
+                            <Card className="p-2 bg-green-100 dark:bg-green-900/30">
+                                <CardDescription className="text-sm text-green-800 dark:text-green-200">Present</CardDescription>
+                                <CardTitle className="text-2xl">{summary.presentDays}</CardTitle>
+                            </Card>
+                             <Card className="p-2 bg-yellow-100 dark:bg-yellow-900/30">
+                                <CardDescription className="text-sm text-yellow-800 dark:text-yellow-200">Half-days</CardDescription>
+                                <CardTitle className="text-2xl">{summary.halfDays}</CardTitle>
+                            </Card>
+                            <Card className="p-2 bg-red-100 dark:bg-red-900/30">
+                                <CardDescription className="text-sm text-red-800 dark:text-red-200">Absent</CardDescription>
+                                <CardTitle className="text-2xl">{summary.absentDays}</CardTitle>
+                            </Card>
                         </div>
-                         <div className="p-3 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg">
-                            <p className="text-sm text-yellow-800 dark:text-yellow-200">Half-days</p>
-                            <p className="text-2xl font-bold">{summary.halfDays}</p>
-                        </div>
-                        <div className="p-3 bg-red-100 dark:bg-red-900/30 rounded-lg">
-                            <p className="text-sm text-red-800 dark:text-red-200">Absent</p>
-                            <p className="text-2xl font-bold">{summary.absentDays}</p>
-                        </div>
+                        <ScrollArea className="h-40 space-y-4">
+                            {halfDayDates.length > 0 && (
+                                <div className="p-3 bg-muted/50 rounded-lg">
+                                    <h4 className="font-semibold mb-2 text-yellow-700">Half-day Dates:</h4>
+                                    <div className="grid grid-cols-3 gap-1 text-sm">
+                                        {halfDayDates.map(date => (
+                                            <span key={date.toISOString()}>{format(date, 'MMM d')}</span>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                            {absentDates.length > 0 && (
+                                <div className="p-3 bg-muted/50 rounded-lg mt-2">
+                                    <h4 className="font-semibold mb-2 text-red-700">Absent Dates:</h4>
+                                    <div className="grid grid-cols-3 gap-1 text-sm">
+                                        {absentDates.map(date => (
+                                            <span key={date.toISOString()}>{format(date, 'MMM d')}</span>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </ScrollArea>
                     </div>
-                    {halfDayDates.length > 0 && (
-                        <div className="p-3 bg-muted/50 rounded-lg">
-                            <h4 className="font-semibold mb-2">Half-day Dates:</h4>
-                            <div className="grid grid-cols-3 gap-1 text-sm">
-                                {halfDayDates.map(date => (
-                                    <span key={date.toISOString()}>{format(date, 'MMM d')}</span>
-                                ))}
+
+                    {/* Right Column: Financials */}
+                    <div className="space-y-4">
+                        <h3 className="font-semibold text-lg border-b pb-2">Financial Report</h3>
+                        <div className="space-y-2">
+                            <div className="flex justify-between items-baseline p-2 bg-blue-50 dark:bg-blue-900/20 rounded-md">
+                                <p>Base Salary:</p>
+                                <p className="font-semibold text-lg text-blue-600">Rs. {employee.salary.toLocaleString()}</p>
                             </div>
-                        </div>
-                    )}
-                     {absentDates.length > 0 && (
-                        <div className="p-3 bg-muted/50 rounded-lg">
-                            <h4 className="font-semibold mb-2">Absent Dates:</h4>
-                            <div className="grid grid-cols-3 gap-1 text-sm">
-                                {absentDates.map(date => (
-                                    <span key={date.toISOString()}>{format(date, 'MMM d')}</span>
-                                ))}
+                            <div className="flex justify-between items-baseline p-2 bg-red-50 dark:bg-red-900/20 rounded-md">
+                                <p>Total Advance Taken:</p>
+                                <p className="font-semibold text-lg text-red-600">- Rs. {summary.totalAdvance.toLocaleString()}</p>
                             </div>
-                        </div>
-                    )}
-                    <Separator />
-                     <div className="space-y-2">
-                        <div className="flex justify-between items-baseline">
-                            <p>Base Salary:</p>
-                            <p className="font-semibold text-lg text-blue-600">Rs. {employee.salary.toLocaleString()}</p>
-                        </div>
-                         <div className="flex justify-between items-baseline">
-                            <p>Total Advance Taken:</p>
-                            <p className="font-semibold text-lg text-red-600">Rs. {summary.totalAdvance.toLocaleString()}</p>
+                            <Separator />
+                            <div className="flex justify-between items-baseline p-3 bg-green-100 dark:bg-green-900/30 rounded-md">
+                                <p className="font-bold text-lg">Remaining Salary:</p>
+                                <p className="font-bold text-xl text-green-700">Rs. {summary.remainingSalary.toLocaleString()}</p>
+                            </div>
                         </div>
                         <Separator />
-                         <div className="flex justify-between items-baseline">
-                            <p className="font-bold text-lg">Remaining Salary:</p>
-                            <p className="font-bold text-xl text-green-600">Rs. {summary.remainingSalary.toLocaleString()}</p>
+                         <div className="space-y-2">
+                            <h4 className="font-semibold">Monthly Advances</h4>
+                            <ScrollArea className="h-24">
+                                {monthlyAdvances.length > 0 ? (
+                                    <div className="space-y-1 pr-2">
+                                    {monthlyAdvances.map((adv, index) => (
+                                        <div key={index} className="flex justify-between items-center text-sm p-1.5 bg-muted/50 rounded-md">
+                                            <span>{format(adv.date, 'MMM d')}:</span>
+                                            <span className="font-mono font-semibold">Rs. {adv.amount.toLocaleString()}</span>
+                                        </div>
+                                    ))}
+                                    </div>
+                                ) : (
+                                    <p className="text-sm text-muted-foreground text-center pt-4">No advances this month.</p>
+                                )}
+                            </ScrollArea>
                         </div>
                     </div>
                 </div>
@@ -952,20 +982,3 @@ function EmployeeSummaryDialog({ open, onOpenChange, employee, attendance, advan
         </Dialog>
     )
 }
-
-
-    
-
-    
-
-    
-
-    
-
-    
-
-
-
-    
-
-      
