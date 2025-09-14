@@ -346,9 +346,9 @@ function OrderPanel({
             </ScrollArea>
             
             <div id="table-grid-container" className="p-4 border-t space-y-4">
-               <div className="flex items-center gap-4">
-                <Label className="font-semibold">Order Type:</Label>
-                <div className="grid grid-cols-3 gap-2 flex-grow">
+               <div className="flex items-center gap-2 flex-wrap">
+                <Label className="font-semibold text-sm shrink-0">Order Type:</Label>
+                <div className="grid grid-cols-3 gap-2 flex-grow min-w-[280px]">
                         <Button variant={orderType === 'Dine-In' ? 'default' : 'outline'} onClick={() => setOrderType('Dine-In')} className="h-12 text-base"><Users className="mr-2 h-5 w-5"/>Dine-In</Button>
                         <Button variant={orderType === 'Takeaway' ? 'default' : 'outline'} onClick={() => setOrderType('Takeaway')} className="h-12 text-base"><ShoppingBag className="mr-2 h-5 w-5"/>Takeaway</Button>
                         <Button variant={orderType === 'Home Delivery' ? 'default' : 'outline'} onClick={() => setOrderType('Home Delivery')} className="h-12 text-base"><Bike className="mr-2 h-5 w-5"/>Home Delivery</Button>
@@ -663,7 +663,9 @@ export default function PosSystem({
   }, [searchTerm, vegFilter, typedMenuData]);
 
   useEffect(() => {
-    setActiveAccordionItems(searchTerm ? filteredMenu.map(c => c.category) : []);
+    if (searchTerm) {
+      setActiveAccordionItems(filteredMenu.map(c => c.category));
+    }
   }, [searchTerm, viewMode, filteredMenu]);
   
   useEffect(() => {
@@ -1755,6 +1757,7 @@ export default function PosSystem({
     </div>
   );
 }
+
 
 
 
