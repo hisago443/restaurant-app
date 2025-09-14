@@ -323,8 +323,8 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
     <div className="p-4 space-y-4">
       <Tabs defaultValue="attendance" className="w-full">
         <TabsList className="grid w-full grid-cols-2 bg-muted p-1 h-auto rounded-lg">
-          <TabsTrigger value="attendance" className="py-2 data-[state=active]:bg-background data-[state=active]:shadow-md text-base">Attendance &amp; Advance</TabsTrigger>
-          <TabsTrigger value="employees" className="py-2 data-[state=active]:bg-background data-[state=active]:shadow-md text-base">Employee List</TabsTrigger>
+          <TabsTrigger value="attendance" className="py-2 data-[state=active]:bg-orange-500 data-[state=active]:text-white data-[state=active]:shadow-md text-base">Attendance &amp; Advance</TabsTrigger>
+          <TabsTrigger value="employees" className="py-2 data-[state=active]:bg-orange-500 data-[state=active]:text-white data-[state=active]:shadow-md text-base">Employee List</TabsTrigger>
         </TabsList>
         <TabsContent value="attendance">
            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-4">
@@ -478,12 +478,12 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>ID</TableHead>
-                      <TableHead>Employee</TableHead>
-                      <TableHead>Role</TableHead>
-                      <TableHead>Base Salary</TableHead>
-                      <TableHead>Advance Taken</TableHead>
-                      <TableHead>Remaining Salary</TableHead>
+                      <TableHead className="font-bold text-foreground text-base">ID</TableHead>
+                      <TableHead className="font-bold text-foreground text-base">Employee</TableHead>
+                      <TableHead className="font-bold text-foreground text-base">Role</TableHead>
+                      <TableHead className="font-bold text-foreground text-base">Base Salary</TableHead>
+                      <TableHead className="font-bold text-foreground text-base border-l">Advance Taken</TableHead>
+                      <TableHead className="font-bold text-foreground text-base border-l">Remaining Salary</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -500,12 +500,12 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
                           </TableCell>
                           <TableCell>{employee.role}</TableCell>
                           <TableCell className="font-semibold text-blue-600">Rs. {employee.salary.toLocaleString()}</TableCell>
-                          <TableCell className="p-0">
+                          <TableCell className="p-0 border-l">
                             <div className="bg-orange-50 dark:bg-orange-900/30 h-full py-4 px-4">
                                 <span className="font-semibold text-orange-600">Rs. {summary?.totalAdvance.toLocaleString() || 0}</span>
                             </div>
                           </TableCell>
-                          <TableCell className="p-0">
+                          <TableCell className="p-0 border-l">
                             <div className="bg-green-50 dark:bg-green-900/30 h-full py-4 px-4">
                                 <span className="font-semibold text-green-600">Rs. {summary?.remainingSalary.toLocaleString() || employee.salary}</span>
                             </div>
@@ -852,5 +852,3 @@ function EmployeeSummaryDialog({ open, onOpenChange, employee, attendance, advan
         </Dialog>
     )
 }
-
-    
