@@ -456,7 +456,7 @@ export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
           name: data.name,
           type: data.type,
           creditLimit: data.creditLimit,
-          transactions: data.transactions.map((tx: any) => ({...tx, date: tx.date.toDate()})),
+          transactions: (data.transactions || []).map((tx: any) => ({...tx, date: tx.date.toDate()})),
         } as PendingBill;
       });
       setPendingBills(bills);
