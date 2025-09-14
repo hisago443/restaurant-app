@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import * as React from 'react';
@@ -27,6 +26,7 @@ import { Checkbox } from './ui/checkbox';
 import { DayContent, DayContentProps } from 'react-day-picker';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 
 const attendanceStatusConfig: Record<AttendanceStatus, { icon: React.ElementType, color: string, label: string, className: string }> = {
@@ -172,8 +172,12 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
     }
   }
   
-  const openAdvanceDialog = (advance: Advance | null) => {
+  const openAdvanceDialog = (advance: Advance | null, employee?: Employee) => {
     setEditingAdvance(advance);
+    if (!advance && employee) {
+      // Pre-fill employee for new advance from dropdown
+      setEditingAdvance({ employeeId: employee.id } as Advance);
+    }
     setIsAdvanceDialogOpen(true);
   }
 
@@ -389,7 +393,7 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
                                               <span className="font-bold">Rs. {advance.amount.toLocaleString()}</span>
                                             </div>
                                             {!isDateLocked &&
-                                              <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100" onClick={() => openAdvanceDialog(advance)}>
+                                              <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100" onClick={() => openAdvanceDialog(advance, undefined)}>
                                                   <Edit className="h-4 w-4"/>
                                               </Button>
                                             }
@@ -437,16 +441,21 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
                                               </Button>
                                           )
                                       })}
-                                      <TooltipProvider>
-                                          <Tooltip>
-                                          <TooltipTrigger asChild>
-                                              <Button variant="ghost" size="icon" onClick={() => openNotesDialog(employee.id)} disabled={!attendanceRecord}>
-                                              <Pencil className="h-4 w-4" />
+                                       <DropdownMenu>
+                                          <DropdownMenuTrigger asChild>
+                                              <Button variant="ghost" size="icon">
+                                                  <Pencil className="h-4 w-4" />
                                               </Button>
-                                          </TooltipTrigger>
-                                          <TooltipContent>{isDateLocked ? 'View Note' : 'Add/Edit Note'}</TooltipContent>
-                                          </Tooltip>
-                                      </TooltipProvider>
+                                          </DropdownMenuTrigger>
+                                          <DropdownMenuContent>
+                                              <DropdownMenuItem onClick={() => openNotesDialog(employee.id)} disabled={!attendanceRecord}>
+                                                  Add/Edit Note
+                                              </DropdownMenuItem>
+                                              <DropdownMenuItem onClick={() => openAdvanceDialog(null, employee)} disabled={isDateLocked}>
+                                                  Add Advance
+                                              </DropdownMenuItem>
+                                          </DropdownMenuContent>
+                                      </DropdownMenu>
                                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openSummaryDialog(employee)}>
                                           <Eye className="h-4 w-4" />
                                       </Button>
@@ -456,7 +465,7 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
                       })}
                   </CardContent>
                 </Card>
-                <Button size="lg" className="w-full h-14 text-base" onClick={() => openAdvanceDialog(null)} disabled={isDateLocked}>
+                <Button size="lg" className="w-full h-14 text-base" onClick={() => openAdvanceDialog(null, undefined)} disabled={isDateLocked}>
                     <Banknote className="mr-4 h-6 w-6" /> Add Salary Advance
                 </Button>
             </div>
@@ -482,6 +491,8 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
                       <TableHead className="font-bold text-foreground text-base">Employee</TableHead>
                       <TableHead className="font-bold text-foreground text-base">Role</TableHead>
                       <TableHead className="font-bold text-foreground text-base">Base Salary</TableHead>
+                      <TableHead className="border-l font-bold text-foreground text-base">Advance Taken</TableHead>
+                      <TableHead className="border-l font-bold text-foreground text-base">Remaining Salary</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -498,6 +509,8 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
                           </TableCell>
                           <TableCell>{employee.role}</TableCell>
                           <TableCell className="font-semibold text-blue-600">Rs. {employee.salary.toLocaleString()}</TableCell>
+                           <TableCell className="border-l bg-red-50 dark:bg-red-900/20 font-semibold text-red-600">Rs. {summary?.totalAdvance.toLocaleString()}</TableCell>
+                          <TableCell className="border-l bg-green-50 dark:bg-green-900/20 font-bold text-green-700">Rs. {summary?.remainingSalary.toLocaleString()}</TableCell>
                         </TableRow>
                       );
                     })}
@@ -571,7 +584,7 @@ function AddOrEditAdvanceDialog({
   useEffect(() => {
     if (existingAdvance) {
       setEmployeeId(existingAdvance.employeeId);
-      setAmount(String(existingAdvance.amount));
+      setAmount(String(existingAdvance.amount || ''));
     } else {
       setEmployeeId('');
       setAmount('');
@@ -594,7 +607,7 @@ function AddOrEditAdvanceDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{existingAdvance ? 'Edit' : 'Add'} Advance</DialogTitle>
+          <DialogTitle>{existingAdvance?.amount ? 'Edit' : 'Add'} Advance</DialogTitle>
           <DialogDescription>
             Record an advance for an employee on {format(selectedDate, 'PPP')}.
           </DialogDescription>
@@ -608,7 +621,7 @@ function AddOrEditAdvanceDialog({
                         key={e.id}
                         variant={employeeId === e.id ? 'default' : 'outline'}
                         onClick={() => setEmployeeId(e.id)}
-                        disabled={!!existingAdvance}
+                        disabled={!!existingAdvance?.amount}
                         className="flex items-center justify-start gap-2"
                     >
                         <span className={cn("h-2 w-2 rounded-full", e.color)} />
