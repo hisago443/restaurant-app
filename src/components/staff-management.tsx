@@ -845,8 +845,6 @@ function EmployeeSummaryDialog({ open, onOpenChange, employee, attendance, advan
     attendance: Attendance[];
     advances: Advance[];
 }) {
-    const [showDates, setShowDates] = useState<'absent' | 'half-day' | null>(null);
-
     const { summary, absentDates, halfDayDates } = useMemo(() => {
         if (!employee) return { summary: null, absentDates: [], halfDayDates: [] };
         
@@ -883,18 +881,8 @@ function EmployeeSummaryDialog({ open, onOpenChange, employee, attendance, advan
             halfDayDates: halfDayRecords.map(a => a.date),
         }
     }, [employee, attendance, advances]);
-    
-    useEffect(() => {
-        if (open) {
-            setShowDates(null);
-        }
-    }, [open]);
 
     if (!employee || !summary) return null;
-    
-    const handleCardClick = (type: 'absent' | 'half-day') => {
-        setShowDates(current => current === type ? null : type);
-    }
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
@@ -911,20 +899,30 @@ function EmployeeSummaryDialog({ open, onOpenChange, employee, attendance, advan
                             <p className="text-sm text-green-800 dark:text-green-200">Present</p>
                             <p className="text-2xl font-bold">{summary.presentDays}</p>
                         </div>
-                         <div className="p-3 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg cursor-pointer" onClick={() => handleCardClick('half-day')}>
+                         <div className="p-3 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg">
                             <p className="text-sm text-yellow-800 dark:text-yellow-200">Half-days</p>
                             <p className="text-2xl font-bold">{summary.halfDays}</p>
                         </div>
-                        <div className="p-3 bg-red-100 dark:bg-red-900/30 rounded-lg cursor-pointer" onClick={() => handleCardClick('absent')}>
+                        <div className="p-3 bg-red-100 dark:bg-red-900/30 rounded-lg">
                             <p className="text-sm text-red-800 dark:text-red-200">Absent</p>
                             <p className="text-2xl font-bold">{summary.absentDays}</p>
                         </div>
                     </div>
-                    {showDates && (
+                    {halfDayDates.length > 0 && (
                         <div className="p-3 bg-muted/50 rounded-lg">
-                            <h4 className="font-semibold mb-2">{showDates === 'absent' ? 'Absent Dates' : 'Half-day Dates'}:</h4>
+                            <h4 className="font-semibold mb-2">Half-day Dates:</h4>
                             <div className="grid grid-cols-3 gap-1 text-sm">
-                                {(showDates === 'absent' ? absentDates : halfDayDates).map(date => (
+                                {halfDayDates.map(date => (
+                                    <span key={date.toISOString()}>{format(date, 'MMM d')}</span>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                     {absentDates.length > 0 && (
+                        <div className="p-3 bg-muted/50 rounded-lg">
+                            <h4 className="font-semibold mb-2">Absent Dates:</h4>
+                            <div className="grid grid-cols-3 gap-1 text-sm">
+                                {absentDates.map(date => (
                                     <span key={date.toISOString()}>{format(date, 'MMM d')}</span>
                                 ))}
                             </div>
