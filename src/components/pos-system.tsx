@@ -18,7 +18,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from '@/hooks/use-toast';
-import { Search, Plus, Minus, X, LayoutGrid, List, Rows, ChevronsUpDown, Palette, Shuffle, ClipboardList, Send, CheckCircle2, Users, Bookmark, Sparkles, Repeat, Edit, UserCheck, BookmarkX, Printer, Loader2, BookOpen, Trash2 as TrashIcon, QrCode as QrCodeIcon, MousePointerClick, Eye, Hand, ShoppingBag, BarChart, Home, Bike } from 'lucide-react';
+import { Search, Plus, Minus, X, LayoutGrid, List, Rows, ChevronsUpDown, Palette, Shuffle, ClipboardList, Send, CheckCircle2, Users, Bookmark, Sparkles, Repeat, Edit, UserCheck, BookmarkX, Printer, Loader2, BookOpen, Trash2 as TrashIcon, QrCode as QrCodeIcon, MousePointerClick, Eye, Hand, ShoppingBag, BarChart, Home, Bike, Beer } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useDrag, useDrop } from 'react-dnd';
@@ -179,6 +179,9 @@ function OrderPanel({
     receiptPreview,
     orderType,
     setOrderType,
+    handleSendToBar,
+    hasBeverages,
+    hasFood,
     children,
 }: {
     orderItems: OrderItem[];
@@ -201,6 +204,9 @@ function OrderPanel({
     receiptPreview: string;
     orderType: OrderType;
     setOrderType: (type: OrderType) => void;
+    handleSendToBar: () => void;
+    hasBeverages: boolean;
+    hasFood: boolean;
     children: React.ReactNode;
 }) {
     const [{ isOver, canDrop }, drop] = useDrop(() => ({
@@ -348,7 +354,7 @@ function OrderPanel({
             <div id="table-grid-container" className="p-4 border-t space-y-4">
                <div className="flex items-center gap-2 flex-wrap">
                     <Label className="font-semibold text-sm shrink-0 whitespace-nowrap">Order Type:</Label>
-                    <div className="flex-1 grid grid-cols-3 gap-2 min-w-[280px]">
+                    <div className="flex-1 grid grid-cols-3 gap-2 min-w-[320px]">
                         <Button variant={orderType === 'Dine-In' ? 'default' : 'outline'} onClick={() => setOrderType('Dine-In')} className="h-12 text-base"><Users className="mr-2 h-5 w-5"/>Dine-In</Button>
                         <Button variant={orderType === 'Takeaway' ? 'default' : 'outline'} onClick={() => setOrderType('Takeaway')} className="h-12 text-base"><ShoppingBag className="mr-2 h-5 w-5"/>Takeaway</Button>
                         <Button variant={orderType === 'Home Delivery' ? 'default' : 'outline'} onClick={() => setOrderType('Home Delivery')} className="h-12 text-base px-2">
@@ -400,15 +406,28 @@ function OrderPanel({
                             Quick Assign to Table
                         </Button>
                     )}
-                    <Button 
-                        size="lg"
-                        className={cn("h-12 text-base", activeOrder && "bg-blue-600 hover:bg-blue-700")}
-                        onClick={handleSendToKitchen}
-                        disabled={isProcessing || (orderItems.length === 0) || (orderType === 'Dine-In' && !currentActiveTableId && !activeOrder)}
-                    >
-                        {isProcessing && (activeOrder ? 'Updating KOT...' : 'Sending KOT...').includes('Sending') ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : (activeOrder ? <Printer className="mr-2 h-4 w-4" /> : <Send className="mr-2 h-4 w-4" />)}
-                        {activeOrder ? 'Update KOT' : 'Send KOT to Kitchen'}
-                    </Button>
+                     <div className={cn("grid gap-2", hasBeverages ? "grid-cols-2" : "grid-cols-1")}>
+                        <Button 
+                            size="lg"
+                            className={cn("h-12 text-base", activeOrder && "bg-blue-600 hover:bg-blue-700")}
+                            onClick={handleSendToKitchen}
+                            disabled={isProcessing || !hasFood || (orderType === 'Dine-In' && !currentActiveTableId && !activeOrder)}
+                        >
+                            {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
+                            {activeOrder ? 'Update Kitchen KOT' : 'Send to Kitchen'}
+                        </Button>
+                        {hasBeverages && (
+                            <Button 
+                                size="lg"
+                                className="h-12 text-base bg-cyan-600 hover:bg-cyan-700"
+                                onClick={handleSendToBar}
+                                disabled={isProcessing || !hasBeverages || (orderType === 'Dine-In' && !currentActiveTableId && !activeOrder)}
+                            >
+                                {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Beer className="mr-2 h-4 w-4" />}
+                                {activeOrder ? 'Update Bar KOT' : 'Send to Bar'}
+                            </Button>
+                        )}
+                    </div>
                     <div className="grid grid-cols-2 gap-2">
                         <Button size="lg" variant="outline" className="h-12 text-base" onClick={handlePrintProvisionalBill} disabled={orderItems.length === 0}>
                             <Printer className="mr-2 h-4 w-4" />
@@ -890,12 +909,11 @@ export default function PosSystem({
     setOrderItems(orderItems.filter(item => item.name !== name));
   };
   
-  const printKot = (order: Order, diffItems?: OrderItem[]) => {
-    const itemsToPrint = diffItems || order.items;
+  const printKot = (order: Order, itemsToPrint: OrderItem[], type: 'Kitchen' | 'Bar') => {
     if (itemsToPrint.length === 0) return;
     const printWindow = window.open('', '_blank');
     if (printWindow) {
-      const isUpdate = !!diffItems && diffItems.length > 0;
+      const isUpdate = !!(activeOrder);
       
       let title: string;
       if (order.tableId === 0) { // Default takeaway
@@ -905,11 +923,13 @@ export default function PosSystem({
       } else {
         title = `Table ${order.tableId}`;
       }
+      
+      const kotType = type === 'Bar' ? 'BAR KOT' : 'KOT';
 
       const kitchenReceipt = `
         <html>
           <head>
-            <title>Kitchen Order Ticket</title>
+            <title>${type} Order Ticket</title>
             <style>
               body { font-family: monospace; margin: 20px; font-size: 14px; }
               h2, h3 { text-align: center; margin: 5px 0; }
@@ -918,7 +938,7 @@ export default function PosSystem({
             </style>
           </head>
           <body>
-            <h2>${isUpdate ? 'KOT UPDATE' : 'KOT'} - ${title}</h2>
+            <h2>${isUpdate ? `${kotType} UPDATE` : kotType} - ${title}</h2>
             <h3>Order ID: ${order.id}</h3>
             ${order.deliveryDetails ? `
               <hr>
@@ -944,14 +964,15 @@ export default function PosSystem({
     }
   };
 
-  const addOrder = (order: Omit<Order, 'id' | 'status'>) => {
+  const addOrder = (order: Omit<Order, 'id' | 'status'>, kitchenItems: OrderItem[], barItems: OrderItem[]) => {
     const newOrder: Order = {
       ...order,
       id: `K${(orders.length + 1).toString().padStart(3, '0')}`,
       status: 'In Preparation', 
     };
     onOrderCreated(newOrder);
-    printKot(newOrder);
+    if (kitchenItems.length > 0) printKot(newOrder, kitchenItems, 'Kitchen');
+    if (barItems.length > 0) printKot(newOrder, barItems, 'Bar');
     setOriginalOrderItems(newOrder.items);
   };
   
@@ -961,77 +982,90 @@ export default function PosSystem({
     });
     setActiveOrder(updatedOrder);
   };
-
-  const handleSendToKitchen = useCallback(() => {
-    if (orderItems.length === 0) {
-      toast({ variant: 'destructive', title: 'Empty Order', description: 'Cannot send an empty order to the kitchen.' });
-      return;
-    }
-    
-    if (orderType === 'Home Delivery' && (!homeDeliveryDetails.name || !homeDeliveryDetails.mobile)) {
-        setIsHomeDeliveryDialogOpen(true);
-        toast({ variant: 'destructive', title: 'Missing Delivery Info', description: 'Please enter customer name and mobile.' });
-        return;
-    }
-
-    setIsProcessing(true);
-    // Use a short timeout to allow the UI to update with the loading state
-    setTimeout(() => {
-        if (activeOrder) {
-          const updatedOrder = { ...activeOrder, items: orderItems };
-          
-          const diffItems: OrderItem[] = [];
-          const originalItemsMap = new Map(originalOrderItems.map(item => [item.name, item.quantity]));
-          const currentItemsMap = new Map(orderItems.map(item => [item.name, item.quantity]));
-
-          currentItemsMap.forEach((quantity, name) => {
-              const originalQuantity = originalItemsMap.get(name) || 0;
-              if (quantity > originalQuantity) {
-              const itemDetails = orderItems.find(i => i.name === name);
-              if (itemDetails) {
-                  diffItems.push({ ...itemDetails, quantity: quantity - originalQuantity });
-              }
-              }
-          });
-          
-          if (diffItems.length > 0) {
-              updateOrder(updatedOrder);
-              printKot(updatedOrder, diffItems);
-              toast({ title: 'Order Updated!', description: `KOT update sent for ${orderType === 'Dine-In' ? `Table ${currentActiveTableId}` : orderType}.` });
-              setOriginalOrderItems([...orderItems]);
-          } else {
-              toast({ title: 'No Changes', description: 'No new items were added to the order.' });
-          }
-
-        } else {
-            let tableIdForOrder: number;
-            switch(orderType) {
-                case 'Dine-In':
-                    tableIdForOrder = currentActiveTableId!;
-                    break;
-                case 'Takeaway':
-                    tableIdForOrder = 0; // Special ID for takeaway
-                    break;
-                case 'Home Delivery':
-                    tableIdForOrder = -1; // Special ID for home delivery
-                    break;
-            }
-          
-            const orderPayload: Omit<Order, 'id' | 'status'> = {
-              items: orderItems,
-              tableId: tableIdForOrder,
-              ...(orderType === 'Home Delivery' && { deliveryDetails: homeDeliveryDetails }),
-            };
-            addOrder(orderPayload);
-            if (orderType === 'Dine-In') {
-              updateTableStatus([currentActiveTableId!], 'Occupied');
-            }
-        }
-        setIsProcessing(false);
-    }, 50);
-  }, [activeOrder, orderItems, currentActiveTableId, toast, addOrder, updateOrder, originalOrderItems, updateTableStatus, onOrderCreated, orderType, homeDeliveryDetails]);
   
-    const handleDropItemOnTable = (tableId: number, item: MenuItem) => {
+    const handleSendOrder = useCallback((type: 'Kitchen' | 'Bar') => {
+        if (orderItems.length === 0) {
+            toast({ variant: 'destructive', title: 'Empty Order', description: 'Cannot send an empty order.' });
+            return;
+        }
+
+        if (orderType === 'Home Delivery' && (!homeDeliveryDetails.name || !homeDeliveryDetails.mobile)) {
+            setIsHomeDeliveryDialogOpen(true);
+            toast({ variant: 'destructive', title: 'Missing Delivery Info', description: 'Please enter customer name and mobile.' });
+            return;
+        }
+        
+        const beverageCategory = menu.find(c => c.category === 'Beverages');
+        const beverageItemNames = beverageCategory ? beverageCategory.subCategories.flatMap(sc => sc.items.map(i => i.name)) : [];
+
+        const isBeverage = (item: OrderItem) => beverageItemNames.includes(item.name);
+        const foodItems = orderItems.filter(item => !isBeverage(item));
+        const beverageItems = orderItems.filter(item => isBeverage(item));
+
+        setIsProcessing(true);
+        setTimeout(() => {
+            if (activeOrder) {
+                const updatedOrder = { ...activeOrder, items: orderItems };
+                
+                const getDiff = (currentItems: OrderItem[], originalItems: OrderItem[]) => {
+                    const diff: OrderItem[] = [];
+                    const originalMap = new Map(originalItems.map(item => [item.name, item.quantity]));
+                    currentItems.forEach(item => {
+                        const originalQty = originalMap.get(item.name) || 0;
+                        if (item.quantity > originalQty) {
+                            diff.push({ ...item, quantity: item.quantity - originalQty });
+                        }
+                    });
+                    return diff;
+                }
+
+                const kitchenDiff = getDiff(foodItems, originalOrderItems);
+                const barDiff = getDiff(beverageItems, originalOrderItems);
+                
+                if (type === 'Kitchen' && kitchenDiff.length > 0) {
+                    printKot(updatedOrder, kitchenDiff, 'Kitchen');
+                } else if (type === 'Bar' && barDiff.length > 0) {
+                    printKot(updatedOrder, barDiff, 'Bar');
+                } else {
+                    toast({ title: 'No Changes', description: `No new ${type.toLowerCase()} items to send.` });
+                    setIsProcessing(false);
+                    return;
+                }
+                
+                updateOrder(updatedOrder);
+                setOriginalOrderItems([...orderItems]);
+                toast({ title: 'Order Updated!', description: `KOT update sent to ${type}.` });
+
+            } else { // New order
+                let tableIdForOrder: number;
+                switch(orderType) {
+                    case 'Dine-In': tableIdForOrder = currentActiveTableId!; break;
+                    case 'Takeaway': tableIdForOrder = 0; break;
+                    case 'Home Delivery': tableIdForOrder = -1; break;
+                }
+
+                const orderPayload: Omit<Order, 'id' | 'status'> = {
+                  items: orderItems,
+                  tableId: tableIdForOrder,
+                  ...(orderType === 'Home Delivery' && { deliveryDetails: homeDeliveryDetails }),
+                };
+                
+                addOrder(orderPayload, foodItems, beverageItems);
+                
+                if (orderType === 'Dine-In') {
+                  updateTableStatus([currentActiveTableId!], 'Occupied');
+                }
+                toast({ title: 'Order Sent!', description: `New KOT sent.` });
+            }
+            setIsProcessing(false);
+        }, 50);
+    }, [activeOrder, orderItems, currentActiveTableId, toast, addOrder, updateOrder, originalOrderItems, updateTableStatus, onOrderCreated, orderType, homeDeliveryDetails, menu]);
+
+
+  const handleSendToKitchen = () => handleSendOrder('Kitchen');
+  const handleSendToBar = () => handleSendOrder('Bar');
+
+  const handleDropItemOnTable = (tableId: number, item: MenuItem) => {
       if (!easyMode) return;
       const table = tables.find(t => t.id === tableId);
       if (!table || (table.status !== 'Available' && table.status !== 'Occupied')) {
@@ -1237,7 +1271,7 @@ export default function PosSystem({
     setSelectedTableId(tableId);
     // Use a timeout to ensure the state updates before sending to kitchen
     setTimeout(() => {
-        handleSendToKitchen();
+        handleSendOrder('Kitchen'); // Default to kitchen
     }, 100);
   };
 
@@ -1324,7 +1358,7 @@ export default function PosSystem({
           searchInputRef.current?.focus();
           setKeyboardMode('order');
         } else if (keyboardMode === 'confirm') {
-          handleSendToKitchen();
+          handleSendOrder('Kitchen');
           setKeyboardMode('table');
         }
       } else if (e.key === 'Escape') {
@@ -1345,7 +1379,7 @@ export default function PosSystem({
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [keyboardMode, selectedTableId, tables, handleSelectTable, updateTableStatus, handleSendToKitchen, setKeyboardMode]);
+  }, [keyboardMode, selectedTableId, tables, handleSelectTable, updateTableStatus, handleSendOrder, setKeyboardMode]);
 
 
   const renderMenuItem = (item: MenuItem, subCategoryName: string, categoryName: string) => {
@@ -1355,15 +1389,16 @@ export default function PosSystem({
     const categoryStatus = menuCategoryStatus[categoryName];
     
     let finalItemColor, isDisabled = false;
+    let finalItemBg = 'bg-background';
 
     if (categoryStatus === 'out' || itemStatus === 'out') {
-        finalItemColor = itemStatusColors.out.light;
+        finalItemBg = itemStatusColors.out.light;
         isDisabled = true;
     } else if (categoryStatus === 'low' || itemStatus === 'low') {
-        finalItemColor = itemStatusColors.low.light;
+        finalItemBg = itemStatusColors.low.light;
     } else {
         const colorName = categoryColors[categoryName];
-        finalItemColor = colorName ? colorPalette[colorName]?.light : 'bg-background';
+        finalItemBg = colorName ? colorPalette[colorName]?.light : 'bg-background';
     }
     
     const menuItemCard = (
@@ -1372,11 +1407,12 @@ export default function PosSystem({
         className={cn(
           "group rounded-lg transition-all shadow-md hover:shadow-lg relative overflow-hidden h-full flex flex-col min-h-[110px]",
           easyMode && "cursor-pointer hover:scale-105",
-          isDisabled && "pointer-events-none opacity-60"
+          isDisabled && "pointer-events-none opacity-60",
+          finalItemBg
         )}
         onClick={() => handleItemClick(item)}
       >
-        <CardContent className={cn("p-3 flex flex-col justify-between flex-grow", finalItemColor)}>
+        <CardContent className={cn("p-3 flex flex-col justify-between flex-grow")}>
           <div>
             <div className="flex justify-between items-start mb-1">
               <div className="flex items-center gap-2">
@@ -1577,6 +1613,20 @@ export default function PosSystem({
     }
   };
   
+  const hasBeverages = useMemo(() => {
+    const beverageCategory = menu.find(c => c.category === 'Beverages');
+    if (!beverageCategory) return false;
+    const beverageItemNames = new Set(beverageCategory.subCategories.flatMap(sc => sc.items.map(i => i.name)));
+    return orderItems.some(item => beverageItemNames.has(item.name));
+  }, [orderItems, menu]);
+
+  const hasFood = useMemo(() => {
+      const beverageCategory = menu.find(c => c.category === 'Beverages');
+      if (!beverageCategory) return true; // If no beverage category, all items are food
+      const beverageItemNames = new Set(beverageCategory.subCategories.flatMap(sc => sc.items.map(i => i.name)));
+      return orderItems.some(item => !beverageItemNames.has(item.name));
+  }, [orderItems, menu]);
+  
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-4 gap-4 h-full p-4">
@@ -1680,6 +1730,9 @@ export default function PosSystem({
               receiptPreview={receiptPreview}
               orderType={orderType}
               setOrderType={setOrderType}
+              handleSendToBar={handleSendToBar}
+              hasBeverages={hasBeverages}
+              hasFood={hasFood}
           >
             <div className="grid grid-cols-[repeat(auto-fit,minmax(80px,1fr))] gap-2">
                 {tables.map(table => {
@@ -1824,6 +1877,7 @@ export default function PosSystem({
 
 
     
+
 
 
 
