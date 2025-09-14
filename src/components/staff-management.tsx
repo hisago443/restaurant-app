@@ -295,6 +295,29 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
     return advancesForSelectedDate.reduce((sum, advance) => sum + advance.amount, 0);
   }, [advancesForSelectedDate]);
 
+    const employeeSummaries = useMemo(() => {
+    const now = new Date();
+    const currentMonth = getMonth(now);
+    const currentYear = getYear(now);
+    
+    return employees.map(employee => {
+        const monthlyAdvances = advances.filter(a => 
+            a.employeeId === employee.id &&
+            getMonth(a.date) === currentMonth &&
+            getYear(a.date) === currentYear
+        );
+
+        const totalAdvance = monthlyAdvances.reduce((sum, a) => sum + a.amount, 0);
+        const remainingSalary = employee.salary - totalAdvance;
+        
+        return {
+            employeeId: employee.id,
+            totalAdvance,
+            remainingSalary,
+        };
+    });
+  }, [employees, advances]);
+
 
   return (
     <div className="p-4 space-y-4">
@@ -445,7 +468,7 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
               <div className='flex justify-between items-center'>
                 <div>
                   <CardTitle>Employees List</CardTitle>
-                  <CardDescription>Manage staff information.</CardDescription>
+                  <CardDescription>Manage staff information and view monthly salary details.</CardDescription>
                 </div>
                 <Button onClick={() => openEmployeeDialog(null)}><PlusCircle className="mr-2 h-4 w-4" /> Add Employee</Button>
               </div>
@@ -459,11 +482,13 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
                       <TableHead>Employee</TableHead>
                       <TableHead>Role</TableHead>
                       <TableHead>Base Salary</TableHead>
-                      <TableHead className="text-right">Summary</TableHead>
+                      <TableHead>Advance Taken</TableHead>
+                      <TableHead>Remaining Salary</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {employees.map((employee, index) => {
+                      const summary = employeeSummaries.find(s => s.employeeId === employee.id);
                       return (
                         <TableRow key={employee.id} className={cn(index % 2 === 0 ? 'bg-muted/50' : 'bg-background')}>
                           <TableCell className="font-mono text-xs">{employee.id}</TableCell>
@@ -475,10 +500,15 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
                           </TableCell>
                           <TableCell>{employee.role}</TableCell>
                           <TableCell className="font-semibold text-blue-600">Rs. {employee.salary.toLocaleString()}</TableCell>
-                          <TableCell className="text-right">
-                              <Button variant="outline" size="sm" onClick={() => openSummaryDialog(employee)}>
-                                  <Eye className="mr-2 h-4 w-4" /> View Summary
-                              </Button>
+                          <TableCell className="p-0">
+                            <div className="bg-orange-50 dark:bg-orange-900/30 h-full py-4 px-4">
+                                <span className="font-semibold text-orange-600">Rs. {summary?.totalAdvance.toLocaleString() || 0}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell className="p-0">
+                            <div className="bg-green-50 dark:bg-green-900/30 h-full py-4 px-4">
+                                <span className="font-semibold text-green-600">Rs. {summary?.remainingSalary.toLocaleString() || employee.salary}</span>
+                            </div>
                           </TableCell>
                         </TableRow>
                       );
@@ -822,7 +852,5 @@ function EmployeeSummaryDialog({ open, onOpenChange, employee, attendance, advan
         </Dialog>
     )
 }
-
-    
 
     
