@@ -321,6 +321,38 @@ export default function AdminDashboard({
                    <SalesReport bills={billHistory} />
                 </CardContent>
             </Card>
+             <Card>
+                <CardHeader>
+                    <CardTitle>Top Selling Items</CardTitle>
+                    <CardDescription>All-time most popular items.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Item</TableHead>
+                          <TableHead className="text-right">Sold</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {topSellingItems.length > 0 ? (
+                          topSellingItems.map(item => (
+                            <TableRow key={item.name} className="hover:bg-muted/50">
+                              <TableCell className="font-bold">{item.name}</TableCell>
+                              <TableCell className="text-right font-bold">{item.count}</TableCell>
+                            </TableRow>
+                          ))
+                        ) : (
+                          <TableRow>
+                            <TableCell colSpan={2} className="text-center text-muted-foreground">
+                              No items sold yet.
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      </TableBody>
+                    </Table>
+                </CardContent>
+            </Card>
         </div>
 
         {/* Right Column */}

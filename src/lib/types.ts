@@ -36,6 +36,7 @@ export interface Table {
   reservationDetails?: {
     name: string;
     time: string;
+    mobile?: string;
   }
 }
 

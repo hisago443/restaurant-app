@@ -309,8 +309,13 @@ export default function MainLayout() {
     ? currentDateTime.toLocaleTimeString()
     : '';
 
-  const updateTableStatus = useCallback((tableIds: number[], status: TableStatus) => {
-    setTables(tables => tables.map(t => (tableIds.includes(t.id) ? { ...t, status } : t)));
+  const updateTableStatus = useCallback((tableIds: number[], status: TableStatus, reservationDetails?: Table['reservationDetails']) => {
+    setTables(tables => tables.map(t => {
+      if (tableIds.includes(t.id)) {
+        return { ...t, status, reservationDetails: status === 'Reserved' ? reservationDetails : undefined };
+      }
+      return t;
+    }));
   }, []);
 
   const addTable = () => {
