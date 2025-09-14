@@ -36,12 +36,12 @@ const vegColor = 'bg-green-100 dark:bg-green-900/30';
 const nonVegColor = 'bg-rose-100 dark:bg-rose-900/30';
 
 const colorPalette: Record<string, {light: string, dark: string}> = {
-    amber: { light: 'bg-amber-100 dark:bg-amber-900/40', dark: 'bg-amber-100 dark:bg-amber-900/40' },
-    lime: { light: 'bg-lime-100 dark:bg-lime-900/40', dark: 'bg-lime-100 dark:bg-lime-900/40' },
-    purple: { light: 'bg-purple-100 dark:bg-purple-900/40', dark: 'bg-purple-100 dark:bg-purple-900/40' },
-    teal: { light: 'bg-teal-100 dark:bg-teal-900/40', dark: 'bg-teal-100 dark:bg-teal-900/40' },
-    orange: { light: 'bg-orange-100 dark:bg-orange-900/40', dark: 'bg-orange-100 dark:bg-orange-900/40' },
-    cyan: { light: 'bg-cyan-100 dark:bg-cyan-900/40', dark: 'bg-cyan-100 dark:bg-cyan-900/40' },
+    amber: { light: 'bg-amber-200 dark:bg-amber-900/50', dark: 'bg-amber-200 dark:bg-amber-900/50' },
+    lime: { light: 'bg-lime-200 dark:bg-lime-900/50', dark: 'bg-lime-200 dark:bg-lime-900/50' },
+    purple: { light: 'bg-purple-200 dark:bg-purple-900/50', dark: 'bg-purple-200 dark:bg-purple-900/50' },
+    teal: { light: 'bg-teal-200 dark:bg-teal-900/50', dark: 'bg-teal-200 dark:bg-teal-900/50' },
+    orange: { light: 'bg-orange-200 dark:bg-orange-900/50', dark: 'bg-orange-200 dark:bg-orange-900/50' },
+    cyan: { light: 'bg-cyan-200 dark:bg-cyan-900/50', dark: 'bg-cyan-200 dark:bg-cyan-900/50' },
 };
 const colorNames = Object.keys(colorPalette);
 
@@ -633,6 +633,12 @@ export default function PosSystem({
     [typedMenuData]
   );
   
+  useEffect(() => {
+    if (searchTerm && viewMode === 'accordion') {
+      setActiveAccordionItems(filteredMenu.map(c => c.category));
+    }
+  }, [searchTerm, viewMode]);
+
   const filteredMenu = useMemo(() => {
     let menuToFilter = typedMenuData;
 
@@ -658,12 +664,6 @@ export default function PosSystem({
 
     return menuToFilter;
   }, [searchTerm, vegFilter, typedMenuData]);
-
-  useEffect(() => {
-    if (searchTerm && viewMode === 'accordion') {
-      setActiveAccordionItems(filteredMenu.map(c => c.category));
-    }
-  }, [searchTerm, viewMode, filteredMenu]);
 
   const currentActiveTableId = useMemo(() => {
     return orderType === 'Dine-In' ? selectedTableId : null;
@@ -1358,7 +1358,8 @@ export default function PosSystem({
     } else if (categoryStatus === 'low' || itemStatus === 'low') {
         finalItemColor = itemStatusColors.low.light;
     } else {
-        finalItemColor = 'bg-background';
+        const colorName = categoryColors[categoryName];
+        finalItemColor = colorName ? colorPalette[colorName]?.light : 'bg-background';
     }
     
     const menuItemCard = (
@@ -1366,13 +1367,12 @@ export default function PosSystem({
         key={item.name}
         className={cn(
           "group rounded-lg transition-all shadow-md hover:shadow-lg relative overflow-hidden h-full flex flex-col min-h-[110px]",
-          finalItemColor,
           easyMode && "cursor-pointer hover:scale-105",
           isDisabled && "pointer-events-none opacity-60"
         )}
         onClick={() => handleItemClick(item)}
       >
-        <CardContent className="p-3 flex flex-col justify-between flex-grow">
+        <CardContent className={cn("p-3 flex flex-col justify-between flex-grow", finalItemColor)}>
           <div>
             <div className="flex justify-between items-start mb-1">
               <div className="flex items-center gap-2">
@@ -1820,6 +1820,7 @@ export default function PosSystem({
 
 
     
+
 
 
 
