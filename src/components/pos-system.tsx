@@ -36,12 +36,12 @@ const vegColor = 'bg-green-100 dark:bg-green-900/30';
 const nonVegColor = 'bg-rose-100 dark:bg-rose-900/30';
 
 const colorPalette: Record<string, {light: string, dark: string}> = {
-    amber: { light: 'bg-amber-100 dark:bg-amber-900/40', dark: 'bg-amber-500 dark:bg-amber-800/70' },
-    lime: { light: 'bg-lime-100 dark:bg-lime-900/40', dark: 'bg-lime-500 dark:bg-lime-800/70' },
-    purple: { light: 'bg-purple-100 dark:bg-purple-900/40', dark: 'bg-purple-500 dark:bg-purple-800/70' },
-    teal: { light: 'bg-teal-100 dark:bg-teal-900/40', dark: 'bg-teal-500 dark:bg-teal-800/70' },
-    orange: { light: 'bg-orange-100 dark:bg-orange-900/40', dark: 'bg-orange-500 dark:bg-orange-800/70' },
-    cyan: { light: 'bg-cyan-100 dark:bg-cyan-900/40', dark: 'bg-cyan-500 dark:bg-cyan-800/70' },
+    amber: { light: 'bg-amber-100 dark:bg-amber-900/40', dark: 'bg-amber-100 dark:bg-amber-900/40' },
+    lime: { light: 'bg-lime-100 dark:bg-lime-900/40', dark: 'bg-lime-100 dark:bg-lime-900/40' },
+    purple: { light: 'bg-purple-100 dark:bg-purple-900/40', dark: 'bg-purple-100 dark:bg-purple-900/40' },
+    teal: { light: 'bg-teal-100 dark:bg-teal-900/40', dark: 'bg-teal-100 dark:bg-teal-900/40' },
+    orange: { light: 'bg-orange-100 dark:bg-orange-900/40', dark: 'bg-orange-100 dark:bg-orange-900/40' },
+    cyan: { light: 'bg-cyan-100 dark:bg-cyan-900/40', dark: 'bg-cyan-100 dark:bg-cyan-900/40' },
 };
 const colorNames = Object.keys(colorPalette);
 
@@ -660,7 +660,7 @@ export default function PosSystem({
   }, [searchTerm, vegFilter, typedMenuData]);
 
   useEffect(() => {
-    if (searchTerm) {
+    if (searchTerm && viewMode === 'accordion') {
       setActiveAccordionItems(filteredMenu.map(c => c.category));
     }
   }, [searchTerm, viewMode, filteredMenu]);
@@ -1349,7 +1349,6 @@ export default function PosSystem({
     
     const itemStatus = menuItemStatus[item.name];
     const categoryStatus = menuCategoryStatus[categoryName];
-    const colorName = categoryColors[categoryName];
     
     let finalItemColor, isDisabled = false;
 
@@ -1359,7 +1358,7 @@ export default function PosSystem({
     } else if (categoryStatus === 'low' || itemStatus === 'low') {
         finalItemColor = itemStatusColors.low.light;
     } else {
-        finalItemColor = isNonVeg ? nonVegColor : (colorName ? colorPalette[colorName]?.light : vegColor);
+        finalItemColor = 'bg-background';
     }
     
     const menuItemCard = (
@@ -1524,7 +1523,7 @@ export default function PosSystem({
                 const colorClass = colorName ? colorPalette[colorName]?.dark : 'bg-muted';
                 return (
                 <AccordionItem key={category.category} value={category.category} className="border-b-0">
-                     <AccordionTrigger className={cn("p-3 rounded-md text-lg font-bold hover:no-underline flex justify-between items-center relative group", statusConfig ? statusConfig.dark : colorClass )}>
+                     <AccordionTrigger className={cn("p-3 rounded-md text-lg font-bold hover:no-underline flex justify-between items-center relative group text-card-foreground", statusConfig ? statusConfig.dark : colorClass )}>
                         {renderCategoryHeader(category)}
                         <div className="absolute top-1/2 -translate-y-1/2 right-10 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
                             <Popover>
@@ -1821,5 +1820,6 @@ export default function PosSystem({
 
 
     
+
 
 
