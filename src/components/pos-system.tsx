@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import * as React from 'react';
@@ -978,7 +977,7 @@ export default function PosSystem({
 
         const beverageCategory = menu.find(c => c.category === 'Beverages');
         const beverageItemNames = beverageCategory ? new Set(beverageCategory.subCategories.flatMap(sc => sc.items.map(i => i.name))) : new Set();
-
+        
         const getDiff = (currentItems: OrderItem[], originalItems: OrderItem[]) => {
             const diff: OrderItem[] = [];
             const originalMap = new Map(originalItems.map(item => [item.name, item.quantity]));
@@ -991,11 +990,11 @@ export default function PosSystem({
             return diff;
         };
 
-        const foodItems = orderItems.filter(item => !beverageItemNames.has(item.name));
-        const beverageItems = orderItems.filter(item => beverageItemNames.has(item.name));
-        
-        const itemsForKOT = type === 'Kitchen' ? foodItems : beverageItems;
-        const originalItemsForKOT = originalOrderItems.filter(item => type === 'Kitchen' ? !beverageItemNames.has(item.name) : beverageItemNames.has(item.name));
+        const isFoodItem = (item: OrderItem) => !beverageItemNames.has(item.name);
+        const isBeverageItem = (item: OrderItem) => beverageItemNames.has(item.name);
+
+        const itemsForKOT = orderItems.filter(type === 'Kitchen' ? isFoodItem : isBeverageItem);
+        const originalItemsForKOT = originalOrderItems.filter(type === 'Kitchen' ? isFoodItem : isBeverageItem);
         
         const itemsToPrint = activeOrder ? getDiff(itemsForKOT, originalItemsForKOT) : itemsForKOT;
         
@@ -1034,17 +1033,14 @@ export default function PosSystem({
             
             printKot(finalOrder, itemsToPrint, type);
 
-            // Update originalOrderItems only with the items sent
-            const updatedOriginals = [...originalOrderItems];
-            itemsForKOT.forEach(sentItem => {
-                const existingIndex = updatedOriginals.findIndex(orig => orig.name === sentItem.name);
-                if (existingIndex > -1) {
-                    updatedOriginals[existingIndex] = { ...sentItem };
-                } else {
-                    updatedOriginals.push({ ...sentItem });
-                }
+            // Correctly update originalOrderItems
+            setOriginalOrderItems(prevOriginals => {
+                const newOriginals = new Map(prevOriginals.map(item => [item.name, item]));
+                itemsForKOT.forEach(sentItem => {
+                    newOriginals.set(sentItem.name, { ...sentItem });
+                });
+                return Array.from(newOriginals.values());
             });
-            setOriginalOrderItems(updatedOriginals);
 
             toast({ title: `KOT Sent!`, description: `Order update sent to ${type}.` });
             setIsProcessing(false);
@@ -1851,30 +1847,4 @@ export default function PosSystem({
   );
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     
-
-
-
-
-
-
-
-
-
-
-
-
