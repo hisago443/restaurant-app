@@ -1350,8 +1350,7 @@ export default function PosSystem({
     const itemStatus = menuItemStatus[item.name];
     const categoryStatus = menuCategoryStatus[categoryName];
     const colorName = categoryColors[categoryName];
-    const colorClass = colorName ? colorPalette[colorName]?.light : '';
-
+    
     let finalItemColor, isDisabled = false;
 
     if (categoryStatus === 'out' || itemStatus === 'out') {
@@ -1360,7 +1359,7 @@ export default function PosSystem({
     } else if (categoryStatus === 'low' || itemStatus === 'low') {
         finalItemColor = itemStatusColors.low.light;
     } else {
-        finalItemColor = isNonVeg ? nonVegColor : (colorClass || vegColor);
+        finalItemColor = isNonVeg ? nonVegColor : (colorName ? colorPalette[colorName]?.light : vegColor);
     }
     
     const menuItemCard = (
@@ -1493,9 +1492,8 @@ export default function PosSystem({
             </div>
             {filteredMenu.map(category => {
               const status = menuCategoryStatus[category.category];
-              const statusConfig = status ? itemStatusColors[status] : null;
               return (
-              <TabsContent key={category.category} value={category.category} className={cn("m-0 rounded-lg p-2 min-h-[200px]", statusConfig ? statusConfig.light : 'bg-background')}>
+              <TabsContent key={category.category} value={category.category} className={cn("m-0 rounded-lg p-2 min-h-[200px] bg-background")}>
                 <div className="space-y-4">
                   {category.subCategories.map((subCategory) => (
                     <div key={subCategory.name}>
@@ -1823,4 +1821,5 @@ export default function PosSystem({
 
 
     
+
 
