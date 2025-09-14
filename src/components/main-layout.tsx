@@ -24,6 +24,7 @@ import { HTML5Backend } from 'react-dnd-html5-backend';
 import { Button } from './ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 import { cn } from '@/lib/utils';
+import SetupWizard from './setup-wizard';
 
 const PENDING_ORDER_KEY = -1;
 
@@ -45,6 +46,20 @@ export default function MainLayout() {
   const [navPosition, setNavPosition] = useState<NavPosition>('top');
   const [customerCreditLimit, setCustomerCreditLimit] = useState(10000);
   const [vendorCreditLimit, setVendorCreditLimit] = useState(50000);
+  const [showSetupWizard, setShowSetupWizard] = useState(false);
+
+  useEffect(() => {
+    try {
+      const setupComplete = localStorage.getItem('setupComplete');
+      if (!setupComplete) {
+        setShowSetupWizard(true);
+      }
+    } catch (e) {
+      console.error("Could not access localStorage", e);
+      // Fallback for environments where localStorage is not available
+      setShowSetupWizard(true); 
+    }
+  }, []);
 
   useEffect(() => {
     try {
@@ -394,6 +409,19 @@ export default function MainLayout() {
     setNavPosition(pos => pos === 'top' ? 'left' : 'top');
   }
 
+  const handleSetupComplete = () => {
+    try {
+      localStorage.setItem('setupComplete', 'true');
+    } catch (e) {
+      console.error("Could not access localStorage", e);
+    }
+    setShowSetupWizard(false);
+  }
+
+
+  if (showSetupWizard) {
+    return <SetupWizard onComplete={handleSetupComplete} />;
+  }
 
   return (
     <div className="flex flex-col h-screen bg-background">
