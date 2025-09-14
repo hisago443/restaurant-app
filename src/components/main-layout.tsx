@@ -525,6 +525,7 @@ export default function MainLayout() {
                 billHistory={billHistory} 
                 employees={employees} 
                 expenses={expenses}
+                inventory={inventory}
                 customerCreditLimit={customerCreditLimit}
                 setCustomerCreditLimit={setCustomerCreditLimit}
                 vendorCreditLimit={vendorCreditLimit}
@@ -537,3 +538,5 @@ export default function MainLayout() {
     </div>
   );
 }
+
+    
