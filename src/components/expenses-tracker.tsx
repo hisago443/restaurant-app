@@ -466,7 +466,6 @@ export default function ExpensesTracker({ expenses, customerCreditLimit, vendorC
           id: doc.id,
           name: data.name,
           type: data.type,
-          creditLimit: data.creditLimit,
           transactions: (data.transactions || []).map((tx: any) => ({...tx, date: tx.date.toDate()})),
         } as PendingBill;
       });
@@ -592,9 +591,34 @@ export default function ExpensesTracker({ expenses, customerCreditLimit, vendorC
   
   const handleMarkAsPaid = async (name: string, type: 'customer' | 'vendor') => {
     const bill = pendingBills.find(b => b.name === name && b.type === type);
-    if (bill) {
+    if (!bill) return;
+
+    if (type === 'vendor') {
+      const totalPaid = bill.transactions.reduce((sum, tx) => sum + tx.amount, 0);
+      const vendor = vendors.find(v => v.name.toLowerCase() === name.toLowerCase());
+      
+      const expenseData = {
+          date: new Date(),
+          category: vendor?.category || 'Vendor Payment',
+          description: `Cleared pending bills for ${name}.`,
+          amount: totalPaid,
+          vendorId: vendor?.id || null,
+      };
+
+      try {
+        await addDoc(collection(db, "expenses"), expenseData);
+        toast({ title: "Expense Recorded", description: `An expense of Rs. ${totalPaid.toFixed(2)} for ${name} has been recorded.` });
+      } catch (error) {
+        toast({ variant: "destructive", title: "Error recording expense" });
+        return; // Stop if we can't record the expense
+      }
+    }
+
+    try {
       await deleteDoc(doc(db, 'pendingBills', bill.id));
       toast({ title: `${name}'s pending bills have been cleared.` });
+    } catch (error) {
+        toast({ variant: "destructive", title: "Error clearing bill" });
     }
   };
 
@@ -744,5 +768,7 @@ export default function ExpensesTracker({ expenses, customerCreditLimit, vendorC
     </div>
   );
 }
+
+    
 
     
