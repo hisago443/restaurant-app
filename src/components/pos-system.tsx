@@ -568,10 +568,6 @@ export default function PosSystem({
     setMenuItemStatus(prev => ({ ...prev, [itemName]: status }));
   };
   
-  const handleSetCategoryColor = (categoryName: string, colorName:string) => {
-    setCategoryColors(prev => ({ ...prev, [categoryName]: colorName }));
-  };
-
   const handleShuffleColors = () => {
     const shuffledPalette = [...colorNames].sort(() => 0.5 - Math.random());
     const newCategoryColors: Record<string, string> = {};
@@ -1125,32 +1121,6 @@ export default function PosSystem({
     );
   };
 
-  const CategoryColorPicker = ({ categoryName }: { categoryName: string }) => {
-    return (
-        <Popover>
-          <PopoverTrigger asChild>
-            <div role="button" aria-label={`Change category color for ${categoryName}`} className="p-1 rounded-md hover:bg-black/10">
-                <Palette className="h-4 w-4" />
-            </div>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-2">
-            <div className="grid grid-cols-5 gap-1">
-              {colorNames.map((name) => (
-                <div
-                  key={name}
-                  className={cn("h-6 w-6 rounded-full cursor-pointer", colorPalette[name].light)}
-                  onClick={() => handleSetCategoryColor(categoryName, name)}
-                />
-              ))}
-              <Button variant="ghost" size="sm" className="col-span-5 h-8" onClick={() => handleSetCategoryColor(categoryName, '')}>
-                Reset
-              </Button>
-            </div>
-          </PopoverContent>
-        </Popover>
-    );
-  };
-
   const renderMenuContent = () => {
     if (viewMode === 'grid') {
         return (
@@ -1162,11 +1132,6 @@ export default function PosSystem({
                     <TabsTrigger value={category.category} className={cn("rounded-none border-b-2 border-transparent data-[state=active]:shadow-none px-4 py-2 cursor-pointer", categoryColors[category.category] ? colorPalette[categoryColors[category.category]]?.dark : '')}>
                       <span className="flex-grow text-left text-lg text-black">{category.category}</span>
                     </TabsTrigger>
-                     <div className="absolute right-0 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <div onClick={(e) => e.stopPropagation()}>
-                          <CategoryColorPicker categoryName={category.category} />
-                        </div>
-                    </div>
                   </div>
                 ))}
               </TabsList>
@@ -1200,9 +1165,6 @@ export default function PosSystem({
                 <AccordionItem key={category.category} value={category.category} className="border-b-0">
                      <AccordionTrigger className={cn("p-3 rounded-md text-lg font-bold hover:no-underline flex justify-between items-center", categoryColors[category.category] ? colorPalette[categoryColors[category.category]]?.dark : 'bg-muted')}>
                         <span className="flex-grow text-left text-black">{category.category}</span>
-                        <div className="flex items-center" onClick={e => e.stopPropagation()}>
-                           <CategoryColorPicker categoryName={category.category} />
-                        </div>
                     </AccordionTrigger>
                     <AccordionContent className="p-2 space-y-2">
                         {category.subCategories.map(subCategory => (
@@ -1456,6 +1418,7 @@ export default function PosSystem({
     </div>
   );
 }
+
 
 
 
