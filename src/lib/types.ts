@@ -125,7 +125,6 @@ export interface PendingBill {
   id: string;
   name: string;
   type: 'customer' | 'vendor';
-  creditLimit: number;
   transactions: PendingBillTransaction[];
 }
 

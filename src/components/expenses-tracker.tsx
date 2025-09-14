@@ -317,22 +317,24 @@ function PendingBillsCard({
   bills,
   type,
   onAddTransaction,
-  onSetLimit,
   onMarkAsPaid,
+  totalLimit,
 }: {
   title: string;
   icon: React.ElementType;
   bills: PendingBill[];
   type: 'customer' | 'vendor';
   onAddTransaction: (name: string, amount: number, dueDate?: Date) => void;
-  onSetLimit: (name: string, limit: number) => void;
   onMarkAsPaid: (name: string) => void;
+  totalLimit: number;
 }) {
   const [isAddBillOpen, setIsAddBillOpen] = useState(false);
   
   const totalPending = useMemo(() => bills.reduce((total, bill) => {
     return total + bill.transactions.reduce((sum, t) => sum + t.amount, 0);
   }, 0), [bills]);
+  
+  const totalProgress = totalLimit > 0 ? (totalPending / totalLimit) * 100 : 0;
 
   return (
     <Card>
@@ -349,24 +351,35 @@ function PendingBillsCard({
         <CardDescription>
           Total Pending: <span className={cn("font-bold", type === 'customer' ? 'text-green-600' : 'text-red-600')}>Rs. {totalPending.toFixed(2)}</span>
         </CardDescription>
+         <div className="space-y-1 mt-2">
+            <div className="flex justify-between items-center text-sm">
+                <span className={cn("font-bold", type === 'customer' ? 'text-green-600' : 'text-red-600')}>
+                  Rs. {totalPending.toFixed(2)}
+                </span>
+                <span className="text-muted-foreground">Overall Limit: Rs. {totalLimit.toLocaleString()}</span>
+            </div>
+            <Progress value={totalProgress} indicatorClassName={totalProgress > 100 ? "bg-red-500" : (type === 'customer' ? 'bg-green-500' : 'bg-red-500')} />
+          </div>
       </CardHeader>
       <CardContent>
         <div className="max-h-96 overflow-y-auto space-y-2">
           {Object.entries(bills.reduce((acc, bill) => {
             if (!acc[bill.name]) {
-              acc[bill.name] = { limit: bill.creditLimit, transactions: [] };
+              acc[bill.name] = { transactions: [] };
             }
             acc[bill.name].transactions.push(...bill.transactions);
             return acc;
-          }, {} as Record<string, { limit: number; transactions: PendingBillTransaction[] }>)).map(([name, data]) => {
+          }, {} as Record<string, { transactions: PendingBillTransaction[] }>)).map(([name, data]) => {
             const totalForName = data.transactions.reduce((sum, t) => sum + t.amount, 0);
-            const progress = data.limit > 0 ? (totalForName / data.limit) * 100 : 0;
             return (
               <Collapsible key={name} className="p-2 border rounded-lg">
                 <div className="flex items-center justify-between">
                   <CollapsibleTrigger className="flex flex-grow items-center gap-2 text-left">
                      <ChevronsUpDown className="h-4 w-4" />
                      <span className="font-medium">{name}</span>
+                     <span className={cn("font-semibold text-sm", type === 'customer' ? 'text-green-600' : 'text-red-600')}>
+                        (Rs. {totalForName.toFixed(2)})
+                      </span>
                   </CollapsibleTrigger>
                    <AlertDialog>
                       <AlertDialogTrigger asChild>
@@ -384,23 +397,7 @@ function PendingBillsCard({
                       </AlertDialogContent>
                   </AlertDialog>
                 </div>
-                <div className="space-y-1 mt-2 px-2">
-                  <div className="flex justify-between items-center text-sm">
-                      <span className={cn("font-bold", type === 'customer' ? 'text-green-600' : 'text-red-600')}>
-                        Rs. {totalForName.toFixed(2)}
-                      </span>
-                      <div className="flex items-center gap-2">
-                        <span>Limit: Rs.</span>
-                        <Input 
-                          type="number" 
-                          defaultValue={data.limit}
-                          onBlur={(e) => onSetLimit(name, parseFloat(e.target.value) || 0)}
-                          className="w-24 h-8"
-                        />
-                      </div>
-                  </div>
-                  <Progress value={progress} indicatorClassName={progress > 100 ? "bg-red-500" : (type === 'customer' ? 'bg-green-500' : 'bg-red-500')} />
-                </div>
+                
                 <CollapsibleContent className="mt-2 space-y-1 pr-2 max-h-40 overflow-y-auto">
                   {data.transactions.map(tx => (
                     <div key={tx.id} className="flex justify-between items-center p-1.5 bg-muted/50 rounded-md text-sm">
@@ -417,7 +414,7 @@ function PendingBillsCard({
             open={isAddBillOpen}
             onOpenChange={setIsAddBillOpen}
             onSave={onAddTransaction}
-            existingNames={bills.map(b => b.name)}
+            existingNames={[...new Set(bills.map(b => b.name))]}
             type={type}
         />
       </CardContent>
@@ -455,7 +452,6 @@ export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
           id: doc.id,
           name: data.name,
           type: data.type,
-          creditLimit: data.creditLimit,
           transactions: (data.transactions || []).map((tx: any) => ({...tx, date: tx.date.toDate()})),
         } as PendingBill;
       });
@@ -572,7 +568,6 @@ export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
       const newBill: Omit<PendingBill, 'id'> = {
         name,
         type,
-        creditLimit: type === 'customer' ? 2000 : 10000, // Default limits
         transactions: [newTransaction],
       };
       await addDoc(collection(db, 'pendingBills'), newBill);
@@ -580,15 +575,6 @@ export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
     toast({ title: 'Pending bill added.' });
   };
   
-    const handleSetCreditLimit = async (name: string, limit: number, type: 'customer' | 'vendor') => {
-    const bill = pendingBills.find(b => b.name === name && b.type === type);
-    if (bill) {
-      const docRef = doc(db, 'pendingBills', bill.id);
-      await updateDoc(docRef, { creditLimit: limit });
-      toast({ title: `Credit limit for ${name} updated to Rs. ${limit}` });
-    }
-  };
-
   const handleMarkAsPaid = async (name: string, type: 'customer' | 'vendor') => {
     const bill = pendingBills.find(b => b.name === name && b.type === type);
     if (bill) {
@@ -613,8 +599,8 @@ export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
           bills={pendingBills.filter(b => b.type === 'customer')}
           type="customer"
           onAddTransaction={(name, amount, dueDate) => handleAddPendingTransaction(name, amount, 'customer', dueDate)}
-          onSetLimit={(name, limit) => handleSetCreditLimit(name, limit, 'customer')}
           onMarkAsPaid={(name) => handleMarkAsPaid(name, 'customer')}
+          totalLimit={10000}
         />
         <PendingBillsCard
           title="To Pay to Vendors"
@@ -622,8 +608,8 @@ export default function ExpensesTracker({ expenses }: ExpensesTrackerProps) {
           bills={pendingBills.filter(b => b.type === 'vendor')}
           type="vendor"
           onAddTransaction={(name, amount, dueDate) => handleAddPendingTransaction(name, amount, 'vendor', dueDate)}
-          onSetLimit={(name, limit) => handleSetCreditLimit(name, limit, 'vendor')}
           onMarkAsPaid={(name) => handleMarkAsPaid(name, 'vendor')}
+          totalLimit={50000}
         />
       </div>
 
