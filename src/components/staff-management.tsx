@@ -419,9 +419,6 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
                                   <div className="flex-grow flex items-center gap-3">
                                       <span className={cn("h-3 w-3 rounded-full", employee.color)} />
                                       <span className="font-semibold text-base">{employee.name}</span>
-                                       <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openSummaryDialog(employee)}>
-                                          <Eye className="h-4 w-4" />
-                                      </Button>
                                   </div>
                                   <div className="flex items-center gap-2">
                                       {(Object.keys(attendanceStatusConfig) as AttendanceStatus[]).map(status => {
@@ -450,6 +447,9 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
                                           <TooltipContent>{isDateLocked ? 'View Note' : 'Add/Edit Note'}</TooltipContent>
                                           </Tooltip>
                                       </TooltipProvider>
+                                       <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openSummaryDialog(employee)}>
+                                          <Eye className="h-4 w-4" />
+                                      </Button>
                                   </div>
                               </div>
                           )
@@ -482,8 +482,6 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
                       <TableHead className="font-bold text-foreground text-base">Employee</TableHead>
                       <TableHead className="font-bold text-foreground text-base">Role</TableHead>
                       <TableHead className="font-bold text-foreground text-base">Base Salary</TableHead>
-                      <TableHead className="font-bold text-foreground text-base border-l">Advance Taken</TableHead>
-                      <TableHead className="font-bold text-foreground text-base border-l">Remaining Salary</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -500,16 +498,6 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
                           </TableCell>
                           <TableCell>{employee.role}</TableCell>
                           <TableCell className="font-semibold text-blue-600">Rs. {employee.salary.toLocaleString()}</TableCell>
-                          <TableCell className="p-0 border-l">
-                            <div className="bg-orange-50 dark:bg-orange-900/30 h-full py-4 px-4">
-                                <span className="font-semibold text-orange-600">Rs. {summary?.totalAdvance.toLocaleString() || 0}</span>
-                            </div>
-                          </TableCell>
-                          <TableCell className="p-0 border-l">
-                            <div className="bg-green-50 dark:bg-green-900/30 h-full py-4 px-4">
-                                <span className="font-semibold text-green-600">Rs. {summary?.remainingSalary.toLocaleString() || employee.salary}</span>
-                            </div>
-                          </TableCell>
                         </TableRow>
                       );
                     })}
@@ -853,6 +841,8 @@ function EmployeeSummaryDialog({ open, onOpenChange, employee, attendance, advan
     )
 }
 
+
+    
 
     
 
