@@ -740,68 +740,10 @@ export default function ExpensesTracker({ expenses, customerCreditLimit, vendorC
           allNames={vendors.map(v => v.name)}
         />
       </div>
-
-      <Separator />
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Expense History</CardTitle>
-          <CardDescription>A log of all recorded business expenses.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-              <Card className="bg-red-100 dark:bg-red-900/30 border-red-200 dark:border-red-800">
-                  <CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-red-800 dark:text-red-200">Today's Expenses</CardTitle></CardHeader>
-                  <CardContent><p className="text-2xl font-bold text-red-900 dark:text-red-100">Rs. {dailyExpenses.toFixed(2)}</p></CardContent>
-              </Card>
-              <Card className="bg-orange-100 dark:bg-orange-900/30 border-orange-200 dark:border-orange-800">
-                  <CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-orange-800 dark:text-orange-200">This Month's Expenses</CardTitle></CardHeader>
-                  <CardContent><p className="text-2xl font-bold text-orange-900 dark:text-orange-100">Rs. {monthlyExpenses.toFixed(2)}</p></CardContent>
-              </Card>
-              <Card className="bg-yellow-100 dark:bg-yellow-900/30 border-yellow-200 dark:border-yellow-800">
-                  <CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-yellow-800 dark:text-yellow-200">Overall Expenses</CardTitle></CardHeader>
-                  <CardContent><p className="text-2xl font-bold text-yellow-900 dark:text-yellow-100">Rs. {totalExpenses.toFixed(2)}</p></CardContent>
-              </Card>
-          </div>
-          <div className="max-h-[60vh] overflow-y-auto">
-            <Table>
-                <TableHeader>
-                    <TableRow>
-                        <TableHead>Date</TableHead>
-                        <TableHead>Category</TableHead>
-                        <TableHead>Description</TableHead>
-                        <TableHead>Vendor</TableHead>
-                        <TableHead>Vendor Mobile</TableHead>
-                        <TableHead className="text-right">Amount</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                {expenses.length > 0 ? (
-                    expenses.map((expense, index) => {
-                      const vendor = getVendorDetails(expense.vendorId);
-                      return (
-                        <TableRow key={expense.id} className={cn(index % 2 === 0 ? 'bg-muted/50' : 'bg-background')}>
-                            <TableCell>{format(expense.date, 'PPP')}</TableCell>
-                            <TableCell>{expense.category}</TableCell>
-                            <TableCell>{expense.description}</TableCell>
-                            <TableCell>{vendor?.name || 'N/A'}</TableCell>
-                            <TableCell>{vendor?.phone || 'N/A'}</TableCell>
-                            <TableCell className="text-right font-mono text-red-600 dark:text-red-400">Rs. {expense.amount.toFixed(2)}</TableCell>
-                        </TableRow>
-                      )
-                    })
-                ) : (
-                    <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground h-24">No expenses recorded yet.</TableCell></TableRow>
-                )}
-                </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
       
       <Separator />
 
-       <Card>
+      <Card>
           <CardHeader>
               <CardTitle>Add New Expense</CardTitle>
               <CardDescription>Record a new business expense.</CardDescription>
@@ -852,6 +794,64 @@ export default function ExpensesTracker({ expenses, customerCreditLimit, vendorC
           </CardContent>
       </Card>
 
+      <Separator />
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Expense History</CardTitle>
+          <CardDescription>A log of all recorded business expenses.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="max-h-[60vh] overflow-y-auto mb-6">
+            <Table>
+                <TableHeader>
+                    <TableRow>
+                        <TableHead>Date</TableHead>
+                        <TableHead>Category</TableHead>
+                        <TableHead>Description</TableHead>
+                        <TableHead>Vendor</TableHead>
+                        <TableHead>Vendor Mobile</TableHead>
+                        <TableHead className="text-right">Amount</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                {expenses.length > 0 ? (
+                    expenses.map((expense, index) => {
+                      const vendor = getVendorDetails(expense.vendorId);
+                      return (
+                        <TableRow key={expense.id} className={cn(index % 2 === 0 ? 'bg-muted/50' : 'bg-background')}>
+                            <TableCell>{format(expense.date, 'PPP')}</TableCell>
+                            <TableCell>{expense.category}</TableCell>
+                            <TableCell>{expense.description}</TableCell>
+                            <TableCell>{vendor?.name || 'N/A'}</TableCell>
+                            <TableCell>{vendor?.phone || 'N/A'}</TableCell>
+                            <TableCell className="text-right font-mono text-red-600 dark:text-red-400">Rs. {expense.amount.toFixed(2)}</TableCell>
+                        </TableRow>
+                      )
+                    })
+                ) : (
+                    <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground h-24">No expenses recorded yet.</TableCell></TableRow>
+                )}
+                </TableBody>
+            </Table>
+          </div>
+           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Card className="bg-red-100 dark:bg-red-900/30 border-red-200 dark:border-red-800">
+                  <CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-red-800 dark:text-red-200">Today's Expenses</CardTitle></CardHeader>
+                  <CardContent><p className="text-2xl font-bold text-red-900 dark:text-red-100">Rs. {dailyExpenses.toFixed(2)}</p></CardContent>
+              </Card>
+              <Card className="bg-orange-100 dark:bg-orange-900/30 border-orange-200 dark:border-orange-800">
+                  <CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-orange-800 dark:text-orange-200">This Month's Expenses</CardTitle></CardHeader>
+                  <CardContent><p className="text-2xl font-bold text-orange-900 dark:text-orange-100">Rs. {monthlyExpenses.toFixed(2)}</p></CardContent>
+              </Card>
+              <Card className="bg-yellow-100 dark:bg-yellow-900/30 border-yellow-200 dark:border-yellow-800">
+                  <CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-yellow-800 dark:text-yellow-200">Overall Expenses</CardTitle></CardHeader>
+                  <CardContent><p className="text-2xl font-bold text-yellow-900 dark:text-yellow-100">Rs. {totalExpenses.toFixed(2)}</p></CardContent>
+              </Card>
+          </div>
+        </CardContent>
+      </Card>
+      
        <AddOrEditVendorDialog open={isVendorAddDialogOpen} onOpenChange={setIsVendorAddDialogOpen} onSave={handleSaveVendor} existingVendor={editingVendor}/>
        <ManageVendorsDialog open={isVendorManageDialogOpen} onOpenChange={setIsVendorManageDialogOpen} vendors={vendors} onEditVendor={(v) => { setIsVendorManageDialogOpen(false); setTimeout(() => openAddVendorDialog(v), 150)}} onDeleteVendor={handleDeleteVendor}/>
     </div>
@@ -861,3 +861,4 @@ export default function ExpensesTracker({ expenses, customerCreditLimit, vendorC
     
 
     
+
