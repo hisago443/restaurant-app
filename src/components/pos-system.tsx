@@ -36,12 +36,12 @@ const vegColor = 'bg-green-100 dark:bg-green-900/30';
 const nonVegColor = 'bg-rose-100 dark:bg-rose-900/30';
 
 const colorPalette: Record<string, {light: string, dark: string}> = {
-    amber: { light: 'bg-amber-200 dark:bg-amber-900/50', dark: 'bg-amber-200 dark:bg-amber-900/50' },
-    lime: { light: 'bg-lime-200 dark:bg-lime-900/50', dark: 'bg-lime-200 dark:bg-lime-900/50' },
-    purple: { light: 'bg-purple-200 dark:bg-purple-900/50', dark: 'bg-purple-200 dark:bg-purple-900/50' },
-    teal: { light: 'bg-teal-200 dark:bg-teal-900/50', dark: 'bg-teal-200 dark:bg-teal-900/50' },
-    orange: { light: 'bg-orange-200 dark:bg-orange-900/50', dark: 'bg-orange-200 dark:bg-orange-900/50' },
-    cyan: { light: 'bg-cyan-200 dark:bg-cyan-900/50', dark: 'bg-cyan-200 dark:bg-cyan-900/50' },
+    amber: { light: 'bg-amber-100 dark:bg-amber-900/50', dark: 'bg-amber-200 dark:bg-amber-900/50' },
+    lime: { light: 'bg-lime-100 dark:bg-lime-900/50', dark: 'bg-lime-200 dark:bg-lime-900/50' },
+    purple: { light: 'bg-purple-100 dark:bg-purple-900/50', dark: 'bg-purple-200 dark:bg-purple-900/50' },
+    teal: { light: 'bg-teal-100 dark:bg-teal-900/50', dark: 'bg-teal-200 dark:bg-teal-900/50' },
+    orange: { light: 'bg-orange-100 dark:bg-orange-900/50', dark: 'bg-orange-200 dark:bg-orange-900/50' },
+    cyan: { light: 'bg-cyan-100 dark:bg-cyan-900/50', dark: 'bg-cyan-200 dark:bg-cyan-900/50' },
 };
 const colorNames = Object.keys(colorPalette);
 
@@ -454,7 +454,7 @@ function ItemStatusDialog({
             {topSellingItems.length > 0 ? (
               <ul className="space-y-2">
                 {topSellingItems.map((item, index) => (
-                  <li key={item.name} className="flex justify-between items-center p-2 bg-muted/50 rounded-md">
+                  <li key={item.name} className="flex justify-between items-center p-2 bg-green-100 dark:bg-green-900/30 rounded-md">
                     <span className="font-medium">{index + 1}. {item.name}</span>
                     <span className="font-bold">{item.count} sold</span>
                   </li>
@@ -1820,6 +1820,7 @@ export default function PosSystem({
 
 
     
+
 
 
 
