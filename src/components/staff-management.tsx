@@ -396,8 +396,8 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
                                   <div className="flex-grow flex items-center gap-3">
                                       <span className={cn("h-3 w-3 rounded-full", employee.color)} />
                                       <span className="font-semibold text-base">{employee.name}</span>
-                                       <Button variant="outline" size="sm" className="h-7" onClick={() => openSummaryDialog(employee)}>
-                                          <Eye className="mr-2 h-4 w-4" /> View
+                                       <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => openSummaryDialog(employee)}>
+                                          <Eye className="h-4 w-4" />
                                       </Button>
                                   </div>
                                   <div className="flex items-center gap-2">
@@ -822,3 +822,5 @@ function EmployeeSummaryDialog({ open, onOpenChange, employee, attendance, advan
         </Dialog>
     )
 }
+
+    
