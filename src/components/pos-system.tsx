@@ -1433,17 +1433,12 @@ export default function PosSystem({
     const renderCategoryHeader = (category: MenuCategory) => {
     const status = menuCategoryStatus[category.category];
     const statusConfig = status ? itemStatusColors[status] : null;
-
-    let bgColor = 'bg-muted';
-    if (statusConfig) {
-        bgColor = statusConfig.dark.replace('dark:', '');
-    }
     
     return (
-        <div className="flex-grow text-left text-black flex items-center gap-2">
-            <span>{category.category}</span>
+        <div className="flex-grow text-left flex items-center gap-2">
+            <span className="truncate">{category.category}</span>
             {statusConfig && (
-                <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-black/10 text-black">
+                <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-black/10">
                     {statusConfig.name}
                 </span>
             )}
@@ -1461,9 +1456,11 @@ export default function PosSystem({
                 {filteredMenu.map(category => {
                     const status = menuCategoryStatus[category.category];
                     const statusConfig = status ? itemStatusColors[status] : null;
+                    const colorName = categoryColors[category.category];
+                    const colorClass = colorName ? colorPalette[colorName]?.dark : '';
                     return (
                         <div key={category.category} className="relative group p-1">
-                            <TabsTrigger value={category.category} className={cn("rounded-none border-b-2 border-transparent data-[state=active]:shadow-none px-4 py-2 cursor-pointer", statusConfig ? statusConfig.dark : 'data-[state=active]:border-primary')}>
+                            <TabsTrigger value={category.category} className={cn("rounded-none border-b-2 border-transparent data-[state=active]:shadow-none px-4 py-2 cursor-pointer", statusConfig ? statusConfig.dark : (colorClass || 'data-[state=active]:border-primary'))}>
                                 {renderCategoryHeader(category)}
                             </TabsTrigger>
                             <div className="absolute top-1 right-2 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
@@ -1494,8 +1491,10 @@ export default function PosSystem({
             {filteredMenu.map(category => {
               const status = menuCategoryStatus[category.category];
               const statusConfig = status ? itemStatusColors[status] : null;
+              const colorName = categoryColors[category.category];
+              const colorClass = colorName ? colorPalette[colorName]?.light : '';
               return (
-              <TabsContent key={category.category} value={category.category} className={cn("m-0 rounded-lg p-2 min-h-[200px]", statusConfig ? statusConfig.light : '')}>
+              <TabsContent key={category.category} value={category.category} className={cn("m-0 rounded-lg p-2 min-h-[200px]", statusConfig ? statusConfig.light : colorClass)}>
                 <div className="space-y-4">
                   {category.subCategories.map((subCategory) => (
                     <div key={subCategory.name}>
@@ -1522,9 +1521,11 @@ export default function PosSystem({
             {filteredMenu.map(category => {
                 const status = menuCategoryStatus[category.category];
                 const statusConfig = status ? itemStatusColors[status] : null;
+                const colorName = categoryColors[category.category];
+                const colorClass = colorName ? colorPalette[colorName]?.light : 'bg-muted';
                 return (
                 <AccordionItem key={category.category} value={category.category} className="border-b-0">
-                     <AccordionTrigger className={cn("p-3 rounded-md text-lg font-bold hover:no-underline flex justify-between items-center relative group", statusConfig ? statusConfig.dark : 'bg-muted')}>
+                     <AccordionTrigger className={cn("p-3 rounded-md text-lg font-bold hover:no-underline flex justify-between items-center relative group", statusConfig ? statusConfig.dark.replace('dark:', '') : colorClass )}>
                         {renderCategoryHeader(category)}
                         <div className="absolute top-1/2 -translate-y-1/2 right-10 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
                             <Popover>
@@ -1547,7 +1548,7 @@ export default function PosSystem({
                             </Popover>
                         </div>
                     </AccordionTrigger>
-                    <AccordionContent className="p-2 space-y-2">
+                    <AccordionContent className={cn("p-2 space-y-2", statusConfig ? statusConfig.light : colorClass)}>
                         {category.subCategories.map(subCategory => (
                             <div key={subCategory.name}>
                                 <h3 className="text-md font-semibold mb-2 text-muted-foreground pl-2">{subCategory.name}</h3>
@@ -1817,3 +1818,6 @@ export default function PosSystem({
 
 
 
+
+
+    
