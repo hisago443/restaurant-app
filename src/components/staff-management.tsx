@@ -424,6 +424,9 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
                                           <span className="font-semibold text-base">{employee.name}</span>
                                           <p className="text-xs text-muted-foreground font-mono">{employee.id}</p>
                                       </div>
+                                      <Button variant="ghost" size="icon" onClick={() => openAdvanceDialog(null, employee)} disabled={isDateLocked} className="ml-4">
+                                          <Banknote className="h-5 w-5 text-primary" />
+                                      </Button>
                                   </div>
                                   <div className="flex items-center gap-1">
                                       {(Object.keys(attendanceStatusConfig) as AttendanceStatus[]).map(status => {
@@ -444,9 +447,6 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
                                       })}
                                        <Button variant="ghost" size="icon" onClick={() => openNotesDialog(employee.id)} disabled={!attendanceRecord}>
                                           <Pencil className="h-4 w-4" />
-                                      </Button>
-                                      <Button variant="ghost" size="icon" onClick={() => openAdvanceDialog(null, employee)} disabled={isDateLocked}>
-                                          <Banknote className="h-4 w-4" />
                                       </Button>
                                       <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openSummaryDialog(employee)}>
                                           <Eye className="h-4 w-4" />
@@ -940,7 +940,7 @@ function EmployeeSummaryDialog({ open, onOpenChange, employee, attendance, advan
                     {/* Right Column: Financials */}
                     <div className="space-y-4">
                         <h3 className="font-semibold text-lg border-b pb-2">Financial Report</h3>
-                        <div className="grid grid-cols-3 gap-2">
+                        <div className="grid grid-cols-3 gap-2 text-center">
                            <Card className="p-2 bg-blue-100 dark:bg-blue-900/30">
                                 <CardDescription className="text-sm text-blue-800 dark:text-blue-200">Base Salary</CardDescription>
                                 <CardTitle className="text-xl">Rs. {employee.salary.toLocaleString()}</CardTitle>
