@@ -57,6 +57,8 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
   const [editingAttendance, setEditingAttendance] = useState<Attendance | null>(null);
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
   const [summaryEmployee, setSummaryEmployee] = useState<Employee | null>(null);
+  const [isAttendanceListDialogOpen, setIsAttendanceListDialogOpen] = useState(false);
+  const [attendanceList, setAttendanceList] = useState<{ title: string, employees: Employee[] }>({ title: '', employees: [] });
 
   const [showAdvancesOnCalendar, setShowAdvancesOnCalendar] = useState(false);
   const [showAbsencesOnCalendar, setShowAbsencesOnCalendar] = useState(false);
@@ -236,6 +238,13 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
     setIsSummaryDialogOpen(true);
   }
 
+  const openAttendanceListDialog = (status: AttendanceStatus) => {
+    const employeeIds = attendanceForSelectedDate.filter(att => att.status === status).map(att => att.employeeId);
+    const employeeList = employees.filter(emp => employeeIds.includes(emp.id));
+    setAttendanceList({ title: `${status} Employees`, employees: employeeList });
+    setIsAttendanceListDialogOpen(true);
+  };
+
   const advancesByEmployee = useMemo(() => {
     return advances.reduce((acc, advance) => {
       if (!acc[advance.employeeId]) {
@@ -383,15 +392,15 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
                 </CardHeader>
                 <CardContent>
                     <div className="grid grid-cols-3 gap-4 text-center">
-                        <div className="p-3 bg-green-100 dark:bg-green-900/30 rounded-lg">
+                        <div className="p-3 bg-green-100 dark:bg-green-900/30 rounded-lg cursor-pointer hover:bg-green-200 dark:hover:bg-green-900" onClick={() => openAttendanceListDialog('Present')}>
                             <p className="text-sm text-green-800 dark:text-green-200">Present</p>
                             <p className="text-3xl font-bold">{dailyAttendanceSummary['Present']}</p>
                         </div>
-                        <div className="p-3 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg">
+                        <div className="p-3 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg cursor-pointer hover:bg-yellow-200 dark:hover:bg-yellow-900" onClick={() => openAttendanceListDialog('Half-day')}>
                             <p className="text-sm text-yellow-800 dark:text-yellow-200">Half-day</p>
                             <p className="text-3xl font-bold">{dailyAttendanceSummary['Half-day']}</p>
                         </div>
-                        <div className="p-3 bg-red-100 dark:bg-red-900/30 rounded-lg">
+                        <div className="p-3 bg-red-100 dark:bg-red-900/30 rounded-lg cursor-pointer hover:bg-red-200 dark:hover:bg-red-900" onClick={() => openAttendanceListDialog('Absent')}>
                             <p className="text-sm text-red-800 dark:text-red-200">Absent</p>
                             <p className="text-3xl font-bold">{dailyAttendanceSummary['Absent']}</p>
                         </div>
@@ -411,7 +420,10 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
                               <div key={employee.id} className="flex items-center gap-4 p-2 border rounded-lg bg-card">
                                   <div className="flex-grow flex items-center gap-3">
                                       <span className={cn("h-3 w-3 rounded-full", employee.color)} />
-                                      <span className="font-semibold text-base">{employee.name}</span>
+                                      <div>
+                                          <span className="font-semibold text-base">{employee.name}</span>
+                                          <p className="text-xs text-muted-foreground font-mono">{employee.id}</p>
+                                      </div>
                                   </div>
                                   <div className="flex items-center gap-1">
                                       {(Object.keys(attendanceStatusConfig) as AttendanceStatus[]).map(status => {
@@ -583,6 +595,32 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
             advances={advancesByEmployee[summaryEmployee.id] || []}
         />
       }
+
+      <Dialog open={isAttendanceListDialogOpen} onOpenChange={setIsAttendanceListDialogOpen}>
+        <DialogContent>
+            <DialogHeader>
+                <DialogTitle>{attendanceList.title} on {format(selectedDate, 'PPP')}</DialogTitle>
+            </DialogHeader>
+            <div className="max-h-80 overflow-y-auto py-4">
+                {attendanceList.employees.length > 0 ? (
+                    <ul className="space-y-2">
+                        {attendanceList.employees.map(emp => (
+                            <li key={emp.id} className="flex items-center gap-2 p-2 bg-muted/50 rounded-md">
+                                <span className={cn("h-2 w-2 rounded-full", emp.color)} />
+                                <span className="font-medium">{emp.name}</span>
+                                <span className="text-xs text-muted-foreground font-mono">({emp.id})</span>
+                            </li>
+                        ))}
+                    </ul>
+                ) : (
+                    <p className="text-muted-foreground text-center">No employees found for this status.</p>
+                )}
+            </div>
+            <DialogFooter>
+                <Button onClick={() => setIsAttendanceListDialogOpen(false)}>Close</Button>
+            </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -904,3 +942,6 @@ function EmployeeSummaryDialog({ open, onOpenChange, employee, attendance, advan
 
     
 
+
+
+    
