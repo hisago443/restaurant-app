@@ -13,6 +13,7 @@ export interface MenuItem {
   price: number;
   code: string;
   history?: MenuItemHistory[];
+  category?: string; // Added to easily identify item's main category
 }
 
 export interface MenuSubCategory {
@@ -145,6 +146,12 @@ export interface PendingBill {
   mobile?: string;
 }
 
+export interface KOTPreference {
+  type: 'single' | 'separate' | 'category';
+  categories?: string[];
+}
+
+
 // Zod schema for serializable Bill
 export const BillSchema = z.object({
   id: z.string(),
@@ -175,5 +182,3 @@ export const GenerateReportOutputSchema = z.object({
   message: z.string(),
 });
 export type GenerateReportOutput = z.infer<typeof GenerateReportOutputSchema>;
-
-    

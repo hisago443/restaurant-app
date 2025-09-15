@@ -3,7 +3,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from 'react';
-import { BarChart, Book, Download, TrendingUp, Settings, Package, User, ShoppingCart, History, Mail, Receipt, Edit, Trash2, Building, Users, CreditCard, PlusCircle, Eye, Repeat } from 'lucide-react';
+import { BarChart, Book, Download, TrendingUp, Settings, Package, User, ShoppingCart, History, Mail, Receipt, Edit, Trash2, Building, Users, CreditCard, PlusCircle, Eye, Repeat, Printer } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -13,7 +13,7 @@ import ActivityLog from './activity-log';
 import InventoryManagement from './inventory-management';
 import SystemSettings from './system-settings';
 import BillHistory from './bill-history';
-import type { Bill, Employee, OrderItem, Expense, Vendor, InventoryItem } from '@/lib/types';
+import type { Bill, Employee, OrderItem, Expense, Vendor, InventoryItem, KOTPreference, MenuCategory } from '@/lib/types';
 import { generateAndSendReport } from '@/ai/flows/generate-report';
 import { useToast } from '@/hooks/use-toast';
 import { Switch } from '@/components/ui/switch';
@@ -30,6 +30,10 @@ import { CalendarIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Separator } from './ui/separator';
 import StaffManagement from './staff-management';
+import menuData from '@/data/menu.json';
+import { RadioGroup, RadioGroupItem } from './ui/radio-group';
+import { Checkbox } from './ui/checkbox';
+
 
 const colors = ['bg-blue-500', 'bg-green-500', 'bg-yellow-500', 'bg-purple-500', 'bg-pink-500', 'bg-indigo-500', 'bg-teal-500'];
 
@@ -43,6 +47,8 @@ interface AdminDashboardProps {
   vendorCreditLimit: number;
   setVendorCreditLimit: (limit: number) => void;
   onRerunSetup: () => void;
+  kotPreference: KOTPreference;
+  setKotPreference: (preference: KOTPreference) => void;
 }
 
 export default function AdminDashboard({ 
@@ -55,6 +61,8 @@ export default function AdminDashboard({
     vendorCreditLimit,
     setVendorCreditLimit,
     onRerunSetup,
+    kotPreference,
+    setKotPreference,
 }: AdminDashboardProps) {
   const { toast } = useToast();
   const [isReportLoading, setIsReportLoading] = useState(false);
@@ -67,6 +75,8 @@ export default function AdminDashboard({
   const [isAddEmployeeDialogOpen, setIsAddEmployeeDialogOpen] = useState(false);
   const [isEditEmployeeDialogOpen, setIsEditEmployeeDialogOpen] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
+
+  const menuCategories = useMemo(() => (menuData as MenuCategory[]).map(cat => cat.category), []);
 
   useEffect(() => {
     const unsubVendors = onSnapshot(collection(db, "vendors"), (snapshot) => {
@@ -272,6 +282,22 @@ export default function AdminDashboard({
     setEditingEmployee(employee);
     setIsEditEmployeeDialogOpen(true);
   }
+  
+  const handleKotCategoryChange = (category: string, checked: boolean) => {
+    const currentCategories = kotPreference.categories || [];
+    let newCategories: string[];
+
+    if (checked) {
+        newCategories = [...currentCategories, category];
+    } else {
+        newCategories = currentCategories.filter(c => c !== category);
+    }
+    
+    setKotPreference({
+        ...kotPreference,
+        categories: newCategories,
+    });
+  };
 
 
   return (
@@ -483,6 +509,44 @@ export default function AdminDashboard({
                     <CardTitle>Settings</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
+                     <Separator />
+                     <div className="space-y-4 pt-4">
+                        <CardTitle className="text-base flex items-center gap-2"><Printer /> KOT Preferences</CardTitle>
+                        <RadioGroup 
+                          value={kotPreference.type} 
+                          onValueChange={(type: 'single' | 'separate' | 'category') => setKotPreference({ ...kotPreference, type, categories: type !== 'category' ? [] : kotPreference.categories })}
+                          className="space-y-2"
+                        >
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="single" id="kot-single" />
+                            <Label htmlFor="kot-single">Single Combined KOT</Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="separate" id="kot-separate" />
+                            <Label htmlFor="kot-separate">Separate Kitchen & Bar KOTs</Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="category" id="kot-category" />
+                            <Label htmlFor="kot-category">Separate KOT for Specific Categories</Label>
+                          </div>
+                        </RadioGroup>
+
+                        {kotPreference.type === 'category' && (
+                            <div className="pl-6 pt-2 space-y-2 max-h-48 overflow-y-auto">
+                                <Label className="font-semibold">Select categories for separate KOTs:</Label>
+                                {menuCategories.filter(cat => cat !== 'Beverages').map(category => (
+                                    <div key={category} className="flex items-center space-x-2">
+                                        <Checkbox
+                                            id={`cat-${category}`}
+                                            checked={(kotPreference.categories || []).includes(category)}
+                                            onCheckedChange={(checked) => handleKotCategoryChange(category, !!checked)}
+                                        />
+                                        <Label htmlFor={`cat-${category}`}>{category}</Label>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                     </div>
                      <Separator />
                      <div className="space-y-4 pt-4">
                         <CardTitle className="text-base flex items-center gap-2"><Mail /> Email Reports</CardTitle>

@@ -9,7 +9,7 @@ import { isSameDay } from 'date-fns';
 import { collection, onSnapshot, doc, setDoc, getDocs, writeBatch, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
-import type { Table, TableStatus, Order, Bill, Employee, OrderItem, Expense, InventoryItem } from '@/lib/types';
+import type { Table, TableStatus, Order, Bill, Employee, OrderItem, Expense, InventoryItem, KOTPreference } from '@/lib/types';
 import { Logo } from "./icons";
 import PosSystem from './pos-system';
 import TableManagement from './table-management';
@@ -49,7 +49,7 @@ export default function MainLayout() {
   const [showSetupWizard, setShowSetupWizard] = useState(false);
   const [isCheckingSetup, setIsCheckingSetup] = useState(true);
   const [venueName, setVenueName] = useState('Up & Above Assistant');
-  const [kotPreference, setKotPreference] = useState<'separate' | 'single'>('separate');
+  const [kotPreference, setKotPreference] = useState<KOTPreference>({ type: 'separate', categories: [] });
 
   useEffect(() => {
     try {
@@ -73,7 +73,7 @@ export default function MainLayout() {
         if (venueDoc.exists()) {
           const data = venueDoc.data();
           setVenueName(data.name || 'Up & Above Assistant');
-          setKotPreference(data.kotPreference || 'separate');
+          setKotPreference(data.kotPreference || { type: 'separate', categories: [] });
         }
       } catch (error) {
         console.error("Error fetching venue settings:", error);
@@ -86,7 +86,9 @@ export default function MainLayout() {
         if (doc.exists()) {
             const data = doc.data();
             setVenueName(data.name || 'Up & Above Assistant');
-            setKotPreference(data.kotPreference || 'separate');
+             if (data.kotPreference) {
+              setKotPreference(data.kotPreference);
+            }
         }
     });
 
@@ -604,6 +606,8 @@ export default function MainLayout() {
                 vendorCreditLimit={vendorCreditLimit}
                 setVendorCreditLimit={setVendorCreditLimit}
                 onRerunSetup={() => setShowSetupWizard(true)}
+                kotPreference={kotPreference}
+                setKotPreference={setKotPreference}
               />
             </TabsContent>
           </main>
