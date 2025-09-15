@@ -661,6 +661,7 @@ export default function PosSystem({
   const [isQuickAssignDialogOpen, setIsQuickAssignDialogOpen] = useState(false);
   const [isEasyModeAlertOpen, setIsEasyModeAlertOpen] = useState(false);
   const hasSeenEasyModeAlert = useRef(false);
+  const [isItemStatusDialogOpen, setIsItemStatusDialogOpen] = useState(false);
 
   const [orderType, setOrderType] = useState<OrderType>('Dine-In');
   const [homeDeliveryDetails, setHomeDeliveryDetails] = useState<HomeDeliveryDetails>({ name: '', mobile: '', houseNo: '', street: '', landmark: '', pincode: '', additionalInfo: '' });
