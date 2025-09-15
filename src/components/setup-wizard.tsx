@@ -28,17 +28,20 @@ interface Owner {
   age?: string;
   address?: string;
   mobile?: string;
+  email?: string;
 }
 
 interface Employee {
   name: string;
   role: string;
   salary: string;
+  email?: string;
 }
 
 interface Vendor {
   name: string;
   mobile: string;
+  email?: string;
 }
 
 const colors = ['bg-blue-500', 'bg-green-500', 'bg-yellow-500', 'bg-purple-500', 'bg-pink-500', 'bg-indigo-500', 'bg-teal-500'];
@@ -54,12 +57,13 @@ export default function SetupWizard({ onComplete }: SetupWizardProps) {
   const [dateOfOpening, setDateOfOpening] = useState<Date | undefined>();
   const [rent, setRent] = useState('');
   const [kotPreference, setKotPreference] = useState<'separate' | 'single'>('separate');
+  const [venueEmail, setVenueEmail] = useState('');
 
-  const [owners, setOwners] = useState<Owner[]>([{ name: '', age: '', address: '', mobile: '' }]);
+  const [owners, setOwners] = useState<Owner[]>([{ name: '', age: '', address: '', mobile: '', email: '' }]);
 
-  const [employees, setEmployees] = useState<Employee[]>([{ name: '', role: '', salary: '' }]);
+  const [employees, setEmployees] = useState<Employee[]>([{ name: '', role: '', salary: '', email: '' }]);
 
-  const [vendors, setVendors] = useState<Vendor[]>([{ name: '', mobile: '' }]);
+  const [vendors, setVendors] = useState<Vendor[]>([{ name: '', mobile: '', email: '' }]);
 
   const handleOwnerChange = (index: number, field: keyof Owner, value: string) => {
     const newOwners = [...owners];
@@ -68,7 +72,7 @@ export default function SetupWizard({ onComplete }: SetupWizardProps) {
   };
 
   const addOwnerField = () => {
-    setOwners([...owners, { name: '', age: '', address: '', mobile: '' }]);
+    setOwners([...owners, { name: '', age: '', address: '', mobile: '', email: '' }]);
   };
   
   const removeOwnerField = (index: number) => {
@@ -83,7 +87,7 @@ export default function SetupWizard({ onComplete }: SetupWizardProps) {
   };
 
   const addEmployeeField = () => {
-    setEmployees([...employees, { name: '', role: '', salary: '' }]);
+    setEmployees([...employees, { name: '', role: '', salary: '', email: '' }]);
   };
   
   const removeEmployeeField = (index: number) => {
@@ -98,7 +102,7 @@ export default function SetupWizard({ onComplete }: SetupWizardProps) {
   };
 
   const addVendorField = () => {
-    setVendors([...vendors, { name: '', mobile: '' }]);
+    setVendors([...vendors, { name: '', mobile: '', email: '' }]);
   };
   
   const removeVendorField = (index: number) => {
@@ -135,6 +139,7 @@ export default function SetupWizard({ onComplete }: SetupWizardProps) {
         dateOfOpening: dateOfOpening || null,
         rent: rent ? parseFloat(rent) : 0,
         kotPreference: kotPreference,
+        email: venueEmail,
       });
 
       // Save Owners
@@ -151,6 +156,7 @@ export default function SetupWizard({ onComplete }: SetupWizardProps) {
                 name: emp.name,
                 role: emp.role,
                 salary: parseFloat(emp.salary),
+                email: emp.email || '',
                 color: colors[index % colors.length]
             });
         }
@@ -160,7 +166,7 @@ export default function SetupWizard({ onComplete }: SetupWizardProps) {
       vendors.forEach(vendor => {
         if (vendor.name && vendor.mobile) {
           const vendorRef = doc(collection(db, "vendors"));
-          batch.set(vendorRef, { name: vendor.name, mobile: vendor.mobile, category: 'General' });
+          batch.set(vendorRef, { name: vendor.name, mobile: vendor.mobile, email: vendor.email || '', category: 'General' });
         }
       });
 
@@ -189,6 +195,10 @@ export default function SetupWizard({ onComplete }: SetupWizardProps) {
           <div className="space-y-2">
             <Label htmlFor="venue-location">Restaurant Location</Label>
             <Input id="venue-location" placeholder="e.g., Bir, Himachal Pradesh" value={venueLocation} onChange={e => setVenueLocation(e.target.value)} />
+          </div>
+           <div className="space-y-2">
+            <Label htmlFor="venue-email">Venue Email (Optional)</Label>
+            <Input id="venue-email" type="email" placeholder="e.g., contact@cafe.com" value={venueEmail} onChange={e => setVenueEmail(e.target.value)} />
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -258,14 +268,14 @@ export default function SetupWizard({ onComplete }: SetupWizardProps) {
                 <Label>Owner {index + 1} Name</Label>
                 <Input value={owner.name} onChange={e => handleOwnerChange(index, 'name', e.target.value)} placeholder="Full Name" />
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="space-y-2">
-                    <Label>Age (Optional)</Label>
-                    <Input value={owner.age} onChange={e => handleOwnerChange(index, 'age', e.target.value)} type="number" placeholder="e.g., 35" />
-                </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                     <Label>Mobile (Optional)</Label>
                     <Input value={owner.mobile} onChange={e => handleOwnerChange(index, 'mobile', e.target.value)} placeholder="e.g., 9876543210" />
+                </div>
+                <div className="space-y-2">
+                    <Label>Email (Optional)</Label>
+                    <Input value={owner.email} onChange={e => handleOwnerChange(index, 'email', e.target.value)} type="email" placeholder="e.g., owner@example.com" />
                 </div>
               </div>
               <div className="space-y-2">
@@ -290,10 +300,14 @@ export default function SetupWizard({ onComplete }: SetupWizardProps) {
                       <Trash2 className="h-4 w-4" />
                   </Button>
               )}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                     <Label>Employee {index + 1} Name</Label>
                     <Input value={employee.name} onChange={e => handleEmployeeChange(index, 'name', e.target.value)} placeholder="Full Name" />
+                </div>
+                 <div className="space-y-2">
+                    <Label>Email (Optional)</Label>
+                    <Input value={employee.email} onChange={e => handleEmployeeChange(index, 'email', e.target.value)} type="email" placeholder="e.g., employee@example.com" />
                 </div>
                 <div className="space-y-2">
                     <Label>Role</Label>
@@ -333,7 +347,7 @@ export default function SetupWizard({ onComplete }: SetupWizardProps) {
                       <Trash2 className="h-4 w-4" />
                   </Button>
               )}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
                     <Label>Vendor {index + 1} Name</Label>
                     <Input value={vendor.name} onChange={e => handleVendorChange(index, 'name', e.target.value)} placeholder="e.g., Local Veggies Co." />
@@ -341,6 +355,10 @@ export default function SetupWizard({ onComplete }: SetupWizardProps) {
                 <div className="space-y-2">
                     <Label>Mobile No.</Label>
                     <Input value={vendor.mobile} onChange={e => handleVendorChange(index, 'mobile', e.target.value)} placeholder="e.g., 9876543210" />
+                </div>
+                <div className="space-y-2">
+                    <Label>Email (Optional)</Label>
+                    <Input value={vendor.email} onChange={e => handleVendorChange(index, 'email', e.target.value)} type="email" placeholder="e.g., vendor@example.com" />
                 </div>
               </div>
             </div>
