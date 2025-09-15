@@ -1097,7 +1097,6 @@ export default function PosSystem({
       
       const billWithId = {
         ...bill,
-        id: newBillId,
         timestamp: new Date(),
       };
       await setDoc(doc(db, "bills", newBillId), billWithId);
