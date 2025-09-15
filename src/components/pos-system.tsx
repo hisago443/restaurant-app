@@ -1325,7 +1325,7 @@ export default function PosSystem({
        return (
          <Button 
             size="lg"
-            className={cn("h-12 text-base col-span-2", activeOrder && "bg-blue-600 hover:bg-blue-700")}
+            className={cn("h-12 text-base w-full", activeOrder && "bg-blue-600 hover:bg-blue-700")}
             onClick={() => processKOTs(kotGroups)}
             disabled={isProcessing || (orderType === 'Dine-In' && !currentActiveTableId && !activeOrder)}
         >
@@ -1339,7 +1339,7 @@ export default function PosSystem({
        <Button 
             key={group.title}
             size="lg"
-            className={cn("h-12 text-base", activeOrder && "bg-blue-600 hover:bg-blue-700")}
+            className={cn("h-12 text-base w-full", activeOrder && "bg-blue-600 hover:bg-blue-700")}
             onClick={() => processKOTs([group])}
             disabled={isProcessing || (orderType === 'Dine-In' && !currentActiveTableId && !activeOrder)}
         >
@@ -1811,6 +1811,7 @@ export default function PosSystem({
     
 
     
+
 
 
 
