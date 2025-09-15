@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import * as React from 'react';
@@ -1069,10 +1070,8 @@ export default function PosSystem({
             
             printKot(finalOrder, itemsToPrint, type);
             
-            // This is where the critical bug was. We need to merge the new items
-            // with the existing original items, not just replace the list.
             setOriginalOrderItems(currentOriginals => {
-                const newOriginalsMap = new Map(currentOriginals.map(item => [item.name, item]));
+                const newOriginalsMap = new Map(currentOriginals.map(item => [item.name, {...item}]));
                 itemsToPrint.forEach(sentItem => {
                     const existing = newOriginalsMap.get(sentItem.name);
                     if (existing) {
@@ -1909,3 +1908,4 @@ export default function PosSystem({
     </div>
   );
 }
+
