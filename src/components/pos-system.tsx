@@ -587,9 +587,13 @@ export default function PosSystem({
     return newItems;
   }, []);
 
-  const hasNewItems = useMemo(() => {
-    return getNewItems(orderItems, sentItems).length > 0;
-  }, [orderItems, sentItems, getNewItems]);
+  useEffect(() => {
+    if (activeOrder) {
+      setSentItems(activeOrder.items);
+    } else {
+      setSentItems([]);
+    }
+  }, [activeOrder]);
 
 
   useEffect(() => {
@@ -750,14 +754,6 @@ export default function PosSystem({
         setReceiptPreview('');
     }
   }, [orderItems, discount, getLocalReceipt]);
-
-  useEffect(() => {
-    if (activeOrder) {
-      setSentItems(activeOrder.items);
-    } else {
-      setSentItems([]);
-    }
-  }, [activeOrder]);
 
 
   const handleSelectTable = (tableId: number | null) => {
@@ -949,22 +945,23 @@ export default function PosSystem({
             }
         }
         
+        const itemsJustSent = kotGroups.flatMap(g => g.items);
+        
         kotGroups.forEach(group => {
             printKot(finalOrder, group.items, group.title);
         });
         
-        const itemsJustSent = kotGroups.flatMap(g => g.items);
         setSentItems(prevSent => {
-            const sentMap = new Map(prevSent.map(item => [item.name, { ...item }]));
-            itemsJustSent.forEach(newItem => {
-                const existing = sentMap.get(newItem.name);
-                if (existing) {
-                    existing.quantity += newItem.quantity;
-                } else {
-                    sentMap.set(newItem.name, { ...newItem });
-                }
-            });
-            return Array.from(sentMap.values());
+          const sentMap = new Map(prevSent.map(item => [item.name, { ...item }]));
+          itemsJustSent.forEach(newItem => {
+            const existing = sentMap.get(newItem.name);
+            if (existing) {
+              existing.quantity += newItem.quantity;
+            } else {
+              sentMap.set(newItem.name, { ...newItem });
+            }
+          });
+          return Array.from(sentMap.values());
         });
         
 
@@ -1274,10 +1271,6 @@ export default function PosSystem({
   
   const groupItemsForKOT = (items: OrderItem[], preference: KOTPreference, allCategories: string[]): { title: string; items: OrderItem[] }[] => {
     if (items.length === 0) return [];
-
-    if (preference.type === 'single') {
-        return [{ title: 'KOT', items: items }];
-    }
 
     if (preference.type === 'separate') {
         const kitchenItems = items.filter(item => item.category !== 'Beverages');
@@ -1820,5 +1813,7 @@ export default function PosSystem({
 
 
 
+
+    
 
     
