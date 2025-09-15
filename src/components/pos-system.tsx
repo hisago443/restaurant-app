@@ -667,6 +667,9 @@ export default function PosSystem({
   const [homeDeliveryDetails, setHomeDeliveryDetails] = useState<HomeDeliveryDetails>({ name: '', mobile: '', houseNo: '', street: '', landmark: '', pincode: '', additionalInfo: '' });
   const [isHomeDeliveryDialogOpen, setIsHomeDeliveryDialogOpen] = useState(false);
 
+  const [hasNewFoodItems, setHasNewFoodItems] = useState(false);
+  const [hasNewBeverageItems, setHasNewBeverageItems] = useState(false);
+
   const searchInputRef = useRef<HTMLInputElement>(null);
   
   const typedMenuData: MenuCategory[] = menu;
@@ -1066,18 +1069,19 @@ export default function PosSystem({
             
             printKot(finalOrder, itemsToPrint, type);
             
-            const sentItemsMap = new Map(itemsToPrint.map(item => [item.name, item]));
-            setOriginalOrderItems(currentOrder => {
-                const newOriginals = [...currentOrder];
-                sentItemsMap.forEach((sentItem, name) => {
-                    const existingIndex = newOriginals.findIndex(item => item.name === name);
-                    if (existingIndex > -1) {
-                        newOriginals[existingIndex].quantity += sentItem.quantity;
+            // This is where the critical bug was. We need to merge the new items
+            // with the existing original items, not just replace the list.
+            setOriginalOrderItems(currentOriginals => {
+                const newOriginalsMap = new Map(currentOriginals.map(item => [item.name, item]));
+                itemsToPrint.forEach(sentItem => {
+                    const existing = newOriginalsMap.get(sentItem.name);
+                    if (existing) {
+                        existing.quantity += sentItem.quantity;
                     } else {
-                        newOriginals.push(sentItem);
+                        newOriginalsMap.set(sentItem.name, { ...sentItem });
                     }
                 });
-                return newOriginals;
+                return Array.from(newOriginalsMap.values());
             });
 
 
@@ -1638,20 +1642,37 @@ export default function PosSystem({
     }
   };
   
-  const hasBeverages = useMemo(() => {
+  useEffect(() => {
     const beverageCategory = menu.find(c => c.category === 'Beverages');
-    if (!beverageCategory) return false;
+    if (!beverageCategory) {
+        setHasNewFoodItems(false);
+        setHasNewBeverageItems(false);
+        return;
+    }
     const beverageItemNames = new Set(beverageCategory.subCategories.flatMap(sc => sc.items.map(i => i.name)));
-    return orderItems.some(item => beverageItemNames.has(item.name));
-  }, [orderItems, menu]);
 
-  const hasFood = useMemo(() => {
-      const beverageCategory = menu.find(c => c.category === 'Beverages');
-      if (!beverageCategory) return true; // If no beverage category, all items are food
-      const beverageItemNames = new Set(beverageCategory.subCategories.flatMap(sc => sc.items.map(i => i.name)));
-      return orderItems.some(item => !beverageItemNames.has(item.name));
-  }, [orderItems, menu]);
-  
+    const getNewItems = (currentItems: OrderItem[], originalItems: OrderItem[]) => {
+        const newItems: OrderItem[] = [];
+        const originalMap = new Map(originalItems.map(item => [item.name, item.quantity]));
+
+        currentItems.forEach(item => {
+            const originalQty = originalMap.get(item.name) || 0;
+            if (item.quantity > originalQty) {
+                newItems.push({ ...item, quantity: item.quantity - originalQty });
+            }
+        });
+        return newItems;
+    };
+
+    const newItems = activeOrder ? getNewItems(orderItems, originalOrderItems) : orderItems;
+
+    setHasNewFoodItems(newItems.some(item => !beverageItemNames.has(item.name)));
+    setHasNewBeverageItems(newItems.some(item => beverageItemNames.has(item.name)));
+
+}, [orderItems, originalOrderItems, activeOrder, menu]);
+
+  const hasFood = hasNewFoodItems;
+  const hasBeverages = hasNewBeverageItems;
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-4 gap-4 h-full p-4">
@@ -1888,5 +1909,3 @@ export default function PosSystem({
     </div>
   );
 }
-
-    
