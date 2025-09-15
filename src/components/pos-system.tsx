@@ -637,24 +637,26 @@ export default function PosSystem({
   }, [menu]);
 
   const getNewItems = useCallback((currentItems: OrderItem[], sentItems: OrderItem[]) => {
-      const newItems: OrderItem[] = [];
-      const sentMap = new Map(sentItems.map(item => [item.name, item.quantity]));
+    const newItems: OrderItem[] = [];
+    const sentMap = new Map(sentItems.map(item => [item.name, item.quantity]));
 
-      currentItems.forEach(item => {
-          const sentQty = sentMap.get(item.name) || 0;
-          if (item.quantity > sentQty) {
-              newItems.push({ ...item, quantity: item.quantity - sentQty });
-          }
-      });
-      return newItems;
-  }, []);
+    currentItems.forEach(item => {
+        const sentQty = sentMap.get(item.name) || 0;
+        if (item.quantity > sentQty) {
+            newItems.push({ ...item, quantity: item.quantity - sentQty });
+        }
+    });
+    return newItems;
+}, []);
 
   useEffect(() => {
-    const foodItems = orderItems.filter(item => !beverageItemNames.has(item.name));
+    const isFoodItem = (item: OrderItem) => !beverageItemNames.has(item.name);
+    const foodItems = orderItems.filter(isFoodItem);
+    const beverageItems = orderItems.filter(item => !isFoodItem(item));
+
     const newFoodItems = getNewItems(foodItems, sentFoodItems);
     setHasNewFoodItems(newFoodItems.length > 0);
 
-    const beverageItems = orderItems.filter(item => beverageItemNames.has(item.name));
     const newBeverageItems = getNewItems(beverageItems, sentBeverageItems);
     setHasNewBeverageItems(newBeverageItems.length > 0);
   }, [orderItems, sentFoodItems, sentBeverageItems, beverageItemNames, getNewItems]);
@@ -1032,14 +1034,12 @@ export default function PosSystem({
             printKot(finalOrder, itemsForKOT, type);
             
             if (type === 'Kitchen') {
-                setSentFoodItems(prevSent => [...prevSent, ...itemsForKOT]);
+                setSentFoodItems(orderItems.filter(isFoodItem));
             } else if (type === 'Bar') {
-                setSentBeverageItems(prevSent => [...prevSent, ...itemsForKOT]);
+                setSentBeverageItems(orderItems.filter(item => !isFoodItem(item)));
             } else { // Combined
-                const foodKOT = itemsForKOT.filter(isFoodItem);
-                const beverageKOT = itemsForKOT.filter(item => !isFoodItem(item));
-                setSentFoodItems(prevSent => [...prevSent, ...foodKOT]);
-                setSentBeverageItems(prevSent => [...prevSent, ...beverageKOT]);
+                setSentFoodItems(orderItems.filter(isFoodItem));
+                setSentBeverageItems(orderItems.filter(item => !isFoodItem(item)));
             }
 
             toast({ title: `KOT Sent!`, description: `Order update sent to ${type}.` });
@@ -1823,5 +1823,7 @@ export default function PosSystem({
   );
 }
 
+
+    
 
     
