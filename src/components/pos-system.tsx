@@ -668,17 +668,48 @@ export default function PosSystem({
   const [homeDeliveryDetails, setHomeDeliveryDetails] = useState<HomeDeliveryDetails>({ name: '', mobile: '', houseNo: '', street: '', landmark: '', pincode: '', additionalInfo: '' });
   const [isHomeDeliveryDialogOpen, setIsHomeDeliveryDialogOpen] = useState(false);
 
-  const [hasNewFoodItems, setHasNewFoodItems] = useState(false);
-  const [hasNewBeverageItems, setHasNewBeverageItems] = useState(false);
+  const [sentFoodItems, setSentFoodItems] = useState<OrderItem[]>([]);
+  const [sentBeverageItems, setSentBeverageItems] = useState<OrderItem[]>([]);
 
   const searchInputRef = useRef<HTMLInputElement>(null);
   
   const typedMenuData: MenuCategory[] = menu;
+
+  const beverageItemNames = useMemo(() => {
+    const beverageCategory = typedMenuData.find(c => c.category === 'Beverages');
+    if (!beverageCategory) {
+      return new Set<string>();
+    }
+    return new Set(beverageCategory.subCategories.flatMap(sc => sc.items.map(i => i.name)));
+  }, [typedMenuData]);
   
   const allMenuItems: MenuItem[] = useMemo(() => 
     typedMenuData.flatMap(cat => cat.subCategories.flatMap(sub => sub.items)),
     [typedMenuData]
   );
+
+  const getNewItems = useCallback((currentItems: OrderItem[], sentItems: OrderItem[]) => {
+      const newItems: OrderItem[] = [];
+      const sentMap = new Map(sentItems.map(item => [item.name, item.quantity]));
+
+      currentItems.forEach(item => {
+          const sentQty = sentMap.get(item.name) || 0;
+          if (item.quantity > sentQty) {
+              newItems.push({ ...item, quantity: item.quantity - sentQty });
+          }
+      });
+      return newItems;
+  }, []);
+
+  const hasNewFoodItems = useMemo(() => {
+      const currentFoodItems = orderItems.filter(item => !beverageItemNames.has(item.name));
+      return getNewItems(currentFoodItems, sentFoodItems).length > 0;
+  }, [orderItems, sentFoodItems, beverageItemNames, getNewItems]);
+
+  const hasNewBeverageItems = useMemo(() => {
+      const currentBeverageItems = orderItems.filter(item => beverageItemNames.has(item.name));
+      return getNewItems(currentBeverageItems, sentBeverageItems).length > 0;
+  }, [orderItems, sentBeverageItems, beverageItemNames, getNewItems]);
   
   const getLocalReceipt = useCallback(() => {
     if (orderItems.length === 0) return '';
@@ -829,11 +860,20 @@ export default function PosSystem({
 
   useEffect(() => {
     if (activeOrder) {
+      // When loading an existing order, populate the 'sent' states
+      const foodItems = activeOrder.items.filter(item => !beverageItemNames.has(item.name));
+      const beverageItems = activeOrder.items.filter(item => beverageItemNames.has(item.name));
+      setSentFoodItems(foodItems);
+      setSentBeverageItems(beverageItems);
       setOriginalOrderItems([...activeOrder.items]);
     } else {
+      // When starting a new order, clear the 'sent' states
+      setSentFoodItems([]);
+      setSentBeverageItems([]);
       setOriginalOrderItems([]);
     }
-  }, [activeOrder]);
+  }, [activeOrder, beverageItemNames]);
+
 
   const handleSelectTable = (tableId: number | null) => {
     setOrderType('Dine-In');
@@ -1001,43 +1041,39 @@ export default function PosSystem({
             return;
         }
 
-        const beverageItemNames = new Set(
-          (menu.find(c => c.category === 'Beverages')?.subCategories || [])
-          .flatMap(sc => sc.items.map(i => i.name))
-        );
-        
-        const getDiff = (currentItems: OrderItem[], originalItems: OrderItem[]) => {
-            const diff: OrderItem[] = [];
-            const originalMap = new Map(originalItems.map(item => [item.name, item.quantity]));
-            currentItems.forEach(item => {
-                const originalQty = originalMap.get(item.name) || 0;
-                if (item.quantity > originalQty) {
-                    diff.push({ ...item, quantity: item.quantity - originalQty });
-                }
-            });
-            return diff;
-        };
-
         const isFoodItem = (item: OrderItem) => !beverageItemNames.has(item.name);
         const isBeverageItem = (item: OrderItem) => beverageItemNames.has(item.name);
         
         let itemsForKOT: OrderItem[];
-        let originalItemsForKOT: OrderItem[];
+        let sentItemsForType: OrderItem[];
+        let setSentItemsForType: React.Dispatch<React.SetStateAction<OrderItem[]>>;
 
         if (type === 'Kitchen') {
             itemsForKOT = orderItems.filter(isFoodItem);
-            originalItemsForKOT = originalOrderItems.filter(isFoodItem);
+            sentItemsForType = sentFoodItems;
+            setSentItemsForType = setSentFoodItems;
         } else if (type === 'Bar') {
             itemsForKOT = orderItems.filter(isBeverageItem);
-            originalItemsForKOT = originalOrderItems.filter(isBeverageItem);
+            sentItemsForType = sentBeverageItems;
+            setSentItemsForType = setSentBeverageItems;
         } else { // Combined
             itemsForKOT = orderItems;
-            originalItemsForKOT = originalOrderItems;
+            // For combined, we merge the two sent states to get the full original list
+            const combinedSentMap = new Map();
+            [...sentFoodItems, ...sentBeverageItems].forEach(item => {
+                combinedSentMap.set(item.name, { ...item });
+            });
+            sentItemsForType = Array.from(combinedSentMap.values());
+            setSentItemsForType = () => {
+              // When combined, we update both states
+              setSentFoodItems(orderItems.filter(isFoodItem));
+              setSentBeverageItems(orderItems.filter(isBeverageItem));
+            };
         }
         
-        const itemsToPrint = activeOrder ? getDiff(itemsForKOT, originalItemsForKOT) : itemsForKOT;
+        const itemsToPrint = getNewItems(itemsForKOT, sentItemsForType);
         
-        if (itemsToPrint.length === 0) {
+        if (itemsToPrint.length === 0 && activeOrder) {
             toast({ title: 'No Changes', description: `No new ${type.toLowerCase()} items to send.` });
             return;
         }
@@ -1070,24 +1106,28 @@ export default function PosSystem({
                 }
             }
             
-            printKot(finalOrder, itemsToPrint, type);
+            printKot(finalOrder, itemsToPrint.length > 0 ? itemsToPrint : itemsForKOT, type);
             
-            setOriginalOrderItems(currentOriginals => {
-                const newOriginalsMap = new Map(currentOriginals.map(item => [item.name, {...item}]));
-                itemsToPrint.forEach(sentItem => {
-                    const existing = newOriginalsMap.get(sentItem.name);
-                    if (existing) {
-                        existing.quantity += sentItem.quantity;
-                    } else {
-                        newOriginalsMap.set(sentItem.name, { ...sentItem });
-                    }
+            // Update the state for the items that were just sent
+            setSentItemsForType(itemsForKOT);
+            
+            if (type === 'Combined') {
+                // Also update the originalOrderItems for display purposes
+                setOriginalOrderItems([...orderItems]);
+            } else {
+                // Merge the changes into originalOrderItems for display
+                setOriginalOrderItems(prevOriginals => {
+                    const newOriginalsMap = new Map(prevOriginals.map(item => [item.name, {...item}]));
+                    itemsForKOT.forEach(item => {
+                        newOriginalsMap.set(item.name, {...item});
+                    });
+                    return Array.from(newOriginalsMap.values());
                 });
-                return Array.from(newOriginalsMap.values());
-            });
+            }
 
             toast({ title: `KOT Sent!`, description: `Order update sent to ${type}.` });
             setIsProcessing(false);
-        }, 50);
+        }, 100);
     };
 
     const handleSendToKitchen = () => processOrder('Kitchen');
@@ -1642,34 +1682,6 @@ export default function PosSystem({
     }
   };
   
-  const beverageItemNames = useMemo(() => {
-    const beverageCategory = menu.find(c => c.category === 'Beverages');
-    if (!beverageCategory) {
-      return new Set<string>();
-    }
-    return new Set(beverageCategory.subCategories.flatMap(sc => sc.items.map(i => i.name)));
-  }, [menu]);
-
-  useEffect(() => {
-    const getNewItems = (currentItems: OrderItem[], originalItems: OrderItem[]) => {
-        const newItems: OrderItem[] = [];
-        const originalMap = new Map(originalItems.map(item => [item.name, item.quantity]));
-
-        currentItems.forEach(item => {
-            const originalQty = originalMap.get(item.name) || 0;
-            if (item.quantity > originalQty) {
-                newItems.push({ ...item, quantity: item.quantity - originalQty });
-            }
-        });
-        return newItems;
-    };
-
-    const newItems = activeOrder ? getNewItems(orderItems, originalOrderItems) : orderItems;
-
-    setHasNewFoodItems(newItems.some(item => !beverageItemNames.has(item.name)));
-    setHasNewBeverageItems(newItems.some(item => beverageItemNames.has(item.name)));
-
-  }, [orderItems, originalOrderItems, activeOrder, beverageItemNames]);
 
   const hasFood = hasNewFoodItems;
   const hasBeverages = hasNewBeverageItems;
@@ -1909,6 +1921,7 @@ export default function PosSystem({
     </div>
   );
 }
+
 
 
 
