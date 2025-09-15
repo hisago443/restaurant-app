@@ -1836,7 +1836,3 @@ export default function PosSystem({
     </div>
   );
 }
-
-    
-
-    
