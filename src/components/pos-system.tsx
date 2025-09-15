@@ -173,17 +173,13 @@ function OrderPanel({
     discount,
     setDiscount,
     isProcessing,
-    handleSendToKitchen,
     handlePrintProvisionalBill,
     handleProcessPayment,
     receiptPreview,
     orderType,
     setOrderType,
-    handleSendToBar,
     handleSendCombinedKOT,
-    hasBeverages,
-    hasFood,
-    kotPreference,
+    hasNewItems,
     children,
 }: {
     orderItems: OrderItem[];
@@ -199,17 +195,13 @@ function OrderPanel({
     discount: number;
     setDiscount: (discount: number) => void;
     isProcessing: boolean;
-    handleSendToKitchen: () => void;
     handlePrintProvisionalBill: () => void;
     handleProcessPayment: () => void;
     receiptPreview: string;
     orderType: OrderType;
     setOrderType: (type: OrderType) => void;
-    handleSendToBar: () => void;
     handleSendCombinedKOT: () => void;
-    hasBeverages: boolean;
-    hasFood: boolean;
-    kotPreference: 'separate' | 'single';
+    hasNewItems: boolean;
     children: React.ReactNode;
 }) {
     const [{ isOver, canDrop }, drop] = useDrop(() => ({
@@ -353,42 +345,15 @@ function OrderPanel({
                             Quick Assign to Table
                         </Button>
                     )}
-                    {kotPreference === 'separate' ? (
-                        <div className={cn("grid gap-2", hasFood && hasBeverages ? "grid-cols-2" : "grid-cols-1")}>
-                            {hasFood && (
-                                <Button 
-                                    size="lg"
-                                    className={cn("h-12 text-base", activeOrder && "bg-blue-600 hover:bg-blue-700")}
-                                    onClick={handleSendToKitchen}
-                                    disabled={isProcessing || !hasFood || (orderType === 'Dine-In' && !currentActiveTableId && !activeOrder)}
-                                >
-                                    {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
-                                    {activeOrder ? 'Update Kitchen KOT' : 'Send to Kitchen'}
-                                </Button>
-                            )}
-                            {hasBeverages && (
-                                <Button 
-                                    size="lg"
-                                    className={cn("h-12 text-base bg-cyan-600 hover:bg-cyan-700", !hasFood && "col-span-full")}
-                                    onClick={handleSendToBar}
-                                    disabled={isProcessing || !hasBeverages || (orderType === 'Dine-In' && !currentActiveTableId && !activeOrder)}
-                                >
-                                    {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Beer className="mr-2 h-4 w-4" />}
-                                    {activeOrder ? 'Update Bar KOT' : 'Send to Bar'}
-                                </Button>
-                            )}
-                        </div>
-                    ) : (
-                         <Button 
-                            size="lg"
-                            className={cn("h-12 text-base", activeOrder && "bg-blue-600 hover:bg-blue-700")}
-                            onClick={handleSendCombinedKOT}
-                            disabled={isProcessing || orderItems.length === 0 || (orderType === 'Dine-In' && !currentActiveTableId && !activeOrder)}
-                        >
-                            {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
-                            {activeOrder ? 'Update KOT' : 'Send KOT'}
-                        </Button>
-                    )}
+                    <Button 
+                        size="lg"
+                        className={cn("h-12 text-base", activeOrder && "bg-blue-600 hover:bg-blue-700")}
+                        onClick={handleSendCombinedKOT}
+                        disabled={isProcessing || !hasNewItems || (orderType === 'Dine-In' && !currentActiveTableId && !activeOrder)}
+                    >
+                        {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
+                        {activeOrder ? 'Update KOT' : 'Send KOT'}
+                    </Button>
                     <div className="grid grid-cols-2 gap-2">
                         <Button size="lg" variant="outline" className="h-12 text-base" onClick={handlePrintProvisionalBill} disabled={orderItems.length === 0}>
                             <Printer className="mr-2 h-4 w-4" />
@@ -608,29 +573,9 @@ export default function PosSystem({
   const [homeDeliveryDetails, setHomeDeliveryDetails] = useState<HomeDeliveryDetails>({ name: '', mobile: '', houseNo: '', street: '', landmark: '', pincode: '', additionalInfo: '' });
   const [isHomeDeliveryDialogOpen, setIsHomeDeliveryDialogOpen] = useState(false);
 
-  const [sentFoodItems, setSentFoodItems] = useState<OrderItem[]>([]);
-  const [sentBeverageItems, setSentBeverageItems] = useState<OrderItem[]>([]);
+  const [sentItems, setSentItems] = useState<OrderItem[]>([]);
   
   const searchInputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    const structuredMenu = (menuData as MenuCategory[]).map(category => ({
-        ...category,
-        subCategories: category.subCategories.map(sub => ({
-            ...sub,
-            items: sub.items.map(item => ({...item, history: item.history || []}))
-        }))
-    }));
-    setMenu(structuredMenu);
-  }, []);
-  
-  const beverageItemNames = useMemo(() => {
-    const beverageCategory = menu.find(c => c.category === 'Beverages');
-    if (!beverageCategory) {
-      return new Set<string>();
-    }
-    return new Set(beverageCategory.subCategories.flatMap(sc => sc.items.map(i => i.name)));
-  }, [menu]);
 
   const getNewItems = useCallback((currentItems: OrderItem[], sentItems: OrderItem[]) => {
     const newItems: OrderItem[] = [];
@@ -645,19 +590,22 @@ export default function PosSystem({
     return newItems;
   }, []);
 
-  const hasNewFoodItems = useMemo(() => {
-    const isFoodItem = (item: OrderItem) => !beverageItemNames.has(item.name);
-    const foodItems = orderItems.filter(isFoodItem);
-    const newFoodItems = getNewItems(foodItems, sentFoodItems);
-    return newFoodItems.length > 0;
-  }, [orderItems, sentFoodItems, beverageItemNames, getNewItems]);
+  const hasNewItems = useMemo(() => {
+    return getNewItems(orderItems, sentItems).length > 0;
+  }, [orderItems, sentItems, getNewItems]);
 
-  const hasNewBeverageItems = useMemo(() => {
-    const isBeverageItem = (item: OrderItem) => beverageItemNames.has(item.name);
-    const beverageItems = orderItems.filter(isBeverageItem);
-    const newBeverageItems = getNewItems(beverageItems, sentBeverageItems);
-    return newBeverageItems.length > 0;
-  }, [orderItems, sentBeverageItems, beverageItemNames, getNewItems]);
+
+  useEffect(() => {
+    const structuredMenu = (menuData as MenuCategory[]).map(category => ({
+        ...category,
+        subCategories: category.subCategories.map(sub => ({
+            ...sub,
+            items: sub.items.map(item => ({...item, history: item.history || []}))
+        }))
+    }));
+    setMenu(structuredMenu);
+  }, []);
+  
 
   const allMenuItems: MenuItem[] = useMemo(() => 
     menu.flatMap(cat => cat.subCategories.flatMap(sub => sub.items)),
@@ -808,14 +756,11 @@ export default function PosSystem({
 
   useEffect(() => {
     if (activeOrder) {
-      const isFoodItem = (item: OrderItem) => !beverageItemNames.has(item.name);
-      setSentFoodItems(activeOrder.items.filter(isFoodItem));
-      setSentBeverageItems(activeOrder.items.filter(item => !isFoodItem(item)));
+      setSentItems(activeOrder.items);
     } else {
-      setSentFoodItems([]);
-      setSentBeverageItems([]);
+      setSentItems([]);
     }
-  }, [activeOrder, beverageItemNames]);
+  }, [activeOrder]);
 
 
   const handleSelectTable = (tableId: number | null) => {
@@ -916,7 +861,7 @@ export default function PosSystem({
     setOrderItems(orderItems.filter(item => item.name !== name));
   };
   
-  const printKot = (order: Order, itemsToPrint: OrderItem[], type: 'Kitchen' | 'Bar' | 'Combined') => {
+  const printKot = (order: Order, itemsToPrint: OrderItem[]) => {
     if (itemsToPrint.length === 0) return;
     const printWindow = window.open('', '_blank');
     if (printWindow) {
@@ -931,12 +876,12 @@ export default function PosSystem({
         title = `Table ${order.tableId}`;
       }
       
-      const kotType = type === 'Combined' ? 'KOT' : (type === 'Bar' ? 'BAR KOT' : 'KOT');
+      const kotType = 'KOT';
 
       const kitchenReceipt = `
         <html>
           <head>
-            <title>${type} Order Ticket</title>
+            <title>Order Ticket</title>
             <style>
               body { font-family: monospace; margin: 20px; font-size: 14px; }
               h2, h3 { text-align: center; margin: 5px 0; }
@@ -971,30 +916,17 @@ export default function PosSystem({
     }
   };
   
-    const processOrder = (type: 'Kitchen' | 'Bar' | 'Combined') => {
+    const handleSendCombinedKOT = () => {
         if (orderType === 'Home Delivery' && (!homeDeliveryDetails.name || !homeDeliveryDetails.mobile)) {
             setIsHomeDeliveryDialogOpen(true);
             toast({ variant: 'destructive', title: 'Missing Delivery Info', description: 'Please enter customer name and mobile.' });
             return;
         }
 
-        const isFoodItem = (item: OrderItem) => !beverageItemNames.has(item.name);
-        const isBeverageItem = (item: OrderItem) => beverageItemNames.has(item.name);
-        
-        let itemsForKOT: OrderItem[];
-        
-        if (type === 'Kitchen') {
-            itemsForKOT = getNewItems(orderItems.filter(isFoodItem), sentFoodItems);
-        } else if (type === 'Bar') {
-            itemsForKOT = getNewItems(orderItems.filter(isBeverageItem), sentBeverageItems);
-        } else {
-            const newFood = getNewItems(orderItems.filter(isFoodItem), sentFoodItems);
-            const newBeverages = getNewItems(orderItems.filter(isBeverageItem), sentBeverageItems);
-            itemsForKOT = [...newFood, ...newBeverages];
-        }
+        const itemsForKOT = getNewItems(orderItems, sentItems);
 
         if (itemsForKOT.length === 0) {
-            toast({ variant: 'destructive', title: 'No New Items', description: `No new items to send to the ${type}.` });
+            toast({ variant: 'destructive', title: 'No New Items', description: `No new items to send to the kitchen.` });
             return;
         }
         
@@ -1025,25 +957,14 @@ export default function PosSystem({
                 }
             }
             
-            printKot(finalOrder, itemsForKOT, type);
+            printKot(finalOrder, itemsForKOT);
             
-            if (type === 'Kitchen') {
-                setSentFoodItems(prevSent => [...prevSent, ...itemsForKOT]);
-            } else if (type === 'Bar') {
-                setSentBeverageItems(prevSent => [...prevSent, ...itemsForKOT]);
-            } else { // Combined
-                setSentFoodItems(orderItems.filter(isFoodItem));
-                setSentBeverageItems(orderItems.filter(isBeverageItem));
-            }
+            setSentItems(orderItems);
 
-            toast({ title: `KOT Sent!`, description: `Order update sent to ${type}.` });
+            toast({ title: `KOT Sent!`, description: `Order update sent.` });
             setIsProcessing(false);
         }, 100);
     };
-
-    const handleSendToKitchen = () => processOrder('Kitchen');
-    const handleSendToBar = () => processOrder('Bar');
-    const handleSendCombinedKOT = () => processOrder('Combined');
 
   const handleDropItemOnTable = (tableId: number, item: MenuItem) => {
       if (!easyMode) return;
@@ -1125,8 +1046,6 @@ export default function PosSystem({
         case 'Home Delivery':
             tableIdForBill = -1;
             break;
-        default:
-            tableIdForBill = 0; // Fallback, should not happen with takeaway removed
     }
     const billPayload: Omit<Bill, 'id' | 'timestamp'> = {
       orderItems: orderItems,
@@ -1242,7 +1161,7 @@ export default function PosSystem({
     setIsQuickAssignDialogOpen(false);
     setSelectedTableId(tableId);
     setTimeout(() => {
-        handleSendToKitchen();
+        handleSendCombinedKOT();
     }, 100);
   };
 
@@ -1329,7 +1248,7 @@ export default function PosSystem({
           searchInputRef.current?.focus();
           setKeyboardMode('order');
         } else if (keyboardMode === 'confirm') {
-          handleSendToKitchen();
+          handleSendCombinedKOT();
           setKeyboardMode('table');
         }
       } else if (e.key === 'Escape') {
@@ -1350,7 +1269,7 @@ export default function PosSystem({
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [keyboardMode, selectedTableId, tables, handleSelectTable, updateTableStatus, handleSendToKitchen, setKeyboardMode]);
+  }, [keyboardMode, selectedTableId, tables, handleSelectTable, updateTableStatus, handleSendCombinedKOT, setKeyboardMode]);
 
 
   const renderMenuItem = (item: MenuItem, subCategoryName: string, categoryName: string) => {
@@ -1676,17 +1595,13 @@ export default function PosSystem({
               discount={discount}
               setDiscount={setDiscount}
               isProcessing={isProcessing}
-              handleSendToKitchen={handleSendToKitchen}
               handlePrintProvisionalBill={handlePrintProvisionalBill}
               handleProcessPayment={handleProcessPayment}
               receiptPreview={receiptPreview}
               orderType={orderType}
               setOrderType={setOrderType}
-              handleSendToBar={handleSendToBar}
               handleSendCombinedKOT={handleSendCombinedKOT}
-              hasBeverages={hasNewBeverageItems}
-              hasFood={hasNewFoodItems}
-              kotPreference={kotPreference}
+              hasNewItems={hasNewItems}
           >
             <div className="grid grid-cols-[repeat(auto-fit,minmax(80px,1fr))] gap-2">
                 {tables.map(table => {
@@ -1820,3 +1735,4 @@ export default function PosSystem({
     
 
     
+
