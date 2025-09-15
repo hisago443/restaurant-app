@@ -342,44 +342,12 @@ export default function AdminDashboard({
         </Card>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid gap-6 lg:grid-cols-2">
         {/* Left Column */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="space-y-6">
             <Card>
                 <CardContent className="p-2">
                    <SalesReport bills={billHistory} />
-                </CardContent>
-            </Card>
-             <Card>
-                <CardHeader>
-                    <CardTitle>Top Selling Items</CardTitle>
-                    <CardDescription>All-time most popular items.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Item</TableHead>
-                          <TableHead className="text-right">Sold</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {topSellingItems.length > 0 ? (
-                          topSellingItems.map(item => (
-                            <TableRow key={item.name} className="hover:bg-muted/50">
-                              <TableCell className="font-bold">{item.name}</TableCell>
-                              <TableCell className="text-right font-bold">{item.count}</TableCell>
-                            </TableRow>
-                          ))
-                        ) : (
-                          <TableRow>
-                            <TableCell colSpan={2} className="text-center text-muted-foreground">
-                              No items sold yet.
-                            </TableCell>
-                          </TableRow>
-                        )}
-                      </TableBody>
-                    </Table>
                 </CardContent>
             </Card>
         </div>
