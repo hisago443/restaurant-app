@@ -161,7 +161,6 @@ const TableDropTarget = ({ table, occupancyCount, handleSelectTable, children, o
 
 function OrderPanel({
     orderItems,
-    originalOrderItems,
     handleDropOnOrder,
     updateQuantity,
     removeFromOrder,
@@ -234,37 +233,13 @@ function OrderPanel({
     }, [orderType, currentActiveTableId]);
 
     const renderOrderItems = () => {
-        const originalItemsMap = new Map(originalOrderItems.map(item => [item.name, item.quantity]));
-
-        const oldItems = orderItems.filter(item => {
-            const originalQuantity = originalItemsMap.get(item.name) || 0;
-            return originalQuantity >= item.quantity;
-        });
-
-        const newItems = orderItems.filter(item => {
-            const originalQuantity = originalItemsMap.get(item.name) || 0;
-            return originalQuantity < item.quantity;
-        });
-        
-        const newItemsExist = newItems.length > 0;
-
-        const renderItemRow = (item: OrderItem, isNewOrUpdated: boolean) => {
-            const originalQuantity = originalItemsMap.get(item.name) || 0;
-            const isNew = !originalItemsMap.has(item.name);
-            const quantityChange = item.quantity - originalQuantity;
-            
-            const itemClass = isNewOrUpdated
-                ? (isNew ? "bg-blue-50 dark:bg-blue-900/20" : "bg-yellow-50 dark:bg-yellow-900/20")
-                : "";
-            const itemTag = isNewOrUpdated
-                ? (isNew ? "(New)" : `(+${quantityChange})`)
-                : "";
-            const tagClass = isNew ? "text-blue-500" : "text-yellow-600";
-
-            return (
-                 <div key={item.name} className={cn("flex items-center p-2 rounded-md", itemClass)}>
+       
+        return (
+          <div className="space-y-3">
+            {orderItems.map(item => (
+                <div key={item.name} className="flex items-center">
                     <div className="flex-grow">
-                        <p className="font-medium">{item.name} {itemTag && <span className={cn("text-xs", tagClass)}>{itemTag}</span>}</p>
+                        <p className="font-medium">{item.name}</p>
                         <p className="text-sm text-muted-foreground">₹{item.price.toFixed(2)}</p>
                     </div>
                     <div className="flex items-center gap-2">
@@ -274,21 +249,7 @@ function OrderPanel({
                         <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => removeFromOrder(item.name)}><X className="h-4 w-4" /></Button>
                     </div>
                 </div>
-            );
-        };
-
-        return (
-          <div className="space-y-3">
-            {oldItems.map(item => renderItemRow(item, false))}
-            
-            {newItemsExist && originalOrderItems.length > 0 && (
-                 <div className="relative my-3">
-                    <Separator />
-                    <span className="absolute left-1/2 -translate-x-1/2 -top-2.5 bg-background px-2 text-xs text-muted-foreground">New/Updated Items</span>
-                </div>
-            )}
-
-            {newItems.map(item => renderItemRow(item, true))}
+            ))}
           </div>
         );
     };
@@ -335,24 +296,7 @@ function OrderPanel({
                         </p>
                     </div>
                 ) : (
-                    activeOrder ? renderOrderItems() : (
-                        <div className="space-y-3">
-                            {orderItems.map(item => (
-                                <div key={item.name} className="flex items-center">
-                                    <div className="flex-grow">
-                                        <p className="font-medium">{item.name}</p>
-                                        <p className="text-sm text-muted-foreground">₹{item.price.toFixed(2)}</p>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => updateQuantity(item.name, item.quantity - 1)}><Minus className="h-4 w-4" /></Button>
-                                        <span className="w-8 text-center font-bold">{item.quantity}</span>
-                                        <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => updateQuantity(item.name, item.quantity + 1)}><Plus className="h-4 w-4" /></Button>
-                                        <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => removeFromOrder(item.name)}><X className="h-4 w-4" /></Button>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    )
+                    renderOrderItems()
                 )}
             </ScrollArea>
             
@@ -418,7 +362,7 @@ function OrderPanel({
                                     size="lg"
                                     className={cn("h-12 text-base", activeOrder && "bg-blue-600 hover:bg-blue-700")}
                                     onClick={handleSendToKitchen}
-                                    disabled={isProcessing || (orderType === 'Dine-In' && !currentActiveTableId && !activeOrder)}
+                                    disabled={isProcessing || !hasFood || (orderType === 'Dine-In' && !currentActiveTableId && !activeOrder)}
                                 >
                                     {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
                                     {activeOrder ? 'Update Kitchen KOT' : 'Send to Kitchen'}
@@ -429,7 +373,7 @@ function OrderPanel({
                                     size="lg"
                                     className={cn("h-12 text-base bg-cyan-600 hover:bg-cyan-700", !hasFood && "col-span-full")}
                                     onClick={handleSendToBar}
-                                    disabled={isProcessing || (orderType === 'Dine-In' && !currentActiveTableId && !activeOrder)}
+                                    disabled={isProcessing || !hasBeverages || (orderType === 'Dine-In' && !currentActiveTableId && !activeOrder)}
                                 >
                                     {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Beer className="mr-2 h-4 w-4" />}
                                     {activeOrder ? 'Update Bar KOT' : 'Send to Bar'}
@@ -696,10 +640,12 @@ export default function PosSystem({
   }, []);
 
   useEffect(() => {
-    const newFoodItems = getNewItems(orderItems.filter(item => !beverageItemNames.has(item.name)), sentFoodItems);
+    const foodItems = orderItems.filter(item => !beverageItemNames.has(item.name));
+    const newFoodItems = getNewItems(foodItems, sentFoodItems);
     setHasNewFoodItems(newFoodItems.length > 0);
 
-    const newBeverageItems = getNewItems(orderItems.filter(item => beverageItemNames.has(item.name)), sentBeverageItems);
+    const beverageItems = orderItems.filter(item => beverageItemNames.has(item.name));
+    const newBeverageItems = getNewItems(beverageItems, sentBeverageItems);
     setHasNewBeverageItems(newBeverageItems.length > 0);
   }, [orderItems, sentFoodItems, sentBeverageItems, beverageItemNames, getNewItems]);
   
@@ -1035,21 +981,12 @@ export default function PosSystem({
         const isBeverageItem = (item: OrderItem) => beverageItemNames.has(item.name);
         
         let itemsForKOT: OrderItem[];
-        let sentItemsForType: OrderItem[];
         let setSentItemsForType: React.Dispatch<React.SetStateAction<OrderItem[]>>;
 
         if (type === 'Kitchen') {
-            if (!hasNewFoodItems) {
-                toast({ title: 'No Changes', description: 'No new food items to send.' });
-                return;
-            }
             itemsForKOT = getNewItems(orderItems.filter(isFoodItem), sentFoodItems);
             setSentItemsForType = setSentFoodItems;
         } else if (type === 'Bar') {
-            if (!hasNewBeverageItems) {
-                toast({ title: 'No Changes', description: 'No new beverage items to send.' });
-                return;
-            }
             itemsForKOT = getNewItems(orderItems.filter(isBeverageItem), sentBeverageItems);
             setSentItemsForType = setSentBeverageItems;
         } else { // Combined
@@ -1059,11 +996,11 @@ export default function PosSystem({
             }
             itemsForKOT = orderItems;
             setSentItemsForType = (items) => {
-              const food = items.filter(isFoodItem);
-              const beverages = items.filter(isBeverageItem);
-              setSentFoodItems(prev => [...prev.filter(p => !food.some(f => f.name === p.name)), ...food]);
-              setSentBeverageItems(prev => [...prev.filter(p => !beverages.some(b => b.name === p.name)), ...beverages]);
-            }
+              const food = Array.isArray(items) ? items.filter(isFoodItem) : [];
+              const beverages = Array.isArray(items) ? items.filter(isBeverageItem) : [];
+              setSentFoodItems(food);
+              setSentBeverageItems(beverages);
+            };
         }
         
         setIsProcessing(true);
@@ -1099,21 +1036,8 @@ export default function PosSystem({
             if (type === 'Combined') {
                 setSentItemsForType(orderItems);
             } else {
-                setSentItemsForType(prevSent => {
-                    const newSentMap = new Map(prevSent.map(item => [item.name, { ...item }]));
-                    itemsForKOT.forEach(item => {
-                        const existing = newSentMap.get(item.name);
-                        if (existing) {
-                            newSentMap.set(item.name, { ...existing, quantity: existing.quantity + item.quantity });
-                        } else {
-                            newSentMap.set(item.name, { ...item });
-                        }
-                    });
-                    return Array.from(newSentMap.values());
-                });
+                setSentItemsForType(prevSent => [...prevSent, ...itemsForKOT]);
             }
-
-            setOriginalOrderItems([...orderItems]);
 
             toast({ title: `KOT Sent!`, description: `Order update sent to ${type}.` });
             setIsProcessing(false);
@@ -1907,5 +1831,3 @@ export default function PosSystem({
     </div>
   );
 }
-
-    
