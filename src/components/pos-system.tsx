@@ -1066,14 +1066,20 @@ export default function PosSystem({
             
             printKot(finalOrder, itemsToPrint, type);
             
-            // Update originalOrderItems to reflect the sent items
-            setOriginalOrderItems(prevOriginals => {
-                const newOriginalsMap = new Map(prevOriginals.map(item => [item.name, item]));
-                itemsForKOT.forEach(sentItem => {
-                    newOriginalsMap.set(sentItem.name, { ...sentItem });
+            const sentItemsMap = new Map(itemsToPrint.map(item => [item.name, item]));
+            setOriginalOrderItems(currentOrder => {
+                const newOriginals = [...currentOrder];
+                sentItemsMap.forEach((sentItem, name) => {
+                    const existingIndex = newOriginals.findIndex(item => item.name === name);
+                    if (existingIndex > -1) {
+                        newOriginals[existingIndex].quantity += sentItem.quantity;
+                    } else {
+                        newOriginals.push(sentItem);
+                    }
                 });
-                return Array.from(newOriginalsMap.values());
+                return newOriginals;
             });
+
 
             toast({ title: `KOT Sent!`, description: `Order update sent to ${type}.` });
             setIsProcessing(false);
