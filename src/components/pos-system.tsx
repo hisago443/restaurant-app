@@ -1072,7 +1072,6 @@ export default function PosSystem({
             
             printKot(finalOrder, itemsToPrint, type);
             
-            // Correctly update originalOrderItems by merging the sent items
             setOriginalOrderItems(currentOriginals => {
                 const newOriginalsMap = new Map(currentOriginals.map(item => [item.name, {...item}]));
                 itemsToPrint.forEach(sentItem => {
@@ -1085,7 +1084,6 @@ export default function PosSystem({
                 });
                 return Array.from(newOriginalsMap.values());
             });
-
 
             toast({ title: `KOT Sent!`, description: `Order update sent to ${type}.` });
             setIsProcessing(false);
@@ -1911,6 +1909,7 @@ export default function PosSystem({
     </div>
   );
 }
+
 
 
 
