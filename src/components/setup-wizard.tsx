@@ -138,7 +138,7 @@ export default function SetupWizard({ onComplete }: SetupWizardProps) {
         category: venueCategory,
         dateOfOpening: dateOfOpening || null,
         rent: rent ? parseFloat(rent) : 0,
-        kotPreference: kotPreference,
+        kotPreference: { type: 'separate' }, // Default KOT preference
         email: venueEmail,
       });
 
@@ -229,25 +229,6 @@ export default function SetupWizard({ onComplete }: SetupWizardProps) {
            <div className="space-y-2">
                 <Label htmlFor="rent">Monthly Rent (Optional)</Label>
                 <Input id="rent" type="number" placeholder="e.g., 50000" value={rent} onChange={e => setRent(e.target.value)} />
-            </div>
-            <div className="space-y-3 pt-2">
-                <Label>Kitchen Order Ticket (KOT) Preference</Label>
-                <RadioGroup value={kotPreference} onValueChange={(value: 'separate' | 'single') => setKotPreference(value)} className="space-y-2">
-                    <div className="flex items-start gap-3 rounded-md border p-4">
-                        <RadioGroupItem value="separate" id="kot-separate" />
-                        <Label htmlFor="kot-separate" className="flex flex-col gap-1 cursor-pointer">
-                            <span className="font-bold">Separate KOTs</span>
-                            <span className="text-sm text-muted-foreground">Print separate tickets for kitchen (food) and bar (beverages). Best for busy venues.</span>
-                        </Label>
-                    </div>
-                     <div className="flex items-start gap-3 rounded-md border p-4">
-                        <RadioGroupItem value="single" id="kot-single" />
-                        <Label htmlFor="kot-single" className="flex flex-col gap-1 cursor-pointer">
-                           <span className="font-bold">Single KOT</span>
-                           <span className="text-sm text-muted-foreground">Print one combined ticket with all items. Simpler for smaller operations.</span>
-                        </Label>
-                    </div>
-                </RadioGroup>
             </div>
         </div>
       )

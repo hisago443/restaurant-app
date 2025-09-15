@@ -25,7 +25,7 @@ import { useDrag, useDrop } from 'react-dnd';
 import { AddItemDialog } from './add-item-dialog';
 import { ManageMenuDialog } from './manage-menu-dialog';
 
-import type { MenuCategory, MenuItem, OrderItem, Table, Order, Bill, TableStatus, HomeDeliveryDetails, OrderType } from '@/lib/types';
+import type { MenuCategory, MenuItem, OrderItem, Table, Order, Bill, TableStatus, HomeDeliveryDetails, OrderType, KOTPreference } from '@/lib/types';
 import menuData from '@/data/menu.json';
 import { generateReceipt, type GenerateReceiptInput } from '@/ai/flows/dynamic-receipt-discount-reasoning';
 import { PaymentDialog } from './payment-dialog';
@@ -102,7 +102,7 @@ interface PosSystemProps {
   keyboardMode: 'table' | 'order' | 'confirm';
   setKeyboardMode: (mode: 'table' | 'order' | 'confirm') => void;
   billHistory: Bill[];
-  kotPreference: 'separate' | 'single';
+  kotPreference: KOTPreference;
 }
 
 const ItemTypes = {
@@ -178,8 +178,7 @@ function OrderPanel({
     receiptPreview,
     orderType,
     setOrderType,
-    handleSendCombinedKOT,
-    hasNewItems,
+    kotButtons,
     children,
 }: {
     orderItems: OrderItem[];
@@ -200,8 +199,7 @@ function OrderPanel({
     receiptPreview: string;
     orderType: OrderType;
     setOrderType: (type: OrderType) => void;
-    handleSendCombinedKOT: () => void;
-    hasNewItems: boolean;
+    kotButtons: React.ReactNode;
     children: React.ReactNode;
 }) {
     const [{ isOver, canDrop }, drop] = useDrop(() => ({
@@ -224,23 +222,42 @@ function OrderPanel({
     }, [orderType, currentActiveTableId]);
 
     const renderOrderItems = () => {
-       
+        const sentItemsMap = new Map((activeOrder?.items || []).map(item => [item.name, item.quantity]));
+        const newItems = orderItems.filter(item => {
+            const sentQty = sentItemsMap.get(item.name) || 0;
+            return item.quantity > sentQty;
+        });
+        const sentItems = orderItems.filter(item => {
+            const sentQty = sentItemsMap.get(item.name) || 0;
+            return item.quantity <= sentQty && sentQty > 0;
+        });
+
+        const renderItem = (item: OrderItem) => (
+            <div key={item.name} className="flex items-center">
+                <div className="flex-grow">
+                    <p className="font-medium">{item.name}</p>
+                    <p className="text-sm text-muted-foreground">₹{item.price.toFixed(2)}</p>
+                </div>
+                <div className="flex items-center gap-2">
+                    <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => updateQuantity(item.name, item.quantity - 1)}><Minus className="h-4 w-4" /></Button>
+                    <span className="w-8 text-center font-bold">{item.quantity}</span>
+                    <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => updateQuantity(item.name, item.quantity + 1)}><Plus className="h-4 w-4" /></Button>
+                    <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => removeFromOrder(item.name)}><X className="h-4 w-4" /></Button>
+                </div>
+            </div>
+        );
+
         return (
           <div className="space-y-3">
-            {orderItems.map(item => (
-                <div key={item.name} className="flex items-center">
-                    <div className="flex-grow">
-                        <p className="font-medium">{item.name}</p>
-                        <p className="text-sm text-muted-foreground">₹{item.price.toFixed(2)}</p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => updateQuantity(item.name, item.quantity - 1)}><Minus className="h-4 w-4" /></Button>
-                        <span className="w-8 text-center font-bold">{item.quantity}</span>
-                        <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => updateQuantity(item.name, item.quantity + 1)}><Plus className="h-4 w-4" /></Button>
-                        <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => removeFromOrder(item.name)}><X className="h-4 w-4" /></Button>
-                    </div>
+             {sentItems.map(renderItem)}
+             {newItems.length > 0 && sentItems.length > 0 && (
+                <div className="flex items-center gap-2 py-2">
+                    <Separator className="flex-grow" />
+                    <span className="text-xs font-medium text-muted-foreground">New Items</span>
+                    <Separator className="flex-grow" />
                 </div>
-            ))}
+             )}
+             {newItems.map(renderItem)}
           </div>
         );
     };
@@ -345,15 +362,9 @@ function OrderPanel({
                             Quick Assign to Table
                         </Button>
                     )}
-                    <Button 
-                        size="lg"
-                        className={cn("h-12 text-base", activeOrder && "bg-blue-600 hover:bg-blue-700")}
-                        onClick={handleSendCombinedKOT}
-                        disabled={isProcessing || !hasNewItems || (orderType === 'Dine-In' && !currentActiveTableId && !activeOrder)}
-                    >
-                        {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
-                        {activeOrder ? 'Update KOT' : 'Send KOT'}
-                    </Button>
+                    <div className="grid grid-cols-2 gap-2">
+                        {kotButtons}
+                    </div>
                     <div className="grid grid-cols-2 gap-2">
                         <Button size="lg" variant="outline" className="h-12 text-base" onClick={handlePrintProvisionalBill} disabled={orderItems.length === 0}>
                             <Printer className="mr-2 h-4 w-4" />
@@ -373,13 +384,11 @@ function OrderPanel({
 function ItemStatusDialog({
   isOpen,
   onOpenChange,
-  topSellingItems,
   lowStockItems,
   outOfStockItems
 }: {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  topSellingItems: { name: string; count: number }[];
   lowStockItems: MenuItem[];
   outOfStockItems: MenuItem[];
 }) {
@@ -389,29 +398,15 @@ function ItemStatusDialog({
         <DialogHeader>
           <DialogTitle>Item Status Overview</DialogTitle>
           <DialogDescription>
-            A quick look at your menu's performance and stock levels.
+            A quick look at your menu's stock levels.
           </DialogDescription>
         </DialogHeader>
-        <Tabs defaultValue="top-selling" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="top-selling" className="data-[state=active]:bg-green-500 data-[state=active]:text-white">Top Selling</TabsTrigger>
+        <Tabs defaultValue="low-stock" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="low-stock" className="data-[state=active]:bg-yellow-500 data-[state=active]:text-black">Running Low</TabsTrigger>
             <TabsTrigger value="out-of-stock" className="data-[state=active]:bg-red-500 data-[state=active]:text-white">Out of Stock</TabsTrigger>
           </TabsList>
-          <TabsContent value="top-selling" className="mt-4 max-h-80 overflow-y-auto">
-            {topSellingItems.length > 0 ? (
-              <ul className="space-y-2">
-                {topSellingItems.map((item, index) => (
-                  <li key={item.name} className="flex justify-between items-center p-2 rounded-md">
-                    <span className="font-medium">{index + 1}. {item.name}</span>
-                    <span className="font-bold">{item.count} sold</span>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-center text-muted-foreground pt-8">No sales data available yet.</p>
-            )}
-          </TabsContent>
+          
           <TabsContent value="low-stock" className="mt-4 max-h-80 overflow-y-auto">
             {lowStockItems.length > 0 ? (
               <ul className="space-y-2">
@@ -576,6 +571,8 @@ export default function PosSystem({
   const [sentItems, setSentItems] = useState<OrderItem[]>([]);
   
   const searchInputRef = useRef<HTMLInputElement>(null);
+
+  const menuCategories = useMemo(() => menu.map(c => c.category), [menu]);
 
   const getNewItems = useCallback((currentItems: OrderItem[], sentItems: OrderItem[]) => {
     const newItems: OrderItem[] = [];
@@ -799,13 +796,17 @@ export default function PosSystem({
                     : orderItem
             );
         } else {
-            return [...prevItems, { ...item, quantity }];
+            const itemWithCategory = {
+                ...item,
+                category: menu.find(c => c.subCategories.some(sc => sc.items.some(i => i.name === item.name)))?.category
+            };
+            return [...prevItems, { ...itemWithCategory, quantity }];
         }
     });
     if (orderType === 'Home Delivery' && !isHomeDeliveryDialogOpen) {
       setIsHomeDeliveryDialogOpen(true);
     }
-  }, [setOrderItems, orderType, isHomeDeliveryDialogOpen]);
+  }, [setOrderItems, orderType, isHomeDeliveryDialogOpen, menu]);
 
   const handleItemClick = (item: MenuItem) => {
     if (easyMode) {
@@ -861,7 +862,7 @@ export default function PosSystem({
     setOrderItems(orderItems.filter(item => item.name !== name));
   };
   
-  const printKot = (order: Order, itemsToPrint: OrderItem[]) => {
+  const printKot = (order: Order, itemsToPrint: OrderItem[], kotTitle: string) => {
     if (itemsToPrint.length === 0) return;
     const printWindow = window.open('', '_blank');
     if (printWindow) {
@@ -876,12 +877,10 @@ export default function PosSystem({
         title = `Table ${order.tableId}`;
       }
       
-      const kotType = 'KOT';
-
-      const kitchenReceipt = `
+      const receipt = `
         <html>
           <head>
-            <title>Order Ticket</title>
+            <title>${kotTitle}</title>
             <style>
               body { font-family: monospace; margin: 20px; font-size: 14px; }
               h2, h3 { text-align: center; margin: 5px 0; }
@@ -890,8 +889,8 @@ export default function PosSystem({
             </style>
           </head>
           <body>
-            <h2>${isUpdate ? `${kotType} UPDATE` : kotType} - ${title}</h2>
-            <h3>Order ID: ${order.id}</h3>
+            <h2>${isUpdate ? `UPDATE - ${kotTitle}` : kotTitle}</h2>
+            <h3>Order ID: ${order.id} | Table: ${title}</h3>
             ${order.deliveryDetails ? `
               <hr>
               <p><b>Deliver To:</b> ${order.deliveryDetails.name}, ${order.deliveryDetails.mobile}</p>
@@ -911,61 +910,67 @@ export default function PosSystem({
           </body>
         </html>
       `;
-      printWindow.document.write(kitchenReceipt);
+      printWindow.document.write(receipt);
       printWindow.document.close();
     }
   };
   
-    const handleSendCombinedKOT = () => {
-        if (orderType === 'Home Delivery' && (!homeDeliveryDetails.name || !homeDeliveryDetails.mobile)) {
-            setIsHomeDeliveryDialogOpen(true);
-            toast({ variant: 'destructive', title: 'Missing Delivery Info', description: 'Please enter customer name and mobile.' });
-            return;
-        }
+  const processKOTs = (kotGroups: { title: string; items: OrderItem[] }[]) => {
+     if (orderType === 'Home Delivery' && (!homeDeliveryDetails.name || !homeDeliveryDetails.mobile)) {
+        setIsHomeDeliveryDialogOpen(true);
+        toast({ variant: 'destructive', title: 'Missing Delivery Info', description: 'Please enter customer name and mobile.' });
+        return;
+    }
 
-        const itemsForKOT = getNewItems(orderItems, sentItems);
+    setIsProcessing(true);
 
-        if (itemsForKOT.length === 0) {
-            toast({ variant: 'destructive', title: 'No New Items', description: `No new items to send to the kitchen.` });
-            return;
-        }
-        
-        setIsProcessing(true);
-
-        setTimeout(() => {
-            let finalOrder: Order;
-            if (activeOrder) {
-                finalOrder = { ...activeOrder, items: orderItems };
-                setOrders(prev => prev.map(o => o.id === finalOrder.id ? finalOrder : o));
-            } else {
-                let tableIdForOrder: number;
-                switch(orderType) {
-                    case 'Dine-In': tableIdForOrder = currentActiveTableId!; break;
-                    case 'Home Delivery': tableIdForOrder = -1; break;
-                }
-                
-                finalOrder = {
-                    items: orderItems,
-                    tableId: tableIdForOrder,
-                    id: `K${(orders.length + 1).toString().padStart(3, '0')}`,
-                    status: 'In Preparation',
-                    ...(orderType === 'Home Delivery' && { deliveryDetails: homeDeliveryDetails }),
-                };
-                onOrderCreated(finalOrder);
-                if (orderType === 'Dine-In' && currentActiveTableId) {
-                  updateTableStatus([currentActiveTableId], 'Occupied');
-                }
+    setTimeout(() => {
+        let finalOrder: Order;
+        if (activeOrder) {
+            finalOrder = { ...activeOrder, items: orderItems };
+            setOrders(prev => prev.map(o => o.id === finalOrder.id ? finalOrder : o));
+        } else {
+            let tableIdForOrder: number;
+            switch(orderType) {
+                case 'Dine-In': tableIdForOrder = currentActiveTableId!; break;
+                case 'Home Delivery': tableIdForOrder = -1; break;
             }
             
-            printKot(finalOrder, itemsForKOT);
-            
-            setSentItems(orderItems);
+            finalOrder = {
+                items: orderItems,
+                tableId: tableIdForOrder,
+                id: `K${(orders.length + 1).toString().padStart(3, '0')}`,
+                status: 'In Preparation',
+                ...(orderType === 'Home Delivery' && { deliveryDetails: homeDeliveryDetails }),
+            };
+            onOrderCreated(finalOrder);
+            if (orderType === 'Dine-In' && currentActiveTableId) {
+              updateTableStatus([currentActiveTableId], 'Occupied');
+            }
+        }
+        
+        kotGroups.forEach(group => {
+            printKot(finalOrder, group.items, group.title);
+        });
+        
+        setSentItems(prevSent => {
+          const newSentItems = getNewItems(orderItems, prevSent);
+          const sentMap = new Map(prevSent.map(item => [item.name, item]));
+          newSentItems.forEach(newItem => {
+            if (sentMap.has(newItem.name)) {
+              sentMap.get(newItem.name)!.quantity += newItem.quantity;
+            } else {
+              sentMap.set(newItem.name, {...newItem});
+            }
+          });
+          return Array.from(sentMap.values());
+        });
 
-            toast({ title: `KOT Sent!`, description: `Order update sent.` });
-            setIsProcessing(false);
-        }, 100);
-    };
-
+        toast({ title: `KOTs Sent!`, description: `Order update sent.` });
+        setIsProcessing(false);
+    }, 100);
+  };
+  
   const handleDropItemOnTable = (tableId: number, item: MenuItem) => {
       if (!easyMode) return;
       const table = tables.find(t => t.id === tableId);
@@ -1161,22 +1166,11 @@ export default function PosSystem({
     setIsQuickAssignDialogOpen(false);
     setSelectedTableId(tableId);
     setTimeout(() => {
-        handleSendCombinedKOT();
+        const newItems = getNewItems(orderItems, sentItems);
+        const kotGroups = groupItemsForKOT(newItems, kotPreference, menuCategories);
+        processKOTs(kotGroups);
     }, 100);
   };
-
-  const topSellingItems = useMemo(() => {
-    const itemCounts: Record<string, number> = {};
-    billHistory.forEach(bill => {
-      bill.orderItems.forEach((item: OrderItem) => {
-        itemCounts[item.name] = (itemCounts[item.name] || 0) + item.quantity;
-      });
-    });
-    return Object.entries(itemCounts)
-      .map(([name, count]) => ({ name, count }))
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 10);
-  }, [billHistory]);
 
   const lowStockItems = useMemo(() => allMenuItems.filter(item => menuItemStatus[item.name] === 'low'), [allMenuItems, menuItemStatus]);
   const outOfStockItems = useMemo(() => allMenuItems.filter(item => menuItemStatus[item.name] === 'out'), [allMenuItems, menuItemStatus]);
@@ -1248,7 +1242,12 @@ export default function PosSystem({
           searchInputRef.current?.focus();
           setKeyboardMode('order');
         } else if (keyboardMode === 'confirm') {
-          handleSendCombinedKOT();
+          // This should trigger the first available KOT button
+          const newItems = getNewItems(orderItems, sentItems);
+          const kotGroups = groupItemsForKOT(newItems, kotPreference, menuCategories);
+          if (kotGroups.length > 0) {
+            processKOTs(kotGroups);
+          }
           setKeyboardMode('table');
         }
       } else if (e.key === 'Escape') {
@@ -1269,7 +1268,86 @@ export default function PosSystem({
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [keyboardMode, selectedTableId, tables, handleSelectTable, updateTableStatus, handleSendCombinedKOT, setKeyboardMode]);
+  }, [keyboardMode, selectedTableId, tables, handleSelectTable, updateTableStatus, setKeyboardMode, orderItems, sentItems, getNewItems, kotPreference, menuCategories]);
+  
+  const groupItemsForKOT = (items: OrderItem[], preference: KOTPreference, allCategories: string[]): { title: string; items: OrderItem[] }[] => {
+    if (items.length === 0) return [];
+
+    if (preference.type === 'single') {
+        return [{ title: 'KOT', items: items }];
+    }
+
+    if (preference.type === 'separate') {
+        const kitchenItems = items.filter(item => item.category !== 'Beverages');
+        const barItems = items.filter(item => item.category === 'Beverages');
+        const groups = [];
+        if (kitchenItems.length > 0) groups.push({ title: 'Kitchen KOT', items: kitchenItems });
+        if (barItems.length > 0) groups.push({ title: 'Bar KOT', items: barItems });
+        return groups;
+    }
+
+    if (preference.type === 'category') {
+        const specifiedCategories = preference.categories || [];
+        const groups: { title: string; items: OrderItem[] }[] = [];
+        let remainingItems = [...items];
+
+        // Group by specified categories first
+        specifiedCategories.forEach(cat => {
+            const categoryItems = remainingItems.filter(item => item.category === cat);
+            if (categoryItems.length > 0) {
+                groups.push({ title: `${cat} KOT`, items: categoryItems });
+                remainingItems = remainingItems.filter(item => item.category !== cat);
+            }
+        });
+        
+        // Group remaining items by Kitchen/Bar
+        const kitchenItems = remainingItems.filter(item => item.category !== 'Beverages');
+        const barItems = remainingItems.filter(item => item.category === 'Beverages');
+
+        if (kitchenItems.length > 0) groups.push({ title: 'Kitchen KOT', items: kitchenItems });
+        if (barItems.length > 0) groups.push({ title: 'Bar KOT', items: barItems });
+
+        return groups;
+    }
+
+    return [];
+  };
+
+  const renderKotButtons = () => {
+    const newItems = getNewItems(orderItems, sentItems);
+    if (newItems.length === 0) return null;
+
+    const kotGroups = groupItemsForKOT(newItems, kotPreference, menuCategories);
+    
+    if (kotGroups.length === 0) return null;
+    
+    if (kotGroups.length === 1 && kotPreference.type === 'single') {
+       return (
+         <Button 
+            size="lg"
+            className={cn("h-12 text-base col-span-2", activeOrder && "bg-blue-600 hover:bg-blue-700")}
+            onClick={() => processKOTs(kotGroups)}
+            disabled={isProcessing || (orderType === 'Dine-In' && !currentActiveTableId && !activeOrder)}
+        >
+            {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
+            {activeOrder ? 'Update KOT' : 'Send KOT'}
+        </Button>
+       )
+    }
+
+    return kotGroups.map(group => (
+       <Button 
+            key={group.title}
+            size="lg"
+            className={cn("h-12 text-base", activeOrder && "bg-blue-600 hover:bg-blue-700")}
+            onClick={() => processKOTs([group])}
+            disabled={isProcessing || (orderType === 'Dine-In' && !currentActiveTableId && !activeOrder)}
+        >
+            {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
+            {activeOrder ? `Update ${group.title}` : `Send ${group.title}`}
+        </Button>
+    ));
+  };
 
 
   const renderMenuItem = (item: MenuItem, subCategoryName: string, categoryName: string) => {
@@ -1600,8 +1678,7 @@ export default function PosSystem({
               receiptPreview={receiptPreview}
               orderType={orderType}
               setOrderType={setOrderType}
-              handleSendCombinedKOT={handleSendCombinedKOT}
-              hasNewItems={hasNewItems}
+              kotButtons={renderKotButtons()}
           >
             <div className="grid grid-cols-[repeat(auto-fit,minmax(80px,1fr))] gap-2">
                 {tables.map(table => {
@@ -1717,7 +1794,6 @@ export default function PosSystem({
       <ItemStatusDialog
         isOpen={isItemStatusDialogOpen}
         onOpenChange={setIsItemStatusDialogOpen}
-        topSellingItems={topSellingItems}
         lowStockItems={lowStockItems}
         outOfStockItems={outOfStockItems}
       />
