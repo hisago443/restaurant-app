@@ -953,10 +953,10 @@ export default function PosSystem({
             printKot(finalOrder, group.items, group.title);
         });
         
+        const itemsJustSent = kotGroups.flatMap(g => g.items);
         setSentItems(prevSent => {
-          const newSentItems = getNewItems(orderItems, prevSent);
-          const sentMap = new Map(prevSent.map(item => [item.name, item]));
-          newSentItems.forEach(newItem => {
+          const sentMap = new Map(prevSent.map(item => [item.name, {...item}]));
+          itemsJustSent.forEach(newItem => {
             if (sentMap.has(newItem.name)) {
               sentMap.get(newItem.name)!.quantity += newItem.quantity;
             } else {
@@ -1811,4 +1811,5 @@ export default function PosSystem({
     
 
     
+
 
