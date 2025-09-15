@@ -574,9 +574,9 @@ export default function PosSystem({
 
   const menuCategories = useMemo(() => menu.map(c => c.category), [menu]);
 
-  const getNewItems = useCallback((currentItems: OrderItem[], sentItems: OrderItem[]) => {
+  const getNewItems = useCallback((currentItems: OrderItem[], sentItemsParam: OrderItem[]) => {
     const newItems: OrderItem[] = [];
-    const sentMap = new Map(sentItems.map(item => [item.name, item.quantity]));
+    const sentMap = new Map(sentItemsParam.map(item => [item.name, item.quantity]));
 
     currentItems.forEach(item => {
         const sentQty = sentMap.get(item.name) || 0;
@@ -945,25 +945,12 @@ export default function PosSystem({
             }
         }
         
-        const itemsJustSent = kotGroups.flatMap(g => g.items);
-        
         kotGroups.forEach(group => {
             printKot(finalOrder, group.items, group.title);
         });
         
-        setSentItems(prevSent => {
-          const sentMap = new Map(prevSent.map(item => [item.name, { ...item }]));
-          itemsJustSent.forEach(newItem => {
-            const existing = sentMap.get(newItem.name);
-            if (existing) {
-              existing.quantity += newItem.quantity;
-            } else {
-              sentMap.set(newItem.name, { ...newItem });
-            }
-          });
-          return Array.from(sentMap.values());
-        });
-        
+        // After printing, update the sentItems state to reflect the new state of the order
+        setSentItems(finalOrder.items);
 
         toast({ title: `KOTs Sent!`, description: `Order update sent.` });
         setIsProcessing(false);
@@ -1310,32 +1297,18 @@ export default function PosSystem({
   };
 
   const renderKotButtons = () => {
-    const newItems = getNewItems(orderItems, sentItems);
+    const newItems = getNewItems(orderItems, activeOrder ? activeOrder.items : []);
     if (newItems.length === 0) return null;
 
     const kotGroups = groupItemsForKOT(newItems, kotPreference, menuCategories);
     
     if (kotGroups.length === 0) return null;
     
-    if (kotGroups.length === 1) {
-       return (
-         <Button 
-            size="lg"
-            className={cn("h-12 text-base w-full", activeOrder && "bg-blue-600 hover:bg-blue-700")}
-            onClick={() => processKOTs(kotGroups)}
-            disabled={isProcessing || (orderType === 'Dine-In' && !currentActiveTableId && !activeOrder)}
-        >
-            {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
-            {activeOrder ? `Update ${kotGroups[0].title}` : `Send ${kotGroups[0].title}`}
-        </Button>
-       )
-    }
-
     return kotGroups.map(group => (
        <Button 
             key={group.title}
             size="lg"
-            className={cn("h-12 text-base w-full", activeOrder && "bg-blue-600 hover:bg-blue-700")}
+            className={cn("h-12 text-base w-full", "bg-blue-600 hover:bg-blue-700")}
             onClick={() => processKOTs([group])}
             disabled={isProcessing || (orderType === 'Dine-In' && !currentActiveTableId && !activeOrder)}
         >
