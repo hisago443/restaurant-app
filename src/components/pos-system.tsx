@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import * as React from 'react';
@@ -413,20 +412,22 @@ function OrderPanel({
                         </Button>
                     )}
                     {kotPreference === 'separate' ? (
-                        <div className={cn("grid gap-2", hasBeverages ? "grid-cols-2" : "grid-cols-1")}>
-                            <Button 
-                                size="lg"
-                                className={cn("h-12 text-base", activeOrder && "bg-blue-600 hover:bg-blue-700")}
-                                onClick={handleSendToKitchen}
-                                disabled={isProcessing || !hasFood || (orderType === 'Dine-In' && !currentActiveTableId && !activeOrder)}
-                            >
-                                {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
-                                {activeOrder ? 'Update Kitchen KOT' : 'Send to Kitchen'}
-                            </Button>
+                        <div className={cn("grid gap-2", hasBeverages && hasFood ? "grid-cols-2" : "grid-cols-1")}>
+                            {hasFood && (
+                                <Button 
+                                    size="lg"
+                                    className={cn("h-12 text-base", activeOrder && "bg-blue-600 hover:bg-blue-700")}
+                                    onClick={handleSendToKitchen}
+                                    disabled={isProcessing || !hasFood || (orderType === 'Dine-In' && !currentActiveTableId && !activeOrder)}
+                                >
+                                    {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
+                                    {activeOrder ? 'Update Kitchen KOT' : 'Send to Kitchen'}
+                                </Button>
+                            )}
                             {hasBeverages && (
                                 <Button 
                                     size="lg"
-                                    className="h-12 text-base bg-cyan-600 hover:bg-cyan-700"
+                                    className={cn("h-12 text-base bg-cyan-600 hover:bg-cyan-700", !hasFood && "col-span-full")}
                                     onClick={handleSendToBar}
                                     disabled={isProcessing || !hasBeverages || (orderType === 'Dine-In' && !currentActiveTableId && !activeOrder)}
                                 >
@@ -659,7 +660,6 @@ export default function PosSystem({
   const [vegFilter, setVegFilter] = useState<VegFilter>('All');
   const [isQuickAssignDialogOpen, setIsQuickAssignDialogOpen] = useState(false);
   const [isEasyModeAlertOpen, setIsEasyModeAlertOpen] = useState(false);
-  const [isItemStatusDialogOpen, setIsItemStatusDialogOpen] = useState(false);
   const hasSeenEasyModeAlert = useRef(false);
 
   const [orderType, setOrderType] = useState<OrderType>('Dine-In');
@@ -1068,13 +1068,8 @@ export default function PosSystem({
             // Update originalOrderItems to reflect the sent items
             setOriginalOrderItems(prevOriginals => {
                 const newOriginalsMap = new Map(prevOriginals.map(item => [item.name, item]));
-                itemsToPrint.forEach(sentItem => {
-                    const existing = newOriginalsMap.get(sentItem.name);
-                    if (existing) {
-                        existing.quantity += sentItem.quantity;
-                    } else {
-                        newOriginalsMap.set(sentItem.name, { ...sentItem });
-                    }
+                itemsForKOT.forEach(sentItem => {
+                    newOriginalsMap.set(sentItem.name, { ...sentItem });
                 });
                 return Array.from(newOriginalsMap.values());
             });
