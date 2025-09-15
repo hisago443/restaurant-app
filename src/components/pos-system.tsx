@@ -103,6 +103,7 @@ interface PosSystemProps {
   keyboardMode: 'table' | 'order' | 'confirm';
   setKeyboardMode: (mode: 'table' | 'order' | 'confirm') => void;
   billHistory: Bill[];
+  kotPreference: 'separate' | 'single';
 }
 
 const ItemTypes = {
@@ -181,8 +182,10 @@ function OrderPanel({
     orderType,
     setOrderType,
     handleSendToBar,
+    handleSendCombinedKOT,
     hasBeverages,
     hasFood,
+    kotPreference,
     children,
 }: {
     orderItems: OrderItem[];
@@ -206,8 +209,10 @@ function OrderPanel({
     orderType: OrderType;
     setOrderType: (type: OrderType) => void;
     handleSendToBar: () => void;
+    handleSendCombinedKOT: () => void;
     hasBeverages: boolean;
     hasFood: boolean;
+    kotPreference: 'separate' | 'single';
     children: React.ReactNode;
 }) {
     const [{ isOver, canDrop }, drop] = useDrop(() => ({
@@ -407,28 +412,40 @@ function OrderPanel({
                             Quick Assign to Table
                         </Button>
                     )}
-                     <div className={cn("grid gap-2", hasBeverages ? "grid-cols-2" : "grid-cols-1")}>
-                        <Button 
-                            size="lg"
-                            className={cn("h-12 text-base", activeOrder && "bg-blue-600 hover:bg-blue-700")}
-                            onClick={handleSendToKitchen}
-                            disabled={isProcessing || !hasFood || (orderType === 'Dine-In' && !currentActiveTableId && !activeOrder)}
-                        >
-                            {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
-                            {activeOrder ? 'Update Kitchen KOT' : 'Send to Kitchen'}
-                        </Button>
-                        {hasBeverages && (
+                    {kotPreference === 'separate' ? (
+                        <div className={cn("grid gap-2", hasBeverages ? "grid-cols-2" : "grid-cols-1")}>
                             <Button 
                                 size="lg"
-                                className="h-12 text-base bg-cyan-600 hover:bg-cyan-700"
-                                onClick={handleSendToBar}
-                                disabled={isProcessing || !hasBeverages || (orderType === 'Dine-In' && !currentActiveTableId && !activeOrder)}
+                                className={cn("h-12 text-base", activeOrder && "bg-blue-600 hover:bg-blue-700")}
+                                onClick={handleSendToKitchen}
+                                disabled={isProcessing || !hasFood || (orderType === 'Dine-In' && !currentActiveTableId && !activeOrder)}
                             >
-                                {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Beer className="mr-2 h-4 w-4" />}
-                                {activeOrder ? 'Update Bar KOT' : 'Send to Bar'}
+                                {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
+                                {activeOrder ? 'Update Kitchen KOT' : 'Send to Kitchen'}
                             </Button>
-                        )}
-                    </div>
+                            {hasBeverages && (
+                                <Button 
+                                    size="lg"
+                                    className="h-12 text-base bg-cyan-600 hover:bg-cyan-700"
+                                    onClick={handleSendToBar}
+                                    disabled={isProcessing || !hasBeverages || (orderType === 'Dine-In' && !currentActiveTableId && !activeOrder)}
+                                >
+                                    {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Beer className="mr-2 h-4 w-4" />}
+                                    {activeOrder ? 'Update Bar KOT' : 'Send to Bar'}
+                                </Button>
+                            )}
+                        </div>
+                    ) : (
+                         <Button 
+                            size="lg"
+                            className={cn("h-12 text-base", activeOrder && "bg-blue-600 hover:bg-blue-700")}
+                            onClick={handleSendCombinedKOT}
+                            disabled={isProcessing || orderItems.length === 0 || (orderType === 'Dine-In' && !currentActiveTableId && !activeOrder)}
+                        >
+                            {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
+                            {activeOrder ? 'Update KOT' : 'Send KOT'}
+                        </Button>
+                    )}
                     <div className="grid grid-cols-2 gap-2">
                         <Button size="lg" variant="outline" className="h-12 text-base" onClick={handlePrintProvisionalBill} disabled={orderItems.length === 0}>
                             <Printer className="mr-2 h-4 w-4" />
@@ -619,6 +636,7 @@ export default function PosSystem({
     keyboardMode,
     setKeyboardMode,
     billHistory,
+    kotPreference,
 }: PosSystemProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [menu, setMenu] = useState<MenuCategory[]>(menuData as MenuCategory[]);
@@ -911,7 +929,7 @@ export default function PosSystem({
     setOrderItems(orderItems.filter(item => item.name !== name));
   };
   
-  const printKot = (order: Order, itemsToPrint: OrderItem[], type: 'Kitchen' | 'Bar') => {
+  const printKot = (order: Order, itemsToPrint: OrderItem[], type: 'Kitchen' | 'Bar' | 'Combined') => {
     if (itemsToPrint.length === 0) return;
     const printWindow = window.open('', '_blank');
     if (printWindow) {
@@ -926,7 +944,7 @@ export default function PosSystem({
         title = `Table ${order.tableId}`;
       }
       
-      const kotType = type === 'Bar' ? 'BAR KOT' : 'KOT';
+      const kotType = type === 'Combined' ? 'KOT' : (type === 'Bar' ? 'BAR KOT' : 'KOT');
 
       const kitchenReceipt = `
         <html>
@@ -966,7 +984,7 @@ export default function PosSystem({
     }
   };
   
-    const processOrder = (type: 'Kitchen' | 'Bar') => {
+    const processOrder = (type: 'Kitchen' | 'Bar' | 'Combined') => {
         if (orderItems.length === 0) {
             toast({ variant: 'destructive', title: 'Empty Order', description: 'Cannot send an empty order.' });
             return;
@@ -995,9 +1013,20 @@ export default function PosSystem({
 
         const isFoodItem = (item: OrderItem) => !beverageItemNames.has(item.name);
         const isBeverageItem = (item: OrderItem) => beverageItemNames.has(item.name);
+        
+        let itemsForKOT: OrderItem[];
+        let originalItemsForKOT: OrderItem[];
 
-        const itemsForKOT = orderItems.filter(type === 'Kitchen' ? isFoodItem : isBeverageItem);
-        const originalItemsForKOT = originalOrderItems.filter(type === 'Kitchen' ? isFoodItem : isBeverageItem);
+        if (type === 'Kitchen') {
+            itemsForKOT = orderItems.filter(isFoodItem);
+            originalItemsForKOT = originalOrderItems.filter(isFoodItem);
+        } else if (type === 'Bar') {
+            itemsForKOT = orderItems.filter(isBeverageItem);
+            originalItemsForKOT = originalOrderItems.filter(isBeverageItem);
+        } else { // Combined
+            itemsForKOT = orderItems;
+            originalItemsForKOT = originalOrderItems;
+        }
         
         const itemsToPrint = activeOrder ? getDiff(itemsForKOT, originalItemsForKOT) : itemsForKOT;
         
@@ -1036,12 +1065,13 @@ export default function PosSystem({
             
             printKot(finalOrder, itemsToPrint, type);
             
+            // Update originalOrderItems to reflect the sent items
             setOriginalOrderItems(prevOriginals => {
                 const newOriginalsMap = new Map(prevOriginals.map(item => [item.name, item]));
-                itemsForKOT.forEach(sentItem => {
+                itemsToPrint.forEach(sentItem => {
                     const existing = newOriginalsMap.get(sentItem.name);
                     if (existing) {
-                        existing.quantity = sentItem.quantity;
+                        existing.quantity += sentItem.quantity;
                     } else {
                         newOriginalsMap.set(sentItem.name, { ...sentItem });
                     }
@@ -1056,6 +1086,7 @@ export default function PosSystem({
 
     const handleSendToKitchen = () => processOrder('Kitchen');
     const handleSendToBar = () => processOrder('Bar');
+    const handleSendCombinedKOT = () => processOrder('Combined');
 
   const handleDropItemOnTable = (tableId: number, item: MenuItem) => {
       if (!easyMode) return;
@@ -1723,8 +1754,10 @@ export default function PosSystem({
               orderType={orderType}
               setOrderType={setOrderType}
               handleSendToBar={handleSendToBar}
+              handleSendCombinedKOT={handleSendCombinedKOT}
               hasBeverages={hasBeverages}
               hasFood={hasFood}
+              kotPreference={kotPreference}
           >
             <div className="grid grid-cols-[repeat(auto-fit,minmax(80px,1fr))] gap-2">
                 {tables.map(table => {

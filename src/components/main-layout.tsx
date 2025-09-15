@@ -49,6 +49,7 @@ export default function MainLayout() {
   const [showSetupWizard, setShowSetupWizard] = useState(false);
   const [isCheckingSetup, setIsCheckingSetup] = useState(true);
   const [venueName, setVenueName] = useState('Up & Above Assistant');
+  const [kotPreference, setKotPreference] = useState<'separate' | 'single'>('separate');
 
   useEffect(() => {
     try {
@@ -66,22 +67,26 @@ export default function MainLayout() {
   }, []);
 
   useEffect(() => {
-    const fetchVenueName = async () => {
+    const fetchVenueSettings = async () => {
       try {
         const venueDoc = await getDoc(doc(db, "settings", "venue"));
         if (venueDoc.exists()) {
-          setVenueName(venueDoc.data().name || 'Up & Above Assistant');
+          const data = venueDoc.data();
+          setVenueName(data.name || 'Up & Above Assistant');
+          setKotPreference(data.kotPreference || 'separate');
         }
       } catch (error) {
-        console.error("Error fetching venue name:", error);
+        console.error("Error fetching venue settings:", error);
       }
     };
-    fetchVenueName();
+    fetchVenueSettings();
     
     // Also listen for real-time updates
     const unsub = onSnapshot(doc(db, "settings", "venue"), (doc) => {
         if (doc.exists()) {
-            setVenueName(doc.data().name || 'Up & Above Assistant');
+            const data = doc.data();
+            setVenueName(data.name || 'Up & Above Assistant');
+            setKotPreference(data.kotPreference || 'separate');
         }
     });
 
@@ -540,6 +545,7 @@ export default function MainLayout() {
                   keyboardMode={keyboardMode}
                   setKeyboardMode={setKeyboardMode}
                   billHistory={billHistory}
+                  kotPreference={kotPreference}
                 />
             </TabsContent>
             <TabsContent value="tables" className="m-0 p-0">
