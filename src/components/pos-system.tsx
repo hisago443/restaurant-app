@@ -669,6 +669,8 @@ export default function PosSystem({
 
   const [sentFoodItems, setSentFoodItems] = useState<OrderItem[]>([]);
   const [sentBeverageItems, setSentBeverageItems] = useState<OrderItem[]>([]);
+  const [hasNewFoodItems, setHasNewFoodItems] = useState(false);
+  const [hasNewBeverageItems, setHasNewBeverageItems] = useState(false);
 
   const searchInputRef = useRef<HTMLInputElement>(null);
   
@@ -679,11 +681,6 @@ export default function PosSystem({
     }
     return new Set(beverageCategory.subCategories.flatMap(sc => sc.items.map(i => i.name)));
   }, [menu]);
-  
-  const allMenuItems: MenuItem[] = useMemo(() => 
-    menu.flatMap(cat => cat.subCategories.flatMap(sub => sub.items)),
-    [menu]
-  );
 
   const getNewItems = useCallback((currentItems: OrderItem[], sentItems: OrderItem[]) => {
       const newItems: OrderItem[] = [];
@@ -698,15 +695,18 @@ export default function PosSystem({
       return newItems;
   }, []);
 
-  const hasNewFoodItems = useMemo(() => {
-      const currentFoodItems = orderItems.filter(item => !beverageItemNames.has(item.name));
-      return getNewItems(currentFoodItems, sentFoodItems).length > 0;
-  }, [orderItems, sentFoodItems, beverageItemNames, getNewItems]);
+  useEffect(() => {
+    const newFoodItems = getNewItems(orderItems.filter(item => !beverageItemNames.has(item.name)), sentFoodItems);
+    setHasNewFoodItems(newFoodItems.length > 0);
 
-  const hasNewBeverageItems = useMemo(() => {
-      const currentBeverageItems = orderItems.filter(item => beverageItemNames.has(item.name));
-      return getNewItems(currentBeverageItems, sentBeverageItems).length > 0;
-  }, [orderItems, sentBeverageItems, beverageItemNames, getNewItems]);
+    const newBeverageItems = getNewItems(orderItems.filter(item => beverageItemNames.has(item.name)), sentBeverageItems);
+    setHasNewBeverageItems(newBeverageItems.length > 0);
+  }, [orderItems, sentFoodItems, sentBeverageItems, beverageItemNames, getNewItems]);
+  
+  const allMenuItems: MenuItem[] = useMemo(() => 
+    menu.flatMap(cat => cat.subCategories.flatMap(sub => sub.items)),
+    [menu]
+  );
   
   const getLocalReceipt = useCallback(() => {
     if (orderItems.length === 0) return '';
@@ -857,14 +857,12 @@ export default function PosSystem({
 
   useEffect(() => {
     if (activeOrder) {
-      // When loading an existing order, populate the 'sent' states
       const foodItems = activeOrder.items.filter(item => !beverageItemNames.has(item.name));
       const beverageItems = activeOrder.items.filter(item => beverageItemNames.has(item.name));
       setSentFoodItems(foodItems);
       setSentBeverageItems(beverageItems);
       setOriginalOrderItems([...activeOrder.items]);
     } else {
-      // When starting a new order, clear the 'sent' states
       setSentFoodItems([]);
       setSentBeverageItems([]);
       setOriginalOrderItems([]);
@@ -1061,8 +1059,10 @@ export default function PosSystem({
             }
             itemsForKOT = orderItems;
             setSentItemsForType = (items) => {
-              setSentFoodItems(items.filter(isFoodItem));
-              setSentBeverageItems(items.filter(isBeverageItem));
+              const food = items.filter(isFoodItem);
+              const beverages = items.filter(isBeverageItem);
+              setSentFoodItems(prev => [...prev.filter(p => !food.some(f => f.name === p.name)), ...food]);
+              setSentBeverageItems(prev => [...prev.filter(p => !beverages.some(b => b.name === p.name)), ...beverages]);
             }
         }
         
@@ -1096,22 +1096,21 @@ export default function PosSystem({
             
             printKot(finalOrder, itemsForKOT, type);
             
-            // Update the state for the items that were just sent
-            if (type === 'Kitchen' || type === 'Bar') {
-              setSentItemsForType(prevSentItems => {
-                const newSentItemsMap = new Map(prevSentItems.map(item => [item.name, { ...item }]));
-                itemsForKOT.forEach(item => {
-                  const existing = newSentItemsMap.get(item.name);
-                  if (existing) {
-                    newSentItemsMap.set(item.name, { ...existing, quantity: existing.quantity + item.quantity });
-                  } else {
-                    newSentItemsMap.set(item.name, { ...item });
-                  }
+            if (type === 'Combined') {
+                setSentItemsForType(orderItems);
+            } else {
+                setSentItemsForType(prevSent => {
+                    const newSentMap = new Map(prevSent.map(item => [item.name, { ...item }]));
+                    itemsForKOT.forEach(item => {
+                        const existing = newSentMap.get(item.name);
+                        if (existing) {
+                            newSentMap.set(item.name, { ...existing, quantity: existing.quantity + item.quantity });
+                        } else {
+                            newSentMap.set(item.name, { ...item });
+                        }
+                    });
+                    return Array.from(newSentMap.values());
                 });
-                return Array.from(newSentItemsMap.values());
-              });
-            } else { // Combined
-              setSentItemsForType(orderItems);
             }
 
             setOriginalOrderItems([...orderItems]);
@@ -1908,3 +1907,5 @@ export default function PosSystem({
     </div>
   );
 }
+
+    
