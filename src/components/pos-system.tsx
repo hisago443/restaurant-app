@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import * as React from 'react';
@@ -413,13 +412,13 @@ function OrderPanel({
                         </Button>
                     )}
                     {kotPreference === 'separate' ? (
-                        <div className={cn("grid gap-2", hasBeverages && hasFood ? "grid-cols-2" : "grid-cols-1")}>
+                        <div className={cn("grid gap-2", hasFood && hasBeverages ? "grid-cols-2" : "grid-cols-1")}>
                             {hasFood && (
                                 <Button 
                                     size="lg"
                                     className={cn("h-12 text-base", activeOrder && "bg-blue-600 hover:bg-blue-700")}
                                     onClick={handleSendToKitchen}
-                                    disabled={isProcessing || !hasFood || (orderType === 'Dine-In' && !currentActiveTableId && !activeOrder)}
+                                    disabled={isProcessing || (orderType === 'Dine-In' && !currentActiveTableId && !activeOrder)}
                                 >
                                     {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
                                     {activeOrder ? 'Update Kitchen KOT' : 'Send to Kitchen'}
@@ -430,7 +429,7 @@ function OrderPanel({
                                     size="lg"
                                     className={cn("h-12 text-base bg-cyan-600 hover:bg-cyan-700", !hasFood && "col-span-full")}
                                     onClick={handleSendToBar}
-                                    disabled={isProcessing || !hasBeverages || (orderType === 'Dine-In' && !currentActiveTableId && !activeOrder)}
+                                    disabled={isProcessing || (orderType === 'Dine-In' && !currentActiveTableId && !activeOrder)}
                                 >
                                     {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Beer className="mr-2 h-4 w-4" />}
                                     {activeOrder ? 'Update Bar KOT' : 'Send to Bar'}
@@ -673,19 +672,17 @@ export default function PosSystem({
 
   const searchInputRef = useRef<HTMLInputElement>(null);
   
-  const typedMenuData: MenuCategory[] = menu;
-
   const beverageItemNames = useMemo(() => {
-    const beverageCategory = typedMenuData.find(c => c.category === 'Beverages');
+    const beverageCategory = menu.find(c => c.category === 'Beverages');
     if (!beverageCategory) {
       return new Set<string>();
     }
     return new Set(beverageCategory.subCategories.flatMap(sc => sc.items.map(i => i.name)));
-  }, [typedMenuData]);
+  }, [menu]);
   
   const allMenuItems: MenuItem[] = useMemo(() => 
-    typedMenuData.flatMap(cat => cat.subCategories.flatMap(sub => sub.items)),
-    [typedMenuData]
+    menu.flatMap(cat => cat.subCategories.flatMap(sub => sub.items)),
+    [menu]
   );
 
   const getNewItems = useCallback((currentItems: OrderItem[], sentItems: OrderItem[]) => {
@@ -767,7 +764,7 @@ export default function PosSystem({
   }, [orderItems, discount, orderType, homeDeliveryDetails, venueName]);
 
   const filteredMenu = useMemo(() => {
-    let menuToFilter = typedMenuData;
+    let menuToFilter = menu;
 
     // Search filter
     if (searchTerm) {
@@ -790,7 +787,7 @@ export default function PosSystem({
     }
 
     return menuToFilter;
-  }, [searchTerm, vegFilter, typedMenuData]);
+  }, [searchTerm, vegFilter, menu]);
 
   useEffect(() => {
     if (searchTerm && viewMode === 'accordion') {
@@ -814,12 +811,12 @@ export default function PosSystem({
   useEffect(() => {
     const defaultCategoryColors: Record<string, string> = {};
     if (Object.keys(categoryColors).length === 0) {
-        typedMenuData.forEach((category, index) => {
+        menu.forEach((category, index) => {
             defaultCategoryColors[category.category] = colorNames[index % colorNames.length];
         });
         setCategoryColors(defaultCategoryColors);
     }
-  }, [typedMenuData, categoryColors, setCategoryColors]);
+  }, [menu, categoryColors, setCategoryColors]);
 
   useEffect(() => {
     try {
@@ -891,7 +888,7 @@ export default function PosSystem({
   const handleShuffleColors = () => {
     const shuffledPalette = [...colorNames].sort(() => 0.5 - Math.random());
     const newCategoryColors: Record<string, string> = {};
-    typedMenuData.forEach((category, index) => {
+    menu.forEach((category, index) => {
       newCategoryColors[category.category] = shuffledPalette[index % shuffledPalette.length];
     });
     setCategoryColors(newCategoryColors);
@@ -1030,11 +1027,6 @@ export default function PosSystem({
   };
   
     const processOrder = (type: 'Kitchen' | 'Bar' | 'Combined') => {
-        if (orderItems.length === 0) {
-            toast({ variant: 'destructive', title: 'Empty Order', description: 'Cannot send an empty order.' });
-            return;
-        }
-
         if (orderType === 'Home Delivery' && (!homeDeliveryDetails.name || !homeDeliveryDetails.mobile)) {
             setIsHomeDeliveryDialogOpen(true);
             toast({ variant: 'destructive', title: 'Missing Delivery Info', description: 'Please enter customer name and mobile.' });
@@ -1049,35 +1041,31 @@ export default function PosSystem({
         let setSentItemsForType: React.Dispatch<React.SetStateAction<OrderItem[]>>;
 
         if (type === 'Kitchen') {
-            itemsForKOT = orderItems.filter(isFoodItem);
-            sentItemsForType = sentFoodItems;
+            if (!hasNewFoodItems) {
+                toast({ title: 'No Changes', description: 'No new food items to send.' });
+                return;
+            }
+            itemsForKOT = getNewItems(orderItems.filter(isFoodItem), sentFoodItems);
             setSentItemsForType = setSentFoodItems;
         } else if (type === 'Bar') {
-            itemsForKOT = orderItems.filter(isBeverageItem);
-            sentItemsForType = sentBeverageItems;
+            if (!hasNewBeverageItems) {
+                toast({ title: 'No Changes', description: 'No new beverage items to send.' });
+                return;
+            }
+            itemsForKOT = getNewItems(orderItems.filter(isBeverageItem), sentBeverageItems);
             setSentItemsForType = setSentBeverageItems;
         } else { // Combined
+            if (orderItems.length === 0) {
+                 toast({ variant: 'destructive', title: 'Empty Order', description: 'Cannot send an empty order.' });
+                return;
+            }
             itemsForKOT = orderItems;
-            // For combined, we merge the two sent states to get the full original list
-            const combinedSentMap = new Map();
-            [...sentFoodItems, ...sentBeverageItems].forEach(item => {
-                combinedSentMap.set(item.name, { ...item });
-            });
-            sentItemsForType = Array.from(combinedSentMap.values());
-            setSentItemsForType = () => {
-              // When combined, we update both states
-              setSentFoodItems(orderItems.filter(isFoodItem));
-              setSentBeverageItems(orderItems.filter(isBeverageItem));
-            };
+            setSentItemsForType = (items) => {
+              setSentFoodItems(items.filter(isFoodItem));
+              setSentBeverageItems(items.filter(isBeverageItem));
+            }
         }
         
-        const itemsToPrint = getNewItems(itemsForKOT, sentItemsForType);
-        
-        if (itemsToPrint.length === 0 && activeOrder) {
-            toast({ title: 'No Changes', description: `No new ${type.toLowerCase()} items to send.` });
-            return;
-        }
-
         setIsProcessing(true);
 
         setTimeout(() => {
@@ -1106,24 +1094,27 @@ export default function PosSystem({
                 }
             }
             
-            printKot(finalOrder, itemsToPrint.length > 0 ? itemsToPrint : itemsForKOT, type);
+            printKot(finalOrder, itemsForKOT, type);
             
             // Update the state for the items that were just sent
-            setSentItemsForType(itemsForKOT);
-            
-            if (type === 'Combined') {
-                // Also update the originalOrderItems for display purposes
-                setOriginalOrderItems([...orderItems]);
-            } else {
-                // Merge the changes into originalOrderItems for display
-                setOriginalOrderItems(prevOriginals => {
-                    const newOriginalsMap = new Map(prevOriginals.map(item => [item.name, {...item}]));
-                    itemsForKOT.forEach(item => {
-                        newOriginalsMap.set(item.name, {...item});
-                    });
-                    return Array.from(newOriginalsMap.values());
+            if (type === 'Kitchen' || type === 'Bar') {
+              setSentItemsForType(prevSentItems => {
+                const newSentItemsMap = new Map(prevSentItems.map(item => [item.name, { ...item }]));
+                itemsForKOT.forEach(item => {
+                  const existing = newSentItemsMap.get(item.name);
+                  if (existing) {
+                    newSentItemsMap.set(item.name, { ...existing, quantity: existing.quantity + item.quantity });
+                  } else {
+                    newSentItemsMap.set(item.name, { ...item });
+                  }
                 });
+                return Array.from(newSentItemsMap.values());
+              });
+            } else { // Combined
+              setSentItemsForType(orderItems);
             }
+
+            setOriginalOrderItems([...orderItems]);
 
             toast({ title: `KOT Sent!`, description: `Order update sent to ${type}.` });
             setIsProcessing(false);
@@ -1682,10 +1673,6 @@ export default function PosSystem({
     }
   };
   
-
-  const hasFood = hasNewFoodItems;
-  const hasBeverages = hasNewBeverageItems;
-
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-4 gap-4 h-full p-4">
       {/* Menu Panel */}
@@ -1790,8 +1777,8 @@ export default function PosSystem({
               setOrderType={setOrderType}
               handleSendToBar={handleSendToBar}
               handleSendCombinedKOT={handleSendCombinedKOT}
-              hasBeverages={hasBeverages}
-              hasFood={hasFood}
+              hasBeverages={hasNewBeverageItems}
+              hasFood={hasNewFoodItems}
               kotPreference={kotPreference}
           >
             <div className="grid grid-cols-[repeat(auto-fit,minmax(80px,1fr))] gap-2">
@@ -1921,8 +1908,3 @@ export default function PosSystem({
     </div>
   );
 }
-
-
-
-
-
