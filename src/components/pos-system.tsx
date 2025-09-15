@@ -187,7 +187,6 @@ function OrderPanel({
     children,
 }: {
     orderItems: OrderItem[];
-    originalOrderItems: OrderItem[];
     handleDropOnOrder: (item: MenuItem) => void;
     updateQuantity: (name: string, quantity: number) => void;
     removeFromOrder: (name: string) => void;
@@ -584,8 +583,7 @@ export default function PosSystem({
     kotPreference,
 }: PosSystemProps) {
   const [searchTerm, setSearchTerm] = useState('');
-  const [menu, setMenu] = useState<MenuCategory[]>(menuData as MenuCategory[]);
-  const [originalOrderItems, setOriginalOrderItems] = useState<OrderItem[]>([]);
+  const [menu, setMenu] = useState<MenuCategory[]>([]);
   const [easyMode, setEasyMode] = useState(false);
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
   const [receiptPreview, setReceiptPreview] = useState('');
@@ -617,6 +615,18 @@ export default function PosSystem({
   const [hasNewBeverageItems, setHasNewBeverageItems] = useState(false);
 
   const searchInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    // This will run once, when the component mounts.
+    const structuredMenu = (menuData as MenuCategory[]).map(category => ({
+        ...category,
+        subCategories: category.subCategories.map(sub => ({
+            ...sub,
+            items: sub.items.map(item => ({...item, history: item.history || []}))
+        }))
+    }));
+    setMenu(structuredMenu);
+  }, []);
   
   const beverageItemNames = useMemo(() => {
     const beverageCategory = menu.find(c => c.category === 'Beverages');
@@ -807,11 +817,9 @@ export default function PosSystem({
       const beverageItems = activeOrder.items.filter(item => beverageItemNames.has(item.name));
       setSentFoodItems(foodItems);
       setSentBeverageItems(beverageItems);
-      setOriginalOrderItems([...activeOrder.items]);
     } else {
       setSentFoodItems([]);
       setSentBeverageItems([]);
-      setOriginalOrderItems([]);
     }
   }, [activeOrder, beverageItemNames]);
 
@@ -981,26 +989,20 @@ export default function PosSystem({
         const isBeverageItem = (item: OrderItem) => beverageItemNames.has(item.name);
         
         let itemsForKOT: OrderItem[];
-        let setSentItemsForType: React.Dispatch<React.SetStateAction<OrderItem[]>>;
-
+        
         if (type === 'Kitchen') {
             itemsForKOT = getNewItems(orderItems.filter(isFoodItem), sentFoodItems);
-            setSentItemsForType = setSentFoodItems;
         } else if (type === 'Bar') {
             itemsForKOT = getNewItems(orderItems.filter(isBeverageItem), sentBeverageItems);
-            setSentItemsForType = setSentBeverageItems;
         } else { // Combined
-            if (orderItems.length === 0) {
-                 toast({ variant: 'destructive', title: 'Empty Order', description: 'Cannot send an empty order.' });
-                return;
-            }
-            itemsForKOT = orderItems;
-            setSentItemsForType = (items) => {
-              const food = Array.isArray(items) ? items.filter(isFoodItem) : [];
-              const beverages = Array.isArray(items) ? items.filter(isBeverageItem) : [];
-              setSentFoodItems(food);
-              setSentBeverageItems(beverages);
-            };
+            const newFood = getNewItems(orderItems.filter(isFoodItem), sentFoodItems);
+            const newBeverages = getNewItems(orderItems.filter(isBeverageItem), sentBeverageItems);
+            itemsForKOT = [...newFood, ...newBeverages];
+        }
+
+        if (itemsForKOT.length === 0) {
+            toast({ variant: 'destructive', title: 'No New Items', description: `No new items to send to the ${type}.` });
+            return;
         }
         
         setIsProcessing(true);
@@ -1033,10 +1035,15 @@ export default function PosSystem({
             
             printKot(finalOrder, itemsForKOT, type);
             
-            if (type === 'Combined') {
-                setSentItemsForType(orderItems);
-            } else {
-                setSentItemsForType(prevSent => [...prevSent, ...itemsForKOT]);
+            if (type === 'Kitchen') {
+                setSentFoodItems(prevSent => [...prevSent, ...itemsForKOT]);
+            } else if (type === 'Bar') {
+                setSentBeverageItems(prevSent => [...prevSent, ...itemsForKOT]);
+            } else { // Combined
+                const foodInKot = itemsForKOT.filter(isFoodItem);
+                const beveragesInKot = itemsForKOT.filter(isBeverageItem);
+                setSentFoodItems(prevSent => [...prevSent, ...foodInKot]);
+                setSentBeverageItems(prevSent => [...prevSent, ...beveragesInKot]);
             }
 
             toast({ title: `KOT Sent!`, description: `Order update sent to ${type}.` });
@@ -1679,7 +1686,6 @@ export default function PosSystem({
       <div className="md:col-span-1 xl:col-span-1 flex flex-col h-full gap-4">
           <OrderPanel
               orderItems={orderItems}
-              originalOrderItems={originalOrderItems}
               handleDropOnOrder={handleDropOnOrder}
               updateQuantity={updateQuantity}
               removeFromOrder={removeFromOrder}
@@ -1831,3 +1837,7 @@ export default function PosSystem({
     </div>
   );
 }
+
+    
+
+    
