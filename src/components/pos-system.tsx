@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import * as React from 'react';
@@ -617,7 +618,6 @@ export default function PosSystem({
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    // This will run once, when the component mounts.
     const structuredMenu = (menuData as MenuCategory[]).map(category => ({
         ...category,
         subCategories: category.subCategories.map(sub => ({
@@ -722,7 +722,6 @@ export default function PosSystem({
   const filteredMenu = useMemo(() => {
     let menuToFilter = menu;
 
-    // Search filter
     if (searchTerm) {
         const lowercasedTerm = searchTerm.toLowerCase();
         menuToFilter = menuToFilter.map(category => ({
@@ -734,7 +733,6 @@ export default function PosSystem({
         })).filter(category => category.subCategories.length > 0);
     }
 
-    // Veg/Non-Veg filter
     if (vegFilter !== 'All') {
         menuToFilter = menuToFilter.map(category => ({
             ...category,
@@ -906,7 +904,6 @@ export default function PosSystem({
         });
         setSearchTerm('');
       } else {
-        // If it's not a valid code, it's treated as a search term, which is the default behavior.
       }
     }
   };
@@ -930,9 +927,9 @@ export default function PosSystem({
       const isUpdate = !!(activeOrder);
       
       let title: string;
-      if (order.tableId === 0) { // Default takeaway
+      if (order.tableId === 0) {
         title = 'Takeaway';
-      } else if (order.tableId === -1) { // Home Delivery
+      } else if (order.tableId === -1) {
         title = 'Home Delivery';
       } else {
         title = `Table ${order.tableId}`;
@@ -994,7 +991,7 @@ export default function PosSystem({
             itemsForKOT = getNewItems(orderItems.filter(isFoodItem), sentFoodItems);
         } else if (type === 'Bar') {
             itemsForKOT = getNewItems(orderItems.filter(isBeverageItem), sentBeverageItems);
-        } else { // Combined
+        } else {
             const newFood = getNewItems(orderItems.filter(isFoodItem), sentFoodItems);
             const newBeverages = getNewItems(orderItems.filter(isBeverageItem), sentBeverageItems);
             itemsForKOT = [...newFood, ...newBeverages];
@@ -1036,14 +1033,12 @@ export default function PosSystem({
             printKot(finalOrder, itemsForKOT, type);
             
             if (type === 'Kitchen') {
-                setSentFoodItems(prevSent => [...prevSent, ...itemsForKOT]);
+                setSentFoodItems(orderItems.filter(isFoodItem));
             } else if (type === 'Bar') {
-                setSentBeverageItems(prevSent => [...prevSent, ...itemsForKOT]);
-            } else { // Combined
-                const foodInKot = itemsForKOT.filter(isFoodItem);
-                const beveragesInKot = itemsForKOT.filter(isBeverageItem);
-                setSentFoodItems(prevSent => [...prevSent, ...foodInKot]);
-                setSentBeverageItems(prevSent => [...prevSent, ...beveragesInKot]);
+                setSentBeverageItems(orderItems.filter(isBeverageItem));
+            } else {
+                setSentFoodItems(orderItems.filter(isFoodItem));
+                setSentBeverageItems(orderItems.filter(isBeverageItem));
             }
 
             toast({ title: `KOT Sent!`, description: `Order update sent to ${type}.` });
@@ -1067,11 +1062,8 @@ export default function PosSystem({
         return;
       }
       
-      // If a different table is selected, switch to the new table
       if (selectedTableId !== tableId) {
         handleSelectTable(tableId);
-        // Add item to the order (for the now-selected table)
-        // A small delay to allow state to update from handleSelectTable
         setTimeout(() => {
           addToOrder(item, 1);
           toast({
@@ -1115,7 +1107,6 @@ export default function PosSystem({
       return;
     }
     
-    // Set local receipt first for instant dialog opening
     setReceiptPreview(getLocalReceipt());
     setIsPaymentDialogOpen(true);
   };
@@ -1137,10 +1128,10 @@ export default function PosSystem({
             tableIdForBill = currentActiveTableId!;
             break;
         case 'Takeaway':
-            tableIdForBill = 0; // Special ID for takeaway
+            tableIdForBill = 0;
             break;
         case 'Home Delivery':
-            tableIdForBill = -1; // Special ID for home delivery
+            tableIdForBill = -1;
             break;
     }
     const billPayload: Omit<Bill, 'id' | 'timestamp'> = {
@@ -1175,7 +1166,6 @@ export default function PosSystem({
       return;
     }
     
-    // Use the locally generated receipt for instant printing.
     const currentReceipt = getLocalReceipt();
     setReceiptPreview(currentReceipt);
     
@@ -1219,7 +1209,6 @@ export default function PosSystem({
       updateTableStatus([tableToReserve], 'Reserved');
       toast({ title: `Table ${tableToReserve} reserved for ${reservationDetails.name || 'guest'}` });
     } catch (e) {
-       // If doc doesn't exist, create it.
        try {
         await setDoc(tableRef, {
             id: tableToReserve,
@@ -1258,9 +1247,8 @@ export default function PosSystem({
   const handleAssignOrderToTable = (tableId: number) => {
     setIsQuickAssignDialogOpen(false);
     setSelectedTableId(tableId);
-    // Use a timeout to ensure the state updates before sending to kitchen
     setTimeout(() => {
-        handleSendToKitchen(); // Default to kitchen
+        handleSendToKitchen();
     }, 100);
   };
 
@@ -1537,7 +1525,6 @@ export default function PosSystem({
           </Tabs>
         );
       }
-    // Accordion view is default
     return (
        <Accordion
             type="multiple"
@@ -1604,7 +1591,6 @@ export default function PosSystem({
   
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-4 gap-4 h-full p-4">
-      {/* Menu Panel */}
       <div className="md:col-span-2 xl:col-span-3 flex flex-col h-full">
         <Card className="flex flex-col flex-grow">
           <CardHeader>
@@ -1681,7 +1667,6 @@ export default function PosSystem({
         </Card>
       </div>
 
-      {/* Order Panel */}
       <div className="md:col-span-1 xl:col-span-1 flex flex-col h-full gap-4">
           <OrderPanel
               orderItems={orderItems}
