@@ -1,4 +1,5 @@
 
+
 import { z } from 'zod';
 
 export interface MenuItemHistory {
@@ -50,10 +51,12 @@ export interface Table {
   }
 }
 
+export type OrderType = 'Dine-In' | 'Home Delivery';
+
 export interface Order {
   id: string;
   items: OrderItem[];
-  tableId: number; // For Dine-in, 0 for Takeaway, -1 for Home Delivery
+  tableId: number; // For Dine-in, -1 for Home Delivery
   status: 'Pending' | 'In Preparation' | 'Completed';
   deliveryDetails?: HomeDeliveryDetails;
 }
