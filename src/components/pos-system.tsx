@@ -1001,8 +1001,10 @@ export default function PosSystem({
             return;
         }
 
-        const beverageCategory = menu.find(c => c.category === 'Beverages');
-        const beverageItemNames = beverageCategory ? new Set(beverageCategory.subCategories.flatMap(sc => sc.items.map(i => i.name))) : new Set();
+        const beverageItemNames = new Set(
+          (menu.find(c => c.category === 'Beverages')?.subCategories || [])
+          .flatMap(sc => sc.items.map(i => i.name))
+        );
         
         const getDiff = (currentItems: OrderItem[], originalItems: OrderItem[]) => {
             const diff: OrderItem[] = [];
@@ -1070,7 +1072,7 @@ export default function PosSystem({
             
             printKot(finalOrder, itemsToPrint, type);
             
-            // Correctly update originalOrderItems
+            // Correctly update originalOrderItems by merging the sent items
             setOriginalOrderItems(currentOriginals => {
                 const newOriginalsMap = new Map(currentOriginals.map(item => [item.name, {...item}]));
                 itemsToPrint.forEach(sentItem => {
@@ -1909,5 +1911,6 @@ export default function PosSystem({
     </div>
   );
 }
+
 
 
