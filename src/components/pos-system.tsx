@@ -1070,6 +1070,7 @@ export default function PosSystem({
             
             printKot(finalOrder, itemsToPrint, type);
             
+            // Correctly update originalOrderItems
             setOriginalOrderItems(currentOriginals => {
                 const newOriginalsMap = new Map(currentOriginals.map(item => [item.name, {...item}]));
                 itemsToPrint.forEach(sentItem => {
@@ -1641,15 +1642,15 @@ export default function PosSystem({
     }
   };
   
-  useEffect(() => {
+  const beverageItemNames = useMemo(() => {
     const beverageCategory = menu.find(c => c.category === 'Beverages');
     if (!beverageCategory) {
-        setHasNewFoodItems(false);
-        setHasNewBeverageItems(false);
-        return;
+      return new Set<string>();
     }
-    const beverageItemNames = new Set(beverageCategory.subCategories.flatMap(sc => sc.items.map(i => i.name)));
+    return new Set(beverageCategory.subCategories.flatMap(sc => sc.items.map(i => i.name)));
+  }, [menu]);
 
+  useEffect(() => {
     const getNewItems = (currentItems: OrderItem[], originalItems: OrderItem[]) => {
         const newItems: OrderItem[] = [];
         const originalMap = new Map(originalItems.map(item => [item.name, item.quantity]));
@@ -1668,7 +1669,7 @@ export default function PosSystem({
     setHasNewFoodItems(newItems.some(item => !beverageItemNames.has(item.name)));
     setHasNewBeverageItems(newItems.some(item => beverageItemNames.has(item.name)));
 
-}, [orderItems, originalOrderItems, activeOrder, menu]);
+  }, [orderItems, originalOrderItems, activeOrder, beverageItemNames]);
 
   const hasFood = hasNewFoodItems;
   const hasBeverages = hasNewBeverageItems;
@@ -1908,4 +1909,5 @@ export default function PosSystem({
     </div>
   );
 }
+
 
