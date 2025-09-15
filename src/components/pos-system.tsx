@@ -955,16 +955,18 @@ export default function PosSystem({
         
         const itemsJustSent = kotGroups.flatMap(g => g.items);
         setSentItems(prevSent => {
-          const sentMap = new Map(prevSent.map(item => [item.name, {...item}]));
-          itemsJustSent.forEach(newItem => {
-            if (sentMap.has(newItem.name)) {
-              sentMap.get(newItem.name)!.quantity += newItem.quantity;
-            } else {
-              sentMap.set(newItem.name, {...newItem});
-            }
-          });
-          return Array.from(sentMap.values());
+            const sentMap = new Map(prevSent.map(item => [item.name, { ...item }]));
+            itemsJustSent.forEach(newItem => {
+                const existing = sentMap.get(newItem.name);
+                if (existing) {
+                    existing.quantity += newItem.quantity;
+                } else {
+                    sentMap.set(newItem.name, { ...newItem });
+                }
+            });
+            return Array.from(sentMap.values());
         });
+        
 
         toast({ title: `KOTs Sent!`, description: `Order update sent.` });
         setIsProcessing(false);
@@ -1811,6 +1813,7 @@ export default function PosSystem({
     
 
     
+
 
 
 
