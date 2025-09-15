@@ -362,7 +362,7 @@ function OrderPanel({
                             Quick Assign to Table
                         </Button>
                     )}
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="flex flex-col gap-2">
                         {kotButtons}
                     </div>
                     <div className="grid grid-cols-2 gap-2">
@@ -1811,5 +1811,6 @@ export default function PosSystem({
     
 
     
+
 
 
