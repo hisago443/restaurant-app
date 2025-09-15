@@ -1033,12 +1033,12 @@ export default function PosSystem({
             printKot(finalOrder, itemsForKOT, type);
             
             if (type === 'Kitchen') {
-                setSentFoodItems(orderItems.filter(isFoodItem));
+                setSentFoodItems(prevSent => [...prevSent, ...itemsForKOT]);
             } else if (type === 'Bar') {
-                setSentBeverageItems(orderItems.filter(isBeverageItem));
-            } else {
-                setSentFoodItems(orderItems.filter(isFoodItem));
-                setSentBeverageItems(orderItems.filter(isBeverageItem));
+                setSentBeverageItems(prevSent => [...prevSent, ...itemsForKOT]);
+            } else { // Combined
+                setSentFoodItems(prevSent => [...prevSent, ...itemsForKOT.filter(isFoodItem)]);
+                setSentBeverageItems(prevSent => [...prevSent, ...itemsForKOT.filter(isBeverageItem)]);
             }
 
             toast({ title: `KOT Sent!`, description: `Order update sent to ${type}.` });
