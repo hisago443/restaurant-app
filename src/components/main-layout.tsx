@@ -49,7 +49,7 @@ export default function MainLayout() {
   const [showSetupWizard, setShowSetupWizard] = useState(false);
   const [isCheckingSetup, setIsCheckingSetup] = useState(true);
   const [venueName, setVenueName] = useState('Up & Above Assistant');
-  const [kotPreference, setKotPreference] = useState<KOTPreference>({ type: 'separate', categories: [] });
+  const [kotPreference, setKotPreference] = useState<KOTPreference>({ type: 'single', categories: [] });
 
   useEffect(() => {
     try {
@@ -73,7 +73,7 @@ export default function MainLayout() {
         if (venueDoc.exists()) {
           const data = venueDoc.data();
           setVenueName(data.name || 'Up & Above Assistant');
-          setKotPreference(data.kotPreference || { type: 'separate', categories: [] });
+          setKotPreference(data.kotPreference || { type: 'single', categories: [] });
         }
       } catch (error) {
         console.error("Error fetching venue settings:", error);
@@ -616,3 +616,5 @@ export default function MainLayout() {
     </div>
   );
 }
+
+    

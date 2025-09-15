@@ -92,22 +92,6 @@ export default function AdminDashboard({
   const totalOrders = useMemo(() => todaysBills.length, [todaysBills]);
   const averageOrderValue = useMemo(() => (totalOrders > 0 ? totalRevenue / totalOrders : 0), [totalRevenue, totalOrders]);
 
-  const allTimeItemCounts = useMemo(() => {
-    const itemCounts: Record<string, number> = {};
-    billHistory.forEach(bill => {
-      bill.orderItems.forEach((item: OrderItem) => {
-        itemCounts[item.name] = (itemCounts[item.name] || 0) + item.quantity;
-      });
-    });
-    return Object.entries(itemCounts)
-      .map(([name, count]) => ({ name, count }))
-      .sort((a, b) => b.count - a.count);
-  }, [billHistory]);
-
-  const topSellingItems = useMemo(() => allTimeItemCounts.slice(0, 5), [allTimeItemCounts]);
-  const leastSellingItems = useMemo(() => allTimeItemCounts.slice(-5).reverse(), [allTimeItemCounts]);
-
-
   const handleExportCSV = () => {
     let csvContent = "data:text/csv;charset=utf-8,";
 
@@ -117,22 +101,6 @@ export default function AdminDashboard({
     csvContent += `Total Revenue (Today),${totalRevenue.toFixed(2)}\n`;
     csvContent += `Total Orders (Today),${totalOrders}\n`;
     csvContent += `Average Order Value (Today),${averageOrderValue.toFixed(2)}\n`;
-    csvContent += "\n";
-
-    // Top Selling Items
-    csvContent += "Top Selling Items (All Time)\n";
-    csvContent += "Item,Quantity Sold\n";
-    topSellingItems.forEach(item => {
-      csvContent += `${item.name},${item.count}\n`;
-    });
-    csvContent += "\n";
-
-    // Least Selling Items
-    csvContent += "Least Selling Items (All Time)\n";
-    csvContent += "Item,Quantity Sold\n";
-    leastSellingItems.forEach(item => {
-      csvContent += `${item.name},${item.count}\n`;
-    });
     csvContent += "\n";
 
     // Expenses
@@ -485,10 +453,6 @@ export default function AdminDashboard({
                           className="space-y-2"
                         >
                           <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="single" id="kot-single" />
-                            <Label htmlFor="kot-single">Single Combined KOT</Label>
-                          </div>
-                          <div className="flex items-center space-x-2">
                             <RadioGroupItem value="separate" id="kot-separate" />
                             <Label htmlFor="kot-separate">Separate Kitchen & Bar KOTs</Label>
                           </div>
@@ -671,5 +635,7 @@ function EmployeeDialog({ open, onOpenChange, employee, onSave }: { open: boolea
         </Dialog>
     );
 }
+
+    
 
     

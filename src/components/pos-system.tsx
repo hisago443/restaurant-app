@@ -1312,7 +1312,8 @@ export default function PosSystem({
         return groups;
     }
 
-    return [];
+    // Default to a single combined KOT if preference is not set or invalid
+    return [{ title: 'KOT', items: items }];
   };
 
   const renderKotButtons = () => {
@@ -1323,7 +1324,7 @@ export default function PosSystem({
     
     if (kotGroups.length === 0) return null;
     
-    if (kotGroups.length === 1 && kotPreference.type === 'single') {
+    if (kotGroups.length === 1) {
        return (
          <Button 
             size="lg"
@@ -1332,7 +1333,7 @@ export default function PosSystem({
             disabled={isProcessing || (orderType === 'Dine-In' && !currentActiveTableId && !activeOrder)}
         >
             {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
-            {activeOrder ? 'Update KOT' : 'Send KOT'}
+            {activeOrder ? `Update ${kotGroups[0].title}` : `Send ${kotGroups[0].title}`}
         </Button>
        )
     }
@@ -1818,3 +1819,6 @@ export default function PosSystem({
 
 
 
+
+
+    
