@@ -342,29 +342,25 @@ export default function AdminDashboard({
         </Card>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-6 lg:grid-cols-3">
         {/* Left Column */}
-        <div className="space-y-6">
+        <div className="lg:col-span-2 space-y-6">
             <Card>
                 <CardContent className="p-2">
                    <SalesReport bills={billHistory} />
                 </CardContent>
             </Card>
-        </div>
-
-        {/* Right Column */}
-        <div className="space-y-6">
-            <Card>
+             <Card>
                 <CardHeader>
                     <CardTitle>Action Center</CardTitle>
                     <CardDescription>Quick access to management tasks.</CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-2">
+                <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-4">
                      <Dialog>
                       <DialogTrigger asChild>
-                        <Button variant="outline" size="lg" className="w-full justify-start gap-3 h-14 text-base">
-                          <History className="h-5 w-5" />
-                          <span>View Bill History</span>
+                        <Button variant="outline" size="lg" className="h-20 text-base flex-col gap-2">
+                          <History className="h-6 w-6" />
+                          <span>View Bills</span>
                         </Button>
                       </DialogTrigger>
                       <DialogContent className="max-w-5xl">
@@ -379,8 +375,8 @@ export default function AdminDashboard({
                     </Dialog>
                     <Dialog open={isStaffManagerOpen} onOpenChange={setIsStaffManagerOpen}>
                         <DialogTrigger asChild>
-                            <Button variant="outline" size="lg" className="w-full justify-start gap-3 h-14 text-base">
-                                <Users className="h-5 w-5" />
+                            <Button variant="outline" size="lg" className="h-20 text-base flex-col gap-2">
+                                <Users className="h-6 w-6" />
                                 <span>Manage Staff</span>
                             </Button>
                         </DialogTrigger>
@@ -453,9 +449,9 @@ export default function AdminDashboard({
                     </Dialog>
                     <Dialog>
                         <DialogTrigger asChild>
-                            <Button variant="outline" size="lg" className="w-full justify-start gap-3 h-14 text-base">
-                                <Package className="h-5 w-5" />
-                                <span>Manage Inventory</span>
+                            <Button variant="outline" size="lg" className="h-20 text-base flex-col gap-2">
+                                <Package className="h-6 w-6" />
+                                <span>Inventory</span>
                             </Button>
                         </DialogTrigger>
                         <DialogContent className="max-w-5xl">
@@ -465,13 +461,16 @@ export default function AdminDashboard({
                             <InventoryManagement inventory={inventory} />
                         </DialogContent>
                     </Dialog>
-                    <Button variant="outline" size="lg" className="w-full justify-start gap-3 h-14 text-base" onClick={handleExportCSV}>
-                        <Download className="h-5 w-5" />
-                        <span>Export All Data (CSV)</span>
+                    <Button variant="outline" size="lg" className="h-20 text-base flex-col gap-2" onClick={handleExportCSV}>
+                        <Download className="h-6 w-6" />
+                        <span>Export Data</span>
                     </Button>
                 </CardContent>
             </Card>
+        </div>
 
+        {/* Right Column */}
+        <div className="space-y-6">
             <Card>
                 <CardHeader>
                     <CardTitle>Settings</CardTitle>
@@ -672,3 +671,5 @@ function EmployeeDialog({ open, onOpenChange, employee, onSave }: { open: boolea
         </Dialog>
     );
 }
+
+    
