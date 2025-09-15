@@ -593,6 +593,30 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
+              <div className="grid grid-cols-2 gap-4">
+                <Button variant="outline" onClick={addTable}>
+                  <PlusCircle className="mr-2 h-4 w-4" /> Add a New Table
+                </Button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="destructive" disabled={tables.length === 0}>
+                      <Trash2 className="mr-2 h-4 w-4" /> Remove Table
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This will permanently remove the last table. This action cannot be undone.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleRemoveLastTable}>Delete</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
               <div className="flex items-center justify-between rounded-lg border p-3 shadow-sm">
                 <Label htmlFor="show-occupancy">Show Occupancy Counter</Label>
                 <Switch
@@ -601,30 +625,6 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
                   onCheckedChange={setShowOccupancy}
                 />
               </div>
-               <div className="grid grid-cols-2 gap-4">
-                  <Button variant="outline" onClick={addTable}>
-                    <PlusCircle className="mr-2 h-4 w-4" /> Add a New Table
-                  </Button>
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button variant="destructive" disabled={tables.length === 0}>
-                        <Trash2 className="mr-2 h-4 w-4" /> Remove Table
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          This will permanently remove the last table. This action cannot be undone.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleRemoveLastTable}>Delete</AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </div>
             </div>
             <DialogFooter>
               <Button onClick={() => setIsLayoutManagerOpen(false)}>Done</Button>
