@@ -38,12 +38,12 @@ const vegColor = 'bg-green-100 dark:bg-green-900/30';
 const nonVegColor = 'bg-rose-100 dark:bg-rose-900/30';
 
 const colorPalette: Record<string, {light: string, dark: string}> = {
-    amber: { light: 'bg-amber-200 dark:bg-amber-900/50', dark: 'bg-amber-400 dark:bg-amber-800/50' },
-    lime: { light: 'bg-lime-200 dark:bg-lime-900/50', dark: 'bg-lime-400 dark:bg-lime-800/50' },
-    purple: { light: 'bg-purple-200 dark:bg-purple-900/50', dark: 'bg-purple-400 dark:bg-purple-800/50' },
-    teal: { light: 'bg-teal-200 dark:bg-teal-900/50', dark: 'bg-teal-400 dark:bg-teal-800/50' },
-    orange: { light: 'bg-orange-200 dark:bg-orange-900/50', dark: 'bg-orange-400 dark:bg-orange-800/50' },
-    cyan: { light: 'bg-cyan-200 dark:bg-cyan-900/50', dark: 'bg-cyan-400 dark:bg-cyan-800/50' },
+    amber: { light: 'bg-amber-200 dark:bg-amber-900/50', dark: 'bg-amber-600 dark:bg-amber-800/50' },
+    lime: { light: 'bg-lime-200 dark:bg-lime-900/50', dark: 'bg-lime-600 dark:bg-lime-800/50' },
+    purple: { light: 'bg-purple-200 dark:bg-purple-900/50', dark: 'bg-purple-600 dark:bg-purple-800/50' },
+    teal: { light: 'bg-teal-200 dark:bg-teal-900/50', dark: 'bg-teal-600 dark:bg-teal-800/50' },
+    orange: { light: 'bg-orange-200 dark:bg-orange-900/50', dark: 'bg-orange-600 dark:bg-orange-800/50' },
+    cyan: { light: 'bg-cyan-200 dark:bg-cyan-900/50', dark: 'bg-cyan-600 dark:bg-cyan-800/50' },
 };
 const colorNames = Object.keys(colorPalette);
 
@@ -857,7 +857,7 @@ export default function PosSystem({
     if (itemsToPrint.length === 0) return;
     const printWindow = window.open('', '_blank');
     if (printWindow) {
-      const isUpdate = !!(activeOrder);
+      const isUpdate = !!(activeOrder && activeOrder.items.length > 0);
       
       let title: string;
        switch (order.orderType) {
@@ -1550,13 +1550,13 @@ export default function PosSystem({
                           </div>
                            <RadioGroup value={vegFilter} onValueChange={(v) => setVegFilter(v as VegFilter)} className="flex items-center gap-2">
                                 <RadioGroupItem value="All" id="filter-all" className="sr-only" />
-                                <Label htmlFor="filter-all" className={cn("h-10 w-24 flex items-center justify-center rounded-md cursor-pointer border-2 font-semibold text-lg", vegFilter === 'All' ? 'bg-primary text-primary-foreground border-primary' : 'bg-background text-foreground hover:bg-accent')}>All</Label>
+                                <Label htmlFor="filter-all" className={cn("h-10 w-24 flex items-center justify-center rounded-md cursor-pointer border-2 font-semibold text-lg bg-background text-foreground hover:bg-accent", vegFilter === 'All' && 'ring-2 ring-primary text-primary')}>All</Label>
                                 
                                 <RadioGroupItem value="Veg" id="filter-veg" className="sr-only" />
-                                <Label htmlFor="filter-veg" className={cn("h-10 w-24 flex items-center justify-center rounded-md cursor-pointer border-2 font-semibold text-lg", vegFilter === 'Veg' ? 'bg-green-600 text-white' : 'bg-background text-green-600 border-green-600 hover:bg-green-50')}>Veg</Label>
+                                <Label htmlFor="filter-veg" className={cn("h-10 w-24 flex items-center justify-center rounded-md cursor-pointer border-2 font-semibold text-lg bg-green-600 text-white", vegFilter === 'Veg' && 'ring-2 ring-white ring-offset-2 ring-offset-green-600 text-white font-bold')}>Veg</Label>
                                 
                                 <RadioGroupItem value="Non-Veg" id="filter-nonveg" className="sr-only" />
-                                <Label htmlFor="filter-nonveg" className={cn("h-10 w-24 flex items-center justify-center rounded-md cursor-pointer border-2 font-semibold text-lg", vegFilter === 'Non-Veg' ? 'bg-red-600 text-white' : 'bg-background text-red-600 border-red-600 hover:bg-red-50')}>Non-Veg</Label>
+                                <Label htmlFor="filter-nonveg" className={cn("h-10 w-24 flex items-center justify-center rounded-md cursor-pointer border-2 font-semibold text-lg bg-red-600 text-white", vegFilter === 'Non-Veg' && 'ring-2 ring-white ring-offset-2 ring-offset-red-600 text-white font-bold')}>Non-Veg</Label>
                             </RadioGroup>
                       </div>
                       <div className="flex items-center gap-2">
