@@ -37,13 +37,13 @@ import { Textarea } from './ui/textarea';
 const vegColor = 'bg-green-100 dark:bg-green-900/30';
 const nonVegColor = 'bg-rose-100 dark:bg-rose-900/30';
 
-const colorPalette: Record<string, {light: string, dark: string}> = {
-    amber: { light: 'bg-amber-200 dark:bg-amber-900/50', dark: 'bg-amber-300 dark:bg-amber-800/50' },
-    lime: { light: 'bg-lime-200 dark:bg-lime-900/50', dark: 'bg-lime-300 dark:bg-lime-800/50' },
-    purple: { light: 'bg-purple-200 dark:bg-purple-900/50', dark: 'bg-purple-300 dark:bg-purple-800/50' },
-    teal: { light: 'bg-teal-200 dark:bg-teal-900/50', dark: 'bg-teal-300 dark:bg-teal-800/50' },
-    orange: { light: 'bg-orange-200 dark:bg-orange-900/50', dark: 'bg-orange-300 dark:bg-orange-800/50' },
-    cyan: { light: 'bg-cyan-200 dark:bg-cyan-900/50', dark: 'bg-cyan-300 dark:bg-cyan-800/50' },
+const colorPalette: Record<string, {light: string, medium: string}> = {
+    amber: { light: 'bg-amber-100 dark:bg-amber-900/50', medium: 'bg-amber-200 dark:bg-amber-800/50' },
+    lime: { light: 'bg-lime-100 dark:bg-lime-900/50', medium: 'bg-lime-200 dark:bg-lime-800/50' },
+    purple: { light: 'bg-purple-100 dark:bg-purple-900/50', medium: 'bg-purple-200 dark:bg-purple-800/50' },
+    teal: { light: 'bg-teal-100 dark:bg-teal-900/50', medium: 'bg-teal-200 dark:bg-teal-800/50' },
+    orange: { light: 'bg-orange-100 dark:bg-orange-900/50', medium: 'bg-orange-200 dark:bg-orange-800/50' },
+    cyan: { light: 'bg-cyan-100 dark:bg-cyan-900/50', medium: 'bg-cyan-200 dark:bg-cyan-800/50' },
 };
 const colorNames = Object.keys(colorPalette);
 
@@ -56,6 +56,7 @@ const itemStatusNames = Object.keys(itemStatusColors);
 
 type ViewMode = 'accordion' | 'grid';
 type VegFilter = 'All' | 'Veg' | 'Non-Veg';
+type ColorShade = 'light' | 'medium';
 
 const statusBaseColors: Record<TableStatus, string> = {
   Available: 'bg-green-400 hover:bg-green-500',
@@ -573,6 +574,7 @@ export default function PosSystem({
   const [isItemStatusDialogOpen, setIsItemStatusDialogOpen] = useState(false);
   const [isHomeDeliveryDialogOpen, setIsHomeDeliveryDialogOpen] = useState(false);
   const [customerDetails, setCustomerDetails] = useState<CustomerDetails | undefined>();
+  const [colorShade, setColorShade] = useState<ColorShade>('light');
 
   const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -1412,7 +1414,7 @@ export default function PosSystem({
                     const status = menuCategoryStatus[category.category];
                     const statusConfig = status ? itemStatusColors[status] : null;
                     const colorName = categoryColors[category.category];
-                    const colorClass = colorName ? colorPalette[colorName]?.dark : '';
+                    const colorClass = colorName ? colorPalette[colorName]?.[colorShade] : '';
                     return (
                         <div key={category.category} className="relative group p-1">
                             <TabsTrigger value={category.category} className={cn("rounded-md border-2 border-transparent data-[state=active]:shadow-md px-4 py-2 cursor-pointer transition-colors", statusConfig ? statusConfig.dark : (colorClass || 'bg-muted data-[state=active]:border-primary'))}>
@@ -1474,7 +1476,7 @@ export default function PosSystem({
                 const status = menuCategoryStatus[category.category];
                 const statusConfig = status ? itemStatusColors[status] : null;
                 const colorName = categoryColors[category.category];
-                const colorClass = colorName ? colorPalette[colorName]?.dark : 'bg-muted';
+                const colorClass = colorName ? colorPalette[colorName]?.[colorShade] : 'bg-muted';
                 return (
                 <AccordionItem key={category.category} value={category.category} className="border-b-0">
                      <AccordionTrigger className={cn("p-3 rounded-md text-lg font-bold hover:no-underline flex justify-between items-center relative group text-card-foreground", statusConfig ? statusConfig.dark : colorClass )}>
@@ -1550,13 +1552,13 @@ export default function PosSystem({
                           </div>
                            <RadioGroup value={vegFilter} onValueChange={(v) => setVegFilter(v as VegFilter)} className="flex items-center gap-2">
                                 <RadioGroupItem value="All" id="filter-all" className="sr-only" />
-                                <Label htmlFor="filter-all" className={cn("h-10 w-24 flex items-center justify-center rounded-md cursor-pointer border-2 font-semibold text-lg bg-background text-foreground hover:bg-accent", vegFilter === 'All' && 'ring-2 ring-primary text-primary')}>All</Label>
+                                <Label htmlFor="filter-all" className={cn("h-10 w-24 flex items-center justify-center rounded-md cursor-pointer border-2 font-semibold text-lg text-foreground hover:bg-accent", vegFilter === 'All' && 'ring-2 ring-primary text-primary bg-background')}>All</Label>
                                 
                                 <RadioGroupItem value="Veg" id="filter-veg" className="sr-only" />
-                                <Label htmlFor="filter-veg" className={cn("h-10 w-24 flex items-center justify-center rounded-md cursor-pointer border-2 font-semibold text-lg bg-green-600 text-white", vegFilter === 'Veg' && 'ring-2 ring-white ring-offset-2 ring-offset-green-600 text-white font-bold')}>Veg</Label>
+                                <Label htmlFor="filter-veg" className={cn("h-10 w-24 flex items-center justify-center rounded-md cursor-pointer border-2 font-semibold text-lg bg-green-600 text-white", vegFilter === 'Veg' && 'ring-2 ring-white ring-offset-2 ring-offset-green-600 font-bold')}>Veg</Label>
                                 
                                 <RadioGroupItem value="Non-Veg" id="filter-nonveg" className="sr-only" />
-                                <Label htmlFor="filter-nonveg" className={cn("h-10 w-24 flex items-center justify-center rounded-md cursor-pointer border-2 font-semibold text-lg bg-red-600 text-white", vegFilter === 'Non-Veg' && 'ring-2 ring-white ring-offset-2 ring-offset-red-600 text-white font-bold')}>Non-Veg</Label>
+                                <Label htmlFor="filter-nonveg" className={cn("h-10 w-24 flex items-center justify-center rounded-md cursor-pointer border-2 font-semibold text-lg bg-red-600 text-white", vegFilter === 'Non-Veg' && 'ring-2 ring-white ring-offset-2 ring-offset-red-600 font-bold')}>Non-Veg</Label>
                             </RadioGroup>
                       </div>
                       <div className="flex items-center gap-2">
@@ -1580,22 +1582,37 @@ export default function PosSystem({
                           </RadioGroup>
                       </div>
                   </div>
-                   <div className="flex justify-end items-center gap-2">
-                      <Button variant="outline" size="sm" onClick={() => setIsItemStatusDialogOpen(true)}>
-                          <BarChart className="mr-2 h-4 w-4" /> Item Status
-                      </Button>
-                      <Button variant="outline" size="sm" onClick={() => setIsMenuManagerOpen(true)}>
-                          <BookOpen className="mr-2 h-4 w-4" /> Manage Menu
-                      </Button>
-                      <Button variant="outline" size="sm" onClick={handleShuffleColors}>
-                          <Shuffle className="mr-2 h-4 w-4" /> Colors
-                      </Button>
-                      {viewMode === 'accordion' && (
-                          <Button variant="outline" size="sm" onClick={toggleAccordion}>
-                              <ChevronsUpDown className="mr-2 h-4 w-4" />
-                              {allItemsOpen ? 'Collapse' : 'Expand'}
+                   <div className="flex justify-between items-center gap-2">
+                      <div className="flex items-center gap-2">
+                          <Label className="font-semibold text-sm">Shade:</Label>
+                           <RadioGroup value={colorShade} onValueChange={(v) => setColorShade(v as ColorShade)} className="flex items-center">
+                              <Label className={cn("p-1.5 rounded-md cursor-pointer transition-colors", colorShade === 'light' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent' )}>
+                                  <RadioGroupItem value="light" id="shade-light" className="sr-only" />
+                                  Light
+                              </Label>
+                              <Label className={cn("p-1.5 rounded-md cursor-pointer transition-colors", colorShade === 'medium' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent' )}>
+                                  <RadioGroupItem value="medium" id="shade-medium" className="sr-only" />
+                                  Medium
+                              </Label>
+                          </RadioGroup>
+                      </div>
+                      <div className="flex items-center gap-2">
+                          <Button variant="outline" size="sm" onClick={() => setIsItemStatusDialogOpen(true)}>
+                              <BarChart className="mr-2 h-4 w-4" /> Item Status
                           </Button>
-                      )}
+                          <Button variant="outline" size="sm" onClick={() => setIsMenuManagerOpen(true)}>
+                              <BookOpen className="mr-2 h-4 w-4" /> Manage Menu
+                          </Button>
+                          <Button variant="outline" size="sm" onClick={handleShuffleColors}>
+                              <Shuffle className="mr-2 h-4 w-4" /> Colors
+                          </Button>
+                          {viewMode === 'accordion' && (
+                              <Button variant="outline" size="sm" onClick={toggleAccordion}>
+                                  <ChevronsUpDown className="mr-2 h-4 w-4" />
+                                  {allItemsOpen ? 'Collapse' : 'Expand'}
+                              </Button>
+                          )}
+                      </div>
                   </div>
               </div>
           </CardHeader>
