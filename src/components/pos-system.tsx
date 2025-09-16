@@ -38,12 +38,12 @@ const vegColor = 'bg-green-100 dark:bg-green-900/30';
 const nonVegColor = 'bg-rose-100 dark:bg-rose-900/30';
 
 const colorPalette: Record<string, {light: string, dark: string}> = {
-    amber: { light: 'bg-amber-100 dark:bg-amber-900/50', dark: 'bg-amber-300 dark:bg-amber-800/50' },
-    lime: { light: 'bg-lime-100 dark:bg-lime-900/50', dark: 'bg-lime-300 dark:bg-lime-800/50' },
-    purple: { light: 'bg-purple-100 dark:bg-purple-900/50', dark: 'bg-purple-300 dark:bg-purple-800/50' },
-    teal: { light: 'bg-teal-100 dark:bg-teal-900/50', dark: 'bg-teal-300 dark:bg-teal-800/50' },
-    orange: { light: 'bg-orange-100 dark:bg-orange-900/50', dark: 'bg-orange-300 dark:bg-orange-800/50' },
-    cyan: { light: 'bg-cyan-100 dark:bg-cyan-900/50', dark: 'bg-cyan-300 dark:bg-cyan-800/50' },
+    amber: { light: 'bg-amber-200 dark:bg-amber-900/50', dark: 'bg-amber-400 dark:bg-amber-800/50' },
+    lime: { light: 'bg-lime-200 dark:bg-lime-900/50', dark: 'bg-lime-400 dark:bg-lime-800/50' },
+    purple: { light: 'bg-purple-200 dark:bg-purple-900/50', dark: 'bg-purple-400 dark:bg-purple-800/50' },
+    teal: { light: 'bg-teal-200 dark:bg-teal-900/50', dark: 'bg-teal-400 dark:bg-teal-800/50' },
+    orange: { light: 'bg-orange-200 dark:bg-orange-900/50', dark: 'bg-orange-400 dark:bg-orange-800/50' },
+    cyan: { light: 'bg-cyan-200 dark:bg-cyan-900/50', dark: 'bg-cyan-400 dark:bg-cyan-800/50' },
 };
 const colorNames = Object.keys(colorPalette);
 
@@ -105,6 +105,8 @@ interface PosSystemProps {
   setKeyboardMode: (mode: 'table' | 'order' | 'confirm') => void;
   billHistory: Bill[];
   kotPreference: KOTPreference;
+  selectedOrderType: OrderType;
+  setSelectedOrderType: (type: OrderType) => void;
 }
 
 const ItemTypes = {
@@ -544,6 +546,8 @@ export default function PosSystem({
     setKeyboardMode,
     billHistory,
     kotPreference,
+    selectedOrderType,
+    setSelectedOrderType,
 }: PosSystemProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [menu, setMenu] = useState<MenuCategory[]>([]);
@@ -569,7 +573,6 @@ export default function PosSystem({
   const [isItemStatusDialogOpen, setIsItemStatusDialogOpen] = useState(false);
   const [isHomeDeliveryDialogOpen, setIsHomeDeliveryDialogOpen] = useState(false);
   const [customerDetails, setCustomerDetails] = useState<CustomerDetails | undefined>();
-  const [selectedOrderType, setSelectedOrderType] = useState<OrderType>('Dine-In');
 
   const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -593,7 +596,7 @@ export default function PosSystem({
       setSelectedOrderType(activeOrder.orderType);
       setCustomerDetails(activeOrder.customerDetails);
     }
-  }, [activeOrder]);
+  }, [activeOrder, setSelectedOrderType]);
 
   const handleSetOrderType = (type: OrderType) => {
     if (orderItems.length > 0 && type !== selectedOrderType) {
@@ -1550,10 +1553,10 @@ export default function PosSystem({
                                 <Label htmlFor="filter-all" className={cn("h-10 w-24 flex items-center justify-center rounded-md cursor-pointer border-2 font-semibold text-lg", vegFilter === 'All' ? 'bg-primary text-primary-foreground border-primary' : 'bg-background text-foreground hover:bg-accent')}>All</Label>
                                 
                                 <RadioGroupItem value="Veg" id="filter-veg" className="sr-only" />
-                                <Label htmlFor="filter-veg" className={cn("h-10 w-24 flex items-center justify-center rounded-md cursor-pointer border-2 font-semibold text-lg", vegFilter === 'Veg' ? 'bg-green-600 text-white border-green-600' : 'text-green-600 border-green-500 hover:bg-green-50')}>Veg</Label>
+                                <Label htmlFor="filter-veg" className={cn("h-10 w-24 flex items-center justify-center rounded-md cursor-pointer border-2 font-semibold text-lg", vegFilter === 'Veg' ? 'bg-green-600 text-white' : 'bg-background text-green-600 border-green-600 hover:bg-green-50')}>Veg</Label>
                                 
                                 <RadioGroupItem value="Non-Veg" id="filter-nonveg" className="sr-only" />
-                                <Label htmlFor="filter-nonveg" className={cn("h-10 w-24 flex items-center justify-center rounded-md cursor-pointer border-2 font-semibold text-lg", vegFilter === 'Non-Veg' ? 'bg-red-600 text-white border-red-600' : 'text-red-600 border-red-500 hover:bg-red-50')}>Non-Veg</Label>
+                                <Label htmlFor="filter-nonveg" className={cn("h-10 w-24 flex items-center justify-center rounded-md cursor-pointer border-2 font-semibold text-lg", vegFilter === 'Non-Veg' ? 'bg-red-600 text-white' : 'bg-background text-red-600 border-red-600 hover:bg-red-50')}>Non-Veg</Label>
                             </RadioGroup>
                       </div>
                       <div className="flex items-center gap-2">
