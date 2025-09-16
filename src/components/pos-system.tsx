@@ -38,12 +38,12 @@ const vegColor = 'bg-green-100 dark:bg-green-900/30';
 const nonVegColor = 'bg-rose-100 dark:bg-rose-900/30';
 
 const colorPalette: Record<string, {light: string, dark: string}> = {
-    amber: { light: 'bg-amber-100 dark:bg-amber-900/50', dark: 'bg-amber-200 dark:bg-amber-800/50' },
-    lime: { light: 'bg-lime-100 dark:bg-lime-900/50', dark: 'bg-lime-200 dark:bg-lime-800/50' },
-    purple: { light: 'bg-purple-100 dark:bg-purple-900/50', dark: 'bg-purple-200 dark:bg-purple-800/50' },
-    teal: { light: 'bg-teal-100 dark:bg-teal-900/50', dark: 'bg-teal-200 dark:bg-teal-800/50' },
-    orange: { light: 'bg-orange-100 dark:bg-orange-900/50', dark: 'bg-orange-200 dark:bg-orange-800/50' },
-    cyan: { light: 'bg-cyan-100 dark:bg-cyan-900/50', dark: 'bg-cyan-200 dark:bg-cyan-800/50' },
+    amber: { light: 'bg-amber-100 dark:bg-amber-900/50', dark: 'bg-amber-300 dark:bg-amber-800/50' },
+    lime: { light: 'bg-lime-100 dark:bg-lime-900/50', dark: 'bg-lime-300 dark:bg-lime-800/50' },
+    purple: { light: 'bg-purple-100 dark:bg-purple-900/50', dark: 'bg-purple-300 dark:bg-purple-800/50' },
+    teal: { light: 'bg-teal-100 dark:bg-teal-900/50', dark: 'bg-teal-300 dark:bg-teal-800/50' },
+    orange: { light: 'bg-orange-100 dark:bg-orange-900/50', dark: 'bg-orange-300 dark:bg-orange-800/50' },
+    cyan: { light: 'bg-cyan-100 dark:bg-cyan-900/50', dark: 'bg-cyan-300 dark:bg-cyan-800/50' },
 };
 const colorNames = Object.keys(colorPalette);
 
@@ -105,8 +105,6 @@ interface PosSystemProps {
   setKeyboardMode: (mode: 'table' | 'order' | 'confirm') => void;
   billHistory: Bill[];
   kotPreference: KOTPreference;
-  selectedOrderType: OrderType;
-  setSelectedOrderType: (type: OrderType) => void;
 }
 
 const ItemTypes = {
@@ -184,6 +182,7 @@ function OrderPanel({
     children,
     orderType,
     customerDetails,
+    getNewItems,
 }: {
     orderItems: OrderItem[];
     handleDropOnOrder: (item: MenuItem) => void;
@@ -205,6 +204,7 @@ function OrderPanel({
     children: React.ReactNode;
     orderType: OrderType;
     customerDetails?: CustomerDetails;
+    getNewItems: (currentItems: OrderItem[], sentItems: OrderItem[]) => OrderItem[];
 }) {
     const [{ isOver, canDrop }, drop] = useDrop(() => ({
         accept: ItemTypes.MENU_ITEM,
@@ -228,18 +228,6 @@ function OrderPanel({
         return 'Current Order'
     }, [selectedTableId, orderType, customerDetails]);
     
-    const getNewItems = useCallback((currentItems: OrderItem[], sentItems: OrderItem[]): OrderItem[] => {
-        const newItems: OrderItem[] = [];
-        const sentMap = new Map(sentItems.map(item => [item.name, item.quantity]));
-
-        currentItems.forEach(item => {
-            const sentQty = sentMap.get(item.name) || 0;
-            if (item.quantity > sentQty) {
-            newItems.push({ ...item, quantity: item.quantity - sentQty });
-            }
-        });
-        return newItems;
-    }, []);
 
     const renderOrderItems = () => {
         if (orderItems.length === 0) {
@@ -447,45 +435,81 @@ function ItemStatusDialog({
 function HomeDeliveryDialog({
   isOpen,
   onOpenChange,
-  onSave
+  onSave,
+  existingDetails,
 }: {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   onSave: (details: CustomerDetails) => void;
+  existingDetails?: CustomerDetails;
 }) {
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [address, setAddress] = useState('');
+  const [houseNo, setHouseNo] = useState('');
+  const [street, setStreet] = useState('');
+  const [landmark, setLandmark] = useState('');
+  const [email, setEmail] = useState('');
+  
+  useEffect(() => {
+    if (isOpen) {
+      setName(existingDetails?.name || '');
+      setPhone(existingDetails?.phone || '');
+      setAddress(existingDetails?.address || '');
+      setHouseNo(existingDetails?.houseNo || '');
+      setStreet(existingDetails?.street || '');
+      setLandmark(existingDetails?.landmark || '');
+      setEmail(existingDetails?.email || '');
+    }
+  }, [isOpen, existingDetails]);
 
   const handleSave = () => {
-    onSave({ name, phone, address });
+    onSave({ name, phone, address, houseNo, street, landmark, email });
     onOpenChange(false);
   }
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Home Delivery Details</DialogTitle>
           <DialogDescription>Enter the customer's information for the delivery.</DialogDescription>
         </DialogHeader>
-        <div className="grid gap-4 py-4">
+        <div className="grid gap-4 py-4 max-h-[60vh] overflow-y-auto px-1">
             <div className="space-y-2">
                 <Label htmlFor="customer-name">Customer Name</Label>
-                <Input id="customer-name" value={name} onChange={e => setName(e.target.value)} placeholder="e.g., John Doe"/>
+                <Input id="customer-name" value={name} onChange={e => setName(e.target.value)} placeholder="e.g., John Doe" required />
             </div>
              <div className="space-y-2">
                 <Label htmlFor="customer-phone">Phone Number</Label>
-                <Input id="customer-phone" type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="e.g., 9876543210"/>
+                <Input id="customer-phone" type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="e.g., 9876543210" required />
             </div>
              <div className="space-y-2">
-                <Label htmlFor="customer-address">Delivery Address</Label>
-                <Textarea id="customer-address" value={address} onChange={e => setAddress(e.target.value)} placeholder="e.g., House No. 123, Main Street..."/>
+                <Label htmlFor="customer-address">Address</Label>
+                <Textarea id="customer-address" value={address} onChange={e => setAddress(e.target.value)} placeholder="e.g., Main Street..." required/>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                    <Label htmlFor="customer-houseno">House No. (Optional)</Label>
+                    <Input id="customer-houseno" value={houseNo} onChange={e => setHouseNo(e.target.value)} placeholder="e.g., #123"/>
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="customer-street">Street Name (Optional)</Label>
+                    <Input id="customer-street" value={street} onChange={e => setStreet(e.target.value)} placeholder="e.g., Temple Road"/>
+                </div>
+            </div>
+            <div className="space-y-2">
+                <Label htmlFor="customer-landmark">Landmark (Optional)</Label>
+                <Input id="customer-landmark" value={landmark} onChange={e => setLandmark(e.target.value)} placeholder="e.g., Near Post Office"/>
+            </div>
+            <div className="space-y-2">
+                <Label htmlFor="customer-email">Email (Optional)</Label>
+                <Input id="customer-email" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="e.g., a@b.com"/>
             </div>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button onClick={handleSave}>Save Details</Button>
+          <Button onClick={handleSave} disabled={!name || !phone || !address}>Save Details</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -520,8 +544,6 @@ export default function PosSystem({
     setKeyboardMode,
     billHistory,
     kotPreference,
-    selectedOrderType,
-    setSelectedOrderType,
 }: PosSystemProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [menu, setMenu] = useState<MenuCategory[]>([]);
@@ -547,10 +569,24 @@ export default function PosSystem({
   const [isItemStatusDialogOpen, setIsItemStatusDialogOpen] = useState(false);
   const [isHomeDeliveryDialogOpen, setIsHomeDeliveryDialogOpen] = useState(false);
   const [customerDetails, setCustomerDetails] = useState<CustomerDetails | undefined>();
+  const [selectedOrderType, setSelectedOrderType] = useState<OrderType>('Dine-In');
 
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   const menuCategories = useMemo(() => menu.map(c => c.category), [menu]);
+  
+  const getNewItems = useCallback((currentItems: OrderItem[], sentItems: OrderItem[]): OrderItem[] => {
+      const newItems: OrderItem[] = [];
+      const sentMap = new Map(sentItems.map(item => [item.name, item.quantity]));
+
+      currentItems.forEach(item => {
+          const sentQty = sentMap.get(item.name) || 0;
+          if (item.quantity > sentQty) {
+            newItems.push({ ...item, quantity: item.quantity - sentQty });
+          }
+      });
+      return newItems;
+  }, []);
 
   useEffect(() => {
     if (activeOrder) {
@@ -1094,18 +1130,6 @@ export default function PosSystem({
   const lowStockItems = useMemo(() => allMenuItems.filter(item => menuItemStatus[item.name] === 'low'), [allMenuItems, menuItemStatus]);
   const outOfStockItems = useMemo(() => allMenuItems.filter(item => menuItemStatus[item.name] === 'out'), [allMenuItems, menuItemStatus]);
   
-  const getNewItems = useCallback((currentItems: OrderItem[], sentItems: OrderItem[]): OrderItem[] => {
-      const newItems: OrderItem[] = [];
-      const sentMap = new Map(sentItems.map(item => [item.name, item.quantity]));
-
-      currentItems.forEach(item => {
-          const sentQty = sentMap.get(item.name) || 0;
-          if (item.quantity > sentQty) {
-          newItems.push({ ...item, quantity: item.quantity - sentQty });
-          }
-      });
-      return newItems;
-  }, []);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -1599,6 +1623,7 @@ export default function PosSystem({
               kotButtons={renderKotButtons()}
               orderType={selectedOrderType}
               customerDetails={customerDetails}
+              getNewItems={getNewItems}
           >
            <div className="flex items-center gap-2 flex-wrap">
                 <Label className="font-semibold text-sm shrink-0 whitespace-nowrap">Order For:</Label>
@@ -1671,6 +1696,7 @@ export default function PosSystem({
         isOpen={isHomeDeliveryDialogOpen}
         onOpenChange={setIsHomeDeliveryDialogOpen}
         onSave={handleSaveDeliveryDetails}
+        existingDetails={customerDetails}
        />
       <Dialog open={isReserveDialogOpen} onOpenChange={setIsReserveDialogOpen}>
         <DialogContent>

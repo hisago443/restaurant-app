@@ -48,6 +48,10 @@ export interface CustomerDetails {
     name: string;
     phone: string;
     address: string;
+    houseNo?: string;
+    street?: string;
+    landmark?: string;
+    email?: string;
 }
 
 export interface Order {
