@@ -950,7 +950,20 @@ export default function PosSystem({
         });
         
         // After printing, update the sentItems state to reflect the new state of the order
-        setSentItems(finalOrder.items);
+        const newlySentItems = kotGroups.flatMap(g => g.items);
+        setSentItems(prevSent => {
+          const newSentMap = new Map(prevSent.map(i => [i.name, i]));
+          newlySentItems.forEach(sentItem => {
+            const existing = newSentMap.get(sentItem.name);
+            if (existing) {
+              newSentMap.set(sentItem.name, { ...existing, quantity: existing.quantity + sentItem.quantity });
+            } else {
+              newSentMap.set(sentItem.name, sentItem);
+            }
+          });
+          return Array.from(newSentMap.values());
+        });
+
 
         toast({ title: `KOTs Sent!`, description: `Order update sent.` });
         setIsProcessing(false);
@@ -1297,7 +1310,7 @@ export default function PosSystem({
   };
 
   const renderKotButtons = () => {
-    const newItems = getNewItems(orderItems, activeOrder ? activeOrder.items : []);
+    const newItems = getNewItems(orderItems, sentItems);
     if (newItems.length === 0) return null;
 
     const kotGroups = groupItemsForKOT(newItems, kotPreference, menuCategories);
