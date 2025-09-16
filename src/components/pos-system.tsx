@@ -495,14 +495,14 @@ export default function PosSystem({
     });
     return newItems;
   }, []);
-
+  
   useEffect(() => {
     if (activeOrder) {
-      setSentItems(activeOrder.items);
+        setSentItems(activeOrder.items);
     } else {
-      setSentItems([]);
+        setSentItems([]);
     }
-  }, [activeOrder, getNewItems]);
+  }, [activeOrder]);
 
 
   useEffect(() => {
@@ -1115,6 +1115,10 @@ export default function PosSystem({
   
   const groupItemsForKOT = (items: OrderItem[], preference: KOTPreference, allCategories: string[]): { title: string; items: OrderItem[] }[] => {
     if (items.length === 0) return [];
+    
+    if (preference.type === 'single') {
+        return [{ title: 'KOT', items }];
+    }
 
     if (preference.type === 'separate') {
         const kitchenItems = items.filter(item => item.category !== 'Beverages');
@@ -1154,7 +1158,7 @@ export default function PosSystem({
   };
 
   const renderKotButtons = () => {
-    const newItems = getNewItems(orderItems, activeOrder?.items || []);
+    const newItems = getNewItems(orderItems, sentItems);
     if (newItems.length === 0) return null;
   
     const kotGroups = groupItemsForKOT(newItems, kotPreference, menuCategories);
@@ -1632,6 +1636,8 @@ export default function PosSystem({
 
 
 
+
+    
 
     
 

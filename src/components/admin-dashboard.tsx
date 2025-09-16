@@ -449,9 +449,13 @@ export default function AdminDashboard({
                         <CardTitle className="text-base flex items-center gap-2"><Printer /> KOT Preferences</CardTitle>
                         <RadioGroup 
                           value={kotPreference.type} 
-                          onValueChange={(type: 'single' | 'separate' | 'category') => setKotPreference({ ...kotPreference, type: type === 'single' ? 'separate' : type, categories: type !== 'category' ? [] : kotPreference.categories })}
+                          onValueChange={(type) => setKotPreference({ ...kotPreference, type: type as any, categories: type !== 'category' ? [] : kotPreference.categories })}
                           className="space-y-2"
                         >
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="single" id="kot-single" />
+                            <Label htmlFor="kot-single">Single Combined KOT</Label>
+                          </div>
                           <div className="flex items-center space-x-2">
                             <RadioGroupItem value="separate" id="kot-separate" />
                             <Label htmlFor="kot-separate">Separate Kitchen & Bar KOTs</Label>
@@ -635,6 +639,8 @@ function EmployeeDialog({ open, onOpenChange, employee, onSave }: { open: boolea
         </Dialog>
     );
 }
+
+    
 
     
 

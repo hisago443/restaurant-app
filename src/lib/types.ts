@@ -133,7 +133,7 @@ export interface PendingBill {
 }
 
 export interface KOTPreference {
-  type: 'separate' | 'category';
+  type: 'single' |'separate' | 'category';
   categories?: string[];
 }
 
@@ -168,3 +168,5 @@ export const GenerateReportOutputSchema = z.object({
   message: z.string(),
 });
 export type GenerateReportOutput = z.infer<typeof GenerateReportOutputSchema>;
+
+    
