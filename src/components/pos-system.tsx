@@ -1450,7 +1450,7 @@ export default function PosSystem({
                     const colorClass = colorName ? colorPalette[colorName]?.dark : '';
                     return (
                         <div key={category.category} className="relative group p-1">
-                            <TabsTrigger value={category.category} className={cn("rounded-none border-b-2 border-transparent data-[state=active]:shadow-none px-4 py-2 cursor-pointer", statusConfig ? statusConfig.dark : (colorClass || 'data-[state=active]:border-primary'))}>
+                            <TabsTrigger value={category.category} className={cn("rounded-md border-2 border-transparent data-[state=active]:shadow-md px-4 py-2 cursor-pointer transition-colors", statusConfig ? statusConfig.dark : (colorClass || 'bg-muted data-[state=active]:border-primary'))}>
                                 {renderCategoryHeader(category)}
                             </TabsTrigger>
                             <div className="absolute top-1 right-2 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
@@ -1584,15 +1584,15 @@ export default function PosSystem({
                               />
                           </div>
                            <RadioGroup value={vegFilter} onValueChange={(v) => setVegFilter(v as VegFilter)} className="flex items-center gap-2">
-                              <RadioGroupItem value="All" id="filter-all" className="sr-only" />
-                              <Label htmlFor="filter-all" className={cn("h-10 flex items-center justify-center px-4 rounded-md cursor-pointer border-2 font-semibold text-lg", vegFilter === 'All' ? 'bg-primary text-primary-foreground border-primary' : 'bg-background text-foreground hover:bg-accent')}>All</Label>
-                              
-                              <RadioGroupItem value="Veg" id="filter-veg" className="sr-only" />
-                              <Label htmlFor="filter-veg" className={cn("h-10 flex items-center justify-center px-4 rounded-md cursor-pointer border-2 font-semibold text-lg", vegFilter === 'Veg' ? 'bg-green-600 text-white border-green-600' : 'text-green-600 border-green-500 hover:bg-green-50')}>Veg</Label>
-                              
-                              <RadioGroupItem value="Non-Veg" id="filter-nonveg" className="sr-only" />
-                              <Label htmlFor="filter-nonveg" className={cn("h-10 flex items-center justify-center px-4 rounded-md cursor-pointer border-2 font-semibold text-lg", vegFilter === 'Non-Veg' ? 'bg-red-600 text-white border-red-600' : 'text-red-600 border-red-500 hover:bg-red-50')}>Non-Veg</Label>
-                          </RadioGroup>
+                                <RadioGroupItem value="All" id="filter-all" className="sr-only" />
+                                <Label htmlFor="filter-all" className={cn("h-10 w-24 flex items-center justify-center rounded-md cursor-pointer border-2 font-semibold text-lg", vegFilter === 'All' ? 'bg-primary text-primary-foreground border-primary' : 'bg-background text-foreground hover:bg-accent')}>All</Label>
+                                
+                                <RadioGroupItem value="Veg" id="filter-veg" className="sr-only" />
+                                <Label htmlFor="filter-veg" className={cn("h-10 w-24 flex items-center justify-center rounded-md cursor-pointer border-2 font-semibold text-lg", vegFilter === 'Veg' ? 'bg-green-600 text-white border-green-600' : 'text-green-600 border-green-500 hover:bg-green-50')}>Veg</Label>
+                                
+                                <RadioGroupItem value="Non-Veg" id="filter-nonveg" className="sr-only" />
+                                <Label htmlFor="filter-nonveg" className={cn("h-10 w-24 flex items-center justify-center rounded-md cursor-pointer border-2 font-semibold text-lg", vegFilter === 'Non-Veg' ? 'bg-red-600 text-white border-red-600' : 'text-red-600 border-red-500 hover:bg-red-50')}>Non-Veg</Label>
+                            </RadioGroup>
                       </div>
                       <div className="flex items-center gap-2">
                           <div className="flex items-center space-x-2">

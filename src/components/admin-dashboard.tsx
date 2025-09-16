@@ -449,7 +449,7 @@ export default function AdminDashboard({
                         <CardTitle className="text-base flex items-center gap-2"><Printer /> KOT Preferences</CardTitle>
                         <RadioGroup 
                           value={kotPreference.type} 
-                          onValueChange={(type: 'single' | 'separate' | 'category') => setKotPreference({ ...kotPreference, type, categories: type !== 'category' ? [] : kotPreference.categories })}
+                          onValueChange={(type: 'single' | 'separate' | 'category') => setKotPreference({ ...kotPreference, type: type === 'single' ? 'separate' : type, categories: type !== 'category' ? [] : kotPreference.categories })}
                           className="space-y-2"
                         >
                           <div className="flex items-center space-x-2">
@@ -472,7 +472,7 @@ export default function AdminDashboard({
                                             checked={(kotPreference.categories || []).includes(category)}
                                             onCheckedChange={(checked) => handleKotCategoryChange(category, !!checked)}
                                         />
-                                        <Label htmlFor={`cat-${category}`}>{category}</Label>
+                                        <Label htmlFor={`cat-${category}`} className="font-normal cursor-pointer">{category}</Label>
                                     </div>
                                 ))}
                             </div>
