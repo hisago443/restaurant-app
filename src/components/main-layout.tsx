@@ -4,7 +4,7 @@
 
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Utensils, LayoutGrid, Soup, Users, Shield, Receipt, Package, History, PanelTop, PanelLeft } from 'lucide-react';
+import { Utensils, LayoutGrid, Soup, Users, Shield, Receipt, Package, PanelTop, PanelLeft } from 'lucide-react';
 import { isSameDay } from 'date-fns';
 import { collection, onSnapshot, doc, setDoc, getDocs, writeBatch, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -49,7 +49,7 @@ export default function MainLayout() {
   const [showSetupWizard, setShowSetupWizard] = useState(false);
   const [isCheckingSetup, setIsCheckingSetup] = useState(true);
   const [venueName, setVenueName] = useState('Up & Above Assistant');
-  const [kotPreference, setKotPreference] = useState<KOTPreference>({ type: 'single', categories: [] });
+  const [kotPreference, setKotPreference] = useState<KOTPreference>({ type: 'separate', categories: [] });
 
   useEffect(() => {
     try {
@@ -73,7 +73,7 @@ export default function MainLayout() {
         if (venueDoc.exists()) {
           const data = venueDoc.data();
           setVenueName(data.name || 'Up & Above Assistant');
-          setKotPreference(data.kotPreference || { type: 'single', categories: [] });
+          setKotPreference(data.kotPreference || { type: 'separate', categories: [] });
         }
       } catch (error) {
         console.error("Error fetching venue settings:", error);

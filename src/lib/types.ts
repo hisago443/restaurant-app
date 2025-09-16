@@ -32,16 +32,6 @@ export interface OrderItem extends MenuItem {
 
 export type TableStatus = 'Available' | 'Occupied' | 'Reserved' | 'Cleaning';
 
-export interface HomeDeliveryDetails {
-    name: string;
-    mobile: string;
-    houseNo?: string;
-    street?: string;
-    landmark?: string;
-    pincode: string;
-    additionalInfo?: string;
-}
-
 export interface Table {
   id: number;
   status: TableStatus;
@@ -52,14 +42,11 @@ export interface Table {
   }
 }
 
-export type OrderType = 'Dine-In' | 'Home Delivery';
-
 export interface Order {
   id: string;
   items: OrderItem[];
-  tableId: number; // For Dine-in, -1 for Home Delivery
+  tableId: number;
   status: 'Pending' | 'In Preparation' | 'Completed';
-  deliveryDetails?: HomeDeliveryDetails;
 }
 
 export interface Bill {
@@ -69,7 +56,6 @@ export interface Bill {
   total: number;
   receiptPreview: string;
   timestamp: Date;
-  deliveryDetails?: HomeDeliveryDetails;
 }
 
 
@@ -147,7 +133,7 @@ export interface PendingBill {
 }
 
 export interface KOTPreference {
-  type: 'single' | 'separate' | 'category';
+  type: 'separate' | 'category';
   categories?: string[];
 }
 

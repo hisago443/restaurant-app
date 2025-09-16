@@ -18,19 +18,18 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from '@/hooks/use-toast';
-import { Search, Plus, Minus, X, LayoutGrid, List, Rows, ChevronsUpDown, Palette, Shuffle, ClipboardList, Send, CheckCircle2, Users, Bookmark, Sparkles, Repeat, Edit, UserCheck, BookmarkX, Printer, Loader2, BookOpen, Trash2 as TrashIcon, QrCode as QrCodeIcon, MousePointerClick, Eye, Hand, ShoppingBag, BarChart, Home, Bike, Beer } from 'lucide-react';
+import { Search, Plus, Minus, X, LayoutGrid, List, Rows, ChevronsUpDown, Palette, Shuffle, ClipboardList, Send, CheckCircle2, Users, Bookmark, Sparkles, Repeat, Edit, UserCheck, BookmarkX, Printer, Loader2, BookOpen, Trash2 as TrashIcon, QrCode as QrCodeIcon, MousePointerClick, Eye, Hand, ShoppingBag } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useDrag, useDrop } from 'react-dnd';
 import { AddItemDialog } from './add-item-dialog';
 import { ManageMenuDialog } from './manage-menu-dialog';
 
-import type { MenuCategory, MenuItem, OrderItem, Table, Order, Bill, TableStatus, HomeDeliveryDetails, OrderType, KOTPreference } from '@/lib/types';
+import type { MenuCategory, MenuItem, OrderItem, Table, Order, Bill, TableStatus, KOTPreference } from '@/lib/types';
 import menuData from '@/data/menu.json';
 import { generateReceipt, type GenerateReceiptInput } from '@/ai/flows/dynamic-receipt-discount-reasoning';
 import { PaymentDialog } from './payment-dialog';
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog';
-import { Textarea } from './ui/textarea';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from './ui/dialog';
 
 const vegColor = 'bg-green-100 dark:bg-green-900/30';
 const nonVegColor = 'bg-rose-100 dark:bg-rose-900/30';
@@ -165,7 +164,7 @@ function OrderPanel({
     updateQuantity,
     removeFromOrder,
     activeOrder,
-    currentActiveTableId,
+    selectedTableId,
     clearCurrentOrder,
     handleQuickAssign,
     subtotal,
@@ -176,8 +175,6 @@ function OrderPanel({
     handlePrintProvisionalBill,
     handleProcessPayment,
     receiptPreview,
-    orderType,
-    setOrderType,
     kotButtons,
     children,
 }: {
@@ -186,7 +183,7 @@ function OrderPanel({
     updateQuantity: (name: string, quantity: number) => void;
     removeFromOrder: (name: string) => void;
     activeOrder: Order | null;
-    currentActiveTableId: number | null;
+    selectedTableId: number | null;
     clearCurrentOrder: (fullReset?: boolean) => void;
     handleQuickAssign: () => void;
     subtotal: number;
@@ -197,8 +194,6 @@ function OrderPanel({
     handlePrintProvisionalBill: () => void;
     handleProcessPayment: () => void;
     receiptPreview: string;
-    orderType: OrderType;
-    setOrderType: (type: OrderType) => void;
     kotButtons: React.ReactNode;
     children: React.ReactNode;
 }) {
@@ -212,14 +207,10 @@ function OrderPanel({
         }),
     }));
     
-    const isTakeawayMode = orderType === 'Home Delivery';
-    const showQuickAssign = orderItems.length > 0 && orderType === 'Dine-In' && currentActiveTableId === null;
+    const showQuickAssign = orderItems.length > 0 && selectedTableId === null;
     const orderTitle = useMemo(() => {
-        if (orderType === 'Dine-In') {
-            return currentActiveTableId ? `Table ${currentActiveTableId}` : 'Select a Table';
-        }
-        return orderType;
-    }, [orderType, currentActiveTableId]);
+      return selectedTableId ? `Table ${selectedTableId}` : 'Select a Table';
+    }, [selectedTableId]);
 
     const renderOrderItems = () => {
         const sentItemsMap = new Map((activeOrder?.items || []).map(item => [item.name, item.quantity]));
@@ -310,16 +301,10 @@ function OrderPanel({
             
             <div id="table-grid-container" className="p-4 border-t space-y-4">
                <div className="flex items-center gap-2 flex-wrap">
-                    <Label className="font-semibold text-sm shrink-0 whitespace-nowrap">Order Type:</Label>
-                    <div className="flex-1 grid grid-cols-2 gap-2 min-w-[210px]">
-                        <Button variant={orderType === 'Dine-In' ? 'default' : 'outline'} onClick={() => setOrderType('Dine-In')} className="h-12 text-base"><Users className="mr-2 h-5 w-5"/>Dine-In</Button>
-                        <Button variant={orderType === 'Home Delivery' ? 'default' : 'outline'} onClick={() => setOrderType('Home Delivery')} className="h-12 text-base px-2 flex-nowrap whitespace-nowrap">
-                            <Bike className="mr-2 h-5 w-5"/>
-                            <span>Home Delivery</span>
-                        </Button>
-                    </div>
+                    <Label className="font-semibold text-sm shrink-0 whitespace-nowrap">Order For:</Label>
+                     <Button variant='default' className="h-12 text-base flex-1"><Users className="mr-2 h-5 w-5"/>Dine-In</Button>
                 </div>
-              {orderType === 'Dine-In' && children}
+              {children}
             </div>
           
             <div className="p-4 border-t space-y-4 bg-muted/30">
@@ -439,79 +424,6 @@ function ItemStatusDialog({
   );
 }
 
-function HomeDeliveryDialog({
-  isOpen,
-  onOpenChange,
-  onSave,
-  initialDetails,
-}: {
-  isOpen: boolean;
-  onOpenChange: (open: boolean) => void;
-  onSave: (details: HomeDeliveryDetails) => void;
-  initialDetails: HomeDeliveryDetails;
-}) {
-  const [details, setDetails] = useState<HomeDeliveryDetails>(initialDetails);
-
-  useEffect(() => {
-    if (isOpen) {
-      setDetails(initialDetails);
-    }
-  }, [isOpen, initialDetails]);
-
-  const handleSave = () => {
-    if (!details.name || !details.mobile) {
-      alert("Customer name and mobile number are required.");
-      return;
-    }
-    onSave(details);
-    onOpenChange(false);
-  };
-
-  return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Home Delivery Details</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-4 py-4">
-          <div className="space-y-2">
-            <Label htmlFor="customer-name">Customer Name</Label>
-            <Input id="customer-name" value={details.name} onChange={e => setDetails(d => ({ ...d, name: e.target.value }))} />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="customer-mobile">Mobile No.</Label>
-            <Input id="customer-mobile" value={details.mobile} onChange={e => setDetails(d => ({ ...d, mobile: e.target.value }))} />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="house-no">House/Apt No. (Optional)</Label>
-            <Input id="house-no" value={details.houseNo} onChange={e => setDetails(d => ({ ...d, houseNo: e.target.value }))} />
-          </div>
-           <div className="space-y-2">
-            <Label htmlFor="street-name">Street Name (Optional)</Label>
-            <Input id="street-name" value={details.street} onChange={e => setDetails(d => ({ ...d, street: e.target.value }))} />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="pincode">Pincode</Label>
-            <Input id="pincode" value={details.pincode} onChange={e => setDetails(d => ({ ...d, pincode: e.target.value }))} />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="landmark">Landmark (Optional)</Label>
-            <Input id="landmark" value={details.landmark} onChange={e => setDetails(d => ({ ...d, landmark: e.target.value }))} />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="additional-details">Additional Details (Optional)</Label>
-            <Textarea id="additional-details" value={details.additionalInfo} onChange={e => setDetails(d => ({ ...d, additionalInfo: e.target.value }))} />
-          </div>
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button onClick={handleSave}>Save Details</Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
 export default function PosSystem({ 
     venueName,
     tables, 
@@ -563,10 +475,6 @@ export default function PosSystem({
   const [isEasyModeAlertOpen, setIsEasyModeAlertOpen] = useState(false);
   const hasSeenEasyModeAlert = useRef(false);
   const [isItemStatusDialogOpen, setIsItemStatusDialogOpen] = useState(false);
-
-  const [orderType, setOrderType] = useState<OrderType>('Dine-In');
-  const [homeDeliveryDetails, setHomeDeliveryDetails] = useState<HomeDeliveryDetails>({ name: '', mobile: '', houseNo: '', street: '', landmark: '', pincode: '', additionalInfo: '' });
-  const [isHomeDeliveryDialogOpen, setIsHomeDeliveryDialogOpen] = useState(false);
 
   const [sentItems, setSentItems] = useState<OrderItem[]>([]);
   
@@ -626,19 +534,6 @@ export default function PosSystem({
     receiptLines.push(`    ${venueName}    `);
     receiptLines.push('*************************');
     receiptLines.push('');
-    
-    if (orderType === 'Home Delivery') {
-      receiptLines.push('--- HOME DELIVERY ---');
-      receiptLines.push(`To: ${homeDeliveryDetails.name}`);
-      receiptLines.push(`Contact: ${homeDeliveryDetails.mobile}`);
-      let address = `${homeDeliveryDetails.houseNo || ''} ${homeDeliveryDetails.street || ''}`;
-      if (address.trim()) receiptLines.push(`Address: ${address.trim()}`);
-      if (homeDeliveryDetails.pincode) receiptLines.push(`Pincode: ${homeDeliveryDetails.pincode}`);
-      if (homeDeliveryDetails.landmark) receiptLines.push(`Landmark: ${homeDeliveryDetails.landmark}`);
-      receiptLines.push('-------------------------');
-    }
-    
-    receiptLines.push('');
     receiptLines.push('Order Details:');
     orderItems.forEach((item, index) => {
       const lineTotal = item.price * item.quantity;
@@ -663,7 +558,7 @@ export default function PosSystem({
     receiptLines.push('*************************');
   
     return receiptLines.join('\n');
-  }, [orderItems, discount, orderType, homeDeliveryDetails, venueName]);
+  }, [orderItems, discount, venueName]);
 
   const filteredMenu = useMemo(() => {
     let menuToFilter = menu;
@@ -694,20 +589,7 @@ export default function PosSystem({
       setActiveAccordionItems(filteredMenu.map(c => c.category));
     }
   }, [searchTerm, viewMode, filteredMenu]);
-
-  const currentActiveTableId = useMemo(() => {
-    return orderType === 'Dine-In' ? selectedTableId : null;
-  }, [selectedTableId, orderType]);
   
-  useEffect(() => {
-    if (orderType === 'Home Delivery' && orderItems.length > 0) {
-      setIsHomeDeliveryDialogOpen(true);
-    }
-    if (orderType !== 'Dine-In') {
-        setSelectedTableId(null);
-    }
-  }, [orderType, orderItems.length, setSelectedTableId]);
-
   useEffect(() => {
     const defaultCategoryColors: Record<string, string> = {};
     if (Object.keys(categoryColors).length === 0) {
@@ -754,12 +636,6 @@ export default function PosSystem({
         setReceiptPreview('');
     }
   }, [orderItems, discount, getLocalReceipt]);
-
-
-  const handleSelectTable = (tableId: number | null) => {
-    setOrderType('Dine-In');
-    setSelectedTableId(tableId);
-  };
   
   const setItemStatus = (itemName: string, status: string) => {
     setMenuItemStatus(prev => ({ ...prev, [itemName]: status }));
@@ -799,10 +675,7 @@ export default function PosSystem({
             return [...prevItems, { ...itemWithCategory, quantity }];
         }
     });
-    if (orderType === 'Home Delivery' && !isHomeDeliveryDialogOpen) {
-      setIsHomeDeliveryDialogOpen(true);
-    }
-  }, [setOrderItems, orderType, isHomeDeliveryDialogOpen, menu]);
+  }, [setOrderItems, menu]);
 
   const handleItemClick = (item: MenuItem) => {
     if (easyMode) {
@@ -865,12 +738,10 @@ export default function PosSystem({
       const isUpdate = !!(activeOrder);
       
       let title: string;
-      if (order.tableId === 0) {
-        title = 'Takeaway';
-      } else if (order.tableId === -1) {
-        title = 'Home Delivery';
-      } else {
+      if (order.tableId) {
         title = `Table ${order.tableId}`;
+      } else {
+          title = 'Unassigned Order'
       }
       
       const receipt = `
@@ -887,11 +758,6 @@ export default function PosSystem({
           <body>
             <h2>${isUpdate ? `UPDATE - ${kotTitle}` : kotTitle}</h2>
             <h3>Order ID: ${order.id} | Table: ${title}</h3>
-            ${order.deliveryDetails ? `
-              <hr>
-              <p><b>Deliver To:</b> ${order.deliveryDetails.name}, ${order.deliveryDetails.mobile}</p>
-              <p>${order.deliveryDetails.houseNo || ''} ${order.deliveryDetails.street || ''}, ${order.deliveryDetails.pincode}</p>
-            ` : ''}
             <hr>
             <ul>
               ${itemsToPrint.map(item => `<li><span>${isUpdate && item.quantity > 0 ? '+' : ''}${item.quantity} x ${item.name}</span></li>`).join('')}
@@ -912,12 +778,6 @@ export default function PosSystem({
   };
   
   const processKOTs = (kotGroups: { title: string; items: OrderItem[] }[]) => {
-     if (orderType === 'Home Delivery' && (!homeDeliveryDetails.name || !homeDeliveryDetails.mobile)) {
-        setIsHomeDeliveryDialogOpen(true);
-        toast({ variant: 'destructive', title: 'Missing Delivery Info', description: 'Please enter customer name and mobile.' });
-        return;
-    }
-
     setIsProcessing(true);
 
     setTimeout(() => {
@@ -926,22 +786,17 @@ export default function PosSystem({
             finalOrder = { ...activeOrder, items: orderItems };
             setOrders(prev => prev.map(o => o.id === finalOrder.id ? finalOrder : o));
         } else {
-            let tableIdForOrder: number;
-            switch(orderType) {
-                case 'Dine-In': tableIdForOrder = currentActiveTableId!; break;
-                case 'Home Delivery': tableIdForOrder = -1; break;
-            }
+            const tableIdForOrder = selectedTableId!;
             
             finalOrder = {
                 items: orderItems,
                 tableId: tableIdForOrder,
                 id: `K${(orders.length + 1).toString().padStart(3, '0')}`,
                 status: 'In Preparation',
-                ...(orderType === 'Home Delivery' && { deliveryDetails: homeDeliveryDetails }),
             };
             onOrderCreated(finalOrder);
-            if (orderType === 'Dine-In' && currentActiveTableId) {
-              updateTableStatus([currentActiveTableId], 'Occupied');
+            if (selectedTableId) {
+              updateTableStatus([selectedTableId], 'Occupied');
             }
         }
         
@@ -949,7 +804,6 @@ export default function PosSystem({
             printKot(finalOrder, group.items, group.title);
         });
         
-        // After printing, update the sentItems state to reflect the new state of the order
         const newlySentItems = kotGroups.flatMap(g => g.items);
         setSentItems(prevSent => {
           const newSentMap = new Map(prevSent.map(i => [i.name, i]));
@@ -983,7 +837,7 @@ export default function PosSystem({
       }
       
       if (selectedTableId !== tableId) {
-        handleSelectTable(tableId);
+        setSelectedTableId(tableId);
         setTimeout(() => {
           addToOrder(item, 1);
           toast({
@@ -1042,26 +896,17 @@ export default function PosSystem({
     setIsPaymentDialogOpen(false);
     toast({ title: "Payment Successful", description: `Rs. ${total.toFixed(2)} confirmed.` });
     
-    let tableIdForBill: number;
-    switch(orderType) {
-        case 'Dine-In':
-            tableIdForBill = currentActiveTableId!;
-            break;
-        case 'Home Delivery':
-            tableIdForBill = -1;
-            break;
-    }
+    const tableIdForBill = selectedTableId!;
     const billPayload: Omit<Bill, 'id' | 'timestamp'> = {
       orderItems: orderItems,
       tableId: tableIdForBill,
       total: total,
       receiptPreview: finalReceipt,
-      ...(orderType === 'Home Delivery' && { deliveryDetails: homeDeliveryDetails }),
     };
     addBill(billPayload);
   
-    if (orderType === 'Dine-In' && currentActiveTableId) {
-      updateTableStatus([currentActiveTableId], 'Cleaning');
+    if (selectedTableId) {
+      updateTableStatus([selectedTableId], 'Cleaning');
     }
     
     if (activeOrder) {
@@ -1069,8 +914,6 @@ export default function PosSystem({
     }
   
     clearCurrentOrder(true);
-    setHomeDeliveryDetails({ name: '', mobile: '', houseNo: '', street: '', landmark: '', pincode: '', additionalInfo: '' });
-    setOrderType('Dine-In');
   };
 
   const handlePrintProvisionalBill = () => {
@@ -1086,7 +929,7 @@ export default function PosSystem({
     const currentReceipt = getLocalReceipt();
     setReceiptPreview(currentReceipt);
     
-    const billTitle = currentActiveTableId === null ? orderType : `Table #${currentActiveTableId}`;
+    const billTitle = selectedTableId === null ? 'Unassigned Order' : `Table #${selectedTableId}`;
   
     const printWindow = window.open('', '_blank');
     if (printWindow) {
@@ -1151,7 +994,7 @@ export default function PosSystem({
   };
   
   const handleQuickAssign = () => {
-    if (orderItems.length > 0 && orderType === 'Dine-In' && currentActiveTableId === null) {
+    if (orderItems.length > 0 && selectedTableId === null) {
         setIsQuickAssignDialogOpen(true);
     } else {
         toast({
@@ -1193,7 +1036,7 @@ export default function PosSystem({
         if (isNumberKey) {
             const tableNum = e.key === '0' ? 10 : parseInt(e.key, 10);
             if (tableNum > 0 && tableNum <= tables.length) {
-              handleSelectTable(tableNum);
+              setSelectedTableId(tableNum);
             }
         } else if (e.key.startsWith('Arrow')) {
             const tableGrid = document.getElementById('table-grid-container')?.querySelector('.grid');
@@ -1226,7 +1069,7 @@ export default function PosSystem({
 
             if (nextIndex !== -1 && nextIndex < sortedTables.length) {
                 const nextTableId = sortedTables[nextIndex].id;
-                handleSelectTable(nextTableId);
+                setSelectedTableId(nextTableId);
             }
         }
       } 
@@ -1267,7 +1110,7 @@ export default function PosSystem({
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [keyboardMode, selectedTableId, tables, handleSelectTable, updateTableStatus, setKeyboardMode, orderItems, sentItems, getNewItems, kotPreference, menuCategories]);
+  }, [keyboardMode, selectedTableId, tables, setSelectedTableId, updateTableStatus, setKeyboardMode, orderItems, sentItems, getNewItems, kotPreference, menuCategories]);
   
   const groupItemsForKOT = (items: OrderItem[], preference: KOTPreference, allCategories: string[]): { title: string; items: OrderItem[] }[] => {
     if (items.length === 0) return [];
@@ -1323,7 +1166,7 @@ export default function PosSystem({
             size="lg"
             className={cn("h-12 text-base w-full", "bg-blue-600 hover:bg-blue-700")}
             onClick={() => processKOTs([group])}
-            disabled={isProcessing || (orderType === 'Dine-In' && !currentActiveTableId && !activeOrder)}
+            disabled={isProcessing || (!selectedTableId && !activeOrder)}
         >
             {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
             {activeOrder ? `Update ${group.title}` : `Send ${group.title}`}
@@ -1647,7 +1490,7 @@ export default function PosSystem({
               updateQuantity={updateQuantity}
               removeFromOrder={removeFromOrder}
               activeOrder={activeOrder}
-              currentActiveTableId={currentActiveTableId}
+              selectedTableId={selectedTableId}
               clearCurrentOrder={clearCurrentOrder}
               handleQuickAssign={handleQuickAssign}
               subtotal={subtotal}
@@ -1658,8 +1501,6 @@ export default function PosSystem({
               handlePrintProvisionalBill={handlePrintProvisionalBill}
               handleProcessPayment={handleProcessPayment}
               receiptPreview={receiptPreview}
-              orderType={orderType}
-              setOrderType={setOrderType}
               kotButtons={renderKotButtons()}
           >
             <div className="grid grid-cols-[repeat(auto-fit,minmax(80px,1fr))] gap-2">
@@ -1668,7 +1509,7 @@ export default function PosSystem({
                     const isSelected = table.id === selectedTableId;
                     const hasPendingItems = (pendingOrders[table.id] || []).length > 0 && table.status !== 'Occupied';
                     return (
-                    <TableDropTarget key={table.id} table={table} occupancyCount={occupancyCount} handleSelectTable={handleSelectTable} onDropItem={handleDropItemOnTable}>
+                    <TableDropTarget key={table.id} table={table} occupancyCount={occupancyCount} handleSelectTable={setSelectedTableId} onDropItem={handleDropItemOnTable}>
                         <div
                         className={cn(
                             'absolute inset-0 flex flex-col items-center justify-center text-center transition-colors rounded-md p-1 h-full',
@@ -1779,17 +1620,9 @@ export default function PosSystem({
         lowStockItems={lowStockItems}
         outOfStockItems={outOfStockItems}
       />
-      <HomeDeliveryDialog
-        isOpen={isHomeDeliveryDialogOpen}
-        onOpenChange={setIsHomeDeliveryDialogOpen}
-        onSave={setHomeDeliveryDetails}
-        initialDetails={homeDeliveryDetails}
-      />
     </div>
   );
 }
-
-
     
 
     
