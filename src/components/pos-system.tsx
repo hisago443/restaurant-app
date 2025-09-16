@@ -227,6 +227,19 @@ function OrderPanel({
         }
         return 'Current Order'
     }, [selectedTableId, orderType, customerDetails]);
+    
+    const getNewItems = useCallback((currentItems: OrderItem[], sentItems: OrderItem[]): OrderItem[] => {
+        const newItems: OrderItem[] = [];
+        const sentMap = new Map(sentItems.map(item => [item.name, item.quantity]));
+
+        currentItems.forEach(item => {
+            const sentQty = sentMap.get(item.name) || 0;
+            if (item.quantity > sentQty) {
+            newItems.push({ ...item, quantity: item.quantity - sentQty });
+            }
+        });
+        return newItems;
+    }, []);
 
     const renderOrderItems = () => {
         if (orderItems.length === 0) {
@@ -479,19 +492,6 @@ function HomeDeliveryDialog({
   )
 }
 
-const getNewItems = (currentItems: OrderItem[], sentItems: OrderItem[]): OrderItem[] => {
-  const newItems: OrderItem[] = [];
-  const sentMap = new Map(sentItems.map(item => [item.name, item.quantity]));
-
-  currentItems.forEach(item => {
-    const sentQty = sentMap.get(item.name) || 0;
-    if (item.quantity > sentQty) {
-      newItems.push({ ...item, quantity: item.quantity - sentQty });
-    }
-  });
-  return newItems;
-};
-
 export default function PosSystem({ 
     venueName,
     tables, 
@@ -560,6 +560,15 @@ export default function PosSystem({
   }, [activeOrder]);
 
   const handleSetOrderType = (type: OrderType) => {
+    if (orderItems.length > 0 && type !== selectedOrderType) {
+        toast({
+            variant: "destructive",
+            title: "Clear Order First",
+            description: "Please clear the current order before changing the order type.",
+        });
+        return;
+    }
+
     if (type === 'Home-Delivery') {
         setIsHomeDeliveryDialogOpen(true);
     } else {
@@ -1084,6 +1093,19 @@ export default function PosSystem({
 
   const lowStockItems = useMemo(() => allMenuItems.filter(item => menuItemStatus[item.name] === 'low'), [allMenuItems, menuItemStatus]);
   const outOfStockItems = useMemo(() => allMenuItems.filter(item => menuItemStatus[item.name] === 'out'), [allMenuItems, menuItemStatus]);
+  
+  const getNewItems = useCallback((currentItems: OrderItem[], sentItems: OrderItem[]): OrderItem[] => {
+      const newItems: OrderItem[] = [];
+      const sentMap = new Map(sentItems.map(item => [item.name, item.quantity]));
+
+      currentItems.forEach(item => {
+          const sentQty = sentMap.get(item.name) || 0;
+          if (item.quantity > sentQty) {
+          newItems.push({ ...item, quantity: item.quantity - sentQty });
+          }
+      });
+      return newItems;
+  }, []);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -1178,7 +1200,7 @@ export default function PosSystem({
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [keyboardMode, selectedTableId, tables, setSelectedTableId, updateTableStatus, setKeyboardMode, orderItems, activeOrder, kotPreference, menuCategories]);
+  }, [keyboardMode, selectedTableId, tables, setSelectedTableId, updateTableStatus, setKeyboardMode, orderItems, activeOrder, kotPreference, menuCategories, getNewItems]);
   
   const groupItemsForKOT = (items: OrderItem[], preference: KOTPreference, allCategories: string[]): { title: string; items: OrderItem[] }[] => {
     if (items.length === 0) return [];
