@@ -9,7 +9,7 @@ import { isSameDay } from 'date-fns';
 import { collection, onSnapshot, doc, setDoc, getDocs, writeBatch, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
-import type { Table, TableStatus, Order, Bill, Employee, OrderItem, Expense, InventoryItem, KOTPreference } from '@/lib/types';
+import type { Table, TableStatus, Order, Bill, Employee, OrderItem, Expense, InventoryItem, KOTPreference, OrderType } from '@/lib/types';
 import { Logo } from "./icons";
 import PosSystem from './pos-system';
 import TableManagement from './table-management';
@@ -49,7 +49,7 @@ export default function MainLayout() {
   const [showSetupWizard, setShowSetupWizard] = useState(false);
   const [isCheckingSetup, setIsCheckingSetup] = useState(true);
   const [venueName, setVenueName] = useState('Up & Above Assistant');
-  const [kotPreference, setKotPreference] = useState<KOTPreference>({ type: 'separate', categories: [] });
+  const [kotPreference, setKotPreference] = useState<KOTPreference>({ type: 'single', categories: [] });
 
   useEffect(() => {
     try {
@@ -132,6 +132,8 @@ export default function MainLayout() {
   const [categoryColors, setCategoryColors] = useState<Record<string, string>>({});
   const [keyboardMode, setKeyboardMode] = useState<'table' | 'order' | 'confirm'>('table');
   const mainRef = useRef<HTMLDivElement>(null);
+  const [selectedOrderType, setSelectedOrderType] = useState<OrderType>('Dine-In');
+
 
   useEffect(() => {
     // Focus the main area on mount to enable keyboard shortcuts immediately
@@ -391,7 +393,9 @@ export default function MainLayout() {
     const todaysBills = billHistory.filter(bill => bill.timestamp && isSameDay(new Date(bill.timestamp), new Date()));
     
     todaysBills.forEach(bill => {
-      counts[bill.tableId] = (counts[bill.tableId] || 0) + 1;
+      if (bill.tableId) {
+        counts[bill.tableId] = (counts[bill.tableId] || 0) + 1;
+      }
     });
 
     return counts;
@@ -409,7 +413,7 @@ export default function MainLayout() {
     if(order.tableId) {
         setPendingOrders(prev => {
             const newPending = {...prev};
-            delete newPending[order.tableId];
+            delete newPending[order.tableId!];
             return newPending;
         })
     }
@@ -548,6 +552,8 @@ export default function MainLayout() {
                   setKeyboardMode={setKeyboardMode}
                   billHistory={billHistory}
                   kotPreference={kotPreference}
+                  selectedOrderType={selectedOrderType}
+                  setSelectedOrderType={setSelectedOrderType}
                 />
             </TabsContent>
             <TabsContent value="tables" className="m-0 p-0">
@@ -616,5 +622,3 @@ export default function MainLayout() {
     </div>
   );
 }
-
-    

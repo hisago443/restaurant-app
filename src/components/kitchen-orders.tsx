@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useState } from 'react';
@@ -8,6 +9,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { ArrowRight, Check, ClipboardList } from 'lucide-react';
 import type { Order } from '@/lib/types';
 import { cn } from '@/lib/utils';
+import { Badge } from './ui/badge';
 
 interface KitchenOrdersProps {
   orders: Order[];
@@ -23,6 +25,19 @@ export default function KitchenOrders({ orders, setOrders }: KitchenOrdersProps)
   const moveOrder = (orderId: string, toStatus: OrderStatus) => {
     setOrders(orders.map(order => order.id === orderId ? { ...order, status: toStatus } : order));
   };
+
+  const getOrderTitle = (order: Order) => {
+    switch(order.orderType) {
+      case 'Dine-In':
+        return `Table: ${order.tableId}`;
+      case 'Take-Away':
+        return 'Take Away';
+      case 'Home-Delivery':
+        return order.customerDetails?.name || 'Home Delivery';
+      default:
+        return 'Unknown Order';
+    }
+  }
 
   const getActionForOrder = (order: Order) => {
     switch (order.status) {
@@ -60,8 +75,11 @@ export default function KitchenOrders({ orders, setOrders }: KitchenOrdersProps)
                       'border-primary': order.status === 'In Preparation',
                     })}>
                       <CardHeader className="p-4">
-                        <CardTitle className="text-lg">Order #{order.id}</CardTitle>
-                        <CardDescription>Table: {order.tableId}</CardDescription>
+                        <div className='flex justify-between items-center'>
+                          <CardTitle className="text-lg">Order #{order.id}</CardTitle>
+                          <Badge variant={order.orderType === 'Dine-In' ? 'default' : 'secondary'}>{order.orderType}</Badge>
+                        </div>
+                        <CardDescription>{getOrderTitle(order)}</CardDescription>
                       </CardHeader>
                       <CardContent className="p-4 pt-0 text-sm">
                         <ul className="list-disc pl-4">

@@ -24,6 +24,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
+import { Badge } from './ui/badge';
 
 interface BillHistoryProps {
   bills: Bill[];
@@ -106,6 +107,19 @@ export default function BillHistory({ bills, onClearAll }: BillHistoryProps) {
     // but for now, we'll let the date filter take precedence.
   }
 
+  const getBillTitle = (bill: Bill) => {
+    switch (bill.orderType) {
+      case 'Dine-In':
+        return `Table ${bill.tableId}`;
+      case 'Take-Away':
+        return 'Take Away';
+      case 'Home-Delivery':
+        return bill.customerDetails?.name || 'Home Delivery';
+      default:
+        return 'N/A';
+    }
+  }
+
   return (
     <>
       <div className="flex justify-between items-center w-full mb-4 flex-wrap gap-4">
@@ -174,7 +188,7 @@ export default function BillHistory({ bills, onClearAll }: BillHistoryProps) {
           <TableHeader>
             <TableRow>
               <TableHead>Bill ID</TableHead>
-              <TableHead>Table</TableHead>
+              <TableHead>Order Details</TableHead>
               <TableHead>Date & Time</TableHead>
               <TableHead className="text-right">Amount</TableHead>
               <TableHead className="text-center">Actions</TableHead>
@@ -185,7 +199,7 @@ export default function BillHistory({ bills, onClearAll }: BillHistoryProps) {
               filteredBills.map((bill) => (
                 <TableRow key={bill.id}>
                   <TableCell className="font-medium">{bill.id}</TableCell>
-                  <TableCell>{bill.tableId}</TableCell>
+                  <TableCell>{getBillTitle(bill)}</TableCell>
                   <TableCell>
                     {format(bill.timestamp, 'PPP p')}
                   </TableCell>
@@ -249,9 +263,11 @@ export default function BillHistory({ bills, onClearAll }: BillHistoryProps) {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Receipt for Bill #{selectedBill?.id}</DialogTitle>
-            <DialogDescription>
-              Table: {selectedBill?.tableId} | Date: {selectedBill ? format(selectedBill.timestamp, 'PPP p') : ''}
-            </DialogDescription>
+            {selectedBill && (
+              <DialogDescription>
+                {getBillTitle(selectedBill)} | Date: {format(selectedBill.timestamp, 'PPP p')}
+              </DialogDescription>
+            )}
           </DialogHeader>
           <pre className="mt-4 text-sm font-mono whitespace-pre-wrap break-words bg-muted p-4 rounded-md max-h-[50vh] overflow-auto">
             {selectedBill?.receiptPreview}

@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import * as React from 'react';
@@ -167,7 +168,7 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
   const availableTables = useMemo(() => tables.filter(t => t.status === 'Available'), [tables]);
   
   const tablePerformanceData = useMemo(() => {
-    const todaysBills = billHistory.filter(bill => isSameDay(bill.timestamp, new Date()));
+    const todaysBills = billHistory.filter(bill => bill.timestamp && isSameDay(bill.timestamp, new Date()));
     return tables.map(table => {
       const turnover = occupancyCount[table.id] || 0;
       const revenue = todaysBills.filter(bill => bill.tableId === table.id).reduce((sum, bill) => sum + bill.total, 0);

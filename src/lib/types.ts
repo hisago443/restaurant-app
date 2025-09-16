@@ -42,20 +42,32 @@ export interface Table {
   }
 }
 
+export type OrderType = 'Dine-In' | 'Take-Away' | 'Home-Delivery';
+
+export interface CustomerDetails {
+    name: string;
+    phone: string;
+    address: string;
+}
+
 export interface Order {
   id: string;
   items: OrderItem[];
-  tableId: number;
+  tableId?: number | null;
   status: 'Pending' | 'In Preparation' | 'Completed';
+  orderType: OrderType;
+  customerDetails?: CustomerDetails;
 }
 
 export interface Bill {
   id: string;
   orderItems: OrderItem[];
-  tableId: number;
+  tableId?: number | null;
   total: number;
   receiptPreview: string;
   timestamp: Date;
+  orderType: OrderType;
+  customerDetails?: CustomerDetails;
 }
 
 
@@ -168,5 +180,3 @@ export const GenerateReportOutputSchema = z.object({
   message: z.string(),
 });
 export type GenerateReportOutput = z.infer<typeof GenerateReportOutputSchema>;
-
-    

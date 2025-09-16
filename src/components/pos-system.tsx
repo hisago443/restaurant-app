@@ -18,19 +18,21 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from '@/hooks/use-toast';
-import { Search, Plus, Minus, X, LayoutGrid, List, Rows, ChevronsUpDown, Palette, Shuffle, ClipboardList, Send, CheckCircle2, Users, Bookmark, Sparkles, Repeat, Edit, UserCheck, BookmarkX, Printer, Loader2, BookOpen, Trash2 as TrashIcon, QrCode as QrCodeIcon, MousePointerClick, Eye, Hand, ShoppingBag, BarChart } from 'lucide-react';
+import { Search, Plus, Minus, X, LayoutGrid, List, Rows, ChevronsUpDown, Palette, Shuffle, ClipboardList, Send, CheckCircle2, Users, Bookmark, Sparkles, Repeat, Edit, UserCheck, BookmarkX, Printer, Loader2, BookOpen, Trash2 as TrashIcon, QrCode as QrCodeIcon, MousePointerClick, Eye, Hand, ShoppingBag, BarChart, Users2, Bike, ShoppingBasket } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useDrag, useDrop } from 'react-dnd';
 import { AddItemDialog } from './add-item-dialog';
 import { ManageMenuDialog } from './manage-menu-dialog';
 
-import type { MenuCategory, MenuItem, OrderItem, Table, Order, Bill, TableStatus, KOTPreference } from '@/lib/types';
+import type { MenuCategory, MenuItem, OrderItem, Table, Order, Bill, TableStatus, KOTPreference, OrderType, CustomerDetails } from '@/lib/types';
 import menuData from '@/data/menu.json';
 import { generateReceipt, type GenerateReceiptInput } from '@/ai/flows/dynamic-receipt-discount-reasoning';
 import { PaymentDialog } from './payment-dialog';
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from './ui/dialog';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog';
 import { Checkbox } from './ui/checkbox';
+import { Textarea } from './ui/textarea';
+
 
 const vegColor = 'bg-green-100 dark:bg-green-900/30';
 const nonVegColor = 'bg-rose-100 dark:bg-rose-900/30';
@@ -103,6 +105,8 @@ interface PosSystemProps {
   setKeyboardMode: (mode: 'table' | 'order' | 'confirm') => void;
   billHistory: Bill[];
   kotPreference: KOTPreference;
+  selectedOrderType: OrderType;
+  setSelectedOrderType: (type: OrderType) => void;
 }
 
 const ItemTypes = {
@@ -178,6 +182,8 @@ function OrderPanel({
     receiptPreview,
     kotButtons,
     children,
+    orderType,
+    customerDetails,
 }: {
     orderItems: OrderItem[];
     handleDropOnOrder: (item: MenuItem) => void;
@@ -197,6 +203,8 @@ function OrderPanel({
     receiptPreview: string;
     kotButtons: React.ReactNode;
     children: React.ReactNode;
+    orderType: OrderType;
+    customerDetails?: CustomerDetails;
 }) {
     const [{ isOver, canDrop }, drop] = useDrop(() => ({
         accept: ItemTypes.MENU_ITEM,
@@ -210,22 +218,33 @@ function OrderPanel({
     
     const showQuickAssign = orderItems.length > 0 && selectedTableId === null;
     const orderTitle = useMemo(() => {
-      return selectedTableId ? `Table ${selectedTableId}` : 'Select a Table';
-    }, [selectedTableId]);
+        if (orderType === 'Dine-In') {
+            return selectedTableId ? `Table ${selectedTableId}` : 'Select a Table';
+        }
+        if (orderType === 'Take-Away') return 'Take-Away Order';
+        if (orderType === 'Home-Delivery') {
+            return customerDetails?.name || 'Home Delivery';
+        }
+        return 'Current Order'
+    }, [selectedTableId, orderType, customerDetails]);
 
     const renderOrderItems = () => {
-        const sentItemsMap = new Map((activeOrder?.items || []).map(item => [item.name, item.quantity]));
-        const newItems = orderItems.filter(item => {
-            const sentQty = sentItemsMap.get(item.name) || 0;
-            return item.quantity > sentQty;
-        });
-        const sentItems = orderItems.filter(item => {
-            const sentQty = sentItemsMap.get(item.name) || 0;
-            return item.quantity <= sentQty && sentQty > 0;
-        });
+        if (orderItems.length === 0) {
+          return (
+            <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
+              <ClipboardList className="w-16 h-16 text-gray-300" />
+              <p className="mt-4 text-sm font-medium text-center">
+                Click on items to add them or drag & drop here.
+              </p>
+            </div>
+          );
+        }
 
-        const renderItem = (item: OrderItem) => (
-            <div key={item.name} className="flex items-center">
+        const newItems = getNewItems(orderItems, activeOrder?.items || []);
+        const sentItems = orderItems.filter(item => !newItems.some(newItem => newItem.name === item.name));
+
+        const renderItem = (item: OrderItem, isNew: boolean) => (
+            <div key={item.name} className={cn("flex items-center p-2 rounded-md", isNew && "bg-blue-50 dark:bg-blue-900/20")}>
                 <div className="flex-grow">
                     <p className="font-medium">{item.name}</p>
                     <p className="text-sm text-muted-foreground">₹{item.price.toFixed(2)}</p>
@@ -240,8 +259,8 @@ function OrderPanel({
         );
 
         return (
-          <div className="space-y-3">
-             {sentItems.map(renderItem)}
+          <div className="space-y-2">
+             {sentItems.map(item => renderItem(item, false))}
              {newItems.length > 0 && sentItems.length > 0 && (
                 <div className="flex items-center gap-2 py-2">
                     <Separator className="flex-grow" />
@@ -249,7 +268,7 @@ function OrderPanel({
                     <Separator className="flex-grow" />
                 </div>
              )}
-             {newItems.map(renderItem)}
+             {newItems.map(item => renderItem(item, true))}
           </div>
         );
     };
@@ -288,23 +307,10 @@ function OrderPanel({
             </div>
           
             <ScrollArea className="flex-grow p-4">
-                {orderItems.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
-                        <ClipboardList className="w-16 h-16 text-gray-300" />
-                        <p className="mt-4 text-sm font-medium text-center">
-                            Click on items to add them or drag & drop here.
-                        </p>
-                    </div>
-                ) : (
-                    renderOrderItems()
-                )}
+                {renderOrderItems()}
             </ScrollArea>
             
             <div id="table-grid-container" className="p-4 border-t space-y-4">
-               <div className="flex items-center gap-2 flex-wrap">
-                    <Label className="font-semibold text-sm shrink-0 whitespace-nowrap">Order For:</Label>
-                     <Button variant='default' className="h-12 text-base flex-1"><Users className="mr-2 h-5 w-5"/>Dine-In</Button>
-                </div>
               {children}
             </div>
           
@@ -425,6 +431,67 @@ function ItemStatusDialog({
   );
 }
 
+function HomeDeliveryDialog({
+  isOpen,
+  onOpenChange,
+  onSave
+}: {
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSave: (details: CustomerDetails) => void;
+}) {
+  const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [address, setAddress] = useState('');
+
+  const handleSave = () => {
+    onSave({ name, phone, address });
+    onOpenChange(false);
+  }
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Home Delivery Details</DialogTitle>
+          <DialogDescription>Enter the customer's information for the delivery.</DialogDescription>
+        </DialogHeader>
+        <div className="grid gap-4 py-4">
+            <div className="space-y-2">
+                <Label htmlFor="customer-name">Customer Name</Label>
+                <Input id="customer-name" value={name} onChange={e => setName(e.target.value)} placeholder="e.g., John Doe"/>
+            </div>
+             <div className="space-y-2">
+                <Label htmlFor="customer-phone">Phone Number</Label>
+                <Input id="customer-phone" type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="e.g., 9876543210"/>
+            </div>
+             <div className="space-y-2">
+                <Label htmlFor="customer-address">Delivery Address</Label>
+                <Textarea id="customer-address" value={address} onChange={e => setAddress(e.target.value)} placeholder="e.g., House No. 123, Main Street..."/>
+            </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button onClick={handleSave}>Save Details</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+const getNewItems = (currentItems: OrderItem[], sentItems: OrderItem[]): OrderItem[] => {
+  const newItems: OrderItem[] = [];
+  const sentMap = new Map(sentItems.map(item => [item.name, item.quantity]));
+
+  currentItems.forEach(item => {
+    const sentQty = sentMap.get(item.name) || 0;
+    if (item.quantity > sentQty) {
+      newItems.push({ ...item, quantity: item.quantity - sentQty });
+    }
+  });
+  return newItems;
+};
+
 export default function PosSystem({ 
     venueName,
     tables, 
@@ -453,6 +520,8 @@ export default function PosSystem({
     setKeyboardMode,
     billHistory,
     kotPreference,
+    selectedOrderType,
+    setSelectedOrderType,
 }: PosSystemProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [menu, setMenu] = useState<MenuCategory[]>([]);
@@ -476,34 +545,38 @@ export default function PosSystem({
   const [isEasyModeAlertOpen, setIsEasyModeAlertOpen] = useState(false);
   const hasSeenEasyModeAlert = useRef(false);
   const [isItemStatusDialogOpen, setIsItemStatusDialogOpen] = useState(false);
+  const [isHomeDeliveryDialogOpen, setIsHomeDeliveryDialogOpen] = useState(false);
+  const [customerDetails, setCustomerDetails] = useState<CustomerDetails | undefined>();
 
-  const [sentItems, setSentItems] = useState<OrderItem[]>([]);
-  
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   const menuCategories = useMemo(() => menu.map(c => c.category), [menu]);
 
-  const getNewItems = useCallback((currentItems: OrderItem[], sentItemsParam: OrderItem[]) => {
-    const newItems: OrderItem[] = [];
-    const sentMap = new Map(sentItemsParam.map(item => [item.name, item.quantity]));
-
-    currentItems.forEach(item => {
-        const sentQty = sentMap.get(item.name) || 0;
-        if (item.quantity > sentQty) {
-            newItems.push({ ...item, quantity: item.quantity - sentQty });
-        }
-    });
-    return newItems;
-  }, []);
-  
   useEffect(() => {
     if (activeOrder) {
-        setSentItems(activeOrder.items);
-    } else {
-        setSentItems([]);
+      setSelectedOrderType(activeOrder.orderType);
+      setCustomerDetails(activeOrder.customerDetails);
     }
   }, [activeOrder]);
 
+  const handleSetOrderType = (type: OrderType) => {
+    if (type === 'Home-Delivery') {
+        setIsHomeDeliveryDialogOpen(true);
+    } else {
+        setSelectedOrderType(type);
+        setCustomerDetails(undefined);
+    }
+    if (type !== 'Dine-In') {
+        setSelectedTableId(null);
+    } else if (!selectedTableId) {
+        setSelectedTableId(1);
+    }
+  };
+
+  const handleSaveDeliveryDetails = (details: CustomerDetails) => {
+    setCustomerDetails(details);
+    setSelectedOrderType('Home-Delivery');
+  }
 
   useEffect(() => {
     const structuredMenu = (menuData as MenuCategory[]).map(category => ({
@@ -739,11 +812,19 @@ export default function PosSystem({
       const isUpdate = !!(activeOrder);
       
       let title: string;
-      if (order.tableId) {
-        title = `Table ${order.tableId}`;
-      } else {
-          title = 'Unassigned Order'
-      }
+       switch (order.orderType) {
+            case 'Dine-In':
+                title = `Table ${order.tableId}`;
+                break;
+            case 'Take-Away':
+                title = 'Take Away';
+                break;
+            case 'Home-Delivery':
+                title = order.customerDetails?.name || 'Home Delivery';
+                break;
+            default:
+                title = 'Unassigned Order';
+        }
       
       const receipt = `
         <html>
@@ -758,7 +839,7 @@ export default function PosSystem({
           </head>
           <body>
             <h2>${isUpdate ? `UPDATE - ${kotTitle}` : kotTitle}</h2>
-            <h3>Order ID: ${order.id} | Table: ${title}</h3>
+            <h3>Order ID: ${order.id} | ${title}</h3>
             <hr>
             <ul>
               ${itemsToPrint.map(item => `<li><span>${isUpdate && item.quantity > 0 ? '+' : ''}${item.quantity} x ${item.name}</span></li>`).join('')}
@@ -787,13 +868,13 @@ export default function PosSystem({
             finalOrder = { ...activeOrder, items: orderItems };
             setOrders(prev => prev.map(o => o.id === finalOrder.id ? finalOrder : o));
         } else {
-            const tableIdForOrder = selectedTableId!;
-            
             finalOrder = {
                 items: orderItems,
-                tableId: tableIdForOrder,
+                tableId: selectedTableId,
                 id: `K${(orders.length + 1).toString().padStart(3, '0')}`,
                 status: 'In Preparation',
+                orderType: selectedOrderType,
+                customerDetails: customerDetails,
             };
             onOrderCreated(finalOrder);
             if (selectedTableId) {
@@ -804,21 +885,6 @@ export default function PosSystem({
         kotGroups.forEach(group => {
             printKot(finalOrder, group.items, group.title);
         });
-        
-        const newlySentItems = kotGroups.flatMap(g => g.items);
-        setSentItems(prevSent => {
-          const newSentMap = new Map(prevSent.map(i => [i.name, i]));
-          newlySentItems.forEach(sentItem => {
-            const existing = newSentMap.get(sentItem.name);
-            if (existing) {
-              newSentMap.set(sentItem.name, { ...existing, quantity: existing.quantity + sentItem.quantity });
-            } else {
-              newSentMap.set(sentItem.name, sentItem);
-            }
-          });
-          return Array.from(newSentMap.values());
-        });
-
 
         toast({ title: `KOTs Sent!`, description: `Order update sent.` });
         setIsProcessing(false);
@@ -897,12 +963,13 @@ export default function PosSystem({
     setIsPaymentDialogOpen(false);
     toast({ title: "Payment Successful", description: `Rs. ${total.toFixed(2)} confirmed.` });
     
-    const tableIdForBill = selectedTableId!;
     const billPayload: Omit<Bill, 'id' | 'timestamp'> = {
       orderItems: orderItems,
-      tableId: tableIdForBill,
+      tableId: selectedTableId,
       total: total,
       receiptPreview: finalReceipt,
+      orderType: selectedOrderType,
+      customerDetails: customerDetails,
     };
     addBill(billPayload);
   
@@ -1009,7 +1076,7 @@ export default function PosSystem({
     setIsQuickAssignDialogOpen(false);
     setSelectedTableId(tableId);
     setTimeout(() => {
-        const newItems = getNewItems(orderItems, sentItems);
+        const newItems = getNewItems(orderItems, activeOrder?.items || []);
         const kotGroups = groupItemsForKOT(newItems, kotPreference, menuCategories);
         processKOTs(kotGroups);
     }, 100);
@@ -1086,7 +1153,7 @@ export default function PosSystem({
           setKeyboardMode('order');
         } else if (keyboardMode === 'confirm') {
           // This should trigger the first available KOT button
-          const newItems = getNewItems(orderItems, sentItems);
+          const newItems = getNewItems(orderItems, activeOrder?.items || []);
           const kotGroups = groupItemsForKOT(newItems, kotPreference, menuCategories);
           if (kotGroups.length > 0) {
             processKOTs(kotGroups);
@@ -1111,7 +1178,7 @@ export default function PosSystem({
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [keyboardMode, selectedTableId, tables, setSelectedTableId, updateTableStatus, setKeyboardMode, orderItems, sentItems, getNewItems, kotPreference, menuCategories]);
+  }, [keyboardMode, selectedTableId, tables, setSelectedTableId, updateTableStatus, setKeyboardMode, orderItems, activeOrder, kotPreference, menuCategories]);
   
   const groupItemsForKOT = (items: OrderItem[], preference: KOTPreference, allCategories: string[]): { title: string; items: OrderItem[] }[] => {
     if (items.length === 0) return [];
@@ -1158,11 +1225,13 @@ export default function PosSystem({
   };
 
   const renderKotButtons = () => {
-    const newItems = getNewItems(orderItems, sentItems);
+    const newItems = getNewItems(orderItems, activeOrder?.items || []);
     if (newItems.length === 0) return null;
   
     const kotGroups = groupItemsForKOT(newItems, kotPreference, menuCategories);
     if (kotGroups.length === 0) return null;
+
+    const isOrderReady = selectedOrderType === 'Dine-In' ? selectedTableId : true;
   
     return kotGroups.map(group => (
       <Button
@@ -1170,7 +1239,7 @@ export default function PosSystem({
         size="lg"
         className="h-12 text-base w-full bg-blue-600 hover:bg-blue-700"
         onClick={() => processKOTs([group])}
-        disabled={isProcessing || (!selectedTableId && !activeOrder)}
+        disabled={isProcessing || !isOrderReady}
       >
         {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
         {activeOrder ? `Update ${group.title}` : `Send ${group.title}`}
@@ -1445,7 +1514,7 @@ export default function PosSystem({
                           <div className="flex items-center space-x-2">
                               <Switch id="easy-mode-switch" checked={easyMode} onCheckedChange={handleEasyModeChange} />
                               <Label htmlFor="easy-mode-switch" className="flex items-center gap-2 cursor-pointer">
-                                  <MousePointerClick className="h-4 w-4" />
+                                  <MousePointerClick className="mr-2 h-4 w-4" />
                                   Easy Mode
                               </Label>
                           </div>
@@ -1506,35 +1575,54 @@ export default function PosSystem({
               handleProcessPayment={handleProcessPayment}
               receiptPreview={receiptPreview}
               kotButtons={renderKotButtons()}
+              orderType={selectedOrderType}
+              customerDetails={customerDetails}
           >
-            <div className="grid grid-cols-[repeat(auto-fit,minmax(80px,1fr))] gap-2">
-                {tables.map(table => {
-                    const Icon = statusIcons[table.status];
-                    const isSelected = table.id === selectedTableId;
-                    const hasPendingItems = (pendingOrders[table.id] || []).length > 0 && table.status !== 'Occupied';
-                    return (
-                    <TableDropTarget key={table.id} table={table} occupancyCount={occupancyCount} handleSelectTable={setSelectedTableId} onDropItem={handleDropItemOnTable}>
-                        <div
-                        className={cn(
-                            'absolute inset-0 flex flex-col items-center justify-center text-center transition-colors rounded-md p-1 h-full',
-                            isSelected && 'ring-4 ring-offset-2 ring-black'
-                        )}
-                        >
-                            {hasPendingItems && (
-                                <div className="absolute top-1 left-1 bg-amber-400 p-1 rounded-full text-black">
-                                    <ShoppingBag className="h-3 w-3" />
-                                </div>
-                            )}
-                            <span className={cn("text-4xl font-bold", table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black')}>{table.id}</span>
-                            <div className="flex items-center gap-1">
-                                <Icon className={cn("h-4 w-4 shrink-0", table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black')} />
-                                <span className={cn("text-xs font-semibold leading-tight break-words", table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black')}>{table.status}</span>
-                            </div>
-                        </div>
-                    </TableDropTarget>
-                    )
-                })}
+           <div className="flex items-center gap-2 flex-wrap">
+                <Label className="font-semibold text-sm shrink-0 whitespace-nowrap">Order For:</Label>
+                <div className="flex-grow grid grid-cols-3 gap-2">
+                    <Button variant={selectedOrderType === 'Dine-In' ? 'default' : 'outline'} className="h-12 text-base" onClick={() => handleSetOrderType('Dine-In')}>
+                        <Users2 className="mr-2 h-5 w-5"/>Dine-In
+                    </Button>
+                    <Button variant={selectedOrderType === 'Take-Away' ? 'default' : 'outline'} className="h-12 text-base" onClick={() => handleSetOrderType('Take-Away')}>
+                        <ShoppingBasket className="mr-2 h-5 w-5"/>Take Away
+                    </Button>
+                    <Button variant={selectedOrderType === 'Home-Delivery' ? 'default' : 'outline'} className="h-12 text-base" onClick={() => handleSetOrderType('Home-Delivery')}>
+                        <Bike className="mr-2 h-5 w-5"/>Delivery
+                    </Button>
+                </div>
             </div>
+
+            {selectedOrderType === 'Dine-In' && (
+              <div className="grid grid-cols-[repeat(auto-fit,minmax(80px,1fr))] gap-2">
+                  {tables.map(table => {
+                      const Icon = statusIcons[table.status];
+                      const isSelected = table.id === selectedTableId;
+                      const hasPendingItems = (pendingOrders[table.id] || []).length > 0 && table.status !== 'Occupied';
+                      return (
+                      <TableDropTarget key={table.id} table={table} occupancyCount={occupancyCount} handleSelectTable={setSelectedTableId} onDropItem={handleDropItemOnTable}>
+                          <div
+                          className={cn(
+                              'absolute inset-0 flex flex-col items-center justify-center text-center transition-colors rounded-md p-1 h-full',
+                              isSelected && 'ring-4 ring-offset-2 ring-black'
+                          )}
+                          >
+                              {hasPendingItems && (
+                                  <div className="absolute top-1 left-1 bg-amber-400 p-1 rounded-full text-black">
+                                      <ShoppingBag className="h-3 w-3" />
+                                  </div>
+                              )}
+                              <span className={cn("text-4xl font-bold", table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black')}>{table.id}</span>
+                              <div className="flex items-center gap-1">
+                                  <Icon className={cn("h-4 w-4 shrink-0", table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black')} />
+                                  <span className={cn("text-xs font-semibold leading-tight break-words", table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black')}>{table.status}</span>
+                              </div>
+                          </div>
+                      </TableDropTarget>
+                      )
+                  })}
+              </div>
+            )}
           </OrderPanel>
       </div>
 
@@ -1557,6 +1645,11 @@ export default function PosSystem({
         menu={menu}
         setMenu={setMenu}
       />
+      <HomeDeliveryDialog
+        isOpen={isHomeDeliveryDialogOpen}
+        onOpenChange={setIsHomeDeliveryDialogOpen}
+        onSave={handleSaveDeliveryDetails}
+       />
       <Dialog open={isReserveDialogOpen} onOpenChange={setIsReserveDialogOpen}>
         <DialogContent>
             <DialogHeader>
@@ -1627,18 +1720,3 @@ export default function PosSystem({
     </div>
   );
 }
-    
-
-    
-
-
-
-
-
-
-
-    
-
-    
-
-    
