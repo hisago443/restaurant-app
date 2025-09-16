@@ -38,12 +38,12 @@ const vegColor = 'bg-green-100 dark:bg-green-900/30';
 const nonVegColor = 'bg-rose-100 dark:bg-rose-900/30';
 
 const colorPalette: Record<string, {light: string, dark: string}> = {
-    amber: { light: 'bg-amber-200 dark:bg-amber-900/50', dark: 'bg-amber-600 dark:bg-amber-800/50' },
-    lime: { light: 'bg-lime-200 dark:bg-lime-900/50', dark: 'bg-lime-600 dark:bg-lime-800/50' },
-    purple: { light: 'bg-purple-200 dark:bg-purple-900/50', dark: 'bg-purple-600 dark:bg-purple-800/50' },
-    teal: { light: 'bg-teal-200 dark:bg-teal-900/50', dark: 'bg-teal-600 dark:bg-teal-800/50' },
-    orange: { light: 'bg-orange-200 dark:bg-orange-900/50', dark: 'bg-orange-600 dark:bg-orange-800/50' },
-    cyan: { light: 'bg-cyan-200 dark:bg-cyan-900/50', dark: 'bg-cyan-600 dark:bg-cyan-800/50' },
+    amber: { light: 'bg-amber-200 dark:bg-amber-900/50', dark: 'bg-amber-300 dark:bg-amber-800/50' },
+    lime: { light: 'bg-lime-200 dark:bg-lime-900/50', dark: 'bg-lime-300 dark:bg-lime-800/50' },
+    purple: { light: 'bg-purple-200 dark:bg-purple-900/50', dark: 'bg-purple-300 dark:bg-purple-800/50' },
+    teal: { light: 'bg-teal-200 dark:bg-teal-900/50', dark: 'bg-teal-300 dark:bg-teal-800/50' },
+    orange: { light: 'bg-orange-200 dark:bg-orange-900/50', dark: 'bg-orange-300 dark:bg-orange-800/50' },
+    cyan: { light: 'bg-cyan-200 dark:bg-cyan-900/50', dark: 'bg-cyan-300 dark:bg-cyan-800/50' },
 };
 const colorNames = Object.keys(colorPalette);
 
