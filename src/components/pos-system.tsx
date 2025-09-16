@@ -18,7 +18,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from '@/hooks/use-toast';
-import { Search, Plus, Minus, X, LayoutGrid, List, Rows, ChevronsUpDown, Palette, Shuffle, ClipboardList, Send, CheckCircle2, Users, Bookmark, Sparkles, Repeat, Edit, UserCheck, BookmarkX, Printer, Loader2, BookOpen, Trash2 as TrashIcon, QrCode as QrCodeIcon, MousePointerClick, Eye, Hand, ShoppingBag } from 'lucide-react';
+import { Search, Plus, Minus, X, LayoutGrid, List, Rows, ChevronsUpDown, Palette, Shuffle, ClipboardList, Send, CheckCircle2, Users, Bookmark, Sparkles, Repeat, Edit, UserCheck, BookmarkX, Printer, Loader2, BookOpen, Trash2 as TrashIcon, QrCode as QrCodeIcon, MousePointerClick, Eye, Hand, ShoppingBag, BarChart } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useDrag, useDrop } from 'react-dnd';
@@ -30,6 +30,7 @@ import menuData from '@/data/menu.json';
 import { generateReceipt, type GenerateReceiptInput } from '@/ai/flows/dynamic-receipt-discount-reasoning';
 import { PaymentDialog } from './payment-dialog';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from './ui/dialog';
+import { Checkbox } from './ui/checkbox';
 
 const vegColor = 'bg-green-100 dark:bg-green-900/30';
 const nonVegColor = 'bg-rose-100 dark:bg-rose-900/30';
@@ -501,7 +502,7 @@ export default function PosSystem({
     } else {
       setSentItems([]);
     }
-  }, [activeOrder]);
+  }, [activeOrder, getNewItems]);
 
 
   useEffect(() => {
@@ -1153,24 +1154,23 @@ export default function PosSystem({
   };
 
   const renderKotButtons = () => {
-    const newItems = getNewItems(orderItems, sentItems);
+    const newItems = getNewItems(orderItems, activeOrder?.items || []);
     if (newItems.length === 0) return null;
-
+  
     const kotGroups = groupItemsForKOT(newItems, kotPreference, menuCategories);
-    
     if (kotGroups.length === 0) return null;
-    
+  
     return kotGroups.map(group => (
-       <Button 
-            key={group.title}
-            size="lg"
-            className={cn("h-12 text-base w-full", "bg-blue-600 hover:bg-blue-700")}
-            onClick={() => processKOTs([group])}
-            disabled={isProcessing || (!selectedTableId && !activeOrder)}
-        >
-            {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
-            {activeOrder ? `Update ${group.title}` : `Send ${group.title}`}
-        </Button>
+      <Button
+        key={group.title}
+        size="lg"
+        className="h-12 text-base w-full bg-blue-600 hover:bg-blue-700"
+        onClick={() => processKOTs([group])}
+        disabled={isProcessing || (!selectedTableId && !activeOrder)}
+      >
+        {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
+        {activeOrder ? `Update ${group.title}` : `Send ${group.title}`}
+      </Button>
     ));
   };
 
