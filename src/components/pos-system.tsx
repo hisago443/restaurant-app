@@ -602,15 +602,16 @@ export default function PosSystem({
 
   const handleSetOrderType = (type: OrderType) => {
     if (type === 'Home-Delivery') {
-        setIsHomeDeliveryDialogOpen(true);
+      setIsHomeDeliveryDialogOpen(true);
     } else {
-        setSelectedOrderType(type);
-        setCustomerDetails(undefined);
+      setSelectedOrderType(type);
+      setCustomerDetails(undefined);
     }
+
     if (type !== 'Dine-In') {
-        setSelectedTableId(null);
+      setSelectedTableId(null);
     } else if (!selectedTableId) {
-        setSelectedTableId(1);
+      setSelectedTableId(1);
     }
   };
 
@@ -740,17 +741,15 @@ export default function PosSystem({
     hasSeenEasyModeAlert.current = true;
     setIsEasyModeAlertOpen(false);
   };
-  
-  const getLocalReceiptStable = useCallback(() => getLocalReceipt(), [getLocalReceipt]);
     
   useEffect(() => {
     if (orderItems.length > 0) {
-      const localReceipt = getLocalReceiptStable();
+      const localReceipt = getLocalReceipt();
       setReceiptPreview(localReceipt);
     } else {
       setReceiptPreview('');
     }
-  }, [orderItems, discount, getLocalReceiptStable]);
+  }, [orderItems, discount, getLocalReceipt]);
 
   
   const setItemStatus = (itemName: string, status: string) => {
@@ -901,7 +900,7 @@ export default function PosSystem({
     }
   };
   
-  const processKOTs = (kotGroups: { title: string; items: OrderItem[] }[]) => {
+  const processKOTs = useCallback((kotGroups: { title: string; items: OrderItem[] }[]) => {
     setIsProcessing(true);
 
     setTimeout(() => {
@@ -931,7 +930,7 @@ export default function PosSystem({
         toast({ title: `KOTs Sent!`, description: `Order update sent.` });
         setIsProcessing(false);
     }, 100);
-  };
+  }, [activeOrder, orderItems, setOrders, selectedTableId, orders.length, selectedOrderType, customerDetails, onOrderCreated, updateTableStatus, toast]);
   
   const handleDropItemOnTable = (tableId: number, item: MenuItem) => {
       if (!easyMode) return;
@@ -1127,6 +1126,67 @@ export default function PosSystem({
   const lowStockItems = useMemo(() => allMenuItems.filter(item => menuItemStatus[item.name] === 'low'), [allMenuItems, menuItemStatus]);
   const outOfStockItems = useMemo(() => allMenuItems.filter(item => menuItemStatus[item.name] === 'out'), [allMenuItems, menuItemStatus]);
   
+  const groupItemsForKOT = useCallback((items: OrderItem[]): { title: string; items: OrderItem[] }[] => {
+    if (items.length === 0) return [];
+  
+    switch (kotPreference.type) {
+      case 'single':
+        return [{ title: 'KOT', items }];
+  
+      case 'separate':
+        const kitchenItems = items.filter(item => item.category !== 'Beverages');
+        const barItems = items.filter(item => item.category === 'Beverages');
+        const groups = [];
+        if (kitchenItems.length > 0) groups.push({ title: 'Kitchen KOT', items: kitchenItems });
+        if (barItems.length > 0) groups.push({ title: 'Bar KOT', items: barItems });
+        return groups;
+  
+      case 'category':
+        const groupedByCategory: Record<string, OrderItem[]> = {};
+        const remainingItems: OrderItem[] = [];
+        const specifiedCategories = kotPreference.categories || [];
+  
+        items.forEach(item => {
+          if (item.category && specifiedCategories.includes(item.category)) {
+            if (!groupedByCategory[item.category]) {
+              groupedByCategory[item.category] = [];
+            }
+            groupedByCategory[item.category].push(item);
+          } else {
+            remainingItems.push(item);
+          }
+        });
+  
+        const categoryGroups = Object.entries(groupedByCategory).map(([category, items]) => ({
+          title: `${category} KOT`,
+          items,
+        }));
+        
+        // Handle remaining items with kitchen/bar split
+        if (remainingItems.length > 0) {
+            const remainingKitchenItems = remainingItems.filter(item => item.category !== 'Beverages');
+            const remainingBarItems = remainingItems.filter(item => item.category === 'Beverages');
+
+            if (remainingKitchenItems.length > 0) {
+                // Try to merge with an existing "Kitchen KOT" if any, otherwise create new
+                const existingKitchenGroup = categoryGroups.find(g => g.title === 'Kitchen KOT');
+                if (existingKitchenGroup) {
+                    existingKitchenGroup.items.push(...remainingKitchenItems);
+                } else {
+                    categoryGroups.push({ title: 'Kitchen KOT', items: remainingKitchenItems });
+                }
+            }
+            if (remainingBarItems.length > 0) {
+                 categoryGroups.push({ title: 'Bar KOT', items: remainingBarItems });
+            }
+        }
+  
+        return categoryGroups;
+  
+      default:
+        return [{ title: 'KOT', items }];
+    }
+  }, [kotPreference]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -1223,67 +1283,6 @@ export default function PosSystem({
     };
   }, [keyboardMode, selectedTableId, tables, setSelectedTableId, updateTableStatus, setKeyboardMode, orderItems, activeOrder, getNewItems, groupItemsForKOT, processKOTs]);
   
-  const groupItemsForKOT = useCallback((items: OrderItem[]): { title: string; items: OrderItem[] }[] => {
-    if (items.length === 0) return [];
-  
-    switch (kotPreference.type) {
-      case 'single':
-        return [{ title: 'KOT', items }];
-  
-      case 'separate':
-        const kitchenItems = items.filter(item => item.category !== 'Beverages');
-        const barItems = items.filter(item => item.category === 'Beverages');
-        const groups = [];
-        if (kitchenItems.length > 0) groups.push({ title: 'Kitchen KOT', items: kitchenItems });
-        if (barItems.length > 0) groups.push({ title: 'Bar KOT', items: barItems });
-        return groups;
-  
-      case 'category':
-        const groupedByCategory: Record<string, OrderItem[]> = {};
-        const remainingItems: OrderItem[] = [];
-        const specifiedCategories = kotPreference.categories || [];
-  
-        items.forEach(item => {
-          if (item.category && specifiedCategories.includes(item.category)) {
-            if (!groupedByCategory[item.category]) {
-              groupedByCategory[item.category] = [];
-            }
-            groupedByCategory[item.category].push(item);
-          } else {
-            remainingItems.push(item);
-          }
-        });
-  
-        const categoryGroups = Object.entries(groupedByCategory).map(([category, items]) => ({
-          title: `${category} KOT`,
-          items,
-        }));
-        
-        // Handle remaining items with kitchen/bar split
-        if (remainingItems.length > 0) {
-            const remainingKitchenItems = remainingItems.filter(item => item.category !== 'Beverages');
-            const remainingBarItems = remainingItems.filter(item => item.category === 'Beverages');
-
-            if (remainingKitchenItems.length > 0) {
-                // Try to merge with an existing "Kitchen KOT" if any, otherwise create new
-                const existingKitchenGroup = categoryGroups.find(g => g.title === 'Kitchen KOT');
-                if (existingKitchenGroup) {
-                    existingKitchenGroup.items.push(...remainingKitchenItems);
-                } else {
-                    categoryGroups.push({ title: 'Kitchen KOT', items: remainingKitchenItems });
-                }
-            }
-            if (remainingBarItems.length > 0) {
-                 categoryGroups.push({ title: 'Bar KOT', items: remainingBarItems });
-            }
-        }
-  
-        return categoryGroups;
-  
-      default:
-        return [{ title: 'KOT', items }];
-    }
-  }, [kotPreference]);
 
   const renderKotButtons = () => {
     const newItems = getNewItems(orderItems, activeOrder?.items || []);
