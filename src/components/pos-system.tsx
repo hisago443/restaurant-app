@@ -246,38 +246,40 @@ function OrderPanel({
           );
         }
 
-        const newItems = getNewItems(orderItems, activeOrder?.items || []);
-        const sentItems = orderItems.filter(item => !newItems.some(newItem => newItem.name === item.name));
-
-        const renderItem = (item: OrderItem, isNew: boolean) => (
-            <div key={item.name} className={cn("flex items-center p-2 rounded-md", isNew && "bg-blue-50 dark:bg-blue-900/20")}>
-                <div className="flex-grow">
-                    <p className="font-medium flex items-center gap-2">
-                        {item.name}
-                        {isNew && <span className="text-xs font-bold text-blue-600 bg-blue-100 dark:bg-blue-900/50 px-2 py-0.5 rounded-full">new</span>}
-                    </p>
-                    <p className="text-sm text-muted-foreground">₹{item.price.toFixed(2)}</p>
-                </div>
-                <div className="flex items-center gap-2">
-                    <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => updateQuantity(item.name, item.quantity - 1)}><Minus className="h-4 w-4" /></Button>
-                    <span className="w-8 text-center font-bold">{item.quantity}</span>
-                    <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => updateQuantity(item.name, item.quantity + 1)}><Plus className="h-4 w-4" /></Button>
-                    <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => removeFromOrder(item.name)}><X className="h-4 w-4" /></Button>
-                </div>
-            </div>
-        );
+        const newItemsMap = new Map<string, OrderItem>();
+        if (activeOrder) { // Only calculate new items if it's an existing order
+            const newItems = getNewItems(orderItems, activeOrder.items || []);
+            newItems.forEach(item => newItemsMap.set(item.name, item));
+        }
 
         return (
           <div className="space-y-2">
-             {sentItems.map(item => renderItem(item, false))}
-             {newItems.length > 0 && sentItems.length > 0 && (
-                <div className="flex items-center gap-2 py-2">
-                    <Separator className="flex-grow" />
-                    <span className="text-xs font-medium text-muted-foreground">New Items</span>
-                    <Separator className="flex-grow" />
-                </div>
-             )}
-             {newItems.map(item => renderItem(item, true))}
+             {orderItems.map(item => {
+                const isNew = newItemsMap.has(item.name);
+                const originalQuantity = activeOrder?.items.find(i => i.name === item.name)?.quantity || 0;
+                
+                return (
+                    <div key={item.name} className={cn("flex items-center p-2 rounded-md", isNew && "bg-blue-50 dark:bg-blue-900/20")}>
+                        <div className="flex-grow">
+                            <p className="font-medium flex items-center gap-2">
+                                {item.name}
+                                {isNew && (
+                                    <span className="text-xs font-bold text-blue-600 bg-blue-100 dark:bg-blue-900/50 px-2 py-0.5 rounded-full">
+                                        new
+                                    </span>
+                                )}
+                            </p>
+                            <p className="text-sm text-muted-foreground">₹{item.price.toFixed(2)}</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => updateQuantity(item.name, item.quantity - 1)}><Minus className="h-4 w-4" /></Button>
+                            <span className="w-8 text-center font-bold">{item.quantity}</span>
+                            <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => updateQuantity(item.name, item.quantity + 1)}><Plus className="h-4 w-4" /></Button>
+                            <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => removeFromOrder(item.name)}><X className="h-4 w-4" /></Button>
+                        </div>
+                    </div>
+                );
+             })}
           </div>
         );
     };
@@ -979,7 +981,6 @@ export default function PosSystem({
         if (activeOrder) {
             finalOrder = { ...activeOrder, items: orderItems };
             setOrders(prev => prev.map(o => o.id === finalOrder.id ? finalOrder : o));
-            setActiveOrder(finalOrder);
         } else {
             finalOrder = {
                 items: orderItems,
