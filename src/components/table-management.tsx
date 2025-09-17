@@ -782,7 +782,7 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
                 />
               </div>
               <div className="flex items-center justify-between rounded-lg border p-3 shadow-sm">
-                <Label htmlFor="show-reservation-time-pos">Display Time for Reserved POS Tables</Label>
+                <Label htmlFor="show-reservation-time-pos">Display Time for Reserved on POS Tables</Label>
                 <Switch
                   id="show-reservation-time-pos"
                   checked={showReservationTimeOnPOS}
