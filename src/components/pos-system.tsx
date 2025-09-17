@@ -252,7 +252,10 @@ function OrderPanel({
         const renderItem = (item: OrderItem, isNew: boolean) => (
             <div key={item.name} className={cn("flex items-center p-2 rounded-md", isNew && "bg-blue-50 dark:bg-blue-900/20")}>
                 <div className="flex-grow">
-                    <p className="font-medium">{item.name}</p>
+                    <p className="font-medium flex items-center gap-2">
+                        {item.name}
+                        {isNew && <span className="text-xs font-bold text-blue-600 bg-blue-100 dark:bg-blue-900/50 px-2 py-0.5 rounded-full">new</span>}
+                    </p>
                     <p className="text-sm text-muted-foreground">₹{item.price.toFixed(2)}</p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -561,7 +564,7 @@ export default function PosSystem({
   const [receiptPreview, setReceiptPreview] = useState('');
   const { toast } = useToast();
   const [activeAccordionItems, setActiveAccordionItems] = useState<string[]>([]);
-  const [viewMode, setViewMode] = useState<ViewMode>('accordion');
+  const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [menuItemStatus, setMenuItemStatus] = useState<Record<string, string>>({});
   const [menuCategoryStatus, setMenuCategoryStatus] = useState<Record<string, string>>({});
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
@@ -998,6 +1001,7 @@ export default function PosSystem({
 
         toast({ title: `KOTs Sent!`, description: `Order update sent.` });
         setIsProcessing(false);
+        setActiveOrder({ ...finalOrder, items: [...orderItems] });
     }, 100);
   }, [activeOrder, orderItems, setOrders, selectedTableId, orders.length, selectedOrderType, customerDetails, onOrderCreated, updateTableStatus, toast, setActiveOrder]);
   
@@ -1587,7 +1591,7 @@ export default function PosSystem({
                           </div>
                           <Separator orientation="vertical" className="h-8" />
                            <RadioGroup value={viewMode} onValueChange={(v) => setViewMode(v as ViewMode)} className="flex items-center">
-                              <Label className={cn("p-1.5 rounded-md cursor-pointer transition-colors", viewMode === 'accordion' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent' )}>
+                              <Label className={cn("p-1.5 rounded-md cursor-pointer transition-colors", viewMode === 'list' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent' )}>
                                   <RadioGroupItem value="accordion" id="accordion-view" className="sr-only" />
                                   <Rows className="h-5 w-5 box-content" />
                               </Label>
