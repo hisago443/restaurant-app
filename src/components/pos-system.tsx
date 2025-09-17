@@ -995,11 +995,11 @@ export default function PosSystem({
   
   const processKOTs = useCallback((kotGroupsToProcess: { title: string; items: OrderItem[] }[]) => {
     setIsProcessing(true);
-
+  
     setTimeout(() => {
         let finalOrder: Order;
         const itemsInThisKot = kotGroupsToProcess.flatMap(g => g.items);
-
+  
         if (activeOrder) {
             // This is an UPDATE to an existing order.
             const updatedItems = [...activeOrder.items];
@@ -1013,10 +1013,9 @@ export default function PosSystem({
             });
             finalOrder = { ...activeOrder, items: updatedItems };
             setOrders(prev => prev.map(o => o.id === finalOrder.id ? finalOrder : o));
+            setActiveOrder(finalOrder); // Update active order with new items
         } else {
             // This is a NEW order.
-            // When creating a new order, we must create it with ALL items in the cart,
-            // not just the ones for the KOT being printed.
             finalOrder = {
                 items: orderItems, // Use all items from the cart.
                 tableId: selectedTableId,
@@ -1025,23 +1024,27 @@ export default function PosSystem({
                 orderType: selectedOrderType,
                 customerDetails: customerDetails,
             };
-            onOrderCreated(finalOrder);
+            onOrderCreated(finalOrder); // This will set the active order.
+  
+            // The activeOrder state is not updated immediately, so for the first KOT of a new order,
+            // we create a temporary 'updated' version of it to reflect the items that will be sent.
+            const tempUpdatedOrder = { ...finalOrder, items: itemsInThisKot };
+            setActiveOrder(tempUpdatedOrder);
+  
             if (selectedTableId) {
-              updateTableStatus([selectedTableId], 'Occupied');
+                updateTableStatus([selectedTableId], 'Occupied');
             }
         }
         
-        // Print KOTs ONLY for the specific groups that were passed into this function.
         kotGroupsToProcess.forEach(group => {
             printKot(finalOrder, group.items, group.title);
         });
-
+  
         toast({ title: `KOTs Sent!`, description: `Order update sent.` });
         setIsProcessing(false);
-        // CRITICAL: Update the activeOrder state to reflect the new reality.
-        setActiveOrder(finalOrder);
+  
     }, 100);
-}, [activeOrder, orders.length, onOrderCreated, selectedTableId, updateTableStatus, setOrders, toast, setActiveOrder, selectedOrderType, customerDetails, orderItems]);
+}, [activeOrder, orderItems, selectedTableId, orders.length, selectedOrderType, customerDetails, onOrderCreated, setOrders, updateTableStatus, toast, setActiveOrder]);
 
   
   const handleDropItemOnTable = (tableId: number, item: MenuItem) => {
@@ -1308,7 +1311,7 @@ export default function PosSystem({
         const newItems = getNewItems(orderItems, activeOrder?.items || []);
         const kotGroups = groupItemsForKOT(newItems);
         if (kotGroups.length > 0) {
-          processKOTs(kotGroups);
+          processKOTs([kotGroups[0]]);
         }
         setKeyboardMode('table');
       }
