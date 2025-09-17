@@ -268,6 +268,7 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
 
   const filteredTables = tables.filter(table => filter === 'All' || table.status === filter);
   const availableTables = useMemo(() => tables.filter(t => t.status === 'Available'), [tables]);
+  const reservedTables = useMemo(() => tables.filter(t => t.status === 'Reserved'), [tables]);
   
   const tablePerformanceData = useMemo(() => {
     const todaysBills = billHistory.filter(bill => bill.timestamp && isSameDay(bill.timestamp, new Date()));
@@ -623,70 +624,93 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
                 </div>
             </CardContent>
         </Card>
-        <Card className="lg:col-span-3">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2"><BookMarked /> Reserve a Table</CardTitle>
-            <CardDescription>Book a table for a future date or time.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="guest-name">Guest Name</Label>
-              <Input id="guest-name" value={reservationName} onChange={(e) => setReservationName(e.target.value)} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="guest-mobile">Mobile No. (Optional)</Label>
-              <Input id="guest-mobile" value={reservationMobile} onChange={(e) => setReservationMobile(e.target.value)} />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-               <div className="space-y-2">
-                <Label>Time of Arrival</Label>
-                <div className="flex items-center gap-1">
-                  <Select value={reservationTime.hour} onValueChange={(v) => setReservationTime(p => ({...p, hour: v}))}>
-                    <SelectTrigger><SelectValue/></SelectTrigger>
-                    <SelectContent>
-                      {Array.from({length: 12}, (_, i) => (
-                        <SelectItem key={i+1} value={String(i+1).padStart(2, '0')}>{String(i+1).padStart(2, '0')}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <span className="font-bold">:</span>
-                  <Select value={reservationTime.minute} onValueChange={(v) => setReservationTime(p => ({...p, minute: v}))}>
-                    <SelectTrigger><SelectValue/></SelectTrigger>
-                    <SelectContent>
-                      {Array.from({length: 60}, (_, i) => (
-                        <SelectItem key={i} value={String(i).padStart(2, '0')}>{String(i).padStart(2, '0')}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Select value={reservationTime.period} onValueChange={(v) => setReservationTime(p => ({...p, period: v}))}>
-                    <SelectTrigger><SelectValue/></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="AM">AM</SelectItem>
-                      <SelectItem value="PM">PM</SelectItem>
-                    </SelectContent>
-                  </Select>
+        <div className="lg:col-span-3 flex flex-col gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2"><BookMarked /> Reserve a Table</CardTitle>
+                <CardDescription>Book a table for a future date or time.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="guest-name">Guest Name</Label>
+                  <Input id="guest-name" value={reservationName} onChange={(e) => setReservationName(e.target.value)} />
                 </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="table-no">Table No.</Label>
-                <Select value={reservationTableId} onValueChange={setReservationTableId}>
-                  <SelectTrigger id="table-no">
-                    <SelectValue placeholder="Select Table" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {availableTables.map(table => (
-                      <SelectItem key={table.id} value={String(table.id)}>
-                        Table {table.id}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <Button className="w-full" onClick={handleReserveTable}>Reserve Table</Button>
-            <Button variant="destructive" className="w-full" onClick={() => setIsCancelReservationDialogOpen(true)}>Cancel Reservation</Button>
-          </CardContent>
-        </Card>
+                <div className="space-y-2">
+                  <Label htmlFor="guest-mobile">Mobile No. (Optional)</Label>
+                  <Input id="guest-mobile" value={reservationMobile} onChange={(e) => setReservationMobile(e.target.value)} />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                   <div className="space-y-2">
+                    <Label>Time of Arrival</Label>
+                    <div className="flex items-center gap-1">
+                      <Select value={reservationTime.hour} onValueChange={(v) => setReservationTime(p => ({...p, hour: v}))}>
+                        <SelectTrigger><SelectValue/></SelectTrigger>
+                        <SelectContent>
+                          {Array.from({length: 12}, (_, i) => (
+                            <SelectItem key={i+1} value={String(i+1).padStart(2, '0')}>{String(i+1).padStart(2, '0')}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <span className="font-bold">:</span>
+                      <Select value={reservationTime.minute} onValueChange={(v) => setReservationTime(p => ({...p, minute: v}))}>
+                        <SelectTrigger><SelectValue/></SelectTrigger>
+                        <SelectContent>
+                          {Array.from({length: 60}, (_, i) => (
+                            <SelectItem key={i} value={String(i).padStart(2, '0')}>{String(i).padStart(2, '0')}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Select value={reservationTime.period} onValueChange={(v) => setReservationTime(p => ({...p, period: v}))}>
+                        <SelectTrigger><SelectValue/></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="AM">AM</SelectItem>
+                          <SelectItem value="PM">PM</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="table-no">Table No.</Label>
+                    <Select value={reservationTableId} onValueChange={setReservationTableId}>
+                      <SelectTrigger id="table-no">
+                        <SelectValue placeholder="Select Table" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {availableTables.map(table => (
+                          <SelectItem key={table.id} value={String(table.id)}>
+                            Table {table.id}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <Button className="w-full" onClick={handleReserveTable}>Reserve Table</Button>
+                <Button variant="destructive" className="w-full" onClick={() => setIsCancelReservationDialogOpen(true)}>Cancel Reservation</Button>
+              </CardContent>
+            </Card>
+            <Card>
+                <CardHeader>
+                    <CardTitle>Current Reservations</CardTitle>
+                    <CardDescription>A list of upcoming bookings.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <div className="max-h-48 overflow-y-auto space-y-2">
+                        {reservedTables.length > 0 ? reservedTables.map(table => (
+                            <div key={table.id} className="p-3 rounded-lg border bg-muted/50 flex justify-between items-center">
+                                <div>
+                                    <p className="font-bold">Table {table.id}</p>
+                                    <p className="text-sm text-muted-foreground">{table.reservationDetails?.name}</p>
+                                </div>
+                                <p className="font-semibold">{table.reservationDetails?.time}</p>
+                            </div>
+                        )) : (
+                            <p className="text-center text-muted-foreground py-8">No tables are currently reserved.</p>
+                        )}
+                    </div>
+                </CardContent>
+            </Card>
+        </div>
       </div>
 
       <Dialog open={isLayoutManagerOpen} onOpenChange={setIsLayoutManagerOpen}>
