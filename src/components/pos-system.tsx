@@ -1192,8 +1192,6 @@ export default function PosSystem({
     }
   }, [kotPreference]);
 
-  const processKOTsCallback = useCallback(processKOTs, [processKOTs]);
-
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (document.querySelector('[role="dialog"], [role="alertdialog"]')) return;
@@ -1265,7 +1263,7 @@ export default function PosSystem({
           const newItems = getNewItems(orderItems, activeOrder?.items || []);
           const kotGroups = groupItemsForKOT(newItems);
           if (kotGroups.length > 0) {
-            processKOTsCallback(kotGroups);
+            processKOTs(kotGroups);
           }
           setKeyboardMode('table');
         }
@@ -1287,7 +1285,7 @@ export default function PosSystem({
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [keyboardMode, selectedTableId, tables, setSelectedTableId, updateTableStatus, setKeyboardMode, orderItems, activeOrder, getNewItems, groupItemsForKOT, processKOTsCallback]);
+  }, [keyboardMode, selectedTableId, tables, setSelectedTableId, updateTableStatus, setKeyboardMode, orderItems, activeOrder, getNewItems, groupItemsForKOT, processKOTs]);
   
 
   const renderKotButtons = () => {
@@ -1570,10 +1568,10 @@ export default function PosSystem({
                                 <Label htmlFor="filter-all" className={cn("h-10 w-24 flex items-center justify-center rounded-md cursor-pointer border-2 font-semibold text-lg text-foreground hover:bg-accent", vegFilter === 'All' && 'ring-2 ring-primary text-primary bg-background')}>All</Label>
                                 
                                 <RadioGroupItem value="Veg" id="filter-veg" className="sr-only" />
-                                <Label htmlFor="filter-veg" className={cn("h-10 w-24 flex items-center justify-center rounded-md cursor-pointer border-2 font-semibold text-lg text-white bg-green-600", vegFilter === 'Veg' && 'ring-2 ring-white ring-offset-2 ring-offset-green-600 font-bold')}>Veg</Label>
+                                <Label htmlFor="filter-veg" className={cn("h-10 w-24 flex items-center justify-center rounded-md cursor-pointer border-2 font-semibold text-lg text-white bg-green-600 border-transparent", vegFilter === 'Veg' && 'border-white font-bold')}>Veg</Label>
                                 
                                 <RadioGroupItem value="Non-Veg" id="filter-nonveg" className="sr-only" />
-                                <Label htmlFor="filter-nonveg" className={cn("h-10 w-24 flex items-center justify-center rounded-md cursor-pointer border-2 font-semibold text-lg text-white bg-red-600", vegFilter === 'Non-Veg' && 'ring-2 ring-white ring-offset-2 ring-offset-red-600 font-bold')}>Non-Veg</Label>
+                                <Label htmlFor="filter-nonveg" className={cn("h-10 w-24 flex items-center justify-center rounded-md cursor-pointer border-2 font-semibold text-lg text-white bg-red-600 border-transparent", vegFilter === 'Non-Veg' && 'border-white font-bold')}>Non-Veg</Label>
                             </RadioGroup>
                       </div>
                       <div className="flex items-center gap-2">
@@ -1586,7 +1584,7 @@ export default function PosSystem({
                           </div>
                           <Separator orientation="vertical" className="h-8" />
                            <RadioGroup value={viewMode} onValueChange={(v) => setViewMode(v as ViewMode)} className="flex items-center">
-                              <Label className={cn("p-1.5 rounded-md cursor-pointer transition-colors", viewMode === 'list' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent' )}>
+                              <Label className={cn("p-1.5 rounded-md cursor-pointer transition-colors", viewMode === 'accordion' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent' )}>
                                   <RadioGroupItem value="accordion" id="accordion-view" className="sr-only" />
                                   <List className="h-5 w-5 box-content" />
                               </Label>
