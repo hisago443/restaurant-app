@@ -13,7 +13,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { cn } from '@/lib/utils';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
-import { PlusCircle, Trash2, LayoutTemplate, Sparkles, Users, CheckCircle2, Bookmark, Printer, Repeat, Edit, SparklesIcon, UserCheck, BookmarkX, Eye, X, BookMarked } from 'lucide-react';
+import { PlusCircle, Trash2, LayoutTemplate, Sparkles, Users, CheckCircle2, Bookmark, Printer, Repeat, Edit, SparklesIcon, UserCheck, BookmarkX, Eye, X, BookMarked, Armchair } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { format, isSameDay } from 'date-fns';
@@ -46,6 +46,7 @@ interface TableManagementProps {
   orders: Order[];
   billHistory: Bill[];
   updateTableStatus: (tableIds: number[], status: TableStatus, reservationDetails?: TableType['reservationDetails']) => void;
+  updateTableDetails: (tableId: number, details: { name?: string, seats?: number }) => void;
   addTable: () => void;
   removeLastTable: () => void;
   occupancyCount: Record<number, number>;
@@ -135,7 +136,76 @@ function CancelReservationDialog({
   )
 }
 
-export default function TableManagement({ tables, orders, billHistory, updateTableStatus, addTable, removeLastTable, occupancyCount, onEditOrder, showOccupancy, setShowOccupancy, initialSelectedTableId, onCreateOrder }: TableManagementProps) {
+function EditTableDialog({ 
+    isOpen, 
+    onOpenChange, 
+    table, 
+    onSave 
+}: { 
+    isOpen: boolean; 
+    onOpenChange: (open: boolean) => void; 
+    table: TableType | null; 
+    onSave: (tableId: number, details: { name: string, seats: number }) => void;
+}) {
+    const [name, setName] = useState('');
+    const [seats, setSeats] = useState('');
+
+    useEffect(() => {
+        if (table) {
+            setName(table.name || '');
+            setSeats(table.seats ? String(table.seats) : '');
+        }
+    }, [table]);
+
+    const handleSave = () => {
+        if (table) {
+            onSave(table.id, { name, seats: Number(seats) || 0 });
+            onOpenChange(false);
+        }
+    };
+
+    if (!table) return null;
+
+    return (
+        <Dialog open={isOpen} onOpenChange={onOpenChange}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Edit Table {table.id}</DialogTitle>
+                    <DialogDescription>
+                        Set a custom name and seat count for this table.
+                    </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="table-name">Table Name (Optional)</Label>
+                        <Input
+                            id="table-name"
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                            placeholder="e.g., Window Seat, Couple's Corner"
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="table-seats">Number of Seats (Optional)</Label>
+                        <Input
+                            id="table-seats"
+                            type="number"
+                            value={seats}
+                            onChange={(e) => setSeats(e.target.value)}
+                            placeholder="e.g., 4"
+                        />
+                    </div>
+                </div>
+                <DialogFooter>
+                    <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+                    <Button onClick={handleSave}>Save Changes</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    );
+}
+
+export default function TableManagement({ tables, orders, billHistory, updateTableStatus, updateTableDetails, addTable, removeLastTable, occupancyCount, onEditOrder, showOccupancy, setShowOccupancy, initialSelectedTableId, onCreateOrder }: TableManagementProps) {
   const [selectedTable, setSelectedTable] = useState<TableType | null>(null);
   const [selectedBill, setSelectedBill] = useState<Bill | null>(null);
   const [selectedTables, setSelectedTables] = useState<number[]>([]);
@@ -148,6 +218,7 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
   const [billsForDialog, setBillsForDialog] = useState<Bill[]>([]);
   const { toast } = useToast();
   const [reservedTableAction, setReservedTableAction] = useState<TableType | null>(null);
+  const [editingTable, setEditingTable] = useState<TableType | null>(null);
 
   const [reservationName, setReservationName] = useState('');
   const [reservationMobile, setReservationMobile] = useState('');
@@ -446,6 +517,9 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
                           </Button>
                         </>
                     )}
+                    <Button variant="secondary" size="icon" className="h-7 w-7 bg-white/30 hover:bg-white/50" onClick={(e) => { e.stopPropagation(); setEditingTable(table); }}>
+                        <Edit className="h-4 w-4 text-black" />
+                    </Button>
                 </div>
                   {showOccupancy && turnover > 0 &&
                     <div className="absolute bottom-1 left-1 flex items-center gap-1 bg-black/50 text-white text-xs font-bold p-1 rounded-md">
@@ -467,6 +541,8 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
                       {React.createElement(Icon, { className: cn("h-4 w-4", table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black') })}
                       <span className={cn("text-base font-semibold leading-tight", table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black')}>{table.status}</span>
                     </div>
+                    {table.name && <div className="text-xs font-bold text-white mt-1 max-w-full truncate">{table.name}</div>}
+                    {table.seats && <div className="text-xs text-white flex items-center justify-center gap-1"><Armchair className="h-3 w-3" /> {table.seats}</div>}
                     {table.status === 'Reserved' && table.reservationDetails && (
                       <div className="text-xs text-black font-bold mt-1 max-w-full truncate">
                         for {table.reservationDetails.name} at {table.reservationDetails.time}
@@ -772,6 +848,13 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
         onOpenChange={setIsCancelReservationDialogOpen}
         tables={tables}
         updateTableStatus={updateTableStatus}
+      />
+      
+      <EditTableDialog
+          isOpen={!!editingTable}
+          onOpenChange={() => setEditingTable(null)}
+          table={editingTable}
+          onSave={(tableId, details) => updateTableDetails(tableId, details)}
       />
 
     </div>

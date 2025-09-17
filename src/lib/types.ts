@@ -35,6 +35,8 @@ export type TableStatus = 'Available' | 'Occupied' | 'Reserved' | 'Cleaning';
 export interface Table {
   id: number;
   status: TableStatus;
+  name?: string;
+  seats?: number;
   reservationDetails?: {
     name: string;
     time: string;

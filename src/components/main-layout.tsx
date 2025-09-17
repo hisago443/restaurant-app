@@ -384,6 +384,13 @@ export default function MainLayout() {
     }));
   }, []);
 
+  const updateTableDetails = useCallback((tableId: number, details: { name?: string, seats?: number }) => {
+    setTables(prevTables => prevTables.map(t => 
+        t.id === tableId ? { ...t, name: details.name, seats: details.seats } : t
+    ));
+    toast({ title: "Table Updated", description: `Details for Table ${tableId} have been saved.` });
+  }, [toast]);
+
   const addTable = () => {
     setTables(prevTables => {
       const newTableId = prevTables.length > 0 ? Math.max(...prevTables.map(t => t.id)) + 1 : 1;
@@ -576,6 +583,7 @@ export default function MainLayout() {
                 orders={orders}
                 billHistory={billHistory}
                 updateTableStatus={updateTableStatus}
+                updateTableDetails={updateTableDetails}
                 addTable={addTable}
                 removeLastTable={removeLastTable}
                 occupancyCount={occupancyCount}
