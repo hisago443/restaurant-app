@@ -601,15 +601,6 @@ export default function PosSystem({
   }, [activeOrder, setSelectedOrderType]);
 
   const handleSetOrderType = (type: OrderType) => {
-    if (orderItems.length > 0 && type !== selectedOrderType) {
-        toast({
-            variant: "destructive",
-            title: "Clear Order First",
-            description: "Please clear the current order before changing the order type.",
-        });
-        return;
-    }
-
     if (type === 'Home-Delivery') {
         setIsHomeDeliveryDialogOpen(true);
     } else {
@@ -750,14 +741,16 @@ export default function PosSystem({
     setIsEasyModeAlertOpen(false);
   };
   
-    useEffect(() => {
-      if (orderItems.length > 0) {
-        const localReceipt = getLocalReceipt();
-        setReceiptPreview(localReceipt);
-      } else {
-        setReceiptPreview('');
-      }
-    }, [orderItems, discount, getLocalReceipt]);
+  const getLocalReceiptStable = useCallback(() => getLocalReceipt(), [getLocalReceipt]);
+    
+  useEffect(() => {
+    if (orderItems.length > 0) {
+      const localReceipt = getLocalReceiptStable();
+      setReceiptPreview(localReceipt);
+    } else {
+      setReceiptPreview('');
+    }
+  }, [orderItems, discount, getLocalReceiptStable]);
 
   
   const setItemStatus = (itemName: string, status: string) => {
@@ -1228,7 +1221,7 @@ export default function PosSystem({
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [keyboardMode, selectedTableId, tables, setSelectedTableId, updateTableStatus, setKeyboardMode, orderItems, activeOrder, getNewItems]);
+  }, [keyboardMode, selectedTableId, tables, setSelectedTableId, updateTableStatus, setKeyboardMode, orderItems, activeOrder, getNewItems, groupItemsForKOT, processKOTs]);
   
   const groupItemsForKOT = useCallback((items: OrderItem[]): { title: string; items: OrderItem[] }[] => {
     if (items.length === 0) return [];
