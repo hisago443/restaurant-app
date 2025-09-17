@@ -109,6 +109,7 @@ interface PosSystemProps {
   selectedOrderType: OrderType;
   setSelectedOrderType: (type: OrderType) => void;
   showTableDetailsOnPOS: boolean;
+  showReservationTimeOnPOS: boolean;
 }
 
 const ItemTypes = {
@@ -551,6 +552,7 @@ export default function PosSystem({
     selectedOrderType,
     setSelectedOrderType,
     showTableDetailsOnPOS,
+    showReservationTimeOnPOS,
 }: PosSystemProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [menu, setMenu] = useState<MenuCategory[]>([]);
@@ -594,7 +596,7 @@ export default function PosSystem({
       });
       return newItems;
   }, []);
-
+  
   const getLocalReceipt = useCallback(() => {
     if (orderItems.length === 0) return '';
   
@@ -1569,10 +1571,10 @@ export default function PosSystem({
                                 <Label htmlFor="filter-all" className={cn("h-10 w-24 flex items-center justify-center rounded-md cursor-pointer border-2 font-semibold text-lg text-foreground hover:bg-accent", vegFilter === 'All' && 'ring-2 ring-primary text-primary bg-background')}>All</Label>
                                 
                                 <RadioGroupItem value="Veg" id="filter-veg" className="sr-only" />
-                                <Label htmlFor="filter-veg" className={cn("h-10 w-24 flex items-center justify-center rounded-md cursor-pointer border-2 font-semibold text-lg text-white bg-green-600 border-transparent", vegFilter === 'Veg' && 'border-black font-bold')}>Veg</Label>
+                                <Label htmlFor="filter-veg" className={cn("h-10 w-24 flex items-center justify-center rounded-md cursor-pointer border-2 font-semibold text-lg text-white bg-green-600 border-transparent", vegFilter === 'Veg' && 'border-white font-bold')}>Veg</Label>
                                 
                                 <RadioGroupItem value="Non-Veg" id="filter-nonveg" className="sr-only" />
-                                <Label htmlFor="filter-nonveg" className={cn("h-10 w-24 flex items-center justify-center rounded-md cursor-pointer border-2 font-semibold text-lg text-white bg-red-600 border-transparent", vegFilter === 'Non-Veg' && 'border-black font-bold')}>Non-Veg</Label>
+                                <Label htmlFor="filter-nonveg" className={cn("h-10 w-24 flex items-center justify-center rounded-md cursor-pointer border-2 font-semibold text-lg text-white bg-red-600 border-transparent", vegFilter === 'Non-Veg' && 'border-white font-bold')}>Non-Veg</Label>
                             </RadioGroup>
                       </div>
                       <div className="flex items-center gap-2">
@@ -1700,8 +1702,9 @@ export default function PosSystem({
                               </div>
                                {showTableDetailsOnPOS && table.name && <div className="text-xs font-bold text-white mt-1 max-w-full truncate">{table.name}</div>}
                                 {showTableDetailsOnPOS && table.seats && <div className="text-xs text-white flex items-center justify-center gap-1"><Armchair className="h-3 w-3" /> {table.seats}</div>}
-                                {showTableDetailsOnPOS && table.status === 'Reserved' && table.reservationDetails && (
+                                {showReservationTimeOnPOS && table.status === 'Reserved' && table.reservationDetails && (
                                 <div className="text-xs text-black font-bold mt-1 max-w-full truncate px-1">
+                                    <p>{table.reservationDetails.time}</p>
                                     for {table.reservationDetails.name}
                                 </div>
                                 )}

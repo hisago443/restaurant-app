@@ -57,6 +57,8 @@ interface TableManagementProps {
   onCreateOrder: (tableId: number) => void;
   showTableDetailsOnPOS: boolean;
   setShowTableDetailsOnPOS: React.Dispatch<React.SetStateAction<boolean>>;
+  showReservationTimeOnPOS: boolean;
+  setShowReservationTimeOnPOS: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 function CancelReservationDialog({
@@ -236,7 +238,7 @@ function EditTableDetailsDialog({
     );
 }
 
-export default function TableManagement({ tables, orders, billHistory, updateTableStatus, updateTableDetails, addTable, removeLastTable, occupancyCount, onEditOrder, showOccupancy, setShowOccupancy, initialSelectedTableId, onCreateOrder, showTableDetailsOnPOS, setShowTableDetailsOnPOS }: TableManagementProps) {
+export default function TableManagement({ tables, orders, billHistory, updateTableStatus, updateTableDetails, addTable, removeLastTable, occupancyCount, onEditOrder, showOccupancy, setShowOccupancy, initialSelectedTableId, onCreateOrder, showTableDetailsOnPOS, setShowTableDetailsOnPOS, showReservationTimeOnPOS, setShowReservationTimeOnPOS }: TableManagementProps) {
   const [selectedTable, setSelectedTable] = useState<TableType | null>(null);
   const [selectedBill, setSelectedBill] = useState<Bill | null>(null);
   const [selectedTables, setSelectedTables] = useState<number[]>([]);
@@ -777,6 +779,14 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
                   id="show-table-details-pos"
                   checked={showTableDetailsOnPOS}
                   onCheckedChange={setShowTableDetailsOnPOS}
+                />
+              </div>
+              <div className="flex items-center justify-between rounded-lg border p-3 shadow-sm">
+                <Label htmlFor="show-reservation-time-pos">Display Time for Reserved POS Tables</Label>
+                <Switch
+                  id="show-reservation-time-pos"
+                  checked={showReservationTimeOnPOS}
+                  onCheckedChange={setShowReservationTimeOnPOS}
                 />
               </div>
             </div>

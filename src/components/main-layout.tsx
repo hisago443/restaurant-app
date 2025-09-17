@@ -51,6 +51,7 @@ export default function MainLayout() {
   const [venueName, setVenueName] = useState('Up & Above Assistant');
   const [kotPreference, setKotPreference] = useState<KOTPreference>({ type: 'single', categories: [] });
   const [showTableDetailsOnPOS, setShowTableDetailsOnPOS] = useState(false);
+  const [showReservationTimeOnPOS, setShowReservationTimeOnPOS] = useState(false);
 
   useEffect(() => {
     try {
@@ -577,6 +578,7 @@ export default function MainLayout() {
                   selectedOrderType={selectedOrderType}
                   setSelectedOrderType={setSelectedOrderType}
                   showTableDetailsOnPOS={showTableDetailsOnPOS}
+                  showReservationTimeOnPOS={showReservationTimeOnPOS}
                 />
             </TabsContent>
             <TabsContent value="tables" className="m-0 p-0">
@@ -602,6 +604,8 @@ export default function MainLayout() {
                 initialSelectedTableId={initialTableForManagement}
                 showTableDetailsOnPOS={showTableDetailsOnPOS}
                 setShowTableDetailsOnPOS={setShowTableDetailsOnPOS}
+                showReservationTimeOnPOS={showReservationTimeOnPOS}
+                setShowReservationTimeOnPOS={setShowReservationTimeOnPOS}
               />
             </TabsContent>
             <TabsContent value="kitchen" className="m-0 p-0 h-full">
