@@ -246,40 +246,56 @@ function OrderPanel({
           );
         }
 
-        const newItemsMap = new Map<string, OrderItem>();
-        if (activeOrder) { // Only calculate new items if it's an existing order
-            const newItems = getNewItems(orderItems, activeOrder.items || []);
-            newItems.forEach(item => newItemsMap.set(item.name, item));
+        const renderItem = (item: OrderItem, isNew: boolean) => (
+            <div key={item.name} className={cn("flex items-center p-2 rounded-md", isNew && "bg-blue-50 dark:bg-blue-900/20")}>
+                <div className="flex-grow">
+                    <p className="font-medium flex items-center gap-2">
+                        {item.name}
+                        {isNew && (
+                            <span className="text-xs font-bold text-blue-600 bg-blue-100 dark:bg-blue-900/50 px-2 py-0.5 rounded-full">
+                                new
+                            </span>
+                        )}
+                    </p>
+                    <p className="text-sm text-muted-foreground">₹{item.price.toFixed(2)}</p>
+                </div>
+                <div className="flex items-center gap-2">
+                    <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => updateQuantity(item.name, item.quantity - 1)}><Minus className="h-4 w-4" /></Button>
+                    <span className="w-8 text-center font-bold">{item.quantity}</span>
+                    <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => updateQuantity(item.name, item.quantity + 1)}><Plus className="h-4 w-4" /></Button>
+                    <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => removeFromOrder(item.name)}><X className="h-4 w-4" /></Button>
+                </div>
+            </div>
+        );
+        
+        if (!activeOrder) {
+            return <div className="space-y-2">{orderItems.map(item => renderItem(item, false))}</div>;
         }
+
+        const sentItemsMap = new Map(activeOrder.items.map(item => [item.name, item]));
+        const existingItems: OrderItem[] = [];
+        const newItems: OrderItem[] = [];
+
+        orderItems.forEach(item => {
+            if (sentItemsMap.has(item.name)) {
+                existingItems.push(item);
+            } else {
+                newItems.push(item);
+            }
+        });
+        
+        const changedExistingItems = existingItems.filter(item => {
+            const sentItem = sentItemsMap.get(item.name);
+            return sentItem && item.quantity > sentItem.quantity;
+        });
+
+        const newAndChangedItems = [...changedExistingItems, ...newItems];
 
         return (
           <div className="space-y-2">
-             {orderItems.map(item => {
-                const isNew = activeOrder && newItemsMap.has(item.name); // Check if activeOrder exists
-                const originalQuantity = activeOrder?.items.find(i => i.name === item.name)?.quantity || 0;
-                
-                return (
-                    <div key={item.name} className={cn("flex items-center p-2 rounded-md", isNew && "bg-blue-50 dark:bg-blue-900/20")}>
-                        <div className="flex-grow">
-                            <p className="font-medium flex items-center gap-2">
-                                {item.name}
-                                {isNew && (
-                                    <span className="text-xs font-bold text-blue-600 bg-blue-100 dark:bg-blue-900/50 px-2 py-0.5 rounded-full">
-                                        new
-                                    </span>
-                                )}
-                            </p>
-                            <p className="text-sm text-muted-foreground">₹{item.price.toFixed(2)}</p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => updateQuantity(item.name, item.quantity - 1)}><Minus className="h-4 w-4" /></Button>
-                            <span className="w-8 text-center font-bold">{item.quantity}</span>
-                            <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => updateQuantity(item.name, item.quantity + 1)}><Plus className="h-4 w-4" /></Button>
-                            <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => removeFromOrder(item.name)}><X className="h-4 w-4" /></Button>
-                        </div>
-                    </div>
-                );
-             })}
+            {existingItems.map(item => renderItem(item, false))}
+            {newAndChangedItems.length > 0 && <Separator className="my-4" />}
+            {newAndChangedItems.map(item => renderItem(item, true))}
           </div>
         );
     };
@@ -1576,10 +1592,10 @@ export default function PosSystem({
                                 <Label htmlFor="filter-all" className={cn("h-10 w-24 flex items-center justify-center rounded-md cursor-pointer border-2 font-semibold text-lg text-foreground hover:bg-accent", vegFilter === 'All' && 'ring-2 ring-primary text-primary bg-background')}>All</Label>
                                 
                                 <RadioGroupItem value="Veg" id="filter-veg" className="sr-only" />
-                                <Label htmlFor="filter-veg" className={cn("h-10 w-24 flex items-center justify-center rounded-md cursor-pointer border-2 font-semibold text-lg text-white bg-green-600 border-black", vegFilter === 'Veg' && 'border-black font-bold')}>Veg</Label>
+                                <Label htmlFor="filter-veg" className={cn("h-10 w-24 flex items-center justify-center rounded-md cursor-pointer border-2 font-semibold text-lg text-white bg-green-600", vegFilter === 'Veg' && 'border-black font-bold')}>Veg</Label>
                                 
                                 <RadioGroupItem value="Non-Veg" id="filter-nonveg" className="sr-only" />
-                                <Label htmlFor="filter-nonveg" className={cn("h-10 w-24 flex items-center justify-center rounded-md cursor-pointer border-2 font-semibold text-lg text-white bg-red-600 border-black", vegFilter === 'Non-Veg' && 'border-black font-bold')}>Non-Veg</Label>
+                                <Label htmlFor="filter-nonveg" className={cn("h-10 w-24 flex items-center justify-center rounded-md cursor-pointer border-2 font-semibold text-lg text-white bg-red-600", vegFilter === 'Non-Veg' && 'border-black font-bold')}>Non-Veg</Label>
                             </RadioGroup>
                       </div>
                       <div className="flex items-center gap-2">
