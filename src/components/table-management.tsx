@@ -136,69 +136,98 @@ function CancelReservationDialog({
   )
 }
 
-function EditTableDialog({ 
+function EditTableDetailsDialog({ 
     isOpen, 
     onOpenChange, 
-    table, 
+    tables, 
     onSave 
 }: { 
     isOpen: boolean; 
     onOpenChange: (open: boolean) => void; 
-    table: TableType | null; 
+    tables: TableType[]; 
     onSave: (tableId: number, details: { name: string, seats: number }) => void;
 }) {
+    const [selectedTableId, setSelectedTableId] = useState('');
     const [name, setName] = useState('');
     const [seats, setSeats] = useState('');
 
     useEffect(() => {
-        if (table) {
-            setName(table.name || '');
-            setSeats(table.seats ? String(table.seats) : '');
+        if (isOpen) {
+            setSelectedTableId('');
+            setName('');
+            setSeats('');
         }
-    }, [table]);
+    }, [isOpen]);
+
+    useEffect(() => {
+        if (selectedTableId) {
+            const table = tables.find(t => String(t.id) === selectedTableId);
+            if (table) {
+                setName(table.name || '');
+                setSeats(table.seats ? String(table.seats) : '');
+            }
+        }
+    }, [selectedTableId, tables]);
 
     const handleSave = () => {
-        if (table) {
-            onSave(table.id, { name, seats: Number(seats) || 0 });
+        if (selectedTableId) {
+            onSave(Number(selectedTableId), { name, seats: Number(seats) || 0 });
             onOpenChange(false);
         }
     };
-
-    if (!table) return null;
 
     return (
         <Dialog open={isOpen} onOpenChange={onOpenChange}>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>Edit Table {table.id}</DialogTitle>
+                    <DialogTitle>Edit Table Details</DialogTitle>
                     <DialogDescription>
-                        Set a custom name and seat count for this table.
+                        Select a table to set a custom name and seat count.
                     </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4 py-4">
                     <div className="space-y-2">
-                        <Label htmlFor="table-name">Table Name (Optional)</Label>
-                        <Input
-                            id="table-name"
-                            value={name}
-                            onChange={(e) => setName(e.target.value)}
-                            placeholder="e.g., Window Seat, Couple's Corner"
-                        />
+                        <Label htmlFor="table-select">Select Table</Label>
+                        <Select value={selectedTableId} onValueChange={setSelectedTableId}>
+                            <SelectTrigger id="table-select">
+                                <SelectValue placeholder="Select a table..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {tables.map(table => (
+                                    <SelectItem key={table.id} value={String(table.id)}>
+                                        Table {table.id} {table.name ? `(${table.name})` : ''}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
                     </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="table-seats">Number of Seats (Optional)</Label>
-                        <Input
-                            id="table-seats"
-                            type="number"
-                            value={seats}
-                            onChange={(e) => setSeats(e.target.value)}
-                            placeholder="e.g., 4"
-                        />
-                    </div>
+                    {selectedTableId && (
+                        <>
+                            <div className="space-y-2">
+                                <Label htmlFor="table-name">Table Name (Optional)</Label>
+                                <Input
+                                    id="table-name"
+                                    value={name}
+                                    onChange={(e) => setName(e.target.value)}
+                                    placeholder="e.g., Window Seat, Couple's Corner"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="table-seats">Number of Seats (Optional)</Label>
+                                <Input
+                                    id="table-seats"
+                                    type="number"
+                                    value={seats}
+                                    onChange={(e) => setSeats(e.target.value)}
+                                    placeholder="e.g., 4"
+                                />
+                            </div>
+                        </>
+                    )}
                 </div>
                 <DialogFooter>
                     <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-                    <Button onClick={handleSave}>Save Changes</Button>
+                    <Button onClick={handleSave} disabled={!selectedTableId}>Save Changes</Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>
@@ -218,7 +247,7 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
   const [billsForDialog, setBillsForDialog] = useState<Bill[]>([]);
   const { toast } = useToast();
   const [reservedTableAction, setReservedTableAction] = useState<TableType | null>(null);
-  const [editingTable, setEditingTable] = useState<TableType | null>(null);
+  const [isEditDetailsDialogOpen, setIsEditDetailsDialogOpen] = useState(false);
 
   const [reservationName, setReservationName] = useState('');
   const [reservationMobile, setReservationMobile] = useState('');
@@ -517,9 +546,6 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
                           </Button>
                         </>
                     )}
-                    <Button variant="secondary" size="icon" className="h-7 w-7 bg-white/30 hover:bg-white/50" onClick={(e) => { e.stopPropagation(); setEditingTable(table); }}>
-                        <Edit className="h-4 w-4 text-black" />
-                    </Button>
                 </div>
                   {showOccupancy && turnover > 0 &&
                     <div className="absolute bottom-1 left-1 flex items-center gap-1 bg-black/50 text-white text-xs font-bold p-1 rounded-md">
@@ -694,6 +720,9 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
                   </AlertDialogContent>
                 </AlertDialog>
               </div>
+              <Button variant="outline" className="w-full" onClick={() => setIsEditDetailsDialogOpen(true)}>
+                <Edit className="mr-2 h-4 w-4" /> Edit Table Details
+              </Button>
               <div className="flex items-center justify-between rounded-lg border p-3 shadow-sm">
                 <Label htmlFor="show-occupancy">Show Occupancy Counter</Label>
                 <Switch
@@ -850,10 +879,10 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
         updateTableStatus={updateTableStatus}
       />
       
-      <EditTableDialog
-          isOpen={!!editingTable}
-          onOpenChange={() => setEditingTable(null)}
-          table={editingTable}
+      <EditTableDetailsDialog
+          isOpen={isEditDetailsDialogOpen}
+          onOpenChange={setIsEditDetailsDialogOpen}
+          tables={tables}
           onSave={(tableId, details) => updateTableDetails(tableId, details)}
       />
 
