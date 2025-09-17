@@ -281,10 +281,12 @@ function OrderPanel({
             const sentQty = sentItemsMap.get(item.name);
             if (sentQty !== undefined) {
                 // Item exists in the previously sent order
-                existingItemsUI.push(renderItem(item, false));
                 if (item.quantity > sentQty) {
-                    // It's an existing item, but quantity has increased. Show the new part.
+                     // It's an existing item, but quantity has increased. Show the original and the new part.
+                    existingItemsUI.push(renderItem({ ...item, quantity: sentQty }, false));
                     newItemsUI.push(renderItem({ ...item, quantity: item.quantity - sentQty }, true));
+                } else if (item.quantity === sentQty) {
+                    existingItemsUI.push(renderItem(item, false));
                 }
             } else {
                 // This is a completely new item for this order
@@ -295,7 +297,7 @@ function OrderPanel({
         return (
           <div className="space-y-2">
             {existingItemsUI}
-            {newItemsUI.length > 0 && <Separator className="my-4" />}
+            {newItemsUI.length > 0 && existingItemsUI.length > 0 && <Separator className="my-4" />}
             {newItemsUI}
           </div>
         );
@@ -995,12 +997,25 @@ export default function PosSystem({
 
     setTimeout(() => {
         let finalOrder: Order;
+        const allNewItems = kotGroups.flatMap(g => g.items);
+
         if (activeOrder) {
-            finalOrder = { ...activeOrder, items: orderItems };
+            // Update existing order
+            const updatedItems = [...activeOrder.items];
+            allNewItems.forEach(newItem => {
+                const existingIndex = updatedItems.findIndex(i => i.name === newItem.name);
+                if (existingIndex > -1) {
+                    updatedItems[existingIndex].quantity += newItem.quantity;
+                } else {
+                    updatedItems.push(newItem);
+                }
+            });
+            finalOrder = { ...activeOrder, items: updatedItems };
             setOrders(prev => prev.map(o => o.id === finalOrder.id ? finalOrder : o));
         } else {
+            // Create new order
             finalOrder = {
-                items: orderItems,
+                items: allNewItems,
                 tableId: selectedTableId,
                 id: `K${(orders.length + 1).toString().padStart(3, '0')}`,
                 status: 'In Preparation',
@@ -1013,15 +1028,17 @@ export default function PosSystem({
             }
         }
         
+        // Print KOTs for the groups that were passed in
         kotGroups.forEach(group => {
             printKot(finalOrder, group.items, group.title);
         });
 
         toast({ title: `KOTs Sent!`, description: `Order update sent.` });
         setIsProcessing(false);
-        setActiveOrder({ ...finalOrder, items: [...orderItems] });
+        setActiveOrder(finalOrder);
     }, 100);
-  }, [activeOrder, orderItems, setOrders, selectedTableId, orders.length, selectedOrderType, customerDetails, onOrderCreated, updateTableStatus, toast, setActiveOrder]);
+}, [activeOrder, orders.length, onOrderCreated, selectedTableId, updateTableStatus, setOrders, toast, setActiveOrder, selectedOrderType, customerDetails]);
+
   
   const handleDropItemOnTable = (tableId: number, item: MenuItem) => {
       if (!easyMode) return;
