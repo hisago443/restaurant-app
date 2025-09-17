@@ -255,7 +255,7 @@ function OrderPanel({
         return (
           <div className="space-y-2">
              {orderItems.map(item => {
-                const isNew = newItemsMap.has(item.name);
+                const isNew = activeOrder && newItemsMap.has(item.name); // Check if activeOrder exists
                 const originalQuantity = activeOrder?.items.find(i => i.name === item.name)?.quantity || 0;
                 
                 return (
@@ -1576,10 +1576,10 @@ export default function PosSystem({
                                 <Label htmlFor="filter-all" className={cn("h-10 w-24 flex items-center justify-center rounded-md cursor-pointer border-2 font-semibold text-lg text-foreground hover:bg-accent", vegFilter === 'All' && 'ring-2 ring-primary text-primary bg-background')}>All</Label>
                                 
                                 <RadioGroupItem value="Veg" id="filter-veg" className="sr-only" />
-                                <Label htmlFor="filter-veg" className={cn("h-10 w-24 flex items-center justify-center rounded-md cursor-pointer border-2 font-semibold text-lg text-white bg-green-600 border-transparent", vegFilter === 'Veg' && 'border-black font-bold')}>Veg</Label>
+                                <Label htmlFor="filter-veg" className={cn("h-10 w-24 flex items-center justify-center rounded-md cursor-pointer border-2 font-semibold text-lg text-white bg-green-600 border-black", vegFilter === 'Veg' && 'border-black font-bold')}>Veg</Label>
                                 
                                 <RadioGroupItem value="Non-Veg" id="filter-nonveg" className="sr-only" />
-                                <Label htmlFor="filter-nonveg" className={cn("h-10 w-24 flex items-center justify-center rounded-md cursor-pointer border-2 font-semibold text-lg text-white bg-red-600 border-transparent", vegFilter === 'Non-Veg' && 'border-black font-bold')}>Non-Veg</Label>
+                                <Label htmlFor="filter-nonveg" className={cn("h-10 w-24 flex items-center justify-center rounded-md cursor-pointer border-2 font-semibold text-lg text-white bg-red-600 border-black", vegFilter === 'Non-Veg' && 'border-black font-bold')}>Non-Veg</Label>
                             </RadioGroup>
                       </div>
                       <div className="flex items-center gap-2">
@@ -1817,3 +1817,5 @@ export default function PosSystem({
     </div>
   );
 }
+
+    
