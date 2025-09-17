@@ -976,7 +976,7 @@ export default function PosSystem({
         if (activeOrder) {
             finalOrder = { ...activeOrder, items: orderItems };
             setOrders(prev => prev.map(o => o.id === finalOrder.id ? finalOrder : o));
-            setActiveOrder(finalOrder); // This is the bug fix
+            setActiveOrder(finalOrder);
         } else {
             finalOrder = {
                 items: orderItems,
@@ -1571,10 +1571,10 @@ export default function PosSystem({
                                 <Label htmlFor="filter-all" className={cn("h-10 w-24 flex items-center justify-center rounded-md cursor-pointer border-2 font-semibold text-lg text-foreground hover:bg-accent", vegFilter === 'All' && 'ring-2 ring-primary text-primary bg-background')}>All</Label>
                                 
                                 <RadioGroupItem value="Veg" id="filter-veg" className="sr-only" />
-                                <Label htmlFor="filter-veg" className={cn("h-10 w-24 flex items-center justify-center rounded-md cursor-pointer border-2 font-semibold text-lg text-white bg-green-600 border-transparent", vegFilter === 'Veg' && 'border-white font-bold')}>Veg</Label>
+                                <Label htmlFor="filter-veg" className={cn("h-10 w-24 flex items-center justify-center rounded-md cursor-pointer border-2 font-semibold text-lg text-white bg-green-600 border-transparent", vegFilter === 'Veg' && 'border-black font-bold')}>Veg</Label>
                                 
                                 <RadioGroupItem value="Non-Veg" id="filter-nonveg" className="sr-only" />
-                                <Label htmlFor="filter-nonveg" className={cn("h-10 w-24 flex items-center justify-center rounded-md cursor-pointer border-2 font-semibold text-lg text-white bg-red-600 border-transparent", vegFilter === 'Non-Veg' && 'border-white font-bold')}>Non-Veg</Label>
+                                <Label htmlFor="filter-nonveg" className={cn("h-10 w-24 flex items-center justify-center rounded-md cursor-pointer border-2 font-semibold text-lg text-white bg-red-600 border-transparent", vegFilter === 'Non-Veg' && 'border-black font-bold')}>Non-Veg</Label>
                             </RadioGroup>
                       </div>
                       <div className="flex items-center gap-2">
