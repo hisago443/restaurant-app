@@ -718,7 +718,7 @@ export default function PosSystem({
         const firstAvailable = tables.find(t => t.status === 'Available');
         setSelectedTableId(firstAvailable ? firstAvailable.id : (tables.length > 0 ? tables[0].id : null));
     }
-};
+  };
 
   const handleSaveDeliveryDetails = (details: CustomerDetails) => {
     setCustomerDetails(details);
@@ -974,6 +974,7 @@ export default function PosSystem({
         if (activeOrder) {
             finalOrder = { ...activeOrder, items: orderItems };
             setOrders(prev => prev.map(o => o.id === finalOrder.id ? finalOrder : o));
+            setActiveOrder(finalOrder); // This is the bug fix
         } else {
             finalOrder = {
                 items: orderItems,
@@ -996,7 +997,7 @@ export default function PosSystem({
         toast({ title: `KOTs Sent!`, description: `Order update sent.` });
         setIsProcessing(false);
     }, 100);
-  }, [activeOrder, orderItems, setOrders, selectedTableId, orders.length, selectedOrderType, customerDetails, onOrderCreated, updateTableStatus, toast]);
+  }, [activeOrder, orderItems, setOrders, selectedTableId, orders.length, selectedOrderType, customerDetails, onOrderCreated, updateTableStatus, toast, setActiveOrder]);
   
   const handleDropItemOnTable = (tableId: number, item: MenuItem) => {
       if (!easyMode) return;
@@ -1192,95 +1193,95 @@ export default function PosSystem({
   const lowStockItems = useMemo(() => allMenuItems.filter(item => menuItemStatus[item.name] === 'low'), [allMenuItems, menuItemStatus]);
   const outOfStockItems = useMemo(() => allMenuItems.filter(item => menuItemStatus[item.name] === 'out'), [allMenuItems, menuItemStatus]);
   
+  const handleKeyDown = (e: KeyboardEvent) => {
+    if (document.querySelector('[role="dialog"], [role="alertdialog"]')) return;
+    
+    const activeEl = document.activeElement;
+    const isInputFocused = activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA');
+
+    if (isInputFocused && activeEl !== searchInputRef.current) {
+      return;
+    }
+    
+    const isNumberKey = e.key >= '0' && e.key <= '9';
+
+    if (keyboardMode === 'table') {
+      e.preventDefault();
+      
+      if (isNumberKey) {
+          const tableNum = e.key === '0' ? 10 : parseInt(e.key, 10);
+          if (tableNum > 0 && tableNum <= tables.length) {
+            setSelectedTableId(tableNum);
+          }
+      } else if (e.key.startsWith('Arrow')) {
+          const tableGrid = document.getElementById('table-grid-container')?.querySelector('.grid');
+          if (!tableGrid || selectedTableId === null) return;
+
+          const gridStyle = window.getComputedStyle(tableGrid);
+          const gridTemplateColumns = gridStyle.getPropertyValue('grid-template-columns');
+          const numColumns = gridTemplateColumns.split(' ').length;
+          
+          const sortedTables = [...tables].sort((a,b) => a.id - b.id);
+          const currentIndex = sortedTables.findIndex(t => t.id === selectedTableId);
+          if (currentIndex === -1) return;
+
+          let nextIndex = -1;
+
+          switch (e.key) {
+              case 'ArrowLeft':
+                  if (currentIndex > 0) nextIndex = currentIndex - 1;
+                  break;
+              case 'ArrowRight':
+                  if (currentIndex < sortedTables.length - 1) nextIndex = currentIndex + 1;
+                  break;
+              case 'ArrowUp':
+                  if (currentIndex >= numColumns) nextIndex = currentIndex - numColumns;
+                  break;
+              case 'ArrowDown':
+                  if (currentIndex < sortedTables.length - numColumns) nextIndex = currentIndex + numColumns;
+                  break;
+          }
+
+          if (nextIndex !== -1 && nextIndex < sortedTables.length) {
+              const nextTableId = sortedTables[nextIndex].id;
+              setSelectedTableId(nextTableId);
+          }
+      }
+    } 
+    
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (keyboardMode === 'table' && selectedTableId) {
+        const table = tables.find(t => t.id === selectedTableId);
+        if (table && table.status === 'Available') {
+          updateTableStatus([selectedTableId], 'Occupied');
+        }
+        searchInputRef.current?.focus();
+        setKeyboardMode('order');
+      } else if (keyboardMode === 'confirm') {
+        // This should trigger the first available KOT button
+        const newItems = getNewItems(orderItems, activeOrder?.items || []);
+        const kotGroups = groupItemsForKOT(newItems);
+        if (kotGroups.length > 0) {
+          processKOTs(kotGroups);
+        }
+        setKeyboardMode('table');
+      }
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      if (keyboardMode === 'order') {
+        if (document.activeElement === searchInputRef.current) {
+          searchInputRef.current?.blur();
+        }
+        setKeyboardMode('confirm');
+      } else if (keyboardMode === 'confirm') {
+        searchInputRef.current?.focus();
+        setKeyboardMode('order');
+      }
+    }
+  };
+  
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (document.querySelector('[role="dialog"], [role="alertdialog"]')) return;
-      
-      const activeEl = document.activeElement;
-      const isInputFocused = activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA');
-
-      if (isInputFocused && activeEl !== searchInputRef.current) {
-        return;
-      }
-      
-      const isNumberKey = e.key >= '0' && e.key <= '9';
-
-      if (keyboardMode === 'table') {
-        e.preventDefault();
-        
-        if (isNumberKey) {
-            const tableNum = e.key === '0' ? 10 : parseInt(e.key, 10);
-            if (tableNum > 0 && tableNum <= tables.length) {
-              setSelectedTableId(tableNum);
-            }
-        } else if (e.key.startsWith('Arrow')) {
-            const tableGrid = document.getElementById('table-grid-container')?.querySelector('.grid');
-            if (!tableGrid || selectedTableId === null) return;
-
-            const gridStyle = window.getComputedStyle(tableGrid);
-            const gridTemplateColumns = gridStyle.getPropertyValue('grid-template-columns');
-            const numColumns = gridTemplateColumns.split(' ').length;
-            
-            const sortedTables = [...tables].sort((a,b) => a.id - b.id);
-            const currentIndex = sortedTables.findIndex(t => t.id === selectedTableId);
-            if (currentIndex === -1) return;
-
-            let nextIndex = -1;
-
-            switch (e.key) {
-                case 'ArrowLeft':
-                    if (currentIndex > 0) nextIndex = currentIndex - 1;
-                    break;
-                case 'ArrowRight':
-                    if (currentIndex < sortedTables.length - 1) nextIndex = currentIndex + 1;
-                    break;
-                case 'ArrowUp':
-                    if (currentIndex >= numColumns) nextIndex = currentIndex - numColumns;
-                    break;
-                case 'ArrowDown':
-                    if (currentIndex < sortedTables.length - numColumns) nextIndex = currentIndex + numColumns;
-                    break;
-            }
-
-            if (nextIndex !== -1 && nextIndex < sortedTables.length) {
-                const nextTableId = sortedTables[nextIndex].id;
-                setSelectedTableId(nextTableId);
-            }
-        }
-      } 
-      
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        if (keyboardMode === 'table' && selectedTableId) {
-          const table = tables.find(t => t.id === selectedTableId);
-          if (table && table.status === 'Available') {
-            updateTableStatus([selectedTableId], 'Occupied');
-          }
-          searchInputRef.current?.focus();
-          setKeyboardMode('order');
-        } else if (keyboardMode === 'confirm') {
-          // This should trigger the first available KOT button
-          const newItems = getNewItems(orderItems, activeOrder?.items || []);
-          const kotGroups = groupItemsForKOT(newItems);
-          if (kotGroups.length > 0) {
-            processKOTs(kotGroups);
-          }
-          setKeyboardMode('table');
-        }
-      } else if (e.key === 'Escape') {
-        e.preventDefault();
-        if (keyboardMode === 'order') {
-          if (document.activeElement === searchInputRef.current) {
-            searchInputRef.current?.blur();
-          }
-          setKeyboardMode('confirm');
-        } else if (keyboardMode === 'confirm') {
-          searchInputRef.current?.focus();
-          setKeyboardMode('order');
-        }
-      }
-    };
-
     window.addEventListener('keydown', handleKeyDown);
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
@@ -1568,10 +1569,10 @@ export default function PosSystem({
                                 <Label htmlFor="filter-all" className={cn("h-10 w-24 flex items-center justify-center rounded-md cursor-pointer border-2 font-semibold text-lg text-foreground hover:bg-accent", vegFilter === 'All' && 'ring-2 ring-primary text-primary bg-background')}>All</Label>
                                 
                                 <RadioGroupItem value="Veg" id="filter-veg" className="sr-only" />
-                                <Label htmlFor="filter-veg" className={cn("h-10 w-24 flex items-center justify-center rounded-md cursor-pointer border-2 font-semibold text-lg text-white bg-green-600 border-transparent", vegFilter === 'Veg' && 'border-white font-bold')}>Veg</Label>
+                                <Label htmlFor="filter-veg" className={cn("h-10 w-24 flex items-center justify-center rounded-md cursor-pointer border-2 font-semibold text-lg text-white bg-green-600 border-transparent", vegFilter === 'Veg' && 'border-black font-bold')}>Veg</Label>
                                 
                                 <RadioGroupItem value="Non-Veg" id="filter-nonveg" className="sr-only" />
-                                <Label htmlFor="filter-nonveg" className={cn("h-10 w-24 flex items-center justify-center rounded-md cursor-pointer border-2 font-semibold text-lg text-white bg-red-600 border-transparent", vegFilter === 'Non-Veg' && 'border-white font-bold')}>Non-Veg</Label>
+                                <Label htmlFor="filter-nonveg" className={cn("h-10 w-24 flex items-center justify-center rounded-md cursor-pointer border-2 font-semibold text-lg text-white bg-red-600 border-transparent", vegFilter === 'Non-Veg' && 'border-black font-bold')}>Non-Veg</Label>
                             </RadioGroup>
                       </div>
                       <div className="flex items-center gap-2">

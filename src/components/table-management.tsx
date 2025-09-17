@@ -462,7 +462,7 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
               <CardDescription>Oversee and manage all tables in your restaurant.</CardDescription>
             </div>
             <div className="flex items-center gap-4">
-              <Button variant="secondary" onClick={() => setIsLayoutManagerOpen(true)}>
+              <Button variant="secondary" className='bg-orange-500 hover:bg-orange-600 text-white' onClick={() => setIsLayoutManagerOpen(true)}>
                 <LayoutTemplate className="mr-2 h-4 w-4" /> 
                 <span>Manage Tables</span>
               </Button>
