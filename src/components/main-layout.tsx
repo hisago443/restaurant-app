@@ -50,6 +50,7 @@ export default function MainLayout() {
   const [isCheckingSetup, setIsCheckingSetup] = useState(true);
   const [venueName, setVenueName] = useState('Up & Above Assistant');
   const [kotPreference, setKotPreference] = useState<KOTPreference>({ type: 'single', categories: [] });
+  const [showTableDetails, setShowTableDetails] = useState(false);
 
   useEffect(() => {
     try {
@@ -386,7 +387,7 @@ export default function MainLayout() {
 
   const updateTableDetails = useCallback((tableId: number, details: { name?: string, seats?: number }) => {
     setTables(prevTables => prevTables.map(t => 
-        t.id === tableId ? { ...t, name: details.name, seats: details.seats } : t
+        t.id === tableId ? { ...t, name: details.name || t.name, seats: details.seats || t.seats } : t
     ));
     toast({ title: "Table Updated", description: `Details for Table ${tableId} have been saved.` });
   }, [toast]);
@@ -575,6 +576,7 @@ export default function MainLayout() {
                   kotPreference={kotPreference}
                   selectedOrderType={selectedOrderType}
                   setSelectedOrderType={setSelectedOrderType}
+                  showTableDetails={showTableDetails}
                 />
             </TabsContent>
             <TabsContent value="tables" className="m-0 p-0">
@@ -598,6 +600,8 @@ export default function MainLayout() {
                 showOccupancy={showOccupancy}
                 setShowOccupancy={setShowOccupancy}
                 initialSelectedTableId={initialTableForManagement}
+                showTableDetails={showTableDetails}
+                setShowTableDetails={setShowTableDetails}
               />
             </TabsContent>
             <TabsContent value="kitchen" className="m-0 p-0 h-full">

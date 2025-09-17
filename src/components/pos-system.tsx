@@ -18,7 +18,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from '@/hooks/use-toast';
-import { Search, Plus, Minus, X, LayoutGrid, List, Rows, ChevronsUpDown, Palette, Shuffle, ClipboardList, Send, CheckCircle2, Users, Bookmark, Sparkles, Repeat, Edit, UserCheck, BookmarkX, Printer, Loader2, BookOpen, Trash2 as TrashIcon, QrCode as QrCodeIcon, MousePointerClick, Eye, Hand, ShoppingBag, BarChart, Users2, Bike, ShoppingBasket } from 'lucide-react';
+import { Search, Plus, Minus, X, LayoutGrid, List, Rows, ChevronsUpDown, Palette, Shuffle, ClipboardList, Send, CheckCircle2, Users, Bookmark, Sparkles, Repeat, Edit, UserCheck, BookmarkX, Printer, Loader2, BookOpen, Trash2 as TrashIcon, QrCode as QrCodeIcon, MousePointerClick, Eye, Hand, ShoppingBag, BarChart, Users2, Bike, ShoppingBasket, Armchair } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useDrag, useDrop } from 'react-dnd';
@@ -108,6 +108,7 @@ interface PosSystemProps {
   kotPreference: KOTPreference;
   selectedOrderType: OrderType;
   setSelectedOrderType: (type: OrderType) => void;
+  showTableDetails: boolean;
 }
 
 const ItemTypes = {
@@ -549,6 +550,7 @@ export default function PosSystem({
     kotPreference,
     selectedOrderType,
     setSelectedOrderType,
+    showTableDetails,
 }: PosSystemProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [menu, setMenu] = useState<MenuCategory[]>([]);
@@ -593,50 +595,6 @@ export default function PosSystem({
       return newItems;
   }, []);
 
-  useEffect(() => {
-    if (activeOrder) {
-      setSelectedOrderType(activeOrder.orderType);
-      setCustomerDetails(activeOrder.customerDetails);
-    }
-  }, [activeOrder, setSelectedOrderType]);
-
-  const handleSetOrderType = (type: OrderType) => {
-    if (type === 'Home-Delivery') {
-      setIsHomeDeliveryDialogOpen(true);
-    } else {
-      setSelectedOrderType(type);
-      setCustomerDetails(undefined);
-    }
-
-    if (type !== 'Dine-In') {
-      setSelectedTableId(null);
-    } else if (!selectedTableId) {
-      setSelectedTableId(1);
-    }
-  };
-
-  const handleSaveDeliveryDetails = (details: CustomerDetails) => {
-    setCustomerDetails(details);
-    setSelectedOrderType('Home-Delivery');
-  }
-
-  useEffect(() => {
-    const structuredMenu = (menuData as MenuCategory[]).map(category => ({
-        ...category,
-        subCategories: category.subCategories.map(sub => ({
-            ...sub,
-            items: sub.items.map(item => ({...item, history: item.history || []}))
-        }))
-    }));
-    setMenu(structuredMenu);
-  }, []);
-  
-
-  const allMenuItems: MenuItem[] = useMemo(() => 
-    menu.flatMap(cat => cat.subCategories.flatMap(sub => sub.items)),
-    [menu]
-  );
-  
   const getLocalReceipt = useCallback(() => {
     if (orderItems.length === 0) return '';
   
@@ -676,6 +634,52 @@ export default function PosSystem({
     return receiptLines.join('\n');
   }, [orderItems, discount, venueName]);
 
+  useEffect(() => {
+    if (activeOrder) {
+      setSelectedOrderType(activeOrder.orderType);
+      setCustomerDetails(activeOrder.customerDetails);
+    }
+  }, [activeOrder, setSelectedOrderType]);
+
+  const handleSetOrderType = (type: OrderType) => {
+    if (type === 'Home-Delivery') {
+        setIsHomeDeliveryDialogOpen(true);
+    } else {
+        setSelectedOrderType(type);
+        setCustomerDetails(undefined);
+    }
+
+    if (type !== 'Dine-In') {
+        setSelectedTableId(null);
+    } else if (!selectedTableId) {
+        // If switching to Dine-In and no table is selected, select the first available one
+        const firstAvailable = tables.find(t => t.status === 'Available');
+        setSelectedTableId(firstAvailable ? firstAvailable.id : (tables.length > 0 ? tables[0].id : null));
+    }
+};
+
+  const handleSaveDeliveryDetails = (details: CustomerDetails) => {
+    setCustomerDetails(details);
+    setSelectedOrderType('Home-Delivery');
+  }
+
+  useEffect(() => {
+    const structuredMenu = (menuData as MenuCategory[]).map(category => ({
+        ...category,
+        subCategories: category.subCategories.map(sub => ({
+            ...sub,
+            items: sub.items.map(item => ({...item, history: item.history || []}))
+        }))
+    }));
+    setMenu(structuredMenu);
+  }, []);
+  
+
+  const allMenuItems: MenuItem[] = useMemo(() => 
+    menu.flatMap(cat => cat.subCategories.flatMap(sub => sub.items)),
+    [menu]
+  );
+  
   const filteredMenu = useMemo(() => {
     let menuToFilter = menu;
 
@@ -1188,6 +1192,8 @@ export default function PosSystem({
     }
   }, [kotPreference]);
 
+  const processKOTsCallback = useCallback(processKOTs, [processKOTs]);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (document.querySelector('[role="dialog"], [role="alertdialog"]')) return;
@@ -1259,7 +1265,7 @@ export default function PosSystem({
           const newItems = getNewItems(orderItems, activeOrder?.items || []);
           const kotGroups = groupItemsForKOT(newItems);
           if (kotGroups.length > 0) {
-            processKOTs(kotGroups);
+            processKOTsCallback(kotGroups);
           }
           setKeyboardMode('table');
         }
@@ -1281,7 +1287,7 @@ export default function PosSystem({
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [keyboardMode, selectedTableId, tables, setSelectedTableId, updateTableStatus, setKeyboardMode, orderItems, activeOrder, getNewItems, groupItemsForKOT, processKOTs]);
+  }, [keyboardMode, selectedTableId, tables, setSelectedTableId, updateTableStatus, setKeyboardMode, orderItems, activeOrder, getNewItems, groupItemsForKOT, processKOTsCallback]);
   
 
   const renderKotButtons = () => {
@@ -1298,7 +1304,7 @@ export default function PosSystem({
         key={group.title}
         size="lg"
         className="h-12 text-base w-full bg-blue-600 hover:bg-blue-700"
-        onClick={() => processKOTs([group])}
+        onClick={() => processKOTs(kotGroups)}
         disabled={isProcessing || !isOrderReady}
       >
         {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
@@ -1324,7 +1330,7 @@ export default function PosSystem({
         finalItemBg = itemStatusColors.low.light;
     } else {
         const colorName = categoryColors[categoryName];
-        finalItemBg = colorName ? colorPalette[colorName]?.light : 'bg-background';
+        finalItemBg = colorName ? colorPalette[colorName]?.[colorShade] : 'bg-background';
     }
     
     const menuItemCard = (
@@ -1580,13 +1586,13 @@ export default function PosSystem({
                           </div>
                           <Separator orientation="vertical" className="h-8" />
                            <RadioGroup value={viewMode} onValueChange={(v) => setViewMode(v as ViewMode)} className="flex items-center">
+                              <Label className={cn("p-1.5 rounded-md cursor-pointer transition-colors", viewMode === 'list' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent' )}>
+                                  <RadioGroupItem value="accordion" id="accordion-view" className="sr-only" />
+                                  <List className="h-5 w-5 box-content" />
+                              </Label>
                               <Label className={cn("p-1.5 rounded-md cursor-pointer transition-colors", viewMode === 'grid' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent' )}>
                                   <RadioGroupItem value="grid" id="grid-view" className="sr-only" />
                                   <LayoutGrid className="h-5 w-5 box-content" />
-                              </Label>
-                              <Label className={cn("p-1.5 rounded-md cursor-pointer transition-colors", viewMode === 'accordion' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent' )}>
-                                  <RadioGroupItem value="accordion" id="accordion-view" className="sr-only" />
-                                  <List className="h-5 w-5 box-content" />
                               </Label>
                           </RadioGroup>
                       </div>
@@ -1693,6 +1699,13 @@ export default function PosSystem({
                                   <Icon className={cn("h-4 w-4 shrink-0", table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black')} />
                                   <span className={cn("text-xs font-semibold leading-tight break-words", table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black')}>{table.status}</span>
                               </div>
+                               {showTableDetails && table.name && <div className="text-xs font-bold text-white mt-1 max-w-full truncate">{table.name}</div>}
+                                {showTableDetails && table.seats && <div className="text-xs text-white flex items-center justify-center gap-1"><Armchair className="h-3 w-3" /> {table.seats}</div>}
+                                {showTableDetails && table.status === 'Reserved' && table.reservationDetails && (
+                                <div className="text-xs text-black font-bold mt-1 max-w-full truncate px-1">
+                                    for {table.reservationDetails.name}
+                                </div>
+                                )}
                           </div>
                       </TableDropTarget>
                       )

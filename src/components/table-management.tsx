@@ -55,6 +55,8 @@ interface TableManagementProps {
   setShowOccupancy: React.Dispatch<React.SetStateAction<boolean>>;
   initialSelectedTableId?: number | null;
   onCreateOrder: (tableId: number) => void;
+  showTableDetails: boolean;
+  setShowTableDetails: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 function CancelReservationDialog({
@@ -234,7 +236,7 @@ function EditTableDetailsDialog({
     );
 }
 
-export default function TableManagement({ tables, orders, billHistory, updateTableStatus, updateTableDetails, addTable, removeLastTable, occupancyCount, onEditOrder, showOccupancy, setShowOccupancy, initialSelectedTableId, onCreateOrder }: TableManagementProps) {
+export default function TableManagement({ tables, orders, billHistory, updateTableStatus, updateTableDetails, addTable, removeLastTable, occupancyCount, onEditOrder, showOccupancy, setShowOccupancy, initialSelectedTableId, onCreateOrder, showTableDetails, setShowTableDetails }: TableManagementProps) {
   const [selectedTable, setSelectedTable] = useState<TableType | null>(null);
   const [selectedBill, setSelectedBill] = useState<Bill | null>(null);
   const [selectedTables, setSelectedTables] = useState<number[]>([]);
@@ -567,11 +569,11 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
                       {React.createElement(Icon, { className: cn("h-4 w-4", table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black') })}
                       <span className={cn("text-base font-semibold leading-tight", table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black')}>{table.status}</span>
                     </div>
-                    {table.name && <div className="text-xs font-bold text-white mt-1 max-w-full truncate">{table.name}</div>}
-                    {table.seats && <div className="text-xs text-white flex items-center justify-center gap-1"><Armchair className="h-3 w-3" /> {table.seats}</div>}
-                    {table.status === 'Reserved' && table.reservationDetails && (
-                      <div className="text-xs text-black font-bold mt-1 max-w-full truncate">
-                        for {table.reservationDetails.name} at {table.reservationDetails.time}
+                    {showTableDetails && table.name && <div className="text-xs font-bold text-white mt-1 max-w-full truncate">{table.name}</div>}
+                    {showTableDetails && table.seats && <div className="text-xs text-white flex items-center justify-center gap-1"><Armchair className="h-3 w-3" /> {table.seats}</div>}
+                    {showTableDetails && table.status === 'Reserved' && table.reservationDetails && (
+                      <div className="text-xs text-black font-bold mt-1 max-w-full truncate px-1">
+                        for {table.reservationDetails.name}
                       </div>
                     )}
                 </div>
@@ -729,6 +731,14 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
                   id="show-occupancy"
                   checked={showOccupancy}
                   onCheckedChange={setShowOccupancy}
+                />
+              </div>
+               <div className="flex items-center justify-between rounded-lg border p-3 shadow-sm">
+                <Label htmlFor="show-table-details">Display Details on Tables</Label>
+                <Switch
+                  id="show-table-details"
+                  checked={showTableDetails}
+                  onCheckedChange={setShowTableDetails}
                 />
               </div>
             </div>
