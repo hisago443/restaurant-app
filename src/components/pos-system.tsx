@@ -247,7 +247,7 @@ function OrderPanel({
         }
 
         const renderItem = (item: OrderItem, isNew: boolean) => (
-            <div key={item.name} className={cn("flex items-center p-2 rounded-md", isNew && "bg-blue-50 dark:bg-blue-900/20")}>
+            <div key={`${item.name}-${isNew}`} className={cn("flex items-center p-2 rounded-md", isNew && "bg-blue-50 dark:bg-blue-900/20")}>
                 <div className="flex-grow">
                     <p className="font-medium flex items-center gap-2">
                         {item.name}
@@ -288,6 +288,7 @@ function OrderPanel({
                 } else if (item.quantity === sentQty) {
                     existingItemsUI.push(renderItem(item, false));
                 }
+                 // If quantity is less, it's a voided item, which we don't render here.
             } else {
                 // This is a completely new item for this order
                 newItemsUI.push(renderItem(item, true));
@@ -992,17 +993,17 @@ export default function PosSystem({
     }
   };
   
-  const processKOTs = useCallback((kotGroups: { title: string; items: OrderItem[] }[]) => {
+  const processKOTs = useCallback((kotGroupsToProcess: { title: string; items: OrderItem[] }[]) => {
     setIsProcessing(true);
 
     setTimeout(() => {
         let finalOrder: Order;
-        const allNewItems = kotGroups.flatMap(g => g.items);
+        const itemsInThisKot = kotGroupsToProcess.flatMap(g => g.items);
 
         if (activeOrder) {
-            // Update existing order
+            // This is an UPDATE to an existing order.
             const updatedItems = [...activeOrder.items];
-            allNewItems.forEach(newItem => {
+            itemsInThisKot.forEach(newItem => {
                 const existingIndex = updatedItems.findIndex(i => i.name === newItem.name);
                 if (existingIndex > -1) {
                     updatedItems[existingIndex].quantity += newItem.quantity;
@@ -1013,9 +1014,11 @@ export default function PosSystem({
             finalOrder = { ...activeOrder, items: updatedItems };
             setOrders(prev => prev.map(o => o.id === finalOrder.id ? finalOrder : o));
         } else {
-            // Create new order
+            // This is a NEW order.
+            // When creating a new order, we must create it with ALL items in the cart,
+            // not just the ones for the KOT being printed.
             finalOrder = {
-                items: allNewItems,
+                items: orderItems, // Use all items from the cart.
                 tableId: selectedTableId,
                 id: `K${(orders.length + 1).toString().padStart(3, '0')}`,
                 status: 'In Preparation',
@@ -1028,16 +1031,17 @@ export default function PosSystem({
             }
         }
         
-        // Print KOTs for the groups that were passed in
-        kotGroups.forEach(group => {
+        // Print KOTs ONLY for the specific groups that were passed into this function.
+        kotGroupsToProcess.forEach(group => {
             printKot(finalOrder, group.items, group.title);
         });
 
         toast({ title: `KOTs Sent!`, description: `Order update sent.` });
         setIsProcessing(false);
+        // CRITICAL: Update the activeOrder state to reflect the new reality.
         setActiveOrder(finalOrder);
     }, 100);
-}, [activeOrder, orders.length, onOrderCreated, selectedTableId, updateTableStatus, setOrders, toast, setActiveOrder, selectedOrderType, customerDetails]);
+}, [activeOrder, orders.length, onOrderCreated, selectedTableId, updateTableStatus, setOrders, toast, setActiveOrder, selectedOrderType, customerDetails, orderItems]);
 
   
   const handleDropItemOnTable = (tableId: number, item: MenuItem) => {
