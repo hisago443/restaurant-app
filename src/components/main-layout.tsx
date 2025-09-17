@@ -66,6 +66,20 @@ export default function MainLayout() {
     }
   }, []);
 
+  const handleKotPreferenceChange = useCallback(async (preference: KOTPreference) => {
+    setKotPreference(preference);
+    try {
+      await setDoc(doc(db, "settings", "venue"), { kotPreference: preference }, { merge: true });
+    } catch (error) {
+      console.error("Error saving KOT preference:", error);
+      toast({
+        variant: "destructive",
+        title: "Could not save preference",
+        description: "Your KOT preference could not be saved. Please try again.",
+      });
+    }
+  }, [toast]);
+
   useEffect(() => {
     const fetchVenueSettings = async () => {
       try {
@@ -613,7 +627,7 @@ export default function MainLayout() {
                 setVendorCreditLimit={setVendorCreditLimit}
                 onRerunSetup={() => setShowSetupWizard(true)}
                 kotPreference={kotPreference}
-                setKotPreference={setKotPreference}
+                setKotPreference={handleKotPreferenceChange}
               />
             </TabsContent>
           </main>
