@@ -108,7 +108,7 @@ interface PosSystemProps {
   kotPreference: KOTPreference;
   selectedOrderType: OrderType;
   setSelectedOrderType: (type: OrderType) => void;
-  showTableDetails: boolean;
+  showTableDetailsOnPOS: boolean;
 }
 
 const ItemTypes = {
@@ -550,7 +550,7 @@ export default function PosSystem({
     kotPreference,
     selectedOrderType,
     setSelectedOrderType,
-    showTableDetails,
+    showTableDetailsOnPOS,
 }: PosSystemProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [menu, setMenu] = useState<MenuCategory[]>([]);
@@ -633,6 +633,68 @@ export default function PosSystem({
   
     return receiptLines.join('\n');
   }, [orderItems, discount, venueName]);
+
+  const groupItemsForKOT = useCallback((items: OrderItem[]): { title: string; items: OrderItem[] }[] => {
+    if (items.length === 0) return [];
+  
+    switch (kotPreference.type) {
+      case 'single':
+        return [{ title: 'KOT', items }];
+  
+      case 'separate':
+        const kitchenItems = items.filter(item => item.category !== 'Beverages');
+        const barItems = items.filter(item => item.category === 'Beverages');
+        const groups = [];
+        if (kitchenItems.length > 0) groups.push({ title: 'Kitchen KOT', items: kitchenItems });
+        if (barItems.length > 0) groups.push({ title: 'Bar KOT', items: barItems });
+        return groups;
+  
+      case 'category':
+        const groupedByCategory: Record<string, OrderItem[]> = {};
+        const remainingItems: OrderItem[] = [];
+        const specifiedCategories = kotPreference.categories || [];
+  
+        items.forEach(item => {
+          if (item.category && specifiedCategories.includes(item.category)) {
+            if (!groupedByCategory[item.category]) {
+              groupedByCategory[item.category] = [];
+            }
+            groupedByCategory[item.category].push(item);
+          } else {
+            remainingItems.push(item);
+          }
+        });
+  
+        const categoryGroups = Object.entries(groupedByCategory).map(([category, items]) => ({
+          title: `${category} KOT`,
+          items,
+        }));
+        
+        // Handle remaining items with kitchen/bar split
+        if (remainingItems.length > 0) {
+            const remainingKitchenItems = remainingItems.filter(item => item.category !== 'Beverages');
+            const remainingBarItems = remainingItems.filter(item => item.category === 'Beverages');
+
+            if (remainingKitchenItems.length > 0) {
+                // Try to merge with an existing "Kitchen KOT" if any, otherwise create new
+                const existingKitchenGroup = categoryGroups.find(g => g.title === 'Kitchen KOT');
+                if (existingKitchenGroup) {
+                    existingKitchenGroup.items.push(...remainingKitchenItems);
+                } else {
+                    categoryGroups.push({ title: 'Kitchen KOT', items: remainingKitchenItems });
+                }
+            }
+            if (remainingBarItems.length > 0) {
+                 categoryGroups.push({ title: 'Bar KOT', items: remainingBarItems });
+            }
+        }
+  
+        return categoryGroups;
+  
+      default:
+        return [{ title: 'KOT', items }];
+    }
+  }, [kotPreference]);
 
   useEffect(() => {
     if (activeOrder) {
@@ -1130,68 +1192,6 @@ export default function PosSystem({
   const lowStockItems = useMemo(() => allMenuItems.filter(item => menuItemStatus[item.name] === 'low'), [allMenuItems, menuItemStatus]);
   const outOfStockItems = useMemo(() => allMenuItems.filter(item => menuItemStatus[item.name] === 'out'), [allMenuItems, menuItemStatus]);
   
-  const groupItemsForKOT = useCallback((items: OrderItem[]): { title: string; items: OrderItem[] }[] => {
-    if (items.length === 0) return [];
-  
-    switch (kotPreference.type) {
-      case 'single':
-        return [{ title: 'KOT', items }];
-  
-      case 'separate':
-        const kitchenItems = items.filter(item => item.category !== 'Beverages');
-        const barItems = items.filter(item => item.category === 'Beverages');
-        const groups = [];
-        if (kitchenItems.length > 0) groups.push({ title: 'Kitchen KOT', items: kitchenItems });
-        if (barItems.length > 0) groups.push({ title: 'Bar KOT', items: barItems });
-        return groups;
-  
-      case 'category':
-        const groupedByCategory: Record<string, OrderItem[]> = {};
-        const remainingItems: OrderItem[] = [];
-        const specifiedCategories = kotPreference.categories || [];
-  
-        items.forEach(item => {
-          if (item.category && specifiedCategories.includes(item.category)) {
-            if (!groupedByCategory[item.category]) {
-              groupedByCategory[item.category] = [];
-            }
-            groupedByCategory[item.category].push(item);
-          } else {
-            remainingItems.push(item);
-          }
-        });
-  
-        const categoryGroups = Object.entries(groupedByCategory).map(([category, items]) => ({
-          title: `${category} KOT`,
-          items,
-        }));
-        
-        // Handle remaining items with kitchen/bar split
-        if (remainingItems.length > 0) {
-            const remainingKitchenItems = remainingItems.filter(item => item.category !== 'Beverages');
-            const remainingBarItems = remainingItems.filter(item => item.category === 'Beverages');
-
-            if (remainingKitchenItems.length > 0) {
-                // Try to merge with an existing "Kitchen KOT" if any, otherwise create new
-                const existingKitchenGroup = categoryGroups.find(g => g.title === 'Kitchen KOT');
-                if (existingKitchenGroup) {
-                    existingKitchenGroup.items.push(...remainingKitchenItems);
-                } else {
-                    categoryGroups.push({ title: 'Kitchen KOT', items: remainingKitchenItems });
-                }
-            }
-            if (remainingBarItems.length > 0) {
-                 categoryGroups.push({ title: 'Bar KOT', items: remainingBarItems });
-            }
-        }
-  
-        return categoryGroups;
-  
-      default:
-        return [{ title: 'KOT', items }];
-    }
-  }, [kotPreference]);
-
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (document.querySelector('[role="dialog"], [role="alertdialog"]')) return;
@@ -1586,7 +1586,7 @@ export default function PosSystem({
                            <RadioGroup value={viewMode} onValueChange={(v) => setViewMode(v as ViewMode)} className="flex items-center">
                               <Label className={cn("p-1.5 rounded-md cursor-pointer transition-colors", viewMode === 'accordion' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent' )}>
                                   <RadioGroupItem value="accordion" id="accordion-view" className="sr-only" />
-                                  <List className="h-5 w-5 box-content" />
+                                  <Rows className="h-5 w-5 box-content" />
                               </Label>
                               <Label className={cn("p-1.5 rounded-md cursor-pointer transition-colors", viewMode === 'grid' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent' )}>
                                   <RadioGroupItem value="grid" id="grid-view" className="sr-only" />
@@ -1697,9 +1697,9 @@ export default function PosSystem({
                                   <Icon className={cn("h-4 w-4 shrink-0", table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black')} />
                                   <span className={cn("text-xs font-semibold leading-tight break-words", table.status === 'Available' || table.status === 'Occupied' ? 'text-white' : 'text-black')}>{table.status}</span>
                               </div>
-                               {showTableDetails && table.name && <div className="text-xs font-bold text-white mt-1 max-w-full truncate">{table.name}</div>}
-                                {showTableDetails && table.seats && <div className="text-xs text-white flex items-center justify-center gap-1"><Armchair className="h-3 w-3" /> {table.seats}</div>}
-                                {showTableDetails && table.status === 'Reserved' && table.reservationDetails && (
+                               {showTableDetailsOnPOS && table.name && <div className="text-xs font-bold text-white mt-1 max-w-full truncate">{table.name}</div>}
+                                {showTableDetailsOnPOS && table.seats && <div className="text-xs text-white flex items-center justify-center gap-1"><Armchair className="h-3 w-3" /> {table.seats}</div>}
+                                {showTableDetailsOnPOS && table.status === 'Reserved' && table.reservationDetails && (
                                 <div className="text-xs text-black font-bold mt-1 max-w-full truncate px-1">
                                     for {table.reservationDetails.name}
                                 </div>

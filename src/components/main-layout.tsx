@@ -50,7 +50,7 @@ export default function MainLayout() {
   const [isCheckingSetup, setIsCheckingSetup] = useState(true);
   const [venueName, setVenueName] = useState('Up & Above Assistant');
   const [kotPreference, setKotPreference] = useState<KOTPreference>({ type: 'single', categories: [] });
-  const [showTableDetails, setShowTableDetails] = useState(false);
+  const [showTableDetailsOnPOS, setShowTableDetailsOnPOS] = useState(false);
 
   useEffect(() => {
     try {
@@ -576,7 +576,7 @@ export default function MainLayout() {
                   kotPreference={kotPreference}
                   selectedOrderType={selectedOrderType}
                   setSelectedOrderType={setSelectedOrderType}
-                  showTableDetails={showTableDetails}
+                  showTableDetailsOnPOS={showTableDetailsOnPOS}
                 />
             </TabsContent>
             <TabsContent value="tables" className="m-0 p-0">
@@ -600,8 +600,8 @@ export default function MainLayout() {
                 showOccupancy={showOccupancy}
                 setShowOccupancy={setShowOccupancy}
                 initialSelectedTableId={initialTableForManagement}
-                showTableDetails={showTableDetails}
-                setShowTableDetails={setShowTableDetails}
+                showTableDetailsOnPOS={showTableDetailsOnPOS}
+                setShowTableDetailsOnPOS={setShowTableDetailsOnPOS}
               />
             </TabsContent>
             <TabsContent value="kitchen" className="m-0 p-0 h-full">
