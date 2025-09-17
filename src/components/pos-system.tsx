@@ -272,30 +272,31 @@ function OrderPanel({
             return <div className="space-y-2">{orderItems.map(item => renderItem(item, false))}</div>;
         }
 
-        const sentItemsMap = new Map(activeOrder.items.map(item => [item.name, item]));
-        const existingItems: OrderItem[] = [];
-        const newItems: OrderItem[] = [];
+        const sentItemsMap = new Map(activeOrder.items.map(item => [item.name, item.quantity]));
+        
+        const existingItemsUI: JSX.Element[] = [];
+        const newItemsUI: JSX.Element[] = [];
 
         orderItems.forEach(item => {
-            if (sentItemsMap.has(item.name)) {
-                existingItems.push(item);
+            const sentQty = sentItemsMap.get(item.name);
+            if (sentQty !== undefined) {
+                // Item exists in the previously sent order
+                existingItemsUI.push(renderItem(item, false));
+                if (item.quantity > sentQty) {
+                    // It's an existing item, but quantity has increased. Show the new part.
+                    newItemsUI.push(renderItem({ ...item, quantity: item.quantity - sentQty }, true));
+                }
             } else {
-                newItems.push(item);
+                // This is a completely new item for this order
+                newItemsUI.push(renderItem(item, true));
             }
         });
-        
-        const changedExistingItems = existingItems.filter(item => {
-            const sentItem = sentItemsMap.get(item.name);
-            return sentItem && item.quantity > sentItem.quantity;
-        });
-
-        const newAndChangedItems = [...changedExistingItems, ...newItems];
 
         return (
           <div className="space-y-2">
-            {existingItems.map(item => renderItem(item, false))}
-            {newAndChangedItems.length > 0 && <Separator className="my-4" />}
-            {newAndChangedItems.map(item => renderItem(item, true))}
+            {existingItemsUI}
+            {newItemsUI.length > 0 && <Separator className="my-4" />}
+            {newItemsUI}
           </div>
         );
     };
@@ -1326,7 +1327,7 @@ export default function PosSystem({
         key={group.title}
         size="lg"
         className="h-12 text-base w-full bg-blue-600 hover:bg-blue-700"
-        onClick={() => processKOTs(kotGroups)}
+        onClick={() => processKOTs([group])}
         disabled={isProcessing || !isOrderReady}
       >
         {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
@@ -1833,5 +1834,3 @@ export default function PosSystem({
     </div>
   );
 }
-
-    
