@@ -774,7 +774,7 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
                 />
               </div>
                <div className="flex items-center justify-between rounded-lg border p-3 shadow-sm">
-                <Label htmlFor="show-table-details-pos">Display Details on POS Tables</Label>
+                <Label htmlFor="show-table-details-pos">Display table details on POS tables</Label>
                 <Switch
                   id="show-table-details-pos"
                   checked={showTableDetailsOnPOS}
