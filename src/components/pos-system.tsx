@@ -247,7 +247,7 @@ function OrderPanel({
         }
 
         const renderItem = (item: OrderItem, isNew: boolean) => (
-            <div key={`${item.name}-${isNew}`} className={cn("flex items-center p-2 rounded-md", isNew && "bg-blue-50 dark:bg-blue-900/20")}>
+            <div key={`${item.name}-${isNew ? 'new' : 'old'}`} className={cn("flex items-center p-2 rounded-md", isNew && "bg-blue-50 dark:bg-blue-900/20")}>
                 <div className="flex-grow">
                     <p className="font-medium flex items-center gap-2">
                         {item.name}
@@ -280,17 +280,13 @@ function OrderPanel({
         orderItems.forEach(item => {
             const sentQty = sentItemsMap.get(item.name);
             if (sentQty !== undefined) {
-                // Item exists in the previously sent order
                 if (item.quantity > sentQty) {
-                     // It's an existing item, but quantity has increased. Show the original and the new part.
                     existingItemsUI.push(renderItem({ ...item, quantity: sentQty }, false));
                     newItemsUI.push(renderItem({ ...item, quantity: item.quantity - sentQty }, true));
                 } else if (item.quantity === sentQty) {
                     existingItemsUI.push(renderItem(item, false));
                 }
-                 // If quantity is less, it's a voided item, which we don't render here.
             } else {
-                // This is a completely new item for this order
                 newItemsUI.push(renderItem(item, true));
             }
         });
@@ -995,11 +991,11 @@ export default function PosSystem({
   
   const processKOTs = useCallback((kotGroupsToProcess: { title: string; items: OrderItem[] }[]) => {
     setIsProcessing(true);
-  
+
     setTimeout(() => {
         let finalOrder: Order;
         const itemsInThisKot = kotGroupsToProcess.flatMap(g => g.items);
-  
+
         if (activeOrder) {
             // This is an UPDATE to an existing order.
             const updatedItems = [...activeOrder.items];
@@ -1013,24 +1009,24 @@ export default function PosSystem({
             });
             finalOrder = { ...activeOrder, items: updatedItems };
             setOrders(prev => prev.map(o => o.id === finalOrder.id ? finalOrder : o));
-            setActiveOrder(finalOrder); // Update active order with new items
+            setActiveOrder(finalOrder);
         } else {
             // This is a NEW order.
             finalOrder = {
-                items: orderItems, // Use all items from the cart.
+                items: orderItems, // Use all items from the cart for the main order object.
                 tableId: selectedTableId,
                 id: `K${(orders.length + 1).toString().padStart(3, '0')}`,
                 status: 'In Preparation',
                 orderType: selectedOrderType,
                 customerDetails: customerDetails,
             };
-            onOrderCreated(finalOrder); // This will set the active order.
-  
-            // The activeOrder state is not updated immediately, so for the first KOT of a new order,
-            // we create a temporary 'updated' version of it to reflect the items that will be sent.
+            onOrderCreated(finalOrder); // This will add the new order to the global state.
+            
+            // Now, we create a temporary version of the order that ONLY has the items for the current KOT.
+            // This is crucial so that subsequent KOTs for the same new order know what's already been sent.
             const tempUpdatedOrder = { ...finalOrder, items: itemsInThisKot };
-            setActiveOrder(tempUpdatedOrder);
-  
+            setActiveOrder(tempUpdatedOrder); // Set this as the active order temporarily.
+
             if (selectedTableId) {
                 updateTableStatus([selectedTableId], 'Occupied');
             }
@@ -1039,10 +1035,10 @@ export default function PosSystem({
         kotGroupsToProcess.forEach(group => {
             printKot(finalOrder, group.items, group.title);
         });
-  
+
         toast({ title: `KOTs Sent!`, description: `Order update sent.` });
         setIsProcessing(false);
-  
+
     }, 100);
 }, [activeOrder, orderItems, selectedTableId, orders.length, selectedOrderType, customerDetails, onOrderCreated, setOrders, updateTableStatus, toast, setActiveOrder]);
 
@@ -1340,25 +1336,25 @@ export default function PosSystem({
   const renderKotButtons = () => {
     const newItems = getNewItems(orderItems, activeOrder?.items || []);
     if (newItems.length === 0) return null;
-  
+
     const kotGroups = groupItemsForKOT(newItems);
     if (kotGroups.length === 0) return null;
 
     const isOrderReady = selectedOrderType === 'Dine-In' ? selectedTableId : true;
-  
+
     return kotGroups.map(group => (
-      <Button
-        key={group.title}
-        size="lg"
-        className="h-12 text-base w-full bg-blue-600 hover:bg-blue-700"
-        onClick={() => processKOTs([group])}
-        disabled={isProcessing || !isOrderReady}
-      >
-        {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
-        {activeOrder ? `Update ${group.title}` : `Send ${group.title}`}
-      </Button>
+        <Button
+            key={group.title}
+            size="lg"
+            className="h-12 text-base w-full bg-blue-600 hover:bg-blue-700"
+            onClick={() => processKOTs([group])}
+            disabled={isProcessing || !isOrderReady}
+        >
+            {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
+            {activeOrder ? `Update ${group.title}` : `Send ${group.title}`}
+        </Button>
     ));
-  };
+};
 
 
   const renderMenuItem = (item: MenuItem, subCategoryName: string, categoryName: string) => {
@@ -1454,7 +1450,7 @@ export default function PosSystem({
     const statusConfig = status ? itemStatusColors[status] : null;
     
     return (
-        <div className="flex-grow text-left flex items-center gap-2">
+        <div className="flex-grow text-left flex items-center gap-2 font-bold">
             <span className="truncate">{category.category}</span>
             {statusConfig && (
                 <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-black/10">
@@ -1482,7 +1478,7 @@ export default function PosSystem({
                             <TabsTrigger value={category.category} className={cn("rounded-md border-2 border-transparent data-[state=active]:shadow-md px-4 py-2 cursor-pointer transition-colors", statusConfig ? statusConfig.dark : (colorClass || 'bg-muted data-[state=active]:border-primary'))}>
                                 {renderCategoryHeader(category)}
                             </TabsTrigger>
-                            <div className="absolute top-1 right-2 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
+                            <div className="absolute bottom-1 right-2 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
                                 <Popover>
                                     <PopoverTrigger asChild>
                                         <div role="button" className="p-1 rounded-md hover:bg-black/10">
