@@ -252,6 +252,7 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
   const [isEditDetailsDialogOpen, setIsEditDetailsDialogOpen] = useState(false);
 
   const [reservationName, setReservationName] = useState('');
+  const [reservationSalutation, setReservationSalutation] = useState('Mr.');
   const [reservationMobile, setReservationMobile] = useState('');
   const [reservationTime, setReservationTime] = useState({ hour: '12', minute: '00', period: 'PM' });
   const [reservationTableId, setReservationTableId] = useState<string>('');
@@ -430,10 +431,11 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
       });
       return;
     }
-
+    
+    const fullName = `${reservationSalutation} ${reservationName}`;
     const formattedTime = `${hour}:${minute} ${period}`;
     const reservationDetails = {
-      name: reservationName,
+      name: fullName,
       mobile: reservationMobile,
       time: formattedTime,
     };
@@ -442,7 +444,7 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
     
     toast({
       title: 'Table Reserved!',
-      description: `Table ${reservationTableId} is now reserved for ${reservationName}.`,
+      description: `Table ${reservationTableId} is now reserved for ${fullName}.`,
     });
 
     // Reset form
@@ -450,6 +452,7 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
     setReservationMobile('');
     setReservationTime({ hour: '12', minute: '00', period: 'PM' });
     setReservationTableId('');
+    setReservationSalutation('Mr.');
   };
 
 
@@ -574,7 +577,8 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
                     {table.seats && <div className="text-xs text-white flex items-center justify-center gap-1"><Armchair className="h-3 w-3" /> {table.seats}</div>}
                     {table.status === 'Reserved' && table.reservationDetails && (
                       <div className="text-xs text-black font-bold mt-1 max-w-full truncate px-1">
-                        for {table.reservationDetails.name}
+                        <p>{table.reservationDetails.time}</p>
+                        <p>for {table.reservationDetails.name}</p>
                       </div>
                     )}
                 </div>
@@ -631,16 +635,26 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
                 <CardDescription>Book a table for a future date or time.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="guest-name">Guest Name</Label>
-                  <Input id="guest-name" value={reservationName} onChange={(e) => setReservationName(e.target.value)} />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="guest-mobile">Mobile No. (Optional)</Label>
-                  <Input id="guest-mobile" value={reservationMobile} onChange={(e) => setReservationMobile(e.target.value)} />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                   <div className="space-y-2">
+                <div className="grid grid-cols-[auto_1fr] gap-x-2 gap-y-4 items-end">
+                  <div className='space-y-2'>
+                    <Label htmlFor="guest-salutation">Title</Label>
+                    <Select value={reservationSalutation} onValueChange={setReservationSalutation}>
+                        <SelectTrigger id="guest-salutation" className="w-[80px]"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="Mr.">Mr.</SelectItem>
+                            <SelectItem value="Mrs.">Mrs.</SelectItem>
+                        </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="guest-name">Guest Name</Label>
+                    <Input id="guest-name" value={reservationName} onChange={(e) => setReservationName(e.target.value)} />
+                  </div>
+                   <div className="space-y-2 col-span-2">
+                    <Label htmlFor="guest-mobile">Mobile No. (Optional)</Label>
+                    <Input id="guest-mobile" value={reservationMobile} onChange={(e) => setReservationMobile(e.target.value)} />
+                  </div>
+                  <div className="space-y-2 col-span-2">
                     <Label>Time of Arrival</Label>
                     <div className="flex items-center gap-1">
                       <Select value={reservationTime.hour} onValueChange={(v) => setReservationTime(p => ({...p, hour: v}))}>
@@ -669,7 +683,7 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
                       </Select>
                     </div>
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-2 col-span-2">
                     <Label htmlFor="table-no">Table No.</Label>
                     <Select value={reservationTableId} onValueChange={setReservationTableId}>
                       <SelectTrigger id="table-no">
@@ -758,9 +772,9 @@ export default function TableManagement({ tables, orders, billHistory, updateTab
                 />
               </div>
                <div className="flex items-center justify-between rounded-lg border p-3 shadow-sm">
-                <Label htmlFor="show-table-details">Display Details on POS Tables</Label>
+                <Label htmlFor="show-table-details-pos">Display Details on POS Tables</Label>
                 <Switch
-                  id="show-table-details"
+                  id="show-table-details-pos"
                   checked={showTableDetailsOnPOS}
                   onCheckedChange={setShowTableDetailsOnPOS}
                 />
