@@ -9,7 +9,7 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 import { sendEmailReceipt } from './send-email-receipt';
-import { GenerateReportInputSchema, GenerateReportOutputSchema, type GenerateReportInput, type GenerateReportOutput, type Bill, type Employee, type Expense, type PendingBill, type Attendance, type Advance } from '@/lib/types';
+import { GenerateReportInputSchema, GenerateReportOutputSchema, type GenerateReportInput, type GenerateReportOutput, type Bill, type Employee, type Expense, type PendingBill, type Attendance, type Advance, type Table, type InventoryItem } from '@/lib/types';
 import { db } from '@/lib/firebase';
 import { collection, getDocs } from 'firebase/firestore';
 
@@ -64,12 +64,24 @@ export async function generateAndSendReport(
     return { ...data, id: doc.id, date: data.date.toDate() } as Advance;
   });
 
+  const tablesSnapshot = await getDocs(collection(db, "tables"));
+  const tables: Table[] = tablesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Table));
+
+  const inventorySnapshot = await getDocs(collection(db, "inventory"));
+  const inventory: InventoryItem[] = inventorySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as InventoryItem));
+
+
   const serializableInput: GenerateReportInput = {
     ...input,
     billHistory: billHistory.map(bill => ({
+      ...bill,
       id: bill.id,
       total: bill.total,
       timestamp: bill.timestamp.toISOString(),
+      orderItems: bill.orderItems.map(item => ({
+        ...item,
+        history: (item.history || []).map(h => ({...h, changedAt: h.changedAt.toISOString()}))
+      }))
     })),
     employees,
     expenses: expenses.map(e => ({...e, date: e.date.toISOString()})),
@@ -79,6 +91,8 @@ export async function generateAndSendReport(
     })),
     attendance: attendance.map(a => ({...a, date: a.date.toISOString()})),
     advances: advances.map(adv => ({...adv, date: adv.date.toISOString()})),
+    tables,
+    inventory,
   };
   return generateReportFlow(serializableInput);
 }
@@ -110,21 +124,29 @@ Your report MUST contain the following sections, in this order:
 1.  **Sales Summary**:
     *   Total number of bills.
     *   Total revenue from all bills in the period.
-    *   A list of all bills with their ID and total amount.
+    *   A list of all bills with their ID, total amount, and timestamp.
 
-2.  **Expense Summary**:
+2.  **Table Performance Summary**:
+    *   For each table, calculate the total revenue and the number of turnovers (times occupied) during the period.
+    *   List tables sorted by revenue in descending order.
+
+3.  **Expense Summary**:
     *   Total expenses for the period.
     *   A breakdown of expenses by category.
     *   A list of all individual expenses with their date, description, and amount.
 
-3.  **Pending Bills Summary**:
+4.  **Pending Bills Summary**:
     *   A section for "To Collect from Customers": List each person and the total amount pending from them.
     *   A section for "To Pay to Vendors": List each person/vendor and the total amount you need to pay them.
 
-4.  **Staff Report**:
+5.  **Staff Report**:
     *   **Attendance Summary**: List employees who were absent or on half-day during the period.
     *   **Salary Advances**: List any salary advances given to employees during the period, including who received it and how much.
     *   **Full Employee List**: A list of all employees with their name, role, and salary.
+
+6.  **Inventory & Reservations Report**:
+    *   **Inventory Status**: List all items that are low in stock or out of stock based on their stock and capacity.
+    *   **Reservation History**: List all table reservations made, including guest name, mobile, time, and table number.
 
 Analyze all the provided data to generate the report.
 
@@ -135,6 +157,8 @@ DATA (JSON Format):
 - Pending Bills: {{{json pendingBills}}}
 - Attendance Records: {{{json attendance}}}
 - Salary Advances: {{{json advances}}}
+- Table Configuration: {{{json tables}}}
+- Inventory Levels: {{{json inventory}}}
 
 Generate the report title and content. The content should be well-formatted for an email. Calculate the total revenue and include it in the designated field. Ensure every section is clearly titled and easy to read.
 `,
