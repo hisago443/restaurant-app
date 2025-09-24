@@ -807,26 +807,7 @@ export default function PosSystem({
   }, [searchTerm, viewMode, filteredMenu]);
   
   useEffect(() => {
-    try {
-      const savedColors = localStorage.getItem('categoryColors');
-      if (savedColors) {
-        setCategoryColors(JSON.parse(savedColors));
-      } else {
-        const initialColors: Record<string, string> = {
-            "Pizza's": "amber",
-            "Pasta (Penne / Spaghetti)": "lime",
-            "Sandwiches": "purple",
-            "Garlic Bread": "teal",
-            "Burger's": "orange",
-            "All Day Breakfast": "cyan",
-            "Beverages": "amber",
-            "Chinese & Snacks": "lime"
-        };
-        setCategoryColors(initialColors);
-      }
-    } catch (e) {
-      console.error("Could not parse 'categoryColors' from localStorage", e);
-      const initialColors: Record<string, string> = {
+    const initialColors: Record<string, string> = {
         "Pizza's": "amber",
         "Pasta (Penne / Spaghetti)": "lime",
         "Sandwiches": "purple",
@@ -835,7 +816,17 @@ export default function PosSystem({
         "All Day Breakfast": "cyan",
         "Beverages": "amber",
         "Chinese & Snacks": "lime"
-      };
+    };
+
+    try {
+      const savedColors = localStorage.getItem('categoryColors');
+      if (savedColors) {
+        setCategoryColors(JSON.parse(savedColors));
+      } else {
+        setCategoryColors(initialColors);
+      }
+    } catch (e) {
+      console.error("Could not parse 'categoryColors' from localStorage", e);
       setCategoryColors(initialColors);
     }
   }, []);
@@ -1541,9 +1532,9 @@ const processKOTs = useCallback((kotGroupsToProcess: { title: string; items: Ord
                     const colorClass = colorName ? colorPalette[colorName]?.[colorShade] : '';
                     return (
                         <div key={category.category} className="relative group p-1">
-                            <TabsTrigger value={category.category} className={cn("rounded-md data-[state=active]:border-primary data-[state=active]:border-2 data-[state=active]:shadow-md pr-8 pl-4 py-3 cursor-pointer transition-colors", statusConfig ? statusConfig.dark : (colorClass || 'bg-muted'))}>
-                                <div className="flex-grow text-left flex items-center gap-2 font-bold">
-                                    <span className="truncate">{category.category}</span>
+                            <TabsTrigger value={category.category} className={cn("rounded-md data-[state=active]:border-primary data-[state=active]:border-2 data-[state=active]:shadow-md px-4 py-3 cursor-pointer transition-colors", statusConfig ? statusConfig.dark : (colorClass || 'bg-muted'))}>
+                                <div className="flex-grow text-left flex items-center gap-2 text-lg font-bold">
+                                    <span className="truncate pr-4">{category.category}</span>
                                     {statusConfig && (
                                         <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-black/10 text-white">
                                             {statusConfig.name}
@@ -1551,7 +1542,7 @@ const processKOTs = useCallback((kotGroupsToProcess: { title: string; items: Ord
                                     )}
                                 </div>
                             </TabsTrigger>
-                            <div className="absolute bottom-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
+                            <div className="absolute bottom-1 right-2 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
                                 <Popover>
                                     <PopoverTrigger asChild>
                                         <div role="button" className="p-1 rounded-md hover:bg-black/10">
@@ -1927,6 +1918,7 @@ const processKOTs = useCallback((kotGroupsToProcess: { title: string; items: Ord
     </div>
   );
 }
+
 
 
 
