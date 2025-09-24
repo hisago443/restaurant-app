@@ -1018,7 +1018,7 @@ const processKOTs = useCallback((kotGroupsToProcess: { title: string; items: Ord
             setActiveOrder(finalOrder);
         } else {
             // This is a NEW order.
-            finalOrder = {
+            const newOrderObject: Order = {
                 items: orderItems, // Use all items from the cart for the main order object.
                 tableId: selectedTableId,
                 id: `K${(orders.length + 1).toString().padStart(3, '0')}`,
@@ -1026,17 +1026,18 @@ const processKOTs = useCallback((kotGroupsToProcess: { title: string; items: Ord
                 orderType: selectedOrderType,
                 customerDetails: customerDetails,
             };
-            onOrderCreated(finalOrder); // This will add the new order to the global state.
+            onOrderCreated(newOrderObject);
             
-            // This is the crucial fix: create a temporary version of the order that ONLY has the items for the current KOT.
-            // This ensures subsequent KOTs know what's already been sent.
+            // This is the crucial part: update the `activeOrder` locally to reflect the items that have just been sent.
+            // This ensures subsequent KOTs for the same fresh order know what's already been processed.
             const sentItemsForThisKot = [...(activeOrder?.items || []), ...itemsInThisKot];
-            const tempUpdatedOrder = { ...finalOrder, items: sentItemsForThisKot };
+            const tempUpdatedOrder = { ...newOrderObject, items: sentItemsForThisKot };
             setActiveOrder(tempUpdatedOrder);
 
             if (selectedTableId) {
                 updateTableStatus([selectedTableId], 'Occupied');
             }
+             finalOrder = newOrderObject;
         }
         
         kotGroupsToProcess.forEach(group => {
@@ -1406,8 +1407,8 @@ const processKOTs = useCallback((kotGroupsToProcess: { title: string; items: Ord
       <Card
         key={item.name}
         className={cn(
-          "group rounded-lg transition-all shadow-md hover:shadow-lg relative overflow-hidden h-full flex flex-col min-h-[110px]",
-          easyMode && "cursor-pointer hover:scale-105",
+          "group rounded-lg transition-all shadow-md hover:shadow-lg relative overflow-hidden h-full flex flex-col min-h-[110px] hover:scale-105",
+          easyMode && "cursor-pointer",
           isDisabled && "pointer-events-none opacity-60",
           finalItemBg
         )}
@@ -1501,10 +1502,10 @@ const processKOTs = useCallback((kotGroupsToProcess: { title: string; items: Ord
                     const colorClass = colorName ? colorPalette[colorName]?.[colorShade] : '';
                     return (
                         <div key={category.category} className="relative group p-1">
-                            <TabsTrigger value={category.category} className={cn("rounded-md border-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-md px-4 py-2 cursor-pointer transition-colors", statusConfig ? statusConfig.dark : (colorClass || 'bg-muted'))}>
+                            <TabsTrigger value={category.category} className={cn("rounded-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md px-4 py-2 cursor-pointer transition-colors", statusConfig ? statusConfig.dark : (colorClass || 'bg-muted'))}>
                                 {renderCategoryHeader(category)}
                             </TabsTrigger>
-                            <div className="absolute bottom-1 right-2 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
+                            <div className="absolute top-1/2 -translate-y-1/2 right-2 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
                                 <Popover>
                                     <PopoverTrigger asChild>
                                         <div role="button" className="p-1 rounded-md hover:bg-black/10">
