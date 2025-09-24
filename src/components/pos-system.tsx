@@ -1424,7 +1424,7 @@ const processKOTs = useCallback((kotGroupsToProcess: { title: string; items: Ord
     let isDisabled = false;
 
     if (categoryStatus === 'out' || itemStatus === 'out') {
-        finalItemBg = itemStatusColors.out.light;
+        finalItemBg = 'bg-red-300 dark:bg-red-900/70 text-white dark:text-red-200';
         isDisabled = true;
     } else if (categoryStatus === 'low' || itemStatus === 'low') {
         finalItemBg = itemStatusColors.low.light;
@@ -1677,10 +1677,10 @@ const processKOTs = useCallback((kotGroupsToProcess: { title: string; items: Ord
                                 <Label htmlFor="filter-all" className={cn("h-10 w-24 flex items-center justify-center rounded-md cursor-pointer border-2 font-semibold text-lg text-foreground hover:bg-accent", vegFilter === 'All' && 'ring-2 ring-primary text-primary bg-background')}>All</Label>
                                 
                                 <RadioGroupItem value="Veg" id="filter-veg" className="sr-only" />
-                                <Label htmlFor="filter-veg" className={cn("h-10 w-24 flex items-center justify-center rounded-md cursor-pointer border-2 font-semibold text-lg text-white bg-green-600", vegFilter === 'Veg' && 'border-black font-bold')}>Veg</Label>
+                                <Label htmlFor="filter-veg" className={cn("h-10 w-24 flex items-center justify-center rounded-md cursor-pointer border-2 font-semibold text-lg text-white bg-green-600 transition-all", vegFilter === 'Veg' && 'border-4 border-black dark:border-white ring-2 ring-offset-2 ring-green-600')}>Veg</Label>
                                 
                                 <RadioGroupItem value="Non-Veg" id="filter-nonveg" className="sr-only" />
-                                <Label htmlFor="filter-nonveg" className={cn("h-10 w-24 flex items-center justify-center rounded-md cursor-pointer border-2 font-semibold text-lg text-white bg-red-600", vegFilter === 'Non-Veg' && 'border-black font-bold')}>Non-Veg</Label>
+                                <Label htmlFor="filter-nonveg" className={cn("h-10 w-24 flex items-center justify-center rounded-md cursor-pointer border-2 font-semibold text-lg text-white bg-red-600 transition-all", vegFilter === 'Non-Veg' && 'border-4 border-black dark:border-white ring-2 ring-offset-2 ring-red-600')}>Non-Veg</Label>
                             </RadioGroup>
                       </div>
                       <div className="flex items-center gap-2">
@@ -1918,6 +1918,7 @@ const processKOTs = useCallback((kotGroupsToProcess: { title: string; items: Ord
     </div>
   );
 }
+
 
 
 
