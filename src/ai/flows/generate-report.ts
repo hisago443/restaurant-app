@@ -9,7 +9,7 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 import { sendEmailReceipt } from './send-email-receipt';
-import { GenerateReportInputSchema, GenerateReportOutputSchema, type GenerateReportInput, type GenerateReportOutput, type Bill, type Employee, type Expense, type PendingBill, type Attendance, type Advance, type Table, type InventoryItem } from '@/lib/types';
+import { GenerateReportInputSchema, GenerateReportOutputSchema, type GenerateReportInput, type GenerateReportOutput, type Bill, type Employee, type Expense, type PendingBill, type Attendance, type Advance, type Table, type InventoryItem, type Customer } from '@/lib/types';
 import { db } from '@/lib/firebase';
 import { collection, getDocs } from 'firebase/firestore';
 
@@ -70,6 +70,37 @@ export async function generateAndSendReport(
   const inventorySnapshot = await getDocs(collection(db, "inventory"));
   const inventory: InventoryItem[] = inventorySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as InventoryItem));
 
+  // Aggregate Customer Data
+  const customerMap = new Map<string, Customer>();
+  billHistory.forEach(bill => {
+    if (!bill.customerDetails || !bill.customerDetails.phone) return;
+    const { phone, name, email, address } = bill.customerDetails;
+    const existing = customerMap.get(phone);
+    if (existing) {
+      existing.totalSpent += bill.total;
+      existing.totalVisits += 1;
+      if (bill.timestamp > existing.lastSeen) {
+        existing.lastSeen = bill.timestamp;
+      }
+    } else {
+      customerMap.set(phone, {
+        id: phone, phone, name, email: email || '', address: address || '',
+        firstSeen: bill.timestamp, lastSeen: bill.timestamp,
+        totalVisits: 1, totalSpent: bill.total,
+      });
+    }
+  });
+  pendingBills.filter(pb => pb.type === 'customer').forEach(pBill => {
+    if (pBill.mobile && !customerMap.has(pBill.mobile)) {
+      const firstTxDate = pBill.transactions.length > 0 ? pBill.transactions[0].date : new Date();
+       customerMap.set(pBill.mobile, {
+        id: pBill.mobile, phone: pBill.mobile, name: pBill.name, email: '', address: '',
+        firstSeen: firstTxDate, lastSeen: firstTxDate, totalVisits: 1, totalSpent: 0,
+      });
+    }
+  });
+  const customerSummary: Customer[] = Array.from(customerMap.values());
+
 
   const serializableInput: GenerateReportInput = {
     ...input,
@@ -93,6 +124,11 @@ export async function generateAndSendReport(
     advances: advances.map(adv => ({...adv, date: adv.date.toISOString()})),
     tables,
     inventory,
+    customerSummary: customerSummary.map(c => ({
+        ...c,
+        firstSeen: c.firstSeen.toISOString(),
+        lastSeen: c.lastSeen.toISOString(),
+    })),
   };
   return generateReportFlow(serializableInput);
 }
@@ -130,21 +166,25 @@ Your report MUST contain the following sections, in this order:
     *   For each table, calculate the total revenue and the number of turnovers (times occupied) during the period.
     *   List tables sorted by revenue in descending order.
 
-3.  **Expense Summary**:
+3.  **Customer Summary**:
+    *   List all customers, sorted by their total spending in descending order.
+    *   For each customer, show their name, phone number, total visits, and total amount spent.
+
+4.  **Expense Summary**:
     *   Total expenses for the period.
     *   A breakdown of expenses by category.
     *   A list of all individual expenses with their date, description, and amount.
 
-4.  **Pending Bills Summary**:
+5.  **Pending Bills Summary**:
     *   A section for "To Collect from Customers": List each person and the total amount pending from them.
     *   A section for "To Pay to Vendors": List each person/vendor and the total amount you need to pay them.
 
-5.  **Staff Report**:
+6.  **Staff Report**:
     *   **Attendance Summary**: List employees who were absent or on half-day during the period.
     *   **Salary Advances**: List any salary advances given to employees during the period, including who received it and how much.
     *   **Full Employee List**: A list of all employees with their name, role, and salary.
 
-6.  **Inventory & Reservations Report**:
+7.  **Inventory & Reservations Report**:
     *   **Inventory Status**: List all items that are low in stock or out of stock based on their stock and capacity.
     *   **Reservation History**: List all table reservations made, including guest name, mobile, time, and table number.
 
@@ -159,6 +199,7 @@ DATA (JSON Format):
 - Salary Advances: {{{json advances}}}
 - Table Configuration: {{{json tables}}}
 - Inventory Levels: {{{json inventory}}}
+- Customer Summary: {{{json customerSummary}}}
 
 Generate the report title and content. The content should be well-formatted for an email. Calculate the total revenue and include it in the designated field. Ensure every section is clearly titled and easy to read.
 `,

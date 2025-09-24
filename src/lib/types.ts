@@ -233,6 +233,7 @@ export const GenerateReportInputSchema = z.object({
   advances: z.array(z.any()).describe('A list of all salary advances.'),
   tables: z.array(z.any()).describe('A list of all tables.'),
   inventory: z.array(z.any()).describe('A list of all inventory items.'),
+  customerSummary: z.array(z.any()).describe('A summary of customer data including total visits and spending.'),
   recipientEmail: z.string().email().describe('The email address to send the report to.'),
 });
 export type GenerateReportInput = z.infer<typeof GenerateReportInputSchema>;
