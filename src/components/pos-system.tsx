@@ -44,6 +44,17 @@ const colorPalette: Record<string, {light: string, medium: string}> = {
     violet: { light: 'bg-violet-200 dark:bg-violet-800/50', medium: 'bg-violet-300 dark:bg-violet-700/50' },
     olive: { light: 'bg-lime-200 dark:bg-lime-800/50', medium: 'bg-lime-300 dark:bg-lime-700/50' },
     cyan: { light: 'bg-cyan-200 dark:bg-cyan-800/50', medium: 'bg-cyan-300 dark:bg-cyan-700/50' },
+    pink: { light: 'bg-pink-200 dark:bg-pink-800/50', medium: 'bg-pink-300 dark:bg-pink-700/50' },
+    fuchsia: { light: 'bg-fuchsia-200 dark:bg-fuchsia-800/50', medium: 'bg-fuchsia-300 dark:bg-fuchsia-700/50' },
+    purple: { light: 'bg-purple-200 dark:bg-purple-800/50', medium: 'bg-purple-300 dark:bg-purple-700/50' },
+    indigo: { light: 'bg-indigo-200 dark:bg-indigo-800/50', medium: 'bg-indigo-300 dark:bg-indigo-700/50' },
+    green: { light: 'bg-green-200 dark:bg-green-800/50', medium: 'bg-green-300 dark:bg-green-700/50' },
+    yellow: { light: 'bg-yellow-200 dark:bg-yellow-800/50', medium: 'bg-yellow-300 dark:bg-yellow-700/50' },
+    emerald: { light: 'bg-emerald-200 dark:bg-emerald-800/50', medium: 'bg-emerald-300 dark:bg-emerald-700/50' },
+    teal: { light: 'bg-teal-200 dark:bg-teal-800/50', medium: 'bg-teal-300 dark:bg-teal-700/50' },
+    sky: { light: 'bg-sky-200 dark:bg-sky-800/50', medium: 'bg-sky-300 dark:bg-sky-700/50' },
+    blue: { light: 'bg-blue-200 dark:bg-blue-800/50', medium: 'bg-blue-300 dark:bg-blue-700/50' },
+    orange: { light: 'bg-orange-200 dark:bg-orange-800/50', medium: 'bg-orange-300 dark:bg-orange-700/50' },
 };
 const colorNames = Object.keys(colorPalette);
 
@@ -795,16 +806,38 @@ export default function PosSystem({
     }
   }, [searchTerm, viewMode, filteredMenu]);
   
-    useEffect(() => {
-    if (Object.keys(categoryColors).length === 0) {
+  useEffect(() => {
+    try {
+      const savedColors = localStorage.getItem('categoryColors');
+      if (savedColors) {
+        setCategoryColors(JSON.parse(savedColors));
+      } else {
         const initialColors: Record<string, string> = {};
         menu.forEach((category, index) => {
-            initialColors[category.category] = colorNames[index % colorNames.length];
+          initialColors[category.category] = colorNames[index % colorNames.length];
         });
         setCategoryColors(initialColors);
+      }
+    } catch (e) {
+      console.error("Could not parse 'categoryColors' from localStorage", e);
+      const initialColors: Record<string, string> = {};
+      menu.forEach((category, index) => {
+        initialColors[category.category] = colorNames[index % colorNames.length];
+      });
+      setCategoryColors(initialColors);
     }
-  }, [menu, categoryColors, setCategoryColors]);
+  }, [menu, setCategoryColors]);
 
+  useEffect(() => {
+    if (Object.keys(categoryColors).length > 0) {
+      try {
+        localStorage.setItem('categoryColors', JSON.stringify(categoryColors));
+      } catch (e) {
+        console.error("Could not save 'categoryColors' to localStorage", e);
+      }
+    }
+  }, [categoryColors]);
+  
   useEffect(() => {
     try {
       const savedMode = localStorage.getItem('easyMode');
@@ -1496,8 +1529,15 @@ const processKOTs = useCallback((kotGroupsToProcess: { title: string; items: Ord
                     const colorClass = colorName ? colorPalette[colorName]?.[colorShade] : '';
                     return (
                         <div key={category.category} className="relative group p-1">
-                            <TabsTrigger value={category.category} className={cn("rounded-md data-[state=active]:border-primary data-[state=active]:border-2 data-[state=active]:text-primary data-[state=active]:shadow-md px-4 py-2 cursor-pointer transition-colors", statusConfig ? statusConfig.dark : (colorClass || 'bg-muted'))}>
-                                {renderCategoryHeader(category)}
+                            <TabsTrigger value={category.category} className={cn("rounded-md data-[state=active]:border-primary data-[state=active]:border-2 data-[state=active]:shadow-md px-4 py-2 cursor-pointer transition-colors", statusConfig ? statusConfig.dark : (colorClass || 'bg-muted'))}>
+                                <div className="flex-grow text-left flex items-center gap-2 font-bold">
+                                    <span className="truncate">{category.category}</span>
+                                    {statusConfig && (
+                                        <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-black/10 text-white">
+                                            {statusConfig.name}
+                                        </span>
+                                    )}
+                                </div>
                             </TabsTrigger>
                             <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
                                 <Popover>
@@ -1875,3 +1915,4 @@ const processKOTs = useCallback((kotGroupsToProcess: { title: string; items: Ord
     </div>
   );
 }
+
