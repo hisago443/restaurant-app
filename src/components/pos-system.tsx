@@ -1534,7 +1534,7 @@ const processKOTs = useCallback((kotGroupsToProcess: { title: string; items: Ord
                         <div key={category.category} className="relative group p-1">
                             <TabsTrigger value={category.category} className={cn("rounded-md data-[state=active]:border-primary data-[state=active]:border-2 data-[state=active]:shadow-md px-4 py-3 cursor-pointer transition-colors", statusConfig ? statusConfig.dark : (colorClass || 'bg-muted'))}>
                                 <div className="flex-grow text-left flex items-center gap-2 text-lg font-bold">
-                                    <span className="truncate pr-4">{category.category}</span>
+                                    <span className="truncate pr-10">{category.category}</span>
                                     {statusConfig && (
                                         <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-black/10 text-white">
                                             {statusConfig.name}
@@ -1918,6 +1918,7 @@ const processKOTs = useCallback((kotGroupsToProcess: { title: string; items: Ord
     </div>
   );
 }
+
 
 
 
