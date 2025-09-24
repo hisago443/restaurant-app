@@ -812,21 +812,33 @@ export default function PosSystem({
       if (savedColors) {
         setCategoryColors(JSON.parse(savedColors));
       } else {
-        const initialColors: Record<string, string> = {};
-        menu.forEach((category, index) => {
-          initialColors[category.category] = colorNames[index % colorNames.length];
-        });
+        const initialColors: Record<string, string> = {
+          "Pizza's": "amber",
+          "Pasta (Penne / Spaghetti)": "lime",
+          "Sandwiches": "purple",
+          "Garlic Bread": "teal",
+          "Burger's": "orange",
+          "All Day Breakfast": "cyan",
+          "Beverages": "amber",
+          "Chinese & Snacks": "lime"
+        };
         setCategoryColors(initialColors);
       }
     } catch (e) {
       console.error("Could not parse 'categoryColors' from localStorage", e);
-      const initialColors: Record<string, string> = {};
-      menu.forEach((category, index) => {
-        initialColors[category.category] = colorNames[index % colorNames.length];
-      });
+      const initialColors: Record<string, string> = {
+          "Pizza's": "amber",
+          "Pasta (Penne / Spaghetti)": "lime",
+          "Sandwiches": "purple",
+          "Garlic Bread": "teal",
+          "Burger's": "orange",
+          "All Day Breakfast": "cyan",
+          "Beverages": "amber",
+          "Chinese & Snacks": "lime"
+      };
       setCategoryColors(initialColors);
     }
-  }, [menu, setCategoryColors]);
+  }, []);
 
   useEffect(() => {
     if (Object.keys(categoryColors).length > 0) {
@@ -1529,7 +1541,7 @@ const processKOTs = useCallback((kotGroupsToProcess: { title: string; items: Ord
                     const colorClass = colorName ? colorPalette[colorName]?.[colorShade] : '';
                     return (
                         <div key={category.category} className="relative group p-1">
-                            <TabsTrigger value={category.category} className={cn("rounded-md data-[state=active]:border-primary data-[state=active]:border-2 data-[state=active]:shadow-md px-4 py-2 cursor-pointer transition-colors", statusConfig ? statusConfig.dark : (colorClass || 'bg-muted'))}>
+                            <TabsTrigger value={category.category} className={cn("rounded-md data-[state=active]:border-primary data-[state=active]:border-2 data-[state=active]:shadow-md px-4 py-3 cursor-pointer transition-colors", statusConfig ? statusConfig.dark : (colorClass || 'bg-muted'))}>
                                 <div className="flex-grow text-left flex items-center gap-2 font-bold">
                                     <span className="truncate">{category.category}</span>
                                     {statusConfig && (
@@ -1915,4 +1927,5 @@ const processKOTs = useCallback((kotGroupsToProcess: { title: string; items: Ord
     </div>
   );
 }
+
 
