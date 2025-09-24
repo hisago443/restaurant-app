@@ -60,7 +60,7 @@ const colorNames = Object.keys(colorPalette);
 
 const itemStatusColors: Record<string, { light: string, dark: string, name: string }> = {
     low: { light: 'bg-yellow-200 dark:bg-yellow-900/40', dark: 'bg-yellow-500 dark:bg-yellow-800/70', name: 'Running Low' },
-    out: { light: 'bg-red-500 text-white dark:bg-red-700/70', dark: 'bg-red-600 dark:bg-red-700/70', name: 'Out of Stock' },
+    out: { light: 'bg-red-200 text-red-800 dark:bg-red-900/40 dark:text-red-200', dark: 'bg-red-800 text-white dark:bg-red-700/70', name: 'Out of Stock' },
 };
 const itemStatusNames = Object.keys(itemStatusColors);
 
@@ -1532,9 +1532,9 @@ const processKOTs = useCallback((kotGroupsToProcess: { title: string; items: Ord
                     const colorClass = colorName ? colorPalette[colorName]?.[colorShade] : '';
                     return (
                         <div key={category.category} className="relative group p-1">
-                            <TabsTrigger value={category.category} className={cn("rounded-md data-[state=active]:border-primary data-[state=active]:border-2 data-[state=active]:shadow-md px-4 py-3 cursor-pointer transition-colors", statusConfig ? statusConfig.dark : (colorClass || 'bg-muted'))}>
-                                <div className="flex-grow text-left flex items-center gap-2 text-lg font-bold">
-                                    <span className="truncate pr-10">{category.category}</span>
+                            <TabsTrigger value={category.category} className={cn("rounded-md data-[state=active]:border-primary data-[state=active]:border-2 data-[state=active]:shadow-md px-4 py-3 cursor-pointer transition-colors text-lg font-bold", statusConfig ? statusConfig.dark : (colorClass || 'bg-muted'))}>
+                                <div className={cn("flex-grow text-left flex items-center gap-2 pr-12")}>
+                                    <span className="truncate">{category.category}</span>
                                     {statusConfig && (
                                         <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-black/10 text-white">
                                             {statusConfig.name}
@@ -1542,10 +1542,10 @@ const processKOTs = useCallback((kotGroupsToProcess: { title: string; items: Ord
                                     )}
                                 </div>
                             </TabsTrigger>
-                            <div className="absolute bottom-1 right-2 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
+                            <div className="absolute top-1/2 -translate-y-1/2 right-4 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
                                 <Popover>
                                     <PopoverTrigger asChild>
-                                        <div role="button" className="p-1 rounded-md hover:bg-black/10">
+                                        <div role="button" className="p-1 rounded-md hover:bg-black/20 dark:hover:bg-white/20">
                                             <Palette className="h-4 w-4" />
                                         </div>
                                     </PopoverTrigger>
@@ -1918,6 +1918,7 @@ const processKOTs = useCallback((kotGroupsToProcess: { title: string; items: Ord
     </div>
   );
 }
+
 
 
 

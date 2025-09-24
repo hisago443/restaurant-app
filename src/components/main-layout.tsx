@@ -25,6 +25,7 @@ import { Button } from './ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 import { cn } from '@/lib/utils';
 import SetupWizard from './setup-wizard';
+import { ThemeToggle } from './theme-toggle';
 
 const PENDING_ORDER_KEY = -1;
 
@@ -497,6 +498,7 @@ export default function MainLayout() {
           <span className="text-lg">{venueName}</span>
         </div>
         <div className="flex items-center gap-4">
+          <ThemeToggle />
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
