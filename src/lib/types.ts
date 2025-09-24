@@ -156,14 +156,13 @@ export interface KOTPreference {
 }
 
 
-// Zod schema for serializable Bill
+// Schemas for report generation
 export const BillSchema = z.object({
   id: z.string(),
   total: z.number(),
   timestamp: z.string().describe('ISO date string'),
 });
 
-// Zod schema for serializable Employee
 export const EmployeeSchema = z.object({
   id: z.string(),
   name: z.string(),
@@ -171,11 +170,55 @@ export const EmployeeSchema = z.object({
   salary: z.number(),
 });
 
+export const ExpenseSchema = z.object({
+  id: z.string(),
+  date: z.string().describe('ISO date string'),
+  category: z.string(),
+  description: z.string(),
+  amount: z.number(),
+  vendorId: z.string().nullish(),
+});
+
+export const PendingBillTransactionSchema = z.object({
+  id: z.string(),
+  amount: z.number(),
+  date: z.string().describe('ISO date string'),
+  description: z.string().optional(),
+});
+
+export const PendingBillSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  type: z.enum(['customer', 'vendor']),
+  transactions: z.array(PendingBillTransactionSchema),
+  mobile: z.string().optional(),
+});
+
+export const AttendanceSchema = z.object({
+  id: z.string(),
+  employeeId: z.string(),
+  date: z.string().describe('ISO date string'),
+  status: z.enum(['Present', 'Absent', 'Half-day']),
+  notes: z.string().optional(),
+});
+
+export const AdvanceSchema = z.object({
+  id: z.string(),
+  employeeId: z.string(),
+  date: z.string().describe('ISO date string'),
+  amount: z.number(),
+});
+
+
 // Zod schema for GenerateReport input
 export const GenerateReportInputSchema = z.object({
   reportType: z.enum(['daily', 'monthly', 'yearly']).describe('The type of report to generate.'),
   billHistory: z.array(BillSchema).describe('A list of all bills.'),
   employees: z.array(EmployeeSchema).describe('A list of all employees.'),
+  expenses: z.array(ExpenseSchema).describe('A list of all recorded expenses.'),
+  pendingBills: z.array(PendingBillSchema).describe('A list of all pending bills (both customer and vendor).'),
+  attendance: z.array(AttendanceSchema).describe('A list of all attendance records.'),
+  advances: z.array(AdvanceSchema).describe('A list of all salary advances.'),
   recipientEmail: z.string().email().describe('The email address to send the report to.'),
 });
 export type GenerateReportInput = z.infer<typeof GenerateReportInputSchema>;

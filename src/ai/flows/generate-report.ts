@@ -9,7 +9,7 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 import { sendEmailReceipt } from './send-email-receipt';
-import { GenerateReportInputSchema, GenerateReportOutputSchema, type GenerateReportInput, type GenerateReportOutput, type Bill, type Employee } from '@/lib/types';
+import { GenerateReportInputSchema, GenerateReportOutputSchema, type GenerateReportInput, type GenerateReportOutput, type Bill, type Employee, type Expense, type PendingBill, type Attendance, type Advance } from '@/lib/types';
 import { db } from '@/lib/firebase';
 import { collection, getDocs } from 'firebase/firestore';
 
@@ -22,20 +22,48 @@ export async function generateAndSendReport(
     recipientEmail: string;
   }
 ): Promise<GenerateReportOutput> {
-  // Fetch data from Firestore
+  // Fetch all necessary data from Firestore
   const billsSnapshot = await getDocs(collection(db, "bills"));
   const billHistory: Bill[] = billsSnapshot.docs.map(doc => {
       const data = doc.data();
       return {
           ...data,
           id: doc.id,
-          timestamp: data.timestamp.toDate(), // Convert Firestore Timestamp to Date
+          timestamp: data.timestamp.toDate(),
       } as Bill;
   });
   
   const employeesSnapshot = await getDocs(collection(db, "employees"));
   const employees: Employee[] = employeesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Employee));
   
+  const expensesSnapshot = await getDocs(collection(db, "expenses"));
+  const expenses: Expense[] = expensesSnapshot.docs.map(doc => {
+    const data = doc.data();
+    return { ...data, id: doc.id, date: data.date.toDate() } as Expense;
+  });
+
+  const pendingBillsSnapshot = await getDocs(collection(db, "pendingBills"));
+  const pendingBills: PendingBill[] = pendingBillsSnapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+          id: doc.id,
+          ...data,
+          transactions: (data.transactions || []).map((tx: any) => ({...tx, date: tx.date.toDate()})),
+      } as PendingBill;
+  });
+
+  const attendanceSnapshot = await getDocs(collection(db, "attendance"));
+  const attendance: Attendance[] = attendanceSnapshot.docs.map(doc => {
+    const data = doc.data();
+    return { ...data, id: doc.id, date: data.date.toDate() } as Attendance;
+  });
+  
+  const advancesSnapshot = await getDocs(collection(db, "advances"));
+  const advances: Advance[] = advancesSnapshot.docs.map(doc => {
+    const data = doc.data();
+    return { ...data, id: doc.id, date: data.date.toDate() } as Advance;
+  });
+
   const serializableInput: GenerateReportInput = {
     ...input,
     billHistory: billHistory.map(bill => ({
@@ -44,6 +72,13 @@ export async function generateAndSendReport(
       timestamp: bill.timestamp.toISOString(),
     })),
     employees,
+    expenses: expenses.map(e => ({...e, date: e.date.toISOString()})),
+    pendingBills: pendingBills.map(pb => ({
+      ...pb,
+      transactions: pb.transactions.map(tx => ({...tx, date: tx.date.toISOString()}))
+    })),
+    attendance: attendance.map(a => ({...a, date: a.date.toISOString()})),
+    advances: advances.map(adv => ({...adv, date: adv.date.toISOString()})),
   };
   return generateReportFlow(serializableInput);
 }
@@ -59,34 +94,49 @@ const generateReportPrompt = ai.definePrompt({
   name: 'generateReportPrompt',
   input: { schema: GenerateReportInputSchema },
   output: { schema: ReportOutputSchema },
-  prompt: `You are an expert financial analyst for a restaurant. Your task is to generate a sales and staff report based on the provided data. The report should be clear, concise, and ready to be emailed.
+  prompt: `You are an expert financial analyst for a restaurant. Your task is to generate a comprehensive business report based on the provided data. The report should be clear, concise, and ready to be emailed.
 
 Report Type: {{{reportType}}}
 Recipient: {{{recipientEmail}}}
 Current Date: ${new Date().toDateString()}
 
-Filter the bill history based on the report type.
-- For a 'daily' report, only include bills from today.
-- For a 'monthly' report, only include bills from the current month.
-- For a 'yearly' report, only include bills from the current year.
+Filter the provided data based on the report type.
+- For a 'daily' report, only include data from today.
+- For a 'monthly' report, only include data from the current month.
+- For a 'yearly' report, only include data from the current year.
 
-Your report should contain the following sections:
+Your report MUST contain the following sections, in this order:
+
 1.  **Sales Summary**:
     *   Total number of bills.
     *   Total revenue from all bills in the period.
     *   A list of all bills with their ID and total amount.
-2.  **Staff Summary**:
-    *   A list of all employees with their name, role, and salary.
 
-Analyze the provided bill history and employee list to generate the report.
+2.  **Expense Summary**:
+    *   Total expenses for the period.
+    *   A breakdown of expenses by category.
+    *   A list of all individual expenses with their date, description, and amount.
 
-Bill History (JSON):
-{{{json billHistory}}}
+3.  **Pending Bills Summary**:
+    *   A section for "To Collect from Customers": List each person and the total amount pending from them.
+    *   A section for "To Pay to Vendors": List each person/vendor and the total amount you need to pay them.
 
-Employee Data (JSON):
-{{{json employees}}}
+4.  **Staff Report**:
+    *   **Attendance Summary**: List employees who were absent or on half-day during the period.
+    *   **Salary Advances**: List any salary advances given to employees during the period, including who received it and how much.
+    *   **Full Employee List**: A list of all employees with their name, role, and salary.
 
-Generate the report title and content. The content should be well-formatted for an email. Calculate the total revenue and include it in the designated field.
+Analyze all the provided data to generate the report.
+
+DATA (JSON Format):
+- Bill History: {{{json billHistory}}}
+- Employee Data: {{{json employees}}}
+- Expense History: {{{json expenses}}}
+- Pending Bills: {{{json pendingBills}}}
+- Attendance Records: {{{json attendance}}}
+- Salary Advances: {{{json advances}}}
+
+Generate the report title and content. The content should be well-formatted for an email. Calculate the total revenue and include it in the designated field. Ensure every section is clearly titled and easy to read.
 `,
 });
 
