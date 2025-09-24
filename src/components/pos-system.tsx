@@ -38,11 +38,11 @@ const vegColor = 'bg-green-100 dark:bg-green-900/30';
 const nonVegColor = 'bg-rose-100 dark:bg-rose-900/30';
 
 const colorPalette: Record<string, {light: string, medium: string}> = {
-    amber: { light: 'bg-amber-200 dark:bg-amber-800/50', medium: 'bg-amber-300 dark:bg-amber-700/50' },
-    lime: { light: 'bg-lime-200 dark:bg-lime-800/50', medium: 'bg-lime-300 dark:bg-lime-700/50' },
-    purple: { light: 'bg-purple-200 dark:bg-purple-800/50', medium: 'bg-purple-300 dark:bg-purple-700/50' },
-    teal: { light: 'bg-teal-200 dark:bg-teal-800/50', medium: 'bg-teal-300 dark:bg-teal-700/50' },
-    orange: { light: 'bg-orange-200 dark:bg-orange-800/50', medium: 'bg-orange-300 dark:bg-orange-700/50' },
+    slate: { light: 'bg-slate-200 dark:bg-slate-800/50', medium: 'bg-slate-300 dark:bg-slate-700/50' },
+    stone: { light: 'bg-stone-200 dark:bg-stone-800/50', medium: 'bg-stone-300 dark:bg-stone-700/50' },
+    rose: { light: 'bg-rose-200 dark:bg-rose-800/50', medium: 'bg-rose-300 dark:bg-rose-700/50' },
+    violet: { light: 'bg-violet-200 dark:bg-violet-800/50', medium: 'bg-violet-300 dark:bg-violet-700/50' },
+    olive: { light: 'bg-lime-200 dark:bg-lime-800/50', medium: 'bg-lime-300 dark:bg-lime-700/50' },
     cyan: { light: 'bg-cyan-200 dark:bg-cyan-800/50', medium: 'bg-cyan-300 dark:bg-cyan-700/50' },
 };
 const colorNames = Object.keys(colorPalette);
@@ -795,13 +795,19 @@ export default function PosSystem({
     }
   }, [searchTerm, viewMode, filteredMenu]);
   
-  useEffect(() => {
-    const defaultCategoryColors: Record<string, string> = {};
+    useEffect(() => {
     if (Object.keys(categoryColors).length === 0) {
-        menu.forEach((category, index) => {
-            defaultCategoryColors[category.category] = colorNames[index % colorNames.length];
-        });
-        setCategoryColors(defaultCategoryColors);
+        const initialColors: Record<string, string> = {
+            "Pizza's": "amber",
+            "Pasta (Penne / Spaghetti)": "lime",
+            "Sandwiches": "purple",
+            "Garlic Bread": "teal",
+            "Burger's": "orange",
+            "All Day Breakfast": "cyan",
+            "Beverages": "amber",
+            "Chinese & Snacks": "lime"
+        };
+        setCategoryColors(initialColors);
     }
   }, [menu, categoryColors, setCategoryColors]);
 
@@ -989,7 +995,7 @@ export default function PosSystem({
     }
   };
   
-  const processKOTs = useCallback((kotGroupsToProcess: { title: string; items: OrderItem[] }[]) => {
+const processKOTs = useCallback((kotGroupsToProcess: { title: string; items: OrderItem[] }[]) => {
     setIsProcessing(true);
 
     setTimeout(() => {
@@ -1022,10 +1028,11 @@ export default function PosSystem({
             };
             onOrderCreated(finalOrder); // This will add the new order to the global state.
             
-            // Now, we create a temporary version of the order that ONLY has the items for the current KOT.
-            // This is crucial so that subsequent KOTs for the same new order know what's already been sent.
-            const tempUpdatedOrder = { ...finalOrder, items: itemsInThisKot };
-            setActiveOrder(tempUpdatedOrder); // Set this as the active order temporarily.
+            // This is the crucial fix: create a temporary version of the order that ONLY has the items for the current KOT.
+            // This ensures subsequent KOTs know what's already been sent.
+            const sentItemsForThisKot = [...(activeOrder?.items || []), ...itemsInThisKot];
+            const tempUpdatedOrder = { ...finalOrder, items: sentItemsForThisKot };
+            setActiveOrder(tempUpdatedOrder);
 
             if (selectedTableId) {
                 updateTableStatus([selectedTableId], 'Occupied');
@@ -1334,13 +1341,32 @@ export default function PosSystem({
   
 
   const renderKotButtons = () => {
-    const newItems = getNewItems(orderItems, activeOrder?.items || []);
+    if (!activeOrder) {
+        // This is a NEW order
+        const kotGroups = groupItemsForKOT(orderItems);
+        if (kotGroups.length === 0) return null;
+        
+        const isOrderReady = selectedOrderType === 'Dine-In' ? selectedTableId : true;
+
+        return kotGroups.map(group => (
+            <Button
+                key={group.title}
+                size="lg"
+                className="h-12 text-base w-full bg-blue-600 hover:bg-blue-700"
+                onClick={() => processKOTs([group])}
+                disabled={isProcessing || !isOrderReady}
+            >
+                {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
+                Send {group.title}
+            </Button>
+        ));
+    }
+
+    // This is an UPDATE to an existing order
+    const newItems = getNewItems(orderItems, activeOrder.items);
     if (newItems.length === 0) return null;
 
     const kotGroups = groupItemsForKOT(newItems);
-    if (kotGroups.length === 0) return null;
-
-    const isOrderReady = selectedOrderType === 'Dine-In' ? selectedTableId : true;
 
     return kotGroups.map(group => (
         <Button
@@ -1348,10 +1374,10 @@ export default function PosSystem({
             size="lg"
             className="h-12 text-base w-full bg-blue-600 hover:bg-blue-700"
             onClick={() => processKOTs([group])}
-            disabled={isProcessing || !isOrderReady}
+            disabled={isProcessing}
         >
             {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
-            {activeOrder ? `Update ${group.title}` : `Send ${group.title}`}
+            Update {group.title}
         </Button>
     ));
 };
@@ -1475,7 +1501,7 @@ export default function PosSystem({
                     const colorClass = colorName ? colorPalette[colorName]?.[colorShade] : '';
                     return (
                         <div key={category.category} className="relative group p-1">
-                            <TabsTrigger value={category.category} className={cn("rounded-md border-2 border-transparent data-[state=active]:shadow-md px-4 py-2 cursor-pointer transition-colors", statusConfig ? statusConfig.dark : (colorClass || 'bg-muted data-[state=active]:border-primary'))}>
+                            <TabsTrigger value={category.category} className={cn("rounded-md border-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-md px-4 py-2 cursor-pointer transition-colors", statusConfig ? statusConfig.dark : (colorClass || 'bg-muted'))}>
                                 {renderCategoryHeader(category)}
                             </TabsTrigger>
                             <div className="absolute bottom-1 right-2 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
