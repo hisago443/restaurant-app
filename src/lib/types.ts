@@ -56,6 +56,18 @@ export interface CustomerDetails {
     email?: string;
 }
 
+export interface Customer {
+  id: string; // phone number can serve as a unique ID
+  name: string;
+  phone: string;
+  email?: string;
+  address?: string;
+  firstSeen: Date;
+  lastSeen: Date;
+  totalVisits: number;
+  totalSpent: number;
+}
+
 export interface Order {
   id: string;
   items: OrderItem[];
@@ -213,12 +225,14 @@ export const AdvanceSchema = z.object({
 // Zod schema for GenerateReport input
 export const GenerateReportInputSchema = z.object({
   reportType: z.enum(['daily', 'monthly', 'yearly']).describe('The type of report to generate.'),
-  billHistory: z.array(BillSchema).describe('A list of all bills.'),
-  employees: z.array(EmployeeSchema).describe('A list of all employees.'),
-  expenses: z.array(ExpenseSchema).describe('A list of all recorded expenses.'),
-  pendingBills: z.array(PendingBillSchema).describe('A list of all pending bills (both customer and vendor).'),
-  attendance: z.array(AttendanceSchema).describe('A list of all attendance records.'),
-  advances: z.array(AdvanceSchema).describe('A list of all salary advances.'),
+  billHistory: z.array(z.any()).describe('A list of all bills.'),
+  employees: z.array(z.any()).describe('A list of all employees.'),
+  expenses: z.array(z.any()).describe('A list of all recorded expenses.'),
+  pendingBills: z.array(z.any()).describe('A list of all pending bills (both customer and vendor).'),
+  attendance: z.array(z.any()).describe('A list of all attendance records.'),
+  advances: z.array(z.any()).describe('A list of all salary advances.'),
+  tables: z.array(z.any()).describe('A list of all tables.'),
+  inventory: z.array(z.any()).describe('A list of all inventory items.'),
   recipientEmail: z.string().email().describe('The email address to send the report to.'),
 });
 export type GenerateReportInput = z.infer<typeof GenerateReportInputSchema>;
@@ -229,3 +243,5 @@ export const GenerateReportOutputSchema = z.object({
   message: z.string(),
 });
 export type GenerateReportOutput = z.infer<typeof GenerateReportOutputSchema>;
+
+    

@@ -4,7 +4,7 @@
 
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Utensils, LayoutGrid, Soup, Users, Shield, Receipt, Package, PanelTop, PanelLeft } from 'lucide-react';
+import { Utensils, LayoutGrid, Soup, Users, Shield, Receipt, Package, PanelTop, PanelLeft, Users2 } from 'lucide-react';
 import { isSameDay } from 'date-fns';
 import { collection, onSnapshot, doc, setDoc, getDocs, writeBatch, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -18,6 +18,7 @@ import AdminDashboard from './admin-dashboard';
 import StaffManagement from "./staff-management";
 import ExpensesTracker from './expenses-tracker';
 import InventoryManagement from './inventory-management';
+import CustomerManagement from './customer-management';
 import { Separator } from '@/components/ui/separator';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
@@ -533,6 +534,10 @@ export default function MainLayout() {
                 <Soup /> <span className={cn(navPosition === 'left' && 'w-32 text-left')}>Kitchen & Inventory</span>
               </TabsTrigger>
               <Separator orientation={navPosition === 'top' ? 'vertical' : 'horizontal'} className={cn(navPosition === 'top' ? "h-6 mx-1" : "w-full my-1")} />
+               <TabsTrigger value="customers" className="px-4 py-2 text-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md flex items-center gap-2">
+                <Users2 /> <span className={cn(navPosition === 'left' && 'w-32 text-left')}>Customers</span>
+              </TabsTrigger>
+              <Separator orientation={navPosition === 'top' ? 'vertical' : 'horizontal'} className={cn(navPosition === 'top' ? "h-6 mx-1" : "w-full my-1")} />
               <TabsTrigger value="staff" className="px-4 py-2 text-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md flex items-center gap-2">
                 <Users /> <span className={cn(navPosition === 'left' && 'w-32 text-left')}>Staff</span>
               </TabsTrigger>
@@ -621,6 +626,9 @@ export default function MainLayout() {
                   </div>
               </div>
             </TabsContent>
+             <TabsContent value="customers" className="m-0 p-0">
+              <CustomerManagement billHistory={billHistory} />
+            </TabsContent>
             <TabsContent value="staff" className="m-0 p-0">
               <StaffManagement 
                 employees={employees} 
@@ -654,3 +662,5 @@ export default function MainLayout() {
     </div>
   );
 }
+
+    
