@@ -38,8 +38,8 @@ const vegColor = 'bg-green-100 dark:bg-green-900/30';
 const nonVegColor = 'bg-rose-100 dark:bg-rose-900/30';
 
 const colorPalette: Record<string, {light: string, medium: string}> = {
-    slate: { light: 'bg-slate-200 dark:bg-slate-800/50', medium: 'bg-slate-300 dark:bg-slate-700/50' },
-    stone: { light: 'bg-stone-200 dark:bg-stone-800/50', medium: 'bg-stone-300 dark:bg-stone-700/50' },
+    amber: { light: 'bg-amber-200 dark:bg-amber-800/50', medium: 'bg-amber-300 dark:bg-amber-700/50' },
+    lime: { light: 'bg-lime-200 dark:bg-lime-800/50', medium: 'bg-lime-300 dark:bg-lime-700/50' },
     rose: { light: 'bg-rose-200 dark:bg-rose-800/50', medium: 'bg-rose-300 dark:bg-rose-700/50' },
     violet: { light: 'bg-violet-200 dark:bg-violet-800/50', medium: 'bg-violet-300 dark:bg-violet-700/50' },
     olive: { light: 'bg-lime-200 dark:bg-lime-800/50', medium: 'bg-lime-300 dark:bg-lime-700/50' },
@@ -797,16 +797,10 @@ export default function PosSystem({
   
     useEffect(() => {
     if (Object.keys(categoryColors).length === 0) {
-        const initialColors: Record<string, string> = {
-            "Pizza's": "amber",
-            "Pasta (Penne / Spaghetti)": "lime",
-            "Sandwiches": "purple",
-            "Garlic Bread": "teal",
-            "Burger's": "orange",
-            "All Day Breakfast": "cyan",
-            "Beverages": "amber",
-            "Chinese & Snacks": "lime"
-        };
+        const initialColors: Record<string, string> = {};
+        menu.forEach((category, index) => {
+            initialColors[category.category] = colorNames[index % colorNames.length];
+        });
         setCategoryColors(initialColors);
     }
   }, [menu, categoryColors, setCategoryColors]);
@@ -1502,10 +1496,10 @@ const processKOTs = useCallback((kotGroupsToProcess: { title: string; items: Ord
                     const colorClass = colorName ? colorPalette[colorName]?.[colorShade] : '';
                     return (
                         <div key={category.category} className="relative group p-1">
-                            <TabsTrigger value={category.category} className={cn("rounded-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md px-4 py-2 cursor-pointer transition-colors", statusConfig ? statusConfig.dark : (colorClass || 'bg-muted'))}>
+                            <TabsTrigger value={category.category} className={cn("rounded-md data-[state=active]:border-primary data-[state=active]:border-2 data-[state=active]:text-primary data-[state=active]:shadow-md px-4 py-2 cursor-pointer transition-colors", statusConfig ? statusConfig.dark : (colorClass || 'bg-muted'))}>
                                 {renderCategoryHeader(category)}
                             </TabsTrigger>
-                            <div className="absolute top-1/2 -translate-y-1/2 right-2 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
+                            <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
                                 <Popover>
                                     <PopoverTrigger asChild>
                                         <div role="button" className="p-1 rounded-md hover:bg-black/10">
