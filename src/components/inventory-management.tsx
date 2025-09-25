@@ -150,44 +150,6 @@ export default function InventoryManagement({ inventory }: InventoryManagementPr
     }
   };
   
-  const handleSeedIngredients = async () => {
-    const defaultIngredients = [
-        { id: '1', name: 'Pizza Base (Medium)', category: 'Bakery', stock: 100, capacity: 200, unit: 'units' },
-        { id: '2', name: 'Pizza Base (Large)', category: 'Bakery', stock: 50, capacity: 100, unit: 'units' },
-        { id: '3', name: 'Tomato Sauce', category: 'Sauces', stock: 10, capacity: 20, unit: 'kg' },
-        { id: '4', name: 'Pesto Sauce', category: 'Sauces', stock: 5, capacity: 10, unit: 'kg' },
-        { id: '5', name: 'White Sauce', category: 'Sauces', stock: 5, capacity: 10, unit: 'kg' },
-        { id: '6', name: 'Cheese (Amul)', category: 'Dairy', stock: 20, capacity: 50, unit: 'kg' },
-        { id: '7', name: 'Mixed Veggies', category: 'Produce', stock: 5, capacity: 10, unit: 'kg' },
-        { id: '8', name: 'Paneer', category: 'Dairy', stock: 10, capacity: 20, unit: 'kg' },
-        { id: '9', name: 'Chicken', category: 'Meat', stock: 10, capacity: 20, unit: 'kg' },
-        { id: '10', name: 'Pasta', category: 'Dry Goods', stock: 15, capacity: 30, unit: 'kg' },
-        { id: '11', name: 'Coffee Beans', stock: 10, capacity: 20, unit: 'kg', category: 'Beverages' },
-        { id: '12', name: 'Milk', stock: 25, capacity: 50, unit: 'liters', category: 'Dairy' },
-    ];
-    
-    try {
-        const batch = writeBatch(db);
-        const inventoryCollection = collection(db, "inventory");
-        const snapshot = await getDocs(inventoryCollection);
-        const existingIds = new Set(snapshot.docs.map(doc => doc.id));
-        
-        defaultIngredients.forEach(item => {
-            if (!existingIds.has(item.id)) {
-                const docRef = doc(db, "inventory", item.id);
-                batch.set(docRef, item);
-            }
-        });
-        
-        await batch.commit();
-        toast({ title: "Default ingredients seeded!", description: "Added common ingredients to your inventory." });
-
-    } catch (error) {
-        console.error("Error seeding ingredients:", error);
-        toast({ variant: 'destructive', title: "Seeding failed", description: "Could not add default ingredients." });
-    }
-};
-
   const handleDeleteItem = async (itemId: string) => {
     try {
       await deleteDoc(doc(db, "inventory", itemId));
@@ -248,7 +210,6 @@ export default function InventoryManagement({ inventory }: InventoryManagementPr
             <Button onClick={() => handleOpenDialog(null)}>
               <PlusCircle className="mr-2 h-4 w-4" /> Add Item
             </Button>
-             <Button onClick={handleSeedIngredients} variant="secondary">Seed Ingredients</Button>
           </div>
         </div>
       </CardHeader>
