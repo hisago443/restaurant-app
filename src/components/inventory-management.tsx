@@ -232,9 +232,9 @@ export default function InventoryManagement({ inventory, menu, setMenu }: Invent
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Item</TableHead>
-                <TableHead>Stock Level</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead className="font-bold text-foreground">Item</TableHead>
+                <TableHead className="font-bold text-foreground">Stock Level</TableHead>
+                <TableHead className="text-right font-bold text-foreground">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -344,3 +344,4 @@ export default function InventoryManagement({ inventory, menu, setMenu }: Invent
 }
 
     
+
