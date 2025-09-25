@@ -455,19 +455,6 @@
           }
         ],
         "history": []
-      },
-      {
-        "name": "CFXVBCVB",
-        "price": 45325,
-        "code": "132",
-        "history": [],
-        "ingredients": [
-          {
-            "inventoryItemId": "2",
-            "quantity": 200,
-            "unit": "g"
-          }
-        ]
       }
     ]
   },
@@ -522,19 +509,6 @@
         "code": "25",
         "history": [],
         "ingredients": []
-      },
-      {
-        "name": "CHEESE CAKE",
-        "price": 15000,
-        "code": "131",
-        "history": [],
-        "ingredients": [
-          {
-            "inventoryItemId": "2",
-            "quantity": 1000,
-            "unit": "g"
-          }
-        ]
       }
     ]
   },
@@ -629,19 +603,6 @@
         "code": "37",
         "history": [],
         "ingredients": []
-      },
-      {
-        "name": "lolop",
-        "price": 566,
-        "code": "129",
-        "history": [],
-        "ingredients": [
-          {
-            "inventoryItemId": "1",
-            "quantity": 560,
-            "unit": "ml"
-          }
-        ]
       }
     ]
   },
@@ -822,19 +783,6 @@
         "code": "62",
         "history": [],
         "ingredients": []
-      },
-      {
-        "name": "RGFTFGGF",
-        "price": 44455,
-        "code": "130",
-        "history": [],
-        "ingredients": [
-          {
-            "inventoryItemId": "1",
-            "quantity": 120,
-            "unit": "ml"
-          }
-        ]
       }
     ]
   },

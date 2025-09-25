@@ -250,7 +250,7 @@ export default function InventoryManagement({ inventory, menu, setMenu }: Invent
                     <div className="flex flex-col gap-2">
                       <Progress
                         value={(item.stock / item.capacity) * 100}
-                        className="w-full h-4"
+                        className="w-full h-2"
                         indicatorClassName={getStockColor(item.stock, item.capacity)}
                       />
                       <div className="flex items-center gap-2">
@@ -344,9 +344,3 @@ export default function InventoryManagement({ inventory, menu, setMenu }: Invent
     </div>
   );
 }
-
-    
-
-
-
-

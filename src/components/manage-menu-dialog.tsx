@@ -299,6 +299,10 @@ export function ManageMenuDialog({
   const [editingItem, setEditingItem] = useState<{ categoryName: string; item: MenuItem } | null>(null);
   const [editingIngredients, setEditingIngredients] = useState<MenuItem | null>(null);
 
+  const [isScanning, setIsScanning] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
   const updateAndSaveMenu = async (newMenuData: MenuCategory[]) => {
     setMenu(newMenuData);
     await saveMenu(newMenuData);
@@ -456,6 +460,32 @@ export function ManageMenuDialog({
             <div className="max-h-[70vh] overflow-y-auto p-1">
               <Accordion type="multiple" defaultValue={[]} className="w-full space-y-4">
                 
+                 {/* Scan from Image */}
+                <AccordionItem value="scan-menu">
+                  <AccordionTrigger className="text-lg font-semibold">Scan Menu from Image</AccordionTrigger>
+                  <AccordionContent className="p-4 bg-muted/50 rounded-b-md">
+                     <RadioGroup defaultValue="upload" className="flex items-center gap-4 mb-4">
+                        <Label htmlFor="scan-upload" className="flex items-center gap-2 p-2 border rounded-md cursor-pointer hover:bg-background has-[:checked]:bg-primary has-[:checked]:text-primary-foreground">
+                            <RadioGroupItem value="upload" id="scan-upload" />
+                            <Upload className="h-4 w-4" /> Upload Image
+                        </Label>
+                        <Label htmlFor="scan-camera" className="flex items-center gap-2 p-2 border rounded-md cursor-pointer hover:bg-background has-[:checked]:bg-primary has-[:checked]:text-primary-foreground">
+                            <RadioGroupItem value="camera" id="scan-camera"/>
+                            <Camera className="h-4 w-4" /> Use Camera
+                        </Label>
+                    </RadioGroup>
+                    <div className="flex justify-center items-center h-48 w-full border-2 border-dashed rounded-lg bg-background relative">
+                        {isScanning ? (
+                            <Loader2 className="h-10 w-10 animate-spin text-primary" />
+                        ) : (
+                            <p className="text-muted-foreground">Your scanned menu will appear here.</p>
+                        )}
+                        <video ref={videoRef} className="absolute inset-0 w-full h-full object-cover" autoPlay playsInline style={{ display: 'none' }} />
+                        <canvas ref={canvasRef} style={{ display: 'none' }} />
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+
                 {/* Add Category */}
                 <AccordionItem value="add-category">
                   <AccordionTrigger className="text-lg font-semibold">Add New Category</AccordionTrigger>
@@ -634,8 +664,3 @@ export function ManageMenuDialog({
     </>
   );
 }
-    
-
-    
-
-    

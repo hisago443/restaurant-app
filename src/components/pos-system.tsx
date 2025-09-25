@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import * as React from 'react';
@@ -1144,7 +1145,7 @@ const processKOTs = useCallback((kotGroupsToProcess: { title: string; items: Ord
       total: total,
       receiptPreview: finalReceipt,
       orderType: selectedOrderType,
-      customerDetails: customerDetails,
+      customerDetails: customerDetails || null,
     };
     addBill(billPayload);
 
@@ -1294,7 +1295,7 @@ const processKOTs = useCallback((kotGroupsToProcess: { title: string; items: Ord
       if (!item.category) return;
       const itemIsLow = menuItemStatus[item.name] === 'low';
       const categoryIsLow = menuCategoryStatus[item.category] === 'low';
-      if (itemIsLow || categoryIsLow) {
+      if ((itemIsLow || categoryIsLow) && !(menuItemStatus[item.name] === 'out' || menuCategoryStatus[item.category] === 'out')) {
         items.add(item);
       }
     });
@@ -1554,8 +1555,10 @@ const processKOTs = useCallback((kotGroupsToProcess: { title: string; items: Ord
 
 
   const renderMenuContent = () => {
+    const tabsKey = searchTerm ? `search-${searchTerm}` : 'all-items';
+    const activeTab = (filteredMenu.length > 0 && !filteredMenu.find(c => c.category === viewMode)) ? filteredMenu[0].category : viewMode;
+
     if (viewMode === 'grid') {
-      const tabsKey = searchTerm ? `search-${searchTerm}` : 'all-items';
       return (
         <Tabs defaultValue={filteredMenu.length > 0 ? filteredMenu[0].category : undefined} key={tabsKey} className="w-full">
           <div className="flex justify-center">
@@ -1940,5 +1943,3 @@ const processKOTs = useCallback((kotGroupsToProcess: { title: string; items: Ord
     </div>
   );
 }
-
-    
