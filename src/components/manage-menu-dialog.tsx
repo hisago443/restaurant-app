@@ -279,7 +279,6 @@ export function ManageMenuDialog({
   startWithEdit = false,
 }: ManageMenuDialogProps) {
   const { toast } = useToast();
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
   
   const [isScanning, setIsScanning] = useState(false);
@@ -480,47 +479,6 @@ export function ManageMenuDialog({
     }
   };
   
-  const handleFileUploadClick = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    if (file.type !== 'application/json') {
-      toast({ variant: 'destructive', title: 'Invalid File Type', description: 'Please upload a valid JSON file.' });
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-      try {
-        const text = e.target?.result;
-        if (typeof text !== 'string') {
-          throw new Error('Failed to read file.');
-        }
-        const newMenu = JSON.parse(text);
-        
-        if (!Array.isArray(newMenu) || !newMenu.every(cat => cat.category && cat.subCategories)) {
-           throw new Error('Invalid menu format.');
-        }
-        
-        await updateAndSaveMenu(newMenu);
-        toast({ title: 'Menu Uploaded Successfully!' });
-        onOpenChange(false);
-      } catch (error) {
-        console.error("Error parsing or saving uploaded menu:", error);
-        toast({ variant: 'destructive', title: 'Upload Failed', description: 'The uploaded file has an invalid format.' });
-      } finally {
-        if (fileInputRef.current) {
-            fileInputRef.current.value = '';
-        }
-      }
-    };
-    reader.readAsText(file);
-  };
-
   const handleImageUploadClick = () => {
     imageInputRef.current?.click();
   };
@@ -577,16 +535,6 @@ export function ManageMenuDialog({
                           {isScanning ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Camera className="mr-2 h-4 w-4" />}
                           Scan from Image
                         </Button>
-                        <Button variant="outline" onClick={handleFileUploadClick} disabled={isScanning}>
-                          <Upload className="mr-2 h-4 w-4" /> Upload JSON
-                        </Button>
-                        <Input 
-                            type="file" 
-                            ref={fileInputRef} 
-                            onChange={handleFileChange} 
-                            className="hidden" 
-                            accept=".json" 
-                        />
                          <Input 
                             type="file" 
                             ref={imageInputRef} 
