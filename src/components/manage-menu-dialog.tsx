@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useState, useMemo, useEffect, useRef } from 'react';
@@ -101,8 +102,8 @@ function EditIngredientsDialog({ isOpen, onOpenChange, menuItem, inventory, onSa
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>Edit Ingredients for "{menuItem.name}"</DialogTitle>
-          <DialogDescription>
-            Define which inventory items are consumed when this menu item is sold.
+          <DialogDescription className="italic text-primary">
+            Defining ingredients helps you track inventory and know the status of your stock.
           </DialogDescription>
         </DialogHeader>
         <div className="py-4 space-y-4">
@@ -317,7 +318,7 @@ export function ManageMenuDialog({
     }
     
     let itemExists = false;
-    const newMenu = [...menu];
+    let newMenu = [...menu];
 
     const categoryIndex = newMenu.findIndex(cat => cat.category === selectedCategoryForItem);
     if (categoryIndex === -1) return;
@@ -334,10 +335,22 @@ export function ManageMenuDialog({
     const newItem: MenuItem = { name: newItemName, price: parseFloat(newItemPrice), code: '', history: [], ingredients: [] };
     newMenu[categoryIndex].items.push(newItem);
     
-    updateAndSaveMenu(newMenu);
+    updateAndSaveMenu(newMenu).then(() => {
+        // Find the newly added item in the updated menu state
+        // This relies on the state update being processed before this `then` block
+        // A more robust way might involve passing the new menu to setEditingIngredients
+        const updatedMenu = [...newMenu]; // Use the same structure
+        const cat = updatedMenu.find(c => c.category === selectedCategoryForItem);
+        const addedItem = cat?.items.find(i => i.name === newItemName);
+        if (addedItem) {
+            setEditingIngredients(addedItem);
+        }
+    });
+
     setNewItemName('');
     setNewItemPrice('');
-    setSelectedCategoryForItem('');
+    // Keep category selected for faster multi-item entry
+    // setSelectedCategoryForItem('');
     toast({ title: `Item "${newItemName}" added.` });
   };
 
@@ -376,7 +389,8 @@ export function ManageMenuDialog({
       return cat;
     });
     
-    newMenu = newMenu.filter(cat => cat.items.length > 0);
+    // This is optional: remove category if it becomes empty
+    // newMenu = newMenu.filter(cat => cat.items.length > 0);
     
     updateAndSaveMenu(newMenu);
     toast({ title: `Item "${itemName}" removed.` });
@@ -486,7 +500,7 @@ export function ManageMenuDialog({
                             placeholder="e.g., 150"
                           />
                         </div>
-                        <Button onClick={handleAddItem}><PlusCircle className="mr-2 h-4 w-4"/>Add Item</Button>
+                        <Button onClick={handleAddItem}><PlusCircle className="mr-2 h-4 w-4"/>Add Item & Ingredients</Button>
                     </div>
                   </AccordionContent>
                 </AccordionItem>
@@ -604,5 +618,9 @@ export function ManageMenuDialog({
     </>
   );
 }
+
+    
+
+    
 
     
