@@ -267,7 +267,6 @@ interface ManageMenuDialogProps {
   menu: MenuCategory[];
   setMenu: (menu: MenuCategory[]) => void;
   inventory: InventoryItem[];
-  startWithEdit?: boolean;
 }
 
 export function ManageMenuDialog({
@@ -276,7 +275,6 @@ export function ManageMenuDialog({
   menu,
   setMenu,
   inventory,
-  startWithEdit = false,
 }: ManageMenuDialogProps) {
   const { toast } = useToast();
   
@@ -288,17 +286,6 @@ export function ManageMenuDialog({
   const [editMenuSearch, setEditMenuSearch] = useState('');
   const [editingItem, setEditingItem] = useState<{ categoryName: string; item: MenuItem } | null>(null);
   const [editingIngredients, setEditingIngredients] = useState<MenuItem | null>(null);
-  const [activeAccordionItems, setActiveAccordionItems] = useState<string[]>([]);
-  
-  useEffect(() => {
-    if (isOpen) {
-        if (startWithEdit) {
-            setActiveAccordionItems(['edit-menu']);
-        } else {
-            setActiveAccordionItems([]);
-        }
-    }
-  }, [isOpen, startWithEdit]);
 
   const updateAndSaveMenu = async (newMenuData: MenuCategory[]) => {
     setMenu(newMenuData);
@@ -421,107 +408,94 @@ export function ManageMenuDialog({
     }).filter(Boolean) as MenuCategory[];
   }, [editMenuSearch, menu]);
   
-  const handleItemClick = (item: MenuItem) => {
-    if (startWithEdit) {
-      setEditingIngredients(item);
-    }
-  };
 
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onOpenChange}>
         <DialogContent className="max-w-4xl">
             <DialogHeader>
-                {startWithEdit ? (
-                    <h2 className="sr-only">Edit Ingredients</h2>
-                ) : (
-                    <div className="flex justify-between items-center">
-                        <div>
-                            <DialogTitle>Manage Menu</DialogTitle>
-                            <DialogDescription>
-                                Add, edit, and organize your menu categories, items, and ingredients.
-                            </DialogDescription>
-                        </div>
+                <div className="flex justify-between items-center">
+                    <div>
+                        <DialogTitle>Manage Menu</DialogTitle>
+                        <DialogDescription>
+                            Add, edit, and organize your menu categories, items, and ingredients.
+                        </DialogDescription>
                     </div>
-                )}
+                </div>
             </DialogHeader>
 
             <div className="max-h-[70vh] overflow-y-auto p-1">
-              <Accordion type="multiple" value={activeAccordionItems} onValueChange={setActiveAccordionItems} className="w-full space-y-4">
+              <Accordion type="multiple" defaultValue={['add-category', 'add-item', 'edit-menu']} className="w-full space-y-4">
                 
-                {!startWithEdit && (
-                  <>
-                    {/* Add Category */}
-                    <AccordionItem value="add-category">
-                      <AccordionTrigger className="text-lg font-semibold">Add New Category</AccordionTrigger>
-                      <AccordionContent className="p-4 bg-muted/50 rounded-b-md">
-                        <div className="flex items-end gap-2">
-                          <div className="flex-grow space-y-1">
-                            <Label htmlFor="new-category">Category Name</Label>
-                            <Input
-                              id="new-category"
-                              value={newCategory}
-                              onChange={e => setNewCategory(e.target.value)}
-                              placeholder="e.g., Desserts"
-                            />
-                          </div>
-                          <Button onClick={handleAddCategory}><PlusCircle className="mr-2 h-4 w-4"/> Add Category</Button>
+                {/* Add Category */}
+                <AccordionItem value="add-category">
+                  <AccordionTrigger className="text-lg font-semibold">Add New Category</AccordionTrigger>
+                  <AccordionContent className="p-4 bg-muted/50 rounded-b-md">
+                    <div className="flex items-end gap-2">
+                      <div className="flex-grow space-y-1">
+                        <Label htmlFor="new-category">Category Name</Label>
+                        <Input
+                          id="new-category"
+                          value={newCategory}
+                          onChange={e => setNewCategory(e.target.value)}
+                          placeholder="e.g., Desserts"
+                        />
+                      </div>
+                      <Button onClick={handleAddCategory}><PlusCircle className="mr-2 h-4 w-4"/> Add Category</Button>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+                
+                {/* Add Item */}
+                <AccordionItem value="add-item">
+                  <AccordionTrigger className="text-lg font-semibold">Add New Menu Item</AccordionTrigger>
+                  <AccordionContent className="p-4 bg-muted/50 rounded-b-md space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-1">
+                          <Label htmlFor="select-category">Category</Label>
+                          <Select value={selectedCategoryForItem} onValueChange={setSelectedCategoryForItem}>
+                            <SelectTrigger id="select-category">
+                              <SelectValue placeholder="Select Category" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {menu.map(cat => (
+                                <SelectItem key={cat.category} value={cat.category}>
+                                  {cat.category}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                         </div>
-                      </AccordionContent>
-                    </AccordionItem>
-                    
-                    {/* Add Item */}
-                    <AccordionItem value="add-item">
-                      <AccordionTrigger className="text-lg font-semibold">Add New Menu Item</AccordionTrigger>
-                      <AccordionContent className="p-4 bg-muted/50 rounded-b-md space-y-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="space-y-1">
-                              <Label htmlFor="select-category">Category</Label>
-                              <Select value={selectedCategoryForItem} onValueChange={setSelectedCategoryForItem}>
-                                <SelectTrigger id="select-category">
-                                  <SelectValue placeholder="Select Category" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {menu.map(cat => (
-                                    <SelectItem key={cat.category} value={cat.category}>
-                                      {cat.category}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                        <div className="space-y-1">
+                          <Label htmlFor="new-item-name">Item Name</Label>
+                          <Input
+                            id="new-item-name"
+                            value={newItemName}
+                            onChange={e => setNewItemName(e.target.value)}
+                            placeholder="e.g., Chocolate Lava Cake"
+                          />
                         </div>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
-                            <div className="space-y-1">
-                              <Label htmlFor="new-item-name">Item Name</Label>
-                              <Input
-                                id="new-item-name"
-                                value={newItemName}
-                                onChange={e => setNewItemName(e.target.value)}
-                                placeholder="e.g., Chocolate Lava Cake"
-                              />
-                            </div>
-                            <div className="space-y-1">
-                              <Label htmlFor="new-item-price">Price</Label>
-                              <Input
-                                id="new-item-price"
-                                type="number"
-                                value={newItemPrice}
-                                onChange={e => setNewItemPrice(e.target.value)}
-                                placeholder="e.g., 150"
-                              />
-                            </div>
-                            <Button onClick={handleAddItem}><PlusCircle className="mr-2 h-4 w-4"/>Add Item & Ingredients</Button>
+                        <div className="space-y-1">
+                          <Label htmlFor="new-item-price">Price</Label>
+                          <Input
+                            id="new-item-price"
+                            type="number"
+                            value={newItemPrice}
+                            onChange={e => setNewItemPrice(e.target.value)}
+                            placeholder="e.g., 150"
+                          />
                         </div>
-                      </AccordionContent>
-                    </AccordionItem>
-                  </>
-                )}
+                        <Button onClick={handleAddItem}><PlusCircle className="mr-2 h-4 w-4"/>Add Item &amp; Ingredients</Button>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
 
                 {/* Edit/Remove Menu */}
                 <AccordionItem value="edit-menu">
                   <AccordionTrigger className="text-lg font-semibold">
-                    {startWithEdit ? "Edit Ingredients" : "Edit Menu & Ingredients"}
+                    Edit Menu &amp; Ingredients
                   </AccordionTrigger>
                   <AccordionContent className="p-4 bg-muted/50 rounded-b-md space-y-4">
                       <Input
@@ -535,7 +509,6 @@ export function ManageMenuDialog({
                               <div key={cat.category} className="p-3 border rounded-md bg-background/50">
                                   <div className="flex justify-between items-center">
                                     <h3 className="font-bold text-lg">{cat.category}</h3>
-                                    {!startWithEdit && (
                                       <AlertDialog>
                                         <AlertDialogTrigger asChild>
                                           <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive">
@@ -555,26 +528,21 @@ export function ManageMenuDialog({
                                           </AlertDialogFooter>
                                         </AlertDialogContent>
                                       </AlertDialog>
-                                    )}
                                   </div>
                                   <ul className="mt-1 space-y-1">
                                       {cat.items.map(item => (
                                           <li 
                                             key={item.name} 
-                                            className={cn("flex justify-between items-center group p-1 rounded-md", startWithEdit && "cursor-pointer hover:bg-muted")}
-                                            onClick={() => handleItemClick(item)}
+                                            className={cn("flex justify-between items-center group p-1 rounded-md")}
                                           >
                                               <span>{item.name} - <span className="font-mono">₹{item.price}</span></span>
                                               <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                                  {!startWithEdit && (
-                                                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setEditingItem({ categoryName: cat.category, item })}>
-                                                      <Edit className="h-4 w-4" />
-                                                    </Button>
-                                                  )}
+                                                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setEditingItem({ categoryName: cat.category, item })}>
+                                                    <Edit className="h-4 w-4" />
+                                                  </Button>
                                                   <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setEditingIngredients(item)}>
                                                       <FilePlus className="h-4 w-4" />
                                                   </Button>
-                                                  {!startWithEdit && (
                                                     <AlertDialog>
                                                         <AlertDialogTrigger asChild>
                                                             <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive">
@@ -594,7 +562,6 @@ export function ManageMenuDialog({
                                                             </AlertDialogFooter>
                                                         </AlertDialogContent>
                                                     </AlertDialog>
-                                                  )}
                                               </div>
                                           </li>
                                       ))}
