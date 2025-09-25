@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import { useState, useMemo, useEffect, useRef } from 'react';
@@ -302,10 +301,23 @@ export function ManageMenuDialog({
   const [isScanning, setIsScanning] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const updateAndSaveMenu = async (newMenuData: MenuCategory[]) => {
     setMenu(newMenuData);
     await saveMenu(newMenuData);
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      // TODO: Implement image scanning logic
+      console.log('File selected:', file.name);
+      toast({
+        title: 'Image Ready',
+        description: 'Image scanning will be implemented in a future update.',
+      });
+    }
   };
 
   const handleAddCategory = () => {
@@ -465,10 +477,17 @@ export function ManageMenuDialog({
                   <AccordionTrigger className="text-lg font-semibold">Scan Menu from Image</AccordionTrigger>
                   <AccordionContent className="p-4 bg-muted/50 rounded-b-md">
                      <RadioGroup defaultValue="upload" className="flex items-center gap-4 mb-4">
-                        <Label htmlFor="scan-upload" className="flex items-center gap-2 p-2 border rounded-md cursor-pointer hover:bg-background has-[:checked]:bg-primary has-[:checked]:text-primary-foreground">
-                            <RadioGroupItem value="upload" id="scan-upload" />
+                        <Label htmlFor="scan-upload" className="flex items-center gap-2 p-2 border rounded-md cursor-pointer hover:bg-background has-[:checked]:bg-primary has-[:checked]:text-primary-foreground" onClick={() => fileInputRef.current?.click()}>
                             <Upload className="h-4 w-4" /> Upload Image
                         </Label>
+                        <Input
+                          ref={fileInputRef}
+                          type="file"
+                          id="scan-upload"
+                          accept="image/*"
+                          className="sr-only"
+                          onChange={handleFileChange}
+                        />
                         <Label htmlFor="scan-camera" className="flex items-center gap-2 p-2 border rounded-md cursor-pointer hover:bg-background has-[:checked]:bg-primary has-[:checked]:text-primary-foreground">
                             <RadioGroupItem value="camera" id="scan-camera"/>
                             <Camera className="h-4 w-4" /> Use Camera
@@ -664,3 +683,5 @@ export function ManageMenuDialog({
     </>
   );
 }
+
+    
