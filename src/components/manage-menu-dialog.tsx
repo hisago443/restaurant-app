@@ -249,6 +249,7 @@ interface ManageMenuDialogProps {
   menu: MenuCategory[];
   setMenu: React.Dispatch<React.SetStateAction<MenuCategory[]>>;
   inventory: InventoryItem[];
+  startWithEdit?: boolean;
 }
 
 export function ManageMenuDialog({
@@ -257,6 +258,7 @@ export function ManageMenuDialog({
   menu,
   setMenu,
   inventory,
+  startWithEdit = false,
 }: ManageMenuDialogProps) {
   const { toast } = useToast();
   
@@ -429,12 +431,13 @@ export function ManageMenuDialog({
   }, [editMenuSearch, menu]);
   
   useEffect(() => {
-    if (!isOpen) return;
-    toast({
-        title: 'Recipe Editing Unlocked',
-        description: 'You can now assign ingredients to your menu items.',
-    });
-  }, [isOpen, toast]);
+    if (isOpen && startWithEdit) {
+      toast({
+          title: 'Recipe Editing Unlocked',
+          description: 'You can now assign ingredients to your menu items.',
+      });
+    }
+  }, [isOpen, startWithEdit, toast]);
 
   return (
     <>
@@ -443,13 +446,13 @@ export function ManageMenuDialog({
           <DialogHeader>
             <DialogTitle>Manage Menu</DialogTitle>
             <DialogDescription>
-              Add new categories and items to your menu.
+              Add, edit, and organize your menu categories, items, and recipes.
             </DialogDescription>
           </DialogHeader>
           <div className="max-h-[70vh] overflow-y-auto p-1">
-            <Accordion type="multiple" defaultValue={['edit-menu']} className="w-full space-y-4">
+            <Accordion type="multiple" defaultValue={startWithEdit ? ['edit-menu'] : ['add-category', 'add-item', 'edit-menu']} className="w-full space-y-4">
               {/* Add Category */}
-              <AccordionItem value="add-category" className="hidden">
+              <AccordionItem value="add-category">
                 <AccordionTrigger className="text-lg font-semibold">Add New Category</AccordionTrigger>
                 <AccordionContent className="p-4 bg-muted/50 rounded-b-md">
                   <div className="flex items-end gap-2">
@@ -468,7 +471,7 @@ export function ManageMenuDialog({
               </AccordionItem>
               
               {/* Add Item */}
-              <AccordionItem value="add-item" className="hidden">
+              <AccordionItem value="add-item">
                 <AccordionTrigger className="text-lg font-semibold">Add New Menu Item</AccordionTrigger>
                 <AccordionContent className="p-4 bg-muted/50 rounded-b-md space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -528,7 +531,7 @@ export function ManageMenuDialog({
 
               {/* Edit/Remove Menu */}
               <AccordionItem value="edit-menu">
-                <AccordionTrigger className="text-lg font-semibold">Edit Menu Recipe</AccordionTrigger>
+                <AccordionTrigger className="text-lg font-semibold">Edit Menu & Recipes</AccordionTrigger>
                 <AccordionContent className="p-4 bg-muted/50 rounded-b-md space-y-4">
                     <Input
                       placeholder="Search for an item or category to edit..."
@@ -639,6 +642,3 @@ export function ManageMenuDialog({
     </>
   );
 }
-
-    
-    

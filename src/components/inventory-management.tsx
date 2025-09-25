@@ -1,4 +1,5 @@
 
+
 "use client"
 
 import { useState, useMemo, useEffect } from 'react';
@@ -351,6 +352,7 @@ export default function InventoryManagement({ inventory }: InventoryManagementPr
         menu={menu}
         setMenu={setMenu}
         inventory={inventory}
+        startWithEdit={true}
       />
     </div>
   );
