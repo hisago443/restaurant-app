@@ -331,7 +331,14 @@ export function ManageMenuDialog({
         return;
     }
 
-    const newItem: MenuItem = { name: newItemName, price: parseFloat(newItemPrice), code: '', history: [], ingredients: [] };
+    const allItems = newMenu.flatMap(c => c.items);
+    const maxCode = allItems.reduce((max, item) => {
+        const codeNum = parseInt(item.code, 10);
+        return !isNaN(codeNum) && codeNum > max ? codeNum : max;
+    }, 0);
+    const newCode = (maxCode + 1).toString();
+
+    const newItem: MenuItem = { name: newItemName, price: parseFloat(newItemPrice), code: newCode, history: [], ingredients: [] };
     newMenu[categoryIndex].items.push(newItem);
     
     updateAndSaveMenu(newMenu).then(() => {
@@ -615,6 +622,8 @@ export function ManageMenuDialog({
     </>
   );
 }
+    
+
     
 
     
