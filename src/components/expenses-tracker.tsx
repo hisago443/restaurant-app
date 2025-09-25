@@ -745,7 +745,7 @@ export default function ExpensesTracker({ expenses, customerCreditLimit, vendorC
 
       <Card>
           <CardHeader>
-            <div className="flex justify-between items-center">
+            <div className="flex justify-between items-start">
               <div>
                 <CardTitle>Add New Expense</CardTitle>
                 <CardDescription>Record a new business expense.</CardDescription>
@@ -757,7 +757,7 @@ export default function ExpensesTracker({ expenses, customerCreditLimit, vendorC
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
                 <div className="space-y-2">
                     <Label>Date</Label>
                     <Popover>
