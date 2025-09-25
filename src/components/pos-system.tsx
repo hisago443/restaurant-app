@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import * as React from 'react';
@@ -1167,11 +1166,12 @@ const processKOTs = useCallback((kotGroupsToProcess: { title: string; items: Ord
     const batch = writeBatch(db);
     const inventoryUpdates = new Map<string, number>();
 
-    orderItems.forEach(item => {
-        if (item.recipe) {
-            item.recipe.forEach(ingredient => {
+    orderItems.forEach(orderItem => {
+        const fullMenuItem = allMenuItems.find(mi => mi.name === orderItem.name);
+        if (fullMenuItem?.recipe) {
+            fullMenuItem.recipe.forEach(ingredient => {
                 const currentQuantity = inventoryUpdates.get(ingredient.inventoryItemId) || 0;
-                inventoryUpdates.set(ingredient.inventoryItemId, currentQuantity + (ingredient.quantity * item.quantity));
+                inventoryUpdates.set(ingredient.inventoryItemId, currentQuantity + (ingredient.quantity * orderItem.quantity));
             });
         }
     });
@@ -1942,11 +1942,4 @@ const processKOTs = useCallback((kotGroupsToProcess: { title: string; items: Ord
   );
 }
 
-
-
-
-
-
-
-
-
+    
