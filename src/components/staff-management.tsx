@@ -348,7 +348,7 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
       <Tabs defaultValue="attendance" className="w-full">
         <TabsList className="grid w-full grid-cols-2 bg-muted p-1 h-auto rounded-lg">
           <TabsTrigger value="attendance" className="py-2 data-[state=active]:bg-orange-500 data-[state=active]:text-white data-[state=active]:shadow-md text-base">Attendance &amp; Advance</TabsTrigger>
-          <TabsTrigger value="employees" className="py-2 data-[state=active]:bg-orange-500 data-[state=active]:text-white data-[state=active]:shadow-md text-base">Employee List</TabsTrigger>
+          <TabsTrigger value="employees" className="py-2 data-[state=active]:bg-orange-500 data-[state=active]:text-white data-[state=active]:shadow-md text-base">Add Employee</TabsTrigger>
         </TabsList>
         <TabsContent value="attendance">
            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-4">
@@ -981,3 +981,5 @@ function EmployeeSummaryDialog({ open, onOpenChange, employee, attendance, advan
         </Dialog>
     )
 }
+
+    
