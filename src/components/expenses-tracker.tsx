@@ -745,7 +745,7 @@ export default function ExpensesTracker({ expenses, customerCreditLimit, vendorC
 
       <Card>
           <CardHeader>
-            <div className="flex justify-between items-start">
+            <div className="flex justify-between items-center">
               <div>
                 <CardTitle>Add New Expense</CardTitle>
                 <CardDescription>Record a new business expense.</CardDescription>
