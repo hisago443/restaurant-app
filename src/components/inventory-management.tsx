@@ -12,11 +12,14 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Label } from '@/components/ui/label';
-import { PlusCircle, Edit, Trash2, Plus, Minus, Server, Search } from 'lucide-react';
+import { PlusCircle, Edit, Trash2, Plus, Minus, Server, Search, FilePlus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import type { InventoryItem } from '@/lib/types';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
+import { ManageMenuDialog } from './manage-menu-dialog';
+import menuData from '@/data/menu.json';
+import type { MenuCategory } from '@/lib/types';
 
 interface InventoryManagementProps {
   inventory: InventoryItem[];
@@ -118,6 +121,21 @@ export default function InventoryManagement({ inventory }: InventoryManagementPr
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [seededIngredients, setSeededIngredients] = useState<Omit<InventoryItem, 'id'>[]>([]);
+  const [isSeedConfirmOpen, setIsSeedConfirmOpen] = useState(false);
+  const [isMenuManagerOpen, setIsMenuManagerOpen] = useState(false);
+  const [menu, setMenu] = useState<MenuCategory[]>([]);
+  
+  useEffect(() => {
+    const structuredMenu = (menuData as MenuCategory[]).map(category => ({
+        ...category,
+        subCategories: category.subCategories.map(sub => ({
+            ...sub,
+            items: sub.items.map(item => ({...item, history: item.history || [], recipe: item.recipe || []}))
+        }))
+    }));
+    setMenu(structuredMenu);
+  }, []);
 
   const filteredInventory = useMemo(() => {
     if (!searchTerm) return inventory;
@@ -177,6 +195,62 @@ export default function InventoryManagement({ inventory }: InventoryManagementPr
     }
   }
 
+  const handleSeedIngredients = async () => {
+    const defaultIngredients: Omit<InventoryItem, 'id'>[] = [
+      { name: 'Pizza Base (Medium)', stock: 100, capacity: 200, unit: 'units', category: 'Bakery' },
+      { name: 'Pizza Base (Large)', stock: 100, capacity: 200, unit: 'units', category: 'Bakery' },
+      { name: 'Tomato Sauce', stock: 10000, capacity: 20000, unit: 'grams', category: 'Sauces' },
+      { name: 'Pesto Sauce', stock: 5000, capacity: 10000, unit: 'grams', category: 'Sauces' },
+      { name: 'White Sauce', stock: 10000, capacity: 20000, unit: 'ml', category: 'Sauces' },
+      { name: 'Cheese', stock: 20000, capacity: 40000, unit: 'grams', category: 'Dairy' },
+      { name: 'Vegetables (Mixed)', stock: 15, capacity: 30, unit: 'kg', category: 'Produce' },
+      { name: 'Paneer', stock: 10000, capacity: 20000, unit: 'grams', category: 'Dairy' },
+      { name: 'Chicken', stock: 10000, capacity: 20000, unit: 'grams', category: 'Meat' },
+      { name: 'Pasta', stock: 10, capacity: 25, unit: 'kg', category: 'Dry Goods' },
+      { name: 'Coffee Beans', stock: 5000, capacity: 10000, unit: 'grams', category: 'Beverages' },
+      { name: 'Milk', stock: 20000, capacity: 40000, unit: 'ml', category: 'Dairy' },
+    ];
+
+    try {
+      const inventoryCollection = await getDocs(collection(db, "inventory"));
+      const existingItemNames = new Set(inventoryCollection.docs.map(doc => doc.data().name.toLowerCase()));
+      const ingredientsToAdd = defaultIngredients.filter(
+        (ingredient) => !existingItemNames.has(ingredient.name.toLowerCase())
+      );
+      
+      if (ingredientsToAdd.length === 0) {
+        toast({
+          title: 'No New Ingredients',
+          description: 'Your inventory already contains all the default ingredients.',
+        });
+        return;
+      }
+      
+      const batch = writeBatch(db);
+      const existingIds = inventoryCollection.docs.map(doc => parseInt(doc.id, 10)).filter(id => !isNaN(id));
+      let newIdCounter = existingIds.length > 0 ? Math.max(...existingIds) + 1 : 1;
+
+      ingredientsToAdd.forEach((ingredient) => {
+        const docRef = doc(db, 'inventory', String(newIdCounter));
+        batch.set(docRef, ingredient);
+        newIdCounter++;
+      });
+      
+      await batch.commit();
+      
+      setSeededIngredients(ingredientsToAdd);
+      setIsSeedConfirmOpen(true);
+      
+    } catch (error) {
+      console.error('Error seeding ingredients:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Seeding Failed',
+        description: 'Could not load default ingredients. Please try again.',
+      });
+    }
+  };
+
   const getStockColor = (stock: number, capacity: number) => {
     const percentage = capacity > 0 ? (stock / capacity) * 100 : 0;
     if (percentage <= 10) {
@@ -207,8 +281,12 @@ export default function InventoryManagement({ inventory }: InventoryManagementPr
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
+            <Button onClick={handleSeedIngredients}>Load Default Ingredients</Button>
             <Button onClick={() => handleOpenDialog(null)}>
               <PlusCircle className="mr-2 h-4 w-4" /> Add Item
+            </Button>
+             <Button variant="secondary" onClick={() => setIsMenuManagerOpen(true)}>
+              <FilePlus className="mr-2 h-4 w-4" /> Edit Recipe
             </Button>
           </div>
         </div>
@@ -325,6 +403,48 @@ export default function InventoryManagement({ inventory }: InventoryManagementPr
       onSave={handleSaveItem}
       existingItem={editingItem}
     />
+    
+    <Dialog open={isSeedConfirmOpen} onOpenChange={setIsSeedConfirmOpen}>
+        <DialogContent>
+            <DialogHeader>
+                <DialogTitle>Default Ingredients Loaded</DialogTitle>
+                <DialogDescription>The following ingredients have been added to your inventory.</DialogDescription>
+            </DialogHeader>
+            <div className="max-h-80 overflow-y-auto my-4">
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Ingredient</TableHead>
+                            <TableHead>Stock</TableHead>
+                            <TableHead>Unit</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {seededIngredients.map((item, index) => (
+                            <TableRow key={index}>
+                                <TableCell>{item.name}</TableCell>
+                                <TableCell>{item.stock}</TableCell>
+                                <TableCell>{item.unit}</TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            </div>
+            <DialogFooter>
+                <Button onClick={() => setIsSeedConfirmOpen(false)}>Okay</Button>
+            </DialogFooter>
+        </DialogContent>
+    </Dialog>
+    
+      <ManageMenuDialog
+        isOpen={isMenuManagerOpen}
+        onOpenChange={setIsMenuManagerOpen}
+        menu={menu}
+        setMenu={setMenu}
+        inventory={inventory}
+      />
     </div>
   );
 }
+
+    
