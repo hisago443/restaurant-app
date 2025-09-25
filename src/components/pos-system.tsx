@@ -1291,8 +1291,9 @@ const processKOTs = useCallback((kotGroupsToProcess: { title: string; items: Ord
   const lowStockItems = useMemo(() => {
     const items = new Set<MenuItem>();
     allMenuItems.forEach(item => {
+      if (!item.category) return;
       const itemIsLow = menuItemStatus[item.name] === 'low';
-      const categoryIsLow = item.category ? menuCategoryStatus[item.category] === 'low' : false;
+      const categoryIsLow = menuCategoryStatus[item.category] === 'low';
       if (itemIsLow || categoryIsLow) {
         items.add(item);
       }
@@ -1303,8 +1304,9 @@ const processKOTs = useCallback((kotGroupsToProcess: { title: string; items: Ord
   const outOfStockItems = useMemo(() => {
     const items = new Set<MenuItem>();
     allMenuItems.forEach(item => {
+      if (!item.category) return;
       const itemIsOut = menuItemStatus[item.name] === 'out';
-      const categoryIsOut = item.category ? menuCategoryStatus[item.category] === 'out' : false;
+      const categoryIsOut = menuCategoryStatus[item.category] === 'out';
       if (itemIsOut || categoryIsOut) {
         items.add(item);
       }
@@ -1553,65 +1555,64 @@ const processKOTs = useCallback((kotGroupsToProcess: { title: string; items: Ord
 
   const renderMenuContent = () => {
     if (viewMode === 'grid') {
-        const tabsKey = searchTerm ? 'search-results' : 'all-items';
-        return (
-          <Tabs defaultValue={filteredMenu.length > 0 ? filteredMenu[0].category : undefined} key={tabsKey} className="w-full">
-            <div className="flex justify-center">
-              <TabsList className="mb-4 flex-wrap h-auto bg-transparent border-b rounded-none p-0">
-                {filteredMenu.map(category => {
-                    const status = menuCategoryStatus[category.category];
-                    const statusConfig = status ? itemStatusColors[status] : null;
-                    const colorName = categoryColors[category.category];
-                    const colorClass = colorName ? colorPalette[colorName]?.[colorShade] : '';
-                    return (
-                        <div key={category.category} className="relative group p-1">
-                            <TabsTrigger value={category.category} className={cn("rounded-md data-[state=active]:border-primary data-[state=active]:border-2 data-[state=active]:shadow-md px-4 py-3 cursor-pointer transition-colors text-lg font-bold", statusConfig ? statusConfig.dark : (colorClass || 'bg-muted'))}>
-                                <div className={cn("flex-grow text-left flex items-center gap-2 pr-12")}>
-                                    <span className="truncate">{category.category}</span>
-                                    {statusConfig && (
-                                        <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-black/10 text-white">
-                                            {statusConfig.name}
-                                        </span>
-                                    )}
-                                </div>
-                            </TabsTrigger>
-                            <div className="absolute top-1/2 -translate-y-1/2 right-4 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
-                                <Popover>
-                                    <PopoverTrigger asChild>
-                                        <div role="button" className="p-1 rounded-md hover:bg-black/20 dark:hover:bg-white/20">
-                                            <Palette className="h-4 w-4" />
-                                        </div>
-                                    </PopoverTrigger>
-                                    <PopoverContent className="w-auto p-2">
-                                    <div className="grid grid-cols-2 gap-1">
-                                        {itemStatusNames.map((name) => (
-                                            <Button key={name} variant="outline" className="w-full justify-start gap-2" onClick={(e) => { e.stopPropagation(); setCategoryStatus(category.category, name); }}>
-                                                <span className={cn("h-3 w-3 rounded-sm", itemStatusColors[name].light)} />
-                                                {itemStatusColors[name].name}
-                                            </Button>
-                                        ))}
-                                    </div>
-                                    <Separator className="my-2" />
-                                    <Button variant="ghost" size="sm" className="w-full h-8" onClick={(e) => { e.stopPropagation(); setCategoryStatus(category.category, ''); }}>Reset</Button>
-                                    </PopoverContent>
-                                </Popover>
-                            </div>
-                        </div>
-                    )
-                })}
-              </TabsList>
-            </div>
-            {filteredMenu.map(category => {
-              return (
-              <TabsContent key={category.category} value={category.category} className={cn("m-0 rounded-lg p-2 min-h-[200px] bg-background")}>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-                  {category.items.map((item) => renderMenuItem(item, category.category))}
-                </div>
-              </TabsContent>
-            )})}
-          </Tabs>
-        );
-      }
+      const tabsKey = searchTerm ? `search-${searchTerm}` : 'all-items';
+      return (
+        <Tabs defaultValue={filteredMenu.length > 0 ? filteredMenu[0].category : undefined} key={tabsKey} className="w-full">
+          <div className="flex justify-center">
+            <TabsList className="mb-4 flex-wrap h-auto bg-transparent border-b rounded-none p-0">
+              {filteredMenu.map(category => {
+                  const status = menuCategoryStatus[category.category];
+                  const statusConfig = status ? itemStatusColors[status] : null;
+                  const colorName = categoryColors[category.category];
+                  const colorClass = colorName ? colorPalette[colorName]?.[colorShade] : '';
+                  return (
+                      <div key={category.category} className="relative group p-1">
+                          <TabsTrigger value={category.category} className={cn("rounded-md data-[state=active]:border-primary data-[state=active]:border-2 data-[state=active]:shadow-md px-4 py-3 cursor-pointer transition-colors text-lg font-bold", statusConfig ? statusConfig.dark : (colorClass || 'bg-muted'))}>
+                              <div className={cn("flex-grow text-left flex items-center gap-2 pr-12")}>
+                                  <span className="truncate">{category.category}</span>
+                                  {statusConfig && (
+                                      <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-black/10 text-white">
+                                          {statusConfig.name}
+                                      </span>
+                                  )}
+                              </div>
+                          </TabsTrigger>
+                          <div className="absolute top-1/2 -translate-y-1/2 right-4 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
+                              <Popover>
+                                  <PopoverTrigger asChild>
+                                      <div role="button" className="p-1 rounded-md hover:bg-black/20 dark:hover:bg-white/20">
+                                          <Palette className="h-4 w-4" />
+                                      </div>
+                                  </PopoverTrigger>
+                                  <PopoverContent className="w-auto p-2">
+                                  <div className="grid grid-cols-2 gap-1">
+                                      {itemStatusNames.map((name) => (
+                                          <Button key={name} variant="outline" className="w-full justify-start gap-2" onClick={(e) => { e.stopPropagation(); setCategoryStatus(category.category, name); }}>
+                                              <span className={cn("h-3 w-3 rounded-sm", itemStatusColors[name].light)} />
+                                              {itemStatusColors[name].name}
+                                          </Button>
+                                      ))}
+                                  </div>
+                                  <Separator className="my-2" />
+                                  <Button variant="ghost" size="sm" className="w-full h-8" onClick={(e) => { e.stopPropagation(); setCategoryStatus(category.category, ''); }}>Reset</Button>
+                                  </PopoverContent>
+                              </Popover>
+                          </div>
+                      </div>
+                  )
+              })}
+            </TabsList>
+          </div>
+          {filteredMenu.map(category => (
+            <TabsContent key={category.category} value={category.category} className={cn("m-0 rounded-lg p-2 min-h-[200px] bg-background")}>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                {category.items.map((item) => renderMenuItem(item, category.category))}
+              </div>
+            </TabsContent>
+          ))}
+        </Tabs>
+      );
+    }
     return (
        <Accordion
             type="multiple"
@@ -1939,3 +1940,5 @@ const processKOTs = useCallback((kotGroupsToProcess: { title: string; items: Ord
     </div>
   );
 }
+
+    
