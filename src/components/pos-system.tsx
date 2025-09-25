@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import * as React from 'react';
@@ -1173,8 +1172,15 @@ const processKOTs = useCallback((kotGroupsToProcess: { title: string; items: Ord
         const fullMenuItem = allMenuItems.find(mi => mi.name === orderItem.name);
         if (fullMenuItem?.recipe) {
             fullMenuItem.recipe.forEach(ingredient => {
-                const currentQuantity = inventoryUpdates.get(ingredient.inventoryItemId) || 0;
-                inventoryUpdates.set(ingredient.inventoryItemId, currentQuantity + (ingredient.quantity * orderItem.quantity));
+                const quantityToDeduct = ingredient.unit === 'g' || ingredient.unit === 'ml' ? ingredient.quantity / 1000 : ingredient.quantity;
+                const inventoryItem = inventory.find(i => i.id === ingredient.inventoryItemId);
+                if (inventoryItem && (inventoryItem.unit === 'kg' || inventoryItem.unit === 'ltr')) {
+                    const currentQuantity = inventoryUpdates.get(ingredient.inventoryItemId) || 0;
+                    inventoryUpdates.set(ingredient.inventoryItemId, currentQuantity + (quantityToDeduct * orderItem.quantity));
+                } else {
+                     const currentQuantity = inventoryUpdates.get(ingredient.inventoryItemId) || 0;
+                     inventoryUpdates.set(ingredient.inventoryItemId, currentQuantity + (ingredient.quantity * orderItem.quantity));
+                }
             });
         }
     });
@@ -1945,5 +1951,3 @@ const processKOTs = useCallback((kotGroupsToProcess: { title: string; items: Ord
     </div>
   );
 }
-
-    

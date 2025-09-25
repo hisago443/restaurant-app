@@ -1,5 +1,4 @@
 
-
 import { z } from 'zod';
 
 export interface MenuItemHistory {
@@ -11,6 +10,7 @@ export interface MenuItemHistory {
 export interface RecipeItem {
   inventoryItemId: string; // Corresponds to the ID of an InventoryItem
   quantity: number; // Amount of the ingredient used
+  unit: 'g' | 'ml' | 'pcs' | 'kg' | 'ltr';
 }
 
 export interface MenuItem {
@@ -250,5 +250,3 @@ export const GenerateReportOutputSchema = z.object({
   message: z.string(),
 });
 export type GenerateReportOutput = z.infer<typeof GenerateReportOutputSchema>;
-
-    

@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import { useState, useMemo, useEffect } from 'react';
@@ -57,12 +56,14 @@ function EditRecipeDialog({ isOpen, onOpenChange, menuItem, inventory, onSave }:
   const [recipe, setRecipe] = useState<RecipeItem[]>([]);
   const [selectedIngredient, setSelectedIngredient] = useState<string>('');
   const [quantity, setQuantity] = useState<string>('');
+  const [unit, setUnit] = useState<RecipeItem['unit']>('g');
   
   useEffect(() => {
     if (isOpen) {
       setRecipe(menuItem.recipe || []);
       setSelectedIngredient('');
       setQuantity('');
+      setUnit('g');
     }
   }, [isOpen, menuItem]);
 
@@ -74,20 +75,23 @@ function EditRecipeDialog({ isOpen, onOpenChange, menuItem, inventory, onSave }:
     const newIngredient: RecipeItem = {
       inventoryItemId: selectedIngredient,
       quantity: parseFloat(quantity),
+      unit: unit,
     };
     setRecipe([...recipe, newIngredient]);
     setSelectedIngredient('');
     setQuantity('');
   };
 
-  const handleRemoveIngredient = (inventoryItemId: string) => {
-    setRecipe(recipe.filter(ing => ing.inventoryItemId !== inventoryItemId));
+  const handleRemoveIngredient = (inventoryItemId: string, unit: string) => {
+    setRecipe(recipe.filter(ing => !(ing.inventoryItemId === inventoryItemId && ing.unit === unit)));
   };
   
   const handleSaveRecipe = () => {
     onSave(menuItem.name, recipe);
     onOpenChange(false);
   }
+
+  const recipeUnits: RecipeItem['unit'][] = ['g', 'ml', 'pcs', 'kg', 'ltr'];
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -102,15 +106,15 @@ function EditRecipeDialog({ isOpen, onOpenChange, menuItem, inventory, onSave }:
           <div>
             <h4 className="font-semibold mb-2">Current Recipe Ingredients</h4>
             <div className="space-y-2 max-h-40 overflow-y-auto border p-2 rounded-md">
-              {recipe.length > 0 ? recipe.map((ingredient) => {
+              {recipe.length > 0 ? recipe.map((ingredient, index) => {
                 const inventoryItem = inventory.find(i => i.id === ingredient.inventoryItemId);
                 return (
-                  <div key={ingredient.inventoryItemId} className="flex justify-between items-center p-2 bg-muted/50 rounded-md">
+                  <div key={`${ingredient.inventoryItemId}-${index}`} className="flex justify-between items-center p-2 bg-muted/50 rounded-md">
                     <div>
                       <span className="font-medium">{inventoryItem?.name || 'Unknown Item'}</span>
-                      <span className="text-sm text-muted-foreground ml-2">({ingredient.quantity} {inventoryItem?.unit})</span>
+                      <span className="text-sm text-muted-foreground ml-2">({ingredient.quantity} {ingredient.unit})</span>
                     </div>
-                    <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleRemoveIngredient(ingredient.inventoryItemId)}>
+                    <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleRemoveIngredient(ingredient.inventoryItemId, ingredient.unit)}>
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
@@ -131,7 +135,7 @@ function EditRecipeDialog({ isOpen, onOpenChange, menuItem, inventory, onSave }:
                     <SelectValue placeholder="Select from inventory" />
                   </SelectTrigger>
                   <SelectContent>
-                    {inventory.filter(invItem => !recipe.some(r => r.inventoryItemId === invItem.id)).map(invItem => (
+                    {inventory.map(invItem => (
                       <SelectItem key={invItem.id} value={invItem.id}>{invItem.name}</SelectItem>
                     ))}
                   </SelectContent>
@@ -147,6 +151,17 @@ function EditRecipeDialog({ isOpen, onOpenChange, menuItem, inventory, onSave }:
                   placeholder="e.g., 50"
                   className="w-24"
                 />
+              </div>
+               <div className="space-y-1">
+                <Label htmlFor="ingredient-unit">Unit</Label>
+                <Select value={unit} onValueChange={(value) => setUnit(value as RecipeItem['unit'])}>
+                    <SelectTrigger id="ingredient-unit" className="w-[80px]">
+                        <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {recipeUnits.map(u => <SelectItem key={u} value={u}>{u}</SelectItem>)}
+                    </SelectContent>
+                </Select>
               </div>
               <Button onClick={handleAddIngredient}><PlusCircle className="mr-2 h-4 w-4"/>Add</Button>
             </div>
@@ -443,26 +458,25 @@ export function ManageMenuDialog({
   
   useEffect(() => {
     if (isOpen && startWithEdit) {
-        // No toast needed here as per user feedback to simplify
     }
-  }, [isOpen, startWithEdit]);
+  }, [isOpen, startWithEdit, toast]);
 
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onOpenChange}>
         <DialogContent className="max-w-4xl">
-          {startWithEdit ? (
-            <DialogHeader>
-              <DialogTitle className="sr-only">Edit Recipe</DialogTitle>
-            </DialogHeader>
-          ) : (
-            <DialogHeader>
-              <DialogTitle>Manage Menu</DialogTitle>
-              <DialogDescription>
-                Add, edit, and organize your menu categories, items, and recipes.
-              </DialogDescription>
-            </DialogHeader>
-          )}
+          <DialogHeader>
+            {startWithEdit ? (
+                <DialogTitle className="sr-only">Edit Recipe</DialogTitle>
+            ) : (
+                <>
+                <DialogTitle>Manage Menu</DialogTitle>
+                <DialogDescription>
+                    Add, edit, and organize your menu categories, items, and recipes.
+                </DialogDescription>
+                </>
+            )}
+          </DialogHeader>
           <div className="max-h-[70vh] overflow-y-auto p-1">
             <Accordion type="multiple" value={activeAccordionItems} onValueChange={setActiveAccordionItems} className="w-full space-y-4">
               
