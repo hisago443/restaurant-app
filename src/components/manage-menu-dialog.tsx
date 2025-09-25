@@ -39,13 +39,14 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useToast } from '@/hooks/use-toast';
 import type { MenuCategory, MenuItem, MenuItemHistory, IngredientItem, InventoryItem } from '@/lib/types';
-import { PlusCircle, Trash2, Edit, History, FilePlus, Upload, Camera, Loader2 } from 'lucide-react';
+import { PlusCircle, Trash2, Edit, History, FilePlus, Upload, Camera, Loader2, Wand2, Check, X } from 'lucide-react';
 import { RadioGroup, RadioGroupItem } from './ui/radio-group';
 import { format } from 'date-fns';
 import { Separator } from './ui/separator';
 import { cn } from '@/lib/utils';
 import { saveMenu } from '@/lib/menu-saver';
 import { ScrollArea } from './ui/scroll-area';
+import { scanMenu, type ScanMenuOutput } from '@/ai/flows/scan-menu-flow';
 
 interface EditIngredientsDialogProps {
   isOpen: boolean;
@@ -299,26 +300,53 @@ export function ManageMenuDialog({
   const [editingIngredients, setEditingIngredients] = useState<MenuItem | null>(null);
 
   const [isScanning, setIsScanning] = useState(false);
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [scannedMenu, setScannedMenu] = useState<ScanMenuOutput | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const updateAndSaveMenu = async (newMenuData: MenuCategory[]) => {
     setMenu(newMenuData);
     await saveMenu(newMenuData);
   };
-
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file) {
-      // TODO: Implement image scanning logic
-      console.log('File selected:', file.name);
-      toast({
-        title: 'Image Ready',
-        description: 'Image scanning will be implemented in a future update.',
-      });
-    }
+    if (!file) return;
+
+    setIsScanning(true);
+    setScannedMenu(null);
+    toast({
+        title: 'Scanning Menu...',
+        description: 'The AI is analyzing your menu. This might take a moment.',
+    });
+
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+        const dataUri = e.target?.result as string;
+        try {
+            const result = await scanMenu({ photoDataUri: dataUri });
+            if (result && result.menu) {
+                setScannedMenu(result);
+                toast({
+                    title: 'Scan Complete!',
+                    description: 'Review the scanned items below and add them to your menu.',
+                });
+            } else {
+                throw new Error("AI could not process the menu image.");
+            }
+        } catch (error) {
+            console.error("Menu scanning failed:", error);
+            toast({
+                variant: 'destructive',
+                title: 'Scan Failed',
+                description: 'Could not read the menu from the image. Please try again with a clearer picture.',
+            });
+        } finally {
+            setIsScanning(false);
+        }
+    };
+    reader.readAsDataURL(file);
   };
+
 
   const handleAddCategory = () => {
     if (!newCategory) {
@@ -433,6 +461,41 @@ export function ManageMenuDialog({
     updateAndSaveMenu(newMenu);
     toast({ title: `Category "${categoryName}" removed.` });
   };
+  
+  const handleAddScannedCategory = (scannedCategory: MenuCategory) => {
+    let newMenu = [...menu];
+    const existingCategoryIndex = newMenu.findIndex(c => c.category.toLowerCase() === scannedCategory.category.toLowerCase());
+    
+    const allItems = newMenu.flatMap(c => c.items);
+    let maxCode = allItems.reduce((max, item) => {
+        const codeNum = parseInt(item.code, 10);
+        return !isNaN(codeNum) && codeNum > max ? codeNum : max;
+    }, 0);
+
+    const itemsToAdd = scannedCategory.items.map(item => ({
+        ...item,
+        code: (++maxCode).toString(),
+        history: [],
+        ingredients: []
+    }));
+
+    if (existingCategoryIndex > -1) {
+        // Category exists, merge items
+        const existingItems = newMenu[existingCategoryIndex].items.map(i => i.name.toLowerCase());
+        const newItems = itemsToAdd.filter(i => !existingItems.includes(i.name.toLowerCase()));
+        newMenu[existingCategoryIndex].items.push(...newItems);
+        toast({ title: `Added ${newItems.length} new item(s) to "${scannedCategory.category}".` });
+    } else {
+        // New category
+        newMenu.push({ category: scannedCategory.category, items: itemsToAdd });
+        toast({ title: `Category "${scannedCategory.category}" with ${itemsToAdd.length} item(s) added.` });
+    }
+    
+    updateAndSaveMenu(newMenu);
+    
+    // Remove the added category from the scanned menu preview
+    setScannedMenu(prev => prev ? ({ ...prev, menu: prev.menu.filter(c => c.category !== scannedCategory.category) }) : null);
+  }
 
   const filteredMenuForEditing = useMemo(() => {
     if (!editMenuSearch) return menu;
@@ -476,9 +539,8 @@ export function ManageMenuDialog({
                 <AccordionItem value="scan-menu">
                   <AccordionTrigger className="text-lg font-semibold">Scan Menu from Image</AccordionTrigger>
                   <AccordionContent className="p-4 bg-muted/50 rounded-b-md">
-                     <RadioGroup defaultValue="upload" className="flex items-center gap-4 mb-4">
+                     <div className="flex items-center gap-4 mb-4">
                         <Label htmlFor="scan-upload" className="flex items-center gap-2 p-2 border rounded-md cursor-pointer hover:bg-background has-[:checked]:bg-primary has-[:checked]:text-primary-foreground">
-                            <RadioGroupItem value="upload" id="scan-radio-upload" className="sr-only"/>
                             <Upload className="h-4 w-4" /> Upload Image
                         </Label>
                         <Input
@@ -489,19 +551,45 @@ export function ManageMenuDialog({
                           className="sr-only"
                           onChange={handleFileChange}
                         />
-                        <Label htmlFor="scan-camera" className="flex items-center gap-2 p-2 border rounded-md cursor-pointer hover:bg-background has-[:checked]:bg-primary has-[:checked]:text-primary-foreground">
-                            <RadioGroupItem value="camera" id="scan-camera"/>
-                            <Camera className="h-4 w-4" /> Use Camera
-                        </Label>
-                    </RadioGroup>
-                    <div className="flex justify-center items-center h-48 w-full border-2 border-dashed rounded-lg bg-background relative">
+                        {/* Camera functionality can be added here if needed */}
+                    </div>
+                    <div className="flex justify-center items-center min-h-[12rem] w-full border-2 border-dashed rounded-lg bg-background relative p-4">
                         {isScanning ? (
-                            <Loader2 className="h-10 w-10 animate-spin text-primary" />
+                            <div className="flex flex-col items-center gap-2 text-primary">
+                                <Loader2 className="h-10 w-10 animate-spin" />
+                                <p className="font-semibold">AI is scanning your menu...</p>
+                            </div>
+                        ) : scannedMenu && scannedMenu.menu.length > 0 ? (
+                           <div className="w-full space-y-4">
+                               <div className="text-center">
+                                   <h3 className="text-lg font-semibold flex items-center justify-center gap-2"><Wand2 /> Scanned Results</h3>
+                                   <p className="text-sm text-muted-foreground">Review and add the scanned categories to your menu.</p>
+                               </div>
+                               <div className="space-y-2 max-h-64 overflow-y-auto">
+                                {scannedMenu.menu.map(category => (
+                                    <div key={category.category} className="p-3 border rounded-md bg-background/50">
+                                        <div className="flex justify-between items-center">
+                                            <h4 className="font-bold text-base">{category.category}</h4>
+                                            <Button size="sm" onClick={() => handleAddScannedCategory(category)}><PlusCircle className="mr-2 h-4 w-4"/> Add to Menu</Button>
+                                        </div>
+                                        <ul className="text-sm mt-2 space-y-1">
+                                            {category.items.map(item => (
+                                                <li key={item.name} className="flex justify-between">
+                                                    <span>{item.name}</span>
+                                                    <span className="font-mono">₹{item.price}</span>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                ))}
+                               </div>
+                               <div className="flex justify-end">
+                                   <Button variant="ghost" onClick={() => setScannedMenu(null)}><X className="mr-2 h-4 w-4"/> Discard All</Button>
+                               </div>
+                           </div>
                         ) : (
-                            <p className="text-muted-foreground">Your scanned menu will appear here.</p>
+                            <p className="text-muted-foreground">Upload an image to start scanning.</p>
                         )}
-                        <video ref={videoRef} className="absolute inset-0 w-full h-full object-cover" autoPlay playsInline style={{ display: 'none' }} />
-                        <canvas ref={canvasRef} style={{ display: 'none' }} />
                     </div>
                   </AccordionContent>
                 </AccordionItem>
