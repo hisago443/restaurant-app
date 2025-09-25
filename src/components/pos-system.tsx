@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import * as React from 'react';
@@ -24,7 +25,7 @@ import { useDrag, useDrop } from 'react-dnd';
 import { AddItemDialog } from './add-item-dialog';
 import { ManageMenuDialog } from './manage-menu-dialog';
 
-import type { MenuCategory, MenuItem, OrderItem, Table, Order, Bill, TableStatus, KOTPreference, OrderType, CustomerDetails } from '@/lib/types';
+import type { MenuCategory, MenuItem, OrderItem, Table, Order, Bill, TableStatus, KOTPreference, OrderType, CustomerDetails, InventoryItem } from '@/lib/types';
 import menuData from '@/data/menu.json';
 import { generateReceipt, type GenerateReceiptInput } from '@/ai/flows/dynamic-receipt-discount-reasoning';
 import { PaymentDialog } from './payment-dialog';
@@ -120,6 +121,7 @@ interface PosSystemProps {
   setSelectedOrderType: (type: OrderType) => void;
   showTableDetailsOnPOS: boolean;
   showReservationTimeOnPOS: boolean;
+  inventory: InventoryItem[];
 }
 
 const ItemTypes = {
@@ -584,6 +586,7 @@ export default function PosSystem({
     setSelectedOrderType,
     showTableDetailsOnPOS,
     showReservationTimeOnPOS,
+    inventory,
 }: PosSystemProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [menu, setMenu] = useState<MenuCategory[]>([]);
@@ -763,7 +766,7 @@ export default function PosSystem({
         ...category,
         subCategories: category.subCategories.map(sub => ({
             ...sub,
-            items: sub.items.map(item => ({...item, history: item.history || []}))
+            items: sub.items.map(item => ({...item, history: item.history || [], recipe: item.recipe || []}))
         }))
     }));
     setMenu(structuredMenu);
@@ -1864,6 +1867,7 @@ const processKOTs = useCallback((kotGroupsToProcess: { title: string; items: Ord
         onOpenChange={setIsMenuManagerOpen}
         menu={menu}
         setMenu={setMenu}
+        inventory={inventory}
       />
       <HomeDeliveryDialog
         isOpen={isHomeDeliveryDialogOpen}

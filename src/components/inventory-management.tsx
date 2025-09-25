@@ -118,8 +118,6 @@ export default function InventoryManagement({ inventory }: InventoryManagementPr
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [seededIngredients, setSeededIngredients] = useState<InventoryItem[]>([]);
-  const [isSeedConfirmationDialogOpen, setIsSeedConfirmationDialogOpen] = useState(false);
 
   const filteredInventory = useMemo(() => {
     if (!searchTerm) return inventory;
@@ -190,42 +188,6 @@ export default function InventoryManagement({ inventory }: InventoryManagementPr
     return "bg-primary";
   };
 
-  const handleSeedIngredients = async () => {
-    try {
-      const batch = writeBatch(db);
-      const defaultIngredients = [
-        { id: '1', name: 'Pizza Base (Medium)', category: 'Bakery', stock: 50, capacity: 100, unit: 'units' },
-        { id: '2', name: 'Pizza Base (Large)', category: 'Bakery', stock: 50, capacity: 100, unit: 'units' },
-        { id: '3', name: 'Tomato Sauce', category: 'Sauces', stock: 10, capacity: 20, unit: 'kg' },
-        { id: '4', name: 'Pesto Sauce', category: 'Sauces', stock: 5, capacity: 10, unit: 'kg' },
-        { id: '5', name: 'White Sauce', category: 'Sauces', stock: 5, capacity: 10, unit: 'kg' },
-        { id: '6', name: 'Cheese', category: 'Dairy', stock: 20, capacity: 40, unit: 'kg' },
-        { id: '7', name: 'Vegetables (Assorted)', category: 'Produce', stock: 15, capacity: 30, unit: 'kg' },
-        { id: '8', name: 'Paneer', category: 'Dairy', stock: 10, capacity: 20, unit: 'kg' },
-        { id: '9', name: 'Chicken', category: 'Meat', stock: 15, capacity: 30, unit: 'kg' },
-        { id: '10', name: 'Pasta', category: 'Pantry', stock: 20, capacity: 50, unit: 'kg' },
-        { id: '11', name: 'Coffee Beans', category: 'Beverages', stock: 10, capacity: 20, unit: 'kg' },
-        { id: '12', name: 'Milk', category: 'Dairy', stock: 25, capacity: 50, unit: 'liters' },
-      ];
-
-      for (const item of defaultIngredients) {
-        const docRef = doc(db, "inventory", item.id);
-        batch.set(docRef, item);
-      }
-      
-      await batch.commit();
-      setSeededIngredients(defaultIngredients);
-      setIsSeedConfirmationDialogOpen(true);
-    } catch (error) {
-      console.error("Error seeding ingredients:", error);
-      toast({
-        variant: "destructive",
-        title: "Seeding Failed",
-        description: "There was an error loading the default ingredients.",
-      });
-    }
-  };
-
   return (
     <div className="p-4">
     <Card className="bg-muted/30">
@@ -247,9 +209,6 @@ export default function InventoryManagement({ inventory }: InventoryManagementPr
             </div>
             <Button onClick={() => handleOpenDialog(null)}>
               <PlusCircle className="mr-2 h-4 w-4" /> Add Item
-            </Button>
-            <Button variant="outline" onClick={handleSeedIngredients}>
-              <Server className="mr-2 h-4 w-4" /> Load Default Ingredients
             </Button>
           </div>
         </div>
@@ -366,42 +325,6 @@ export default function InventoryManagement({ inventory }: InventoryManagementPr
       onSave={handleSaveItem}
       existingItem={editingItem}
     />
-    
-    <Dialog open={isSeedConfirmationDialogOpen} onOpenChange={setIsSeedConfirmationDialogOpen}>
-        <DialogContent className="max-w-2xl">
-            <DialogHeader>
-                <DialogTitle>Default Ingredients Loaded</DialogTitle>
-                <DialogDescription>
-                    The following ingredients have been added or updated in your inventory.
-                </DialogDescription>
-            </DialogHeader>
-            <div className="max-h-[60vh] overflow-y-auto p-1">
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>ID</TableHead>
-                            <TableHead>Name</TableHead>
-                            <TableHead>Category</TableHead>
-                            <TableHead className="text-right">Stock / Capacity</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {seededIngredients.map(item => (
-                            <TableRow key={item.id}>
-                                <TableCell className="font-mono">{item.id}</TableCell>
-                                <TableCell>{item.name}</TableCell>
-                                <TableCell>{item.category}</TableCell>
-                                <TableCell className="text-right">{item.stock} / {item.capacity} {item.unit}</TableCell>
-                            </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-            </div>
-            <DialogFooter>
-                <Button onClick={() => setIsSeedConfirmationDialogOpen(false)}>Close</Button>
-            </DialogFooter>
-        </DialogContent>
-    </Dialog>
     </div>
   );
 }

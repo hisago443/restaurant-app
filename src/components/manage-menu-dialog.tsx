@@ -39,11 +39,128 @@ import {
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useToast } from '@/hooks/use-toast';
-import type { MenuCategory, MenuItem, MenuItemHistory } from '@/lib/types';
-import { PlusCircle, Trash2, Edit, History } from 'lucide-react';
+import type { MenuCategory, MenuItem, MenuItemHistory, RecipeItem, InventoryItem } from '@/lib/types';
+import { PlusCircle, Trash2, Edit, History, FilePlus } from 'lucide-react';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { format } from 'date-fns';
 import { Separator } from './ui/separator';
+
+interface EditRecipeDialogProps {
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
+  menuItem: MenuItem;
+  inventory: InventoryItem[];
+  onSave: (itemName: string, newRecipe: RecipeItem[]) => void;
+}
+
+function EditRecipeDialog({ isOpen, onOpenChange, menuItem, inventory, onSave }: EditRecipeDialogProps) {
+  const [recipe, setRecipe] = useState<RecipeItem[]>([]);
+  const [selectedIngredient, setSelectedIngredient] = useState<string>('');
+  const [quantity, setQuantity] = useState<string>('');
+  
+  useEffect(() => {
+    if (isOpen) {
+      setRecipe(menuItem.recipe || []);
+      setSelectedIngredient('');
+      setQuantity('');
+    }
+  }, [isOpen, menuItem]);
+
+  const handleAddIngredient = () => {
+    if (!selectedIngredient || !quantity) {
+      alert("Please select an ingredient and enter a quantity.");
+      return;
+    }
+    const newIngredient: RecipeItem = {
+      inventoryItemId: selectedIngredient,
+      quantity: parseFloat(quantity),
+    };
+    setRecipe([...recipe, newIngredient]);
+    setSelectedIngredient('');
+    setQuantity('');
+  };
+
+  const handleRemoveIngredient = (inventoryItemId: string) => {
+    setRecipe(recipe.filter(ing => ing.inventoryItemId !== inventoryItemId));
+  };
+  
+  const handleSaveRecipe = () => {
+    onSave(menuItem.name, recipe);
+    onOpenChange(false);
+  }
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>Edit Recipe for "{menuItem.name}"</DialogTitle>
+          <DialogDescription>
+            Define which inventory items are consumed when this menu item is sold.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="py-4 space-y-4">
+          <div>
+            <h4 className="font-semibold mb-2">Current Recipe Ingredients</h4>
+            <div className="space-y-2 max-h-40 overflow-y-auto border p-2 rounded-md">
+              {recipe.length > 0 ? recipe.map((ingredient) => {
+                const inventoryItem = inventory.find(i => i.id === ingredient.inventoryItemId);
+                return (
+                  <div key={ingredient.inventoryItemId} className="flex justify-between items-center p-2 bg-muted/50 rounded-md">
+                    <div>
+                      <span className="font-medium">{inventoryItem?.name || 'Unknown Item'}</span>
+                      <span className="text-sm text-muted-foreground ml-2">({ingredient.quantity} {inventoryItem?.unit})</span>
+                    </div>
+                    <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleRemoveIngredient(ingredient.inventoryItemId)}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                );
+              }) : (
+                <p className="text-sm text-muted-foreground text-center p-4">No ingredients in this recipe yet.</p>
+              )}
+            </div>
+          </div>
+          <Separator />
+          <div>
+            <h4 className="font-semibold mb-2">Add New Ingredient</h4>
+            <div className="flex items-end gap-2">
+              <div className="flex-grow space-y-1">
+                <Label htmlFor="ingredient-select">Ingredient</Label>
+                <Select value={selectedIngredient} onValueChange={setSelectedIngredient}>
+                  <SelectTrigger id="ingredient-select">
+                    <SelectValue placeholder="Select from inventory" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {inventory.filter(invItem => !recipe.some(r => r.inventoryItemId === invItem.id)).map(invItem => (
+                      <SelectItem key={invItem.id} value={invItem.id}>{invItem.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="ingredient-quantity">Quantity</Label>
+                <Input
+                  id="ingredient-quantity"
+                  type="number"
+                  value={quantity}
+                  onChange={(e) => setQuantity(e.target.value)}
+                  placeholder="e.g., 0.5"
+                  className="w-24"
+                />
+              </div>
+              <Button onClick={handleAddIngredient}><PlusCircle className="mr-2 h-4 w-4"/>Add</Button>
+            </div>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button onClick={handleSaveRecipe}>Save Recipe</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 
 interface EditItemDialogProps {
   isOpen: boolean;
@@ -131,6 +248,7 @@ interface ManageMenuDialogProps {
   onOpenChange: (open: boolean) => void;
   menu: MenuCategory[];
   setMenu: React.Dispatch<React.SetStateAction<MenuCategory[]>>;
+  inventory: InventoryItem[];
 }
 
 export function ManageMenuDialog({
@@ -138,6 +256,7 @@ export function ManageMenuDialog({
   onOpenChange,
   menu,
   setMenu,
+  inventory,
 }: ManageMenuDialogProps) {
   const { toast } = useToast();
   const [newCategory, setNewCategory] = useState('');
@@ -148,6 +267,7 @@ export function ManageMenuDialog({
   const [selectedCategoryForItem, setSelectedCategoryForItem] = useState('');
   const [editMenuSearch, setEditMenuSearch] = useState('');
   const [editingItem, setEditingItem] = useState<{ categoryName: string; subCategoryName: string; item: MenuItem } | null>(null);
+  const [editingRecipe, setEditingRecipe] = useState<MenuItem | null>(null);
 
   const handleAddCategory = () => {
     if (!newCategory) {
@@ -195,7 +315,7 @@ export function ManageMenuDialog({
           }
 
           // Add the new item
-          updatedSubCategories[targetSubCategoryIndex].items.push({ name: newItemName, price: parseFloat(newItemPrice), code: '', history: [] });
+          updatedSubCategories[targetSubCategoryIndex].items.push({ name: newItemName, price: parseFloat(newItemPrice), code: '', history: [], recipe: [] });
           
           return {
             ...cat,
@@ -236,6 +356,19 @@ export function ManageMenuDialog({
     });
     setEditingItem(null);
     toast({ title: "Item Updated" });
+  };
+
+  const handleSaveRecipe = (itemName: string, newRecipe: RecipeItem[]) => {
+    setMenu(prevMenu => {
+      return prevMenu.map(cat => ({
+        ...cat,
+        subCategories: cat.subCategories.map(subCat => ({
+          ...subCat,
+          items: subCat.items.map(item => item.name === itemName ? { ...item, recipe: newRecipe } : item)
+        }))
+      }))
+    });
+    toast({ title: `Recipe for ${itemName} updated!` });
   };
   
   const handleRemoveItem = (categoryName: string, subCategoryName: string, itemName: string) => {
@@ -431,6 +564,9 @@ export function ManageMenuDialog({
                                                           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setEditingItem({ categoryName: cat.category, subCategoryName: subCat.name, item })}>
                                                             <Edit className="h-4 w-4" />
                                                           </Button>
+                                                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setEditingRecipe(item)}>
+                                                              <FilePlus className="h-4 w-4" />
+                                                          </Button>
                                                           <AlertDialog>
                                                               <AlertDialogTrigger asChild>
                                                                   <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive">
@@ -482,10 +618,15 @@ export function ManageMenuDialog({
           onSave={handleEditItem}
         />
       )}
+      {editingRecipe && (
+        <EditRecipeDialog
+            isOpen={!!editingRecipe}
+            onOpenChange={(open) => !open && setEditingRecipe(null)}
+            menuItem={editingRecipe}
+            inventory={inventory}
+            onSave={handleSaveRecipe}
+        />
+      )}
     </>
   );
 }
-
-    
-
-    
