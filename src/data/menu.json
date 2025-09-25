@@ -531,6 +531,19 @@
         "code": "25",
         "history": [],
         "ingredients": []
+      },
+      {
+        "name": "mjbmbv",
+        "price": 4121,
+        "code": "",
+        "history": [],
+        "ingredients": [
+          {
+            "inventoryItemId": "1",
+            "quantity": 500,
+            "unit": "ml"
+          }
+        ]
       }
     ]
   },

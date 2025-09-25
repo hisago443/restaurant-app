@@ -337,8 +337,6 @@ export function ManageMenuDialog({
     
     updateAndSaveMenu(newMenu).then(() => {
         // Find the newly added item in the updated menu state
-        // This relies on the state update being processed before this `then` block
-        // A more robust way might involve passing the new menu to setEditingIngredients
         const updatedMenu = [...newMenu]; // Use the same structure
         const cat = updatedMenu.find(c => c.category === selectedCategoryForItem);
         const addedItem = cat?.items.find(i => i.name === newItemName);
@@ -500,7 +498,7 @@ export function ManageMenuDialog({
                             placeholder="e.g., 150"
                           />
                         </div>
-                        <Button onClick={handleAddItem}><PlusCircle className="mr-2 h-4 w-4"/>Add Item & Ingredients</Button>
+                        <Button onClick={handleAddItem}><PlusCircle className="mr-2 h-4 w-4"/>Add Item</Button>
                     </div>
                   </AccordionContent>
                 </AccordionItem>
