@@ -40,6 +40,8 @@ export default function BillHistory({ bills, onClearAll }: BillHistoryProps) {
   const [selectedBill, setSelectedBill] = useState<Bill | null>(null);
   const [filter, setFilter] = useState<FilterType>('all');
   const [date, setDate] = useState<Date | undefined>();
+  const [dateInput, setDateInput] = useState('');
+
 
   const filteredBills = useMemo(() => {
     const now = new Date();
@@ -105,9 +107,33 @@ export default function BillHistory({ bills, onClearAll }: BillHistoryProps) {
 
   const handleDateSelect = (selectedDate: Date | undefined) => {
     setDate(selectedDate);
-    // When a date is picked, we might want to clear the tab filter to avoid confusion
-    // but for now, we'll let the date filter take precedence.
+    setDateInput(selectedDate ? format(selectedDate, 'dd-MM-yyyy') : '');
   }
+
+  const handleDateInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let value = e.target.value.replace(/[^0-9]/g, '');
+    if (value.length > 8) {
+      value = value.slice(0, 8);
+    }
+    
+    if (value.length > 4) {
+      value = `${value.slice(0, 2)}-${value.slice(2, 4)}-${value.slice(4)}`;
+    } else if (value.length > 2) {
+      value = `${value.slice(0, 2)}-${value.slice(2)}`;
+    }
+    
+    setDateInput(value);
+
+    if (value.length === 10) {
+      const [day, month, year] = value.split('-');
+      if (day && month && year) {
+          const newDate = new Date(Number(year), Number(month) - 1, Number(day));
+          if (!isNaN(newDate.getTime())) {
+              setDate(newDate);
+          }
+      }
+    }
+  };
 
   const getBillTitle = (bill: Bill) => {
     switch (bill.orderType) {
@@ -126,7 +152,7 @@ export default function BillHistory({ bills, onClearAll }: BillHistoryProps) {
     <>
       <div className="flex justify-between items-center w-full mb-4 flex-wrap gap-4">
         <div className='flex items-center gap-2 flex-wrap'>
-          <Tabs value={filter} onValueChange={(value) => { setDate(undefined); setFilter(value as FilterType); }} className="w-auto">
+          <Tabs value={filter} onValueChange={(value) => { setDate(undefined); setDateInput(''); setFilter(value as FilterType); }} className="w-auto">
             <TabsList>
               <TabsTrigger value="all">All</TabsTrigger>
               <TabsTrigger value="month">This Month</TabsTrigger>
@@ -159,21 +185,14 @@ export default function BillHistory({ bills, onClearAll }: BillHistoryProps) {
                   <Input 
                       id="date-input"
                       placeholder="DD-MM-YYYY"
-                      onBlur={(e) => {
-                          const [day, month, year] = e.target.value.split(/[-/]/);
-                          if(day && month && year) {
-                              const newDate = new Date(Number(year), Number(month) - 1, Number(day));
-                              if (!isNaN(newDate.getTime())) {
-                                  handleDateSelect(newDate);
-                              }
-                          }
-                      }}
+                      value={dateInput}
+                      onChange={handleDateInputChange}
                   />
               </div>
             </PopoverContent>
           </Popover>
-          {date && (
-            <Button variant="ghost" onClick={() => setDate(undefined)} className="h-10 px-3">
+          {(date || dateInput) && (
+            <Button variant="ghost" onClick={() => { setDate(undefined); setDateInput(''); }} className="h-10 px-3">
               <X className="h-4 w-4 mr-2"/>
               Clear
             </Button>
