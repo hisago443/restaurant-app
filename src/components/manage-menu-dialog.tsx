@@ -271,6 +271,17 @@ export function ManageMenuDialog({
   const [editMenuSearch, setEditMenuSearch] = useState('');
   const [editingItem, setEditingItem] = useState<{ categoryName: string; subCategoryName: string; item: MenuItem } | null>(null);
   const [editingRecipe, setEditingRecipe] = useState<MenuItem | null>(null);
+  const [activeAccordionItems, setActiveAccordionItems] = useState<string[]>([]);
+  
+  useEffect(() => {
+    if (isOpen) {
+        if (startWithEdit) {
+            setActiveAccordionItems(['edit-menu']);
+        } else {
+            setActiveAccordionItems([]);
+        }
+    }
+  }, [isOpen, startWithEdit]);
 
   const handleAddCategory = () => {
     if (!newCategory) {
@@ -432,25 +443,24 @@ export function ManageMenuDialog({
   
   useEffect(() => {
     if (isOpen && startWithEdit) {
-      toast({
-          title: 'Recipe Editing Unlocked',
-          description: 'You can now assign ingredients to your menu items.',
-      });
+        // No toast needed here as per user feedback to simplify
     }
-  }, [isOpen, startWithEdit, toast]);
+  }, [isOpen, startWithEdit]);
 
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onOpenChange}>
         <DialogContent className="max-w-4xl">
-          <DialogHeader>
-            <DialogTitle>Manage Menu</DialogTitle>
-            <DialogDescription>
-              Add, edit, and organize your menu categories, items, and recipes.
-            </DialogDescription>
-          </DialogHeader>
+          {!startWithEdit && (
+            <DialogHeader>
+              <DialogTitle>Manage Menu</DialogTitle>
+              <DialogDescription>
+                Add, edit, and organize your menu categories, items, and recipes.
+              </DialogDescription>
+            </DialogHeader>
+          )}
           <div className="max-h-[70vh] overflow-y-auto p-1">
-            <Accordion type="multiple" defaultValue={startWithEdit ? ['edit-menu'] : []} className="w-full space-y-4">
+            <Accordion type="multiple" value={activeAccordionItems} onValueChange={setActiveAccordionItems} className="w-full space-y-4">
               
               {!startWithEdit && (
                 <>
@@ -536,7 +546,9 @@ export function ManageMenuDialog({
 
               {/* Edit/Remove Menu */}
               <AccordionItem value="edit-menu">
-                <AccordionTrigger className="text-lg font-semibold">Edit Menu & Recipes</AccordionTrigger>
+                <AccordionTrigger className="text-lg font-semibold">
+                  {startWithEdit ? "Edit Recipe" : "Edit Menu & Recipes"}
+                </AccordionTrigger>
                 <AccordionContent className="p-4 bg-muted/50 rounded-b-md space-y-4">
                     <Input
                       placeholder="Search for an item or category to edit..."
