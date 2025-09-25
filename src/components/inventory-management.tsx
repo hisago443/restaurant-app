@@ -21,6 +21,7 @@ import { cn } from '@/lib/utils';
 import { ManageMenuDialog } from './manage-menu-dialog';
 import menuData from '@/data/menu.json';
 import type { MenuCategory } from '@/lib/types';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface InventoryManagementProps {
   inventory: InventoryItem[];
@@ -105,7 +106,16 @@ function AddOrEditItemDialog({
           </div>
           <div className="col-span-2 space-y-2">
             <Label htmlFor="item-unit">Unit</Label>
-            <Input id="item-unit" value={unit} onChange={e => setUnit(e.target.value)} placeholder="e.g., kg, liters, units" />
+            <Select value={unit} onValueChange={setUnit}>
+                <SelectTrigger id="item-unit">
+                    <SelectValue placeholder="Select a unit" />
+                </SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="kg">kg</SelectItem>
+                    <SelectItem value="ltr">ltr</SelectItem>
+                    <SelectItem value="unit">unit</SelectItem>
+                </SelectContent>
+            </Select>
           </div>
         </div>
         <DialogFooter>
