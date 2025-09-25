@@ -44,6 +44,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { format } from 'date-fns';
 import { Separator } from './ui/separator';
 import { cn } from '@/lib/utils';
+import { saveMenu } from '@/lib/menu-saver';
 
 interface EditRecipeDialogProps {
   isOpen: boolean;
@@ -299,6 +300,17 @@ export function ManageMenuDialog({
     }
   }, [isOpen, startWithEdit]);
 
+  const updateAndSaveMenu = async (newMenu: MenuCategory[] | ((prev: MenuCategory[]) => MenuCategory[])) => {
+    let updatedMenu: MenuCategory[];
+    if (typeof newMenu === 'function') {
+      updatedMenu = newMenu(menu);
+    } else {
+      updatedMenu = newMenu;
+    }
+    setMenu(updatedMenu);
+    await saveMenu(updatedMenu);
+  };
+
   const handleAddCategory = () => {
     if (!newCategory) {
       toast({ variant: 'destructive', title: 'Category name is required' });
@@ -308,10 +320,11 @@ export function ManageMenuDialog({
         toast({ variant: 'destructive', title: 'Category already exists' });
         return;
     }
-    setMenu(prevMenu => [
-      ...prevMenu,
+    const newMenu = [
+      ...menu,
       { category: newCategory, subCategories: [] },
-    ]);
+    ];
+    updateAndSaveMenu(newMenu);
     setNewCategory('');
     toast({ title: `Category "${newCategory}" added.` });
   };
@@ -322,40 +335,41 @@ export function ManageMenuDialog({
       return;
     }
     
-    setMenu(prevMenu => {
-      return prevMenu.map(cat => {
-        if (cat.category === selectedCategoryForItem) {
-          const subCategoryName = newItemType;
-          let subCategoryExists = cat.subCategories.some(sub => sub.name === subCategoryName);
+    let itemExists = false;
+    const newMenu = menu.map(cat => {
+      if (cat.category === selectedCategoryForItem) {
+        const subCategoryName = newItemType;
+        let subCategoryExists = cat.subCategories.some(sub => sub.name === subCategoryName);
 
-          // Find or create the sub-category
-          let updatedSubCategories = [...cat.subCategories];
-          let targetSubCategoryIndex = updatedSubCategories.findIndex(sub => sub.name === subCategoryName);
+        let updatedSubCategories = [...cat.subCategories];
+        let targetSubCategoryIndex = updatedSubCategories.findIndex(sub => sub.name === subCategoryName);
 
-          if (targetSubCategoryIndex === -1) {
-            // Create sub-category if it doesn't exist
-            updatedSubCategories.push({ name: subCategoryName, items: [] });
-            targetSubCategoryIndex = updatedSubCategories.length - 1;
-          }
-
-          // Check if item already exists in the sub-category
-          if (updatedSubCategories[targetSubCategoryIndex].items.some(item => item.name.toLowerCase() === newItemName.toLowerCase())) {
-            toast({ variant: 'destructive', title: 'Item already exists in this sub-category' });
-            return cat;
-          }
-
-          // Add the new item
-          updatedSubCategories[targetSubCategoryIndex].items.push({ name: newItemName, price: parseFloat(newItemPrice), code: '', history: [], recipe: [] });
-          
-          return {
-            ...cat,
-            subCategories: updatedSubCategories,
-          };
+        if (targetSubCategoryIndex === -1) {
+          updatedSubCategories.push({ name: subCategoryName, items: [] });
+          targetSubCategoryIndex = updatedSubCategories.length - 1;
         }
-        return cat;
-      });
+
+        if (updatedSubCategories[targetSubCategoryIndex].items.some(item => item.name.toLowerCase() === newItemName.toLowerCase())) {
+          itemExists = true;
+          return cat;
+        }
+
+        updatedSubCategories[targetSubCategoryIndex].items.push({ name: newItemName, price: parseFloat(newItemPrice), code: '', history: [], recipe: [] });
+        
+        return {
+          ...cat,
+          subCategories: updatedSubCategories,
+        };
+      }
+      return cat;
     });
 
+    if (itemExists) {
+      toast({ variant: 'destructive', title: 'Item already exists in this sub-category' });
+      return;
+    }
+
+    updateAndSaveMenu(newMenu);
     setNewItemName('');
     setNewItemPrice('');
     setSelectedCategoryForItem('');
@@ -365,65 +379,64 @@ export function ManageMenuDialog({
   const handleEditItem = (oldName: string, newItem: MenuItem) => {
     if (!editingItem) return;
 
-    setMenu(prevMenu => {
-      return prevMenu.map(cat => {
-        if (cat.category === editingItem.categoryName) {
-          return {
-            ...cat,
-            subCategories: cat.subCategories.map(subCat => {
-              if (subCat.name === editingItem.subCategoryName) {
-                return {
-                  ...subCat,
-                  items: subCat.items.map(item => item.name === oldName ? newItem : item)
-                };
-              }
-              return subCat;
-            })
-          };
-        }
-        return cat;
-      });
+    const newMenu = menu.map(cat => {
+      if (cat.category === editingItem.categoryName) {
+        return {
+          ...cat,
+          subCategories: cat.subCategories.map(subCat => {
+            if (subCat.name === editingItem.subCategoryName) {
+              return {
+                ...subCat,
+                items: subCat.items.map(item => item.name === oldName ? newItem : item)
+              };
+            }
+            return subCat;
+          })
+        };
+      }
+      return cat;
     });
+
+    updateAndSaveMenu(newMenu);
     setEditingItem(null);
     toast({ title: "Item Updated" });
   };
 
   const handleSaveRecipe = (itemName: string, newRecipe: RecipeItem[]) => {
-    setMenu(prevMenu => {
-      return prevMenu.map(cat => ({
-        ...cat,
-        subCategories: cat.subCategories.map(subCat => ({
-          ...subCat,
-          items: subCat.items.map(item => item.name === itemName ? { ...item, recipe: newRecipe } : item)
-        }))
+    const newMenu = menu.map(cat => ({
+      ...cat,
+      subCategories: cat.subCategories.map(subCat => ({
+        ...subCat,
+        items: subCat.items.map(item => item.name === itemName ? { ...item, recipe: newRecipe } : item)
       }))
-    });
+    }));
+    updateAndSaveMenu(newMenu);
     toast({ title: `Recipe for ${itemName} updated!` });
   };
   
   const handleRemoveItem = (categoryName: string, subCategoryName: string, itemName: string) => {
-    setMenu(prevMenu => {
-      const newMenu = prevMenu.map(cat => {
-        if (cat.category === categoryName) {
-          const newSubCategories = cat.subCategories.map(subCat => {
-            if (subCat.name === subCategoryName) {
-              const newItems = subCat.items.filter(item => item.name !== itemName);
-              return { ...subCat, items: newItems };
-            }
-            return subCat;
-          }).filter(subCat => subCat.items.length > 0); // Remove subcategory if it becomes empty
-          
-          return { ...cat, subCategories: newSubCategories };
-        }
-        return cat;
-      });
-      return newMenu.filter(cat => cat.subCategories.some(sub => sub.items.length > 0));
+    const newMenu = menu.map(cat => {
+      if (cat.category === categoryName) {
+        const newSubCategories = cat.subCategories.map(subCat => {
+          if (subCat.name === subCategoryName) {
+            const newItems = subCat.items.filter(item => item.name !== itemName);
+            return { ...subCat, items: newItems };
+          }
+          return subCat;
+        }).filter(subCat => subCat.items.length > 0);
+        
+        return { ...cat, subCategories: newSubCategories };
+      }
+      return cat;
     });
+    
+    updateAndSaveMenu(newMenu.filter(cat => cat.subCategories.length > 0));
     toast({ title: `Item "${itemName}" removed.` });
   };
 
   const handleRemoveCategory = (categoryName: string) => {
-    setMenu(prevMenu => prevMenu.filter(cat => cat.category !== categoryName));
+    const newMenu = menu.filter(cat => cat.category !== categoryName);
+    updateAndSaveMenu(newMenu);
     toast({ title: `Category "${categoryName}" removed.` });
   };
 
