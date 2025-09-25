@@ -796,6 +796,19 @@
         "code": "62",
         "history": [],
         "ingredients": []
+      },
+      {
+        "name": "RGFTFGGF",
+        "price": 44455,
+        "code": "130",
+        "history": [],
+        "ingredients": [
+          {
+            "inventoryItemId": "1",
+            "quantity": 120,
+            "unit": "ml"
+          }
+        ]
       }
     ]
   },

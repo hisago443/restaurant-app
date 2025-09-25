@@ -248,12 +248,12 @@ export default function InventoryManagement({ inventory, menu, setMenu }: Invent
                     <div className="flex flex-col gap-2">
                       <Progress
                         value={(item.stock / item.capacity) * 100}
-                        className="w-full h-3"
+                        className="w-full h-4"
                         indicatorClassName={getStockColor(item.stock, item.capacity)}
                       />
-                      <div className="flex items-center gap-1">
-                        <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => handleStockChange(item.id, item.stock - 5)}>-5</Button>
-                        <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => handleStockChange(item.id, item.stock - 1)}>
+                      <div className="flex items-center gap-2">
+                        <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => handleStockChange(item.id, item.stock - 5)}>-5</Button>
+                        <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => handleStockChange(item.id, item.stock - 1)}>
                             <Minus className="h-4 w-4" />
                         </Button>
                          <Input 
@@ -261,13 +261,13 @@ export default function InventoryManagement({ inventory, menu, setMenu }: Invent
                             value={item.stock}
                             onChange={(e) => handleStockChange(item.id, e.target.value === '' ? 0 : parseInt(e.target.value, 10))}
                             onBlur={(e) => { if (e.target.value === '') { handleStockChange(item.id, 0); } }}
-                            className="w-16 h-8 text-center"
+                            className="w-20 h-10 text-center text-base font-bold"
                         />
-                        <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => handleStockChange(item.id, item.stock + 1)}>
+                        <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => handleStockChange(item.id, item.stock + 1)}>
                             <Plus className="h-4 w-4" />
                         </Button>
-                        <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => handleStockChange(item.id, item.stock + 5)}>+5</Button>
-                        <div className="text-sm text-muted-foreground ml-2">/ {item.capacity} {item.unit}</div>
+                        <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => handleStockChange(item.id, item.stock + 5)}>+5</Button>
+                        <div className="text-base text-muted-foreground ml-2">/ {item.capacity} {item.unit}</div>
                       </div>
                     </div>
                   </TableCell>
