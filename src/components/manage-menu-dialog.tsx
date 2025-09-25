@@ -70,6 +70,17 @@ function EditIngredientsDialog({ isOpen, onOpenChange, menuItem, inventory, onSa
     }
   }, [isOpen, menuItem]);
 
+  useEffect(() => {
+    if (selectedIngredient) {
+      const inventoryItem = inventory.find(i => i.id === selectedIngredient);
+      if (inventoryItem) {
+        if (inventoryItem.unit === 'kg') setUnit('g');
+        else if (inventoryItem.unit === 'ltr') setUnit('ml');
+        else if (inventoryItem.unit === 'unit') setUnit('pcs');
+      }
+    }
+  }, [selectedIngredient, inventory]);
+
   const handleAddIngredient = () => {
     if (!selectedIngredient || !quantity) {
       alert("Please select an ingredient and enter a quantity.");

@@ -455,28 +455,6 @@
           }
         ],
         "history": []
-      },
-      {
-        "name": "CHEESE CAKE",
-        "price": 56552,
-        "code": "",
-        "history": [],
-        "recipe": [],
-        "ingredients": []
-      },
-      {
-        "name": "veg cheese",
-        "price": 150,
-        "code": "",
-        "history": [],
-        "ingredients": []
-      },
-      {
-        "name": "CHEESE CAKEooo",
-        "price": 555,
-        "code": "",
-        "history": [],
-        "ingredients": []
       }
     ]
   },
@@ -531,19 +509,6 @@
         "code": "25",
         "history": [],
         "ingredients": []
-      },
-      {
-        "name": "mjbmbv",
-        "price": 4121,
-        "code": "",
-        "history": [],
-        "ingredients": [
-          {
-            "inventoryItemId": "1",
-            "quantity": 500,
-            "unit": "ml"
-          }
-        ]
       }
     ]
   },
@@ -641,17 +606,16 @@
       },
       {
         "name": "lolop",
-        "price": 540,
-        "code": "",
+        "price": 566,
+        "code": "129",
         "history": [],
-        "ingredients": []
-      },
-      {
-        "name": "gvuyg",
-        "price": 874,
-        "code": "",
-        "history": [],
-        "ingredients": []
+        "ingredients": [
+          {
+            "inventoryItemId": "1",
+            "quantity": 560,
+            "unit": "ml"
+          }
+        ]
       }
     ]
   },
@@ -830,13 +794,6 @@
         "name": "Egg Parantha",
         "price": 89,
         "code": "62",
-        "history": [],
-        "ingredients": []
-      },
-      {
-        "name": "FDSFDFDFD",
-        "price": 569,
-        "code": "",
         "history": [],
         "ingredients": []
       }
@@ -1180,20 +1137,6 @@
         "name": "Sprite",
         "price": 40,
         "code": "103",
-        "history": [],
-        "ingredients": []
-      },
-      {
-        "name": "chhu",
-        "price": 56,
-        "code": "",
-        "history": [],
-        "ingredients": []
-      },
-      {
-        "name": "looo",
-        "price": 44,
-        "code": "",
         "history": [],
         "ingredients": []
       },
