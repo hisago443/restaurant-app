@@ -6,23 +6,23 @@
       {
         "name": "Veg",
         "items": [
-          { "name": "Margherita Pizza (Medium)", "price": 299, "code": "1", "recipe": [{ "inventoryItemId": "1", "quantity": 1 }, { "inventoryItemId": "3", "quantity": 0.1 }, { "inventoryItemId": "6", "quantity": 0.15 }] },
-          { "name": "Margherita Pizza (Large)", "price": 399, "code": "2", "recipe": [{ "inventoryItemId": "2", "quantity": 1 }, { "inventoryItemId": "3", "quantity": 0.15 }, { "inventoryItemId": "6", "quantity": 0.2 }] },
-          { "name": "Vegie Supreme Pizza (Medium)", "price": 319, "code": "3", "recipe": [{ "inventoryItemId": "1", "quantity": 1 }, { "inventoryItemId": "3", "quantity": 0.1 }, { "inventoryItemId": "6", "quantity": 0.15 }, { "inventoryItemId": "7", "quantity": 0.1 }] },
-          { "name": "Vegie Supreme Pizza (Large)", "price": 419, "code": "4", "recipe": [{ "inventoryItemId": "2", "quantity": 1 }, { "inventoryItemId": "3", "quantity": 0.15 }, { "inventoryItemId": "6", "quantity": 0.2 }, { "inventoryItemId": "7", "quantity": 0.15 }] },
-          { "name": "Loaded Paneer Pizza (Medium)", "price": 379, "code": "5", "recipe": [{ "inventoryItemId": "1", "quantity": 1 }, { "inventoryItemId": "3", "quantity": 0.1 }, { "inventoryItemId": "6", "quantity": 0.15 }, { "inventoryItemId": "8", "quantity": 0.1 }] },
-          { "name": "Loaded Paneer Pizza (Large)", "price": 479, "code": "6", "recipe": [{ "inventoryItemId": "2", "quantity": 1 }, { "inventoryItemId": "3", "quantity": 0.15 }, { "inventoryItemId": "6", "quantity": 0.2 }, { "inventoryItemId": "8", "quantity": 0.15 }] },
-          { "name": "Pesto Pizza Veg (Medium)", "price": 349, "code": "7", "recipe": [{ "inventoryItemId": "1", "quantity": 1 }, { "inventoryItemId": "4", "quantity": 0.1 }, { "inventoryItemId": "6", "quantity": 0.15 }] },
-          { "name": "Pesto Pizza Veg (Large)", "price": 449, "code": "8", "recipe": [{ "inventoryItemId": "2", "quantity": 1 }, { "inventoryItemId": "4", "quantity": 0.15 }, { "inventoryItemId": "6", "quantity": 0.2 }] }
+          { "name": "Margherita Pizza (Medium)", "price": 299, "code": "1", "recipe": [{ "inventoryItemId": "1", "quantity": 1 }, { "inventoryItemId": "13", "quantity": 100 }, { "inventoryItemId": "14", "quantity": 150 }] },
+          { "name": "Margherita Pizza (Large)", "price": 399, "code": "2", "recipe": [{ "inventoryItemId": "2", "quantity": 1 }, { "inventoryItemId": "13", "quantity": 150 }, { "inventoryItemId": "14", "quantity": 200 }] },
+          { "name": "Vegie Supreme Pizza (Medium)", "price": 319, "code": "3", "recipe": [{ "inventoryItemId": "1", "quantity": 1 }, { "inventoryItemId": "13", "quantity": 100 }, { "inventoryItemId": "14", "quantity": 150 }, { "inventoryItemId": "7", "quantity": 100 }] },
+          { "name": "Vegie Supreme Pizza (Large)", "price": 419, "code": "4", "recipe": [{ "inventoryItemId": "2", "quantity": 1 }, { "inventoryItemId": "13", "quantity": 150 }, { "inventoryItemId": "14", "quantity": 200 }, { "inventoryItemId": "7", "quantity": 150 }] },
+          { "name": "Loaded Paneer Pizza (Medium)", "price": 379, "code": "5", "recipe": [{ "inventoryItemId": "1", "quantity": 1 }, { "inventoryItemId": "13", "quantity": 100 }, { "inventoryItemId": "14", "quantity": 150 }, { "inventoryItemId": "8", "quantity": 100 }] },
+          { "name": "Loaded Paneer Pizza (Large)", "price": 479, "code": "6", "recipe": [{ "inventoryItemId": "2", "quantity": 1 }, { "inventoryItemId": "13", "quantity": 150 }, { "inventoryItemId": "14", "quantity": 200 }, { "inventoryItemId": "8", "quantity": 150 }] },
+          { "name": "Pesto Pizza Veg (Medium)", "price": 349, "code": "7", "recipe": [{ "inventoryItemId": "1", "quantity": 1 }, { "inventoryItemId": "15", "quantity": 100 }, { "inventoryItemId": "14", "quantity": 150 }] },
+          { "name": "Pesto Pizza Veg (Large)", "price": 449, "code": "8", "recipe": [{ "inventoryItemId": "2", "quantity": 1 }, { "inventoryItemId": "15", "quantity": 150 }, { "inventoryItemId": "14", "quantity": 200 }] }
         ]
       },
       {
         "name": "Non-Veg",
         "items": [
-          { "name": "Loaded Chicken Pizza (Medium)", "price": 389, "code": "9", "recipe": [{ "inventoryItemId": "1", "quantity": 1 }, { "inventoryItemId": "3", "quantity": 0.1 }, { "inventoryItemId": "6", "quantity": 0.15 }, { "inventoryItemId": "9", "quantity": 0.1 }] },
-          { "name": "Loaded Chicken Pizza (Large)", "price": 489, "code": "10", "recipe": [{ "inventoryItemId": "2", "quantity": 1 }, { "inventoryItemId": "3", "quantity": 0.15 }, { "inventoryItemId": "6", "quantity": 0.2 }, { "inventoryItemId": "9", "quantity": 0.15 }] },
-          { "name": "Pesto Pizza Chicken (Medium)", "price": 399, "code": "11", "recipe": [{ "inventoryItemId": "1", "quantity": 1 }, { "inventoryItemId": "4", "quantity": 0.1 }, { "inventoryItemId": "6", "quantity": 0.15 }, { "inventoryItemId": "9", "quantity": 0.1 }] },
-          { "name": "Pesto Pizza Chicken (Large)", "price": 499, "code": "12", "recipe": [{ "inventoryItemId": "2", "quantity": 1 }, { "inventoryItemId": "4", "quantity": 0.15 }, { "inventoryItemId": "6", "quantity": 0.2 }, { "inventoryItemId": "9", "quantity": 0.15 }] }
+          { "name": "Loaded Chicken Pizza (Medium)", "price": 389, "code": "9", "recipe": [{ "inventoryItemId": "1", "quantity": 1 }, { "inventoryItemId": "13", "quantity": 100 }, { "inventoryItemId": "14", "quantity": 150 }, { "inventoryItemId": "9", "quantity": 100 }] },
+          { "name": "Loaded Chicken Pizza (Large)", "price": 489, "code": "10", "recipe": [{ "inventoryItemId": "2", "quantity": 1 }, { "inventoryItemId": "13", "quantity": 150 }, { "inventoryItemId": "14", "quantity": 200 }, { "inventoryItemId": "9", "quantity": 150 }] },
+          { "name": "Pesto Pizza Chicken (Medium)", "price": 399, "code": "11", "recipe": [{ "inventoryItemId": "1", "quantity": 1 }, { "inventoryItemId": "15", "quantity": 100 }, { "inventoryItemId": "14", "quantity": 150 }, { "inventoryItemId": "9", "quantity": 100 }] },
+          { "name": "Pesto Pizza Chicken (Large)", "price": 499, "code": "12", "recipe": [{ "inventoryItemId": "2", "quantity": 1 }, { "inventoryItemId": "15", "quantity": 150 }, { "inventoryItemId": "14", "quantity": 200 }, { "inventoryItemId": "9", "quantity": 150 }] }
         ]
       }
     ]
@@ -33,17 +33,17 @@
       {
         "name": "Veg",
         "items": [
-          { "name": "Alfredo Pasta (Veg)", "price": 229, "code": "13", "recipe": [{ "inventoryItemId": "10", "quantity": 0.15 }, { "inventoryItemId": "5", "quantity": 0.2 }] },
-          { "name": "Arabiatta Pasta (Veg)", "price": 229, "code": "14", "recipe": [{ "inventoryItemId": "10", "quantity": 0.15 }, { "inventoryItemId": "3", "quantity": 0.2 }] },
-          { "name": "Preme Rose Pasta (Veg)", "price": 229, "code": "15", "recipe": [{ "inventoryItemId": "10", "quantity": 0.15 }, { "inventoryItemId": "5", "quantity": 0.1 }, { "inventoryItemId": "3", "quantity": 0.1 }] }
+          { "name": "Alfredo Pasta (Veg)", "price": 229, "code": "13", "recipe": [{ "inventoryItemId": "10", "quantity": 150 }, { "inventoryItemId": "16", "quantity": 200 }] },
+          { "name": "Arabiatta Pasta (Veg)", "price": 229, "code": "14", "recipe": [{ "inventoryItemId": "10", "quantity": 150 }, { "inventoryItemId": "13", "quantity": 200 }] },
+          { "name": "Preme Rose Pasta (Veg)", "price": 229, "code": "15", "recipe": [{ "inventoryItemId": "10", "quantity": 150 }, { "inventoryItemId": "16", "quantity": 100 }, { "inventoryItemId": "13", "quantity": 100 }] }
         ]
       },
       {
         "name": "Non-Veg",
         "items": [
-          { "name": "Alfredo Pasta (Non-Veg)", "price": 329, "code": "16", "recipe": [{ "inventoryItemId": "10", "quantity": 0.15 }, { "inventoryItemId": "5", "quantity": 0.2 }, { "inventoryItemId": "9", "quantity": 0.1 }] },
-          { "name": "Arabiatta Pasta (Non-Veg)", "price": 329, "code": "17", "recipe": [{ "inventoryItemId": "10", "quantity": 0.15 }, { "inventoryItemId": "3", "quantity": 0.2 }, { "inventoryItemId": "9", "quantity": 0.1 }] },
-          { "name": "Preme Rose Pasta (Non-Veg)", "price": 329, "code": "18", "recipe": [{ "inventoryItemId": "10", "quantity": 0.15 }, { "inventoryItemId": "5", "quantity": 0.1 }, { "inventoryItemId": "3", "quantity": 0.1 }, { "inventoryItemId": "9", "quantity": 0.1 }] }
+          { "name": "Alfredo Pasta (Non-Veg)", "price": 329, "code": "16", "recipe": [{ "inventoryItemId": "10", "quantity": 150 }, { "inventoryItemId": "16", "quantity": 200 }, { "inventoryItemId": "9", "quantity": 100 }] },
+          { "name": "Arabiatta Pasta (Non-Veg)", "price": 329, "code": "17", "recipe": [{ "inventoryItemId": "10", "quantity": 150 }, { "inventoryItemId": "13", "quantity": 200 }, { "inventoryItemId": "9", "quantity": 100 }] },
+          { "name": "Preme Rose Pasta (Non-Veg)", "price": 329, "code": "18", "recipe": [{ "inventoryItemId": "10", "quantity": 150 }, { "inventoryItemId": "16", "quantity": 100 }, { "inventoryItemId": "13", "quantity": 100 }, { "inventoryItemId": "9", "quantity": 100 }] }
         ]
       }
     ]
@@ -164,13 +164,13 @@
           { "name": "Green Tea", "price": 59, "code": "66" },
           { "name": "Rose Tea", "price": 59, "code": "67" },
           { "name": "Ginger Lemon Honey", "price": 69, "code": "68" },
-          { "name": "Black Coffee", "price": 79, "code": "69", "recipe": [{ "inventoryItemId": "11", "quantity": 0.02 }] },
-          { "name": "Milk Coffee (hot)", "price": 89, "code": "70", "recipe": [{ "inventoryItemId": "11", "quantity": 0.02 }, { "inventoryItemId": "12", "quantity": 0.2 }] },
-          { "name": "Cafe Latte", "price": 129, "code": "71", "recipe": [{ "inventoryItemId": "11", "quantity": 0.02 }, { "inventoryItemId": "12", "quantity": 0.25 }] },
-          { "name": "Cappuccino Coffee", "price": 129, "code": "72", "recipe": [{ "inventoryItemId": "11", "quantity": 0.02 }, { "inventoryItemId": "12", "quantity": 0.25 }] },
+          { "name": "Black Coffee", "price": 79, "code": "69", "recipe": [{ "inventoryItemId": "11", "quantity": 20 }] },
+          { "name": "Milk Coffee (hot)", "price": 89, "code": "70", "recipe": [{ "inventoryItemId": "11", "quantity": 20 }, { "inventoryItemId": "12", "quantity": 200 }] },
+          { "name": "Cafe Latte", "price": 129, "code": "71", "recipe": [{ "inventoryItemId": "11", "quantity": 20 }, { "inventoryItemId": "12", "quantity": 250 }] },
+          { "name": "Cappuccino Coffee", "price": 129, "code": "72", "recipe": [{ "inventoryItemId": "11", "quantity": 20 }, { "inventoryItemId": "12", "quantity": 250 }] },
           { "name": "Hazelnut Coffee", "price": 139, "code": "73" },
           { "name": "Caramel Coffee", "price": 139, "code": "74" },
-          { "name": "Plain Milk", "price": 79, "code": "75", "recipe": [{ "inventoryItemId": "12", "quantity": 0.25 }] },
+          { "name": "Plain Milk", "price": 79, "code": "75", "recipe": [{ "inventoryItemId": "12", "quantity": 250 }] },
           { "name": "Bournvita Milk", "price": 99, "code": "76" },
           { "name": "Hot Chocolate With Marshmallow", "price": 149, "code": "77" }
         ]
@@ -259,3 +259,5 @@
     ]
   }
 ]
+
+    
