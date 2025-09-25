@@ -744,14 +744,14 @@ export default function ExpensesTracker({ expenses, customerCreditLimit, vendorC
       <Separator />
 
       <Card>
-          <CardHeader>
+        <CardHeader>
             <div className="flex justify-between items-start">
               <div>
                 <CardTitle>Add New Expense</CardTitle>
                 <CardDescription>Record a new business expense.</CardDescription>
               </div>
               <div className="flex gap-2">
-                  <Button variant="secondary" onClick={() => openAddVendorDialog(null)}><Building className="mr-2 h-4 w-4" /> Add Vendor</Button>
+                  <Button onClick={() => openAddVendorDialog(null)}><Building className="mr-2 h-4 w-4" /> Add Vendor</Button>
                   <Button variant="secondary" onClick={() => setIsVendorManageDialogOpen(true)}><List className="mr-2 h-4 w-4" /> Manage Vendors</Button>
               </div>
             </div>
@@ -863,3 +863,5 @@ export default function ExpensesTracker({ expenses, customerCreditLimit, vendorC
     </div>
   );
 }
+
+    
