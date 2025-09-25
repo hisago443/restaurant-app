@@ -26,6 +26,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { Badge } from './ui/badge';
 import { Input } from './ui/input';
+import { Label } from './ui/label';
 
 interface BillHistoryProps {
   bills: Bill[];
