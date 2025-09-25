@@ -144,7 +144,7 @@ function EditRecipeDialog({ isOpen, onOpenChange, menuItem, inventory, onSave }:
                   type="number"
                   value={quantity}
                   onChange={(e) => setQuantity(e.target.value)}
-                  placeholder="e.g., 0.5"
+                  placeholder="e.g., 50"
                   className="w-24"
                 />
               </div>
@@ -451,83 +451,88 @@ export function ManageMenuDialog({
           </DialogHeader>
           <div className="max-h-[70vh] overflow-y-auto p-1">
             <Accordion type="multiple" defaultValue={startWithEdit ? ['edit-menu'] : []} className="w-full space-y-4">
-              {/* Add Category */}
-              <AccordionItem value="add-category">
-                <AccordionTrigger className="text-lg font-semibold">Add New Category</AccordionTrigger>
-                <AccordionContent className="p-4 bg-muted/50 rounded-b-md">
-                  <div className="flex items-end gap-2">
-                    <div className="flex-grow space-y-1">
-                      <Label htmlFor="new-category">Category Name</Label>
-                      <Input
-                        id="new-category"
-                        value={newCategory}
-                        onChange={e => setNewCategory(e.target.value)}
-                        placeholder="e.g., Desserts"
-                      />
-                    </div>
-                    <Button onClick={handleAddCategory}><PlusCircle className="mr-2 h-4 w-4"/> Add Category</Button>
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
               
-              {/* Add Item */}
-              <AccordionItem value="add-item">
-                <AccordionTrigger className="text-lg font-semibold">Add New Menu Item</AccordionTrigger>
-                <AccordionContent className="p-4 bg-muted/50 rounded-b-md space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-1">
-                        <Label htmlFor="select-category">Category</Label>
-                        <Select value={selectedCategoryForItem} onValueChange={setSelectedCategoryForItem}>
-                          <SelectTrigger id="select-category">
-                            <SelectValue placeholder="Select Category" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {menu.map(cat => (
-                              <SelectItem key={cat.category} value={cat.category}>
-                                {cat.category}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+              {!startWithEdit && (
+                <>
+                  {/* Add Category */}
+                  <AccordionItem value="add-category">
+                    <AccordionTrigger className="text-lg font-semibold">Add New Category</AccordionTrigger>
+                    <AccordionContent className="p-4 bg-muted/50 rounded-b-md">
+                      <div className="flex items-end gap-2">
+                        <div className="flex-grow space-y-1">
+                          <Label htmlFor="new-category">Category Name</Label>
+                          <Input
+                            id="new-category"
+                            value={newCategory}
+                            onChange={e => setNewCategory(e.target.value)}
+                            placeholder="e.g., Desserts"
+                          />
+                        </div>
+                        <Button onClick={handleAddCategory}><PlusCircle className="mr-2 h-4 w-4"/> Add Category</Button>
                       </div>
-                      <div className="space-y-1">
-                        <Label>Item Type</Label>
-                        <RadioGroup defaultValue="Veg" value={newItemType} onValueChange={(value: 'Veg' | 'Non-Veg') => setNewItemType(value)} className="flex items-center space-x-4 pt-2">
-                          <div className="flex items-center space-x-2">
-                              <RadioGroupItem value="Veg" id="veg-item" />
-                              <Label htmlFor="veg-item">Veg</Label>
+                    </AccordionContent>
+                  </AccordionItem>
+                  
+                  {/* Add Item */}
+                  <AccordionItem value="add-item">
+                    <AccordionTrigger className="text-lg font-semibold">Add New Menu Item</AccordionTrigger>
+                    <AccordionContent className="p-4 bg-muted/50 rounded-b-md space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="space-y-1">
+                            <Label htmlFor="select-category">Category</Label>
+                            <Select value={selectedCategoryForItem} onValueChange={setSelectedCategoryForItem}>
+                              <SelectTrigger id="select-category">
+                                <SelectValue placeholder="Select Category" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {menu.map(cat => (
+                                  <SelectItem key={cat.category} value={cat.category}>
+                                    {cat.category}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
                           </div>
-                          <div className="flex items-center space-x-2">
-                              <RadioGroupItem value="Non-Veg" id="non-veg-item" />
-                              <Label htmlFor="non-veg-item">Non-Veg</Label>
+                          <div className="space-y-1">
+                            <Label>Item Type</Label>
+                            <RadioGroup defaultValue="Veg" value={newItemType} onValueChange={(value: 'Veg' | 'Non-Veg') => setNewItemType(value)} className="flex items-center space-x-4 pt-2">
+                              <div className="flex items-center space-x-2">
+                                  <RadioGroupItem value="Veg" id="veg-item" />
+                                  <Label htmlFor="veg-item">Veg</Label>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                  <RadioGroupItem value="Non-Veg" id="non-veg-item" />
+                                  <Label htmlFor="non-veg-item">Non-Veg</Label>
+                              </div>
+                            </RadioGroup>
                           </div>
-                        </RadioGroup>
                       </div>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
-                      <div className="space-y-1">
-                        <Label htmlFor="new-item-name">Item Name</Label>
-                        <Input
-                          id="new-item-name"
-                          value={newItemName}
-                          onChange={e => setNewItemName(e.target.value)}
-                          placeholder="e.g., Chocolate Lava Cake"
-                        />
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                          <div className="space-y-1">
+                            <Label htmlFor="new-item-name">Item Name</Label>
+                            <Input
+                              id="new-item-name"
+                              value={newItemName}
+                              onChange={e => setNewItemName(e.target.value)}
+                              placeholder="e.g., Chocolate Lava Cake"
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <Label htmlFor="new-item-price">Price</Label>
+                            <Input
+                              id="new-item-price"
+                              type="number"
+                              value={newItemPrice}
+                              onChange={e => setNewItemPrice(e.target.value)}
+                              placeholder="e.g., 150"
+                            />
+                          </div>
+                          <Button onClick={handleAddItem}><PlusCircle className="mr-2 h-4 w-4"/>Add Item</Button>
                       </div>
-                      <div className="space-y-1">
-                        <Label htmlFor="new-item-price">Price</Label>
-                        <Input
-                          id="new-item-price"
-                          type="number"
-                          value={newItemPrice}
-                          onChange={e => setNewItemPrice(e.target.value)}
-                          placeholder="e.g., 150"
-                        />
-                      </div>
-                      <Button onClick={handleAddItem}><PlusCircle className="mr-2 h-4 w-4"/>Add Item</Button>
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
+                    </AccordionContent>
+                  </AccordionItem>
+                </>
+              )}
 
               {/* Edit/Remove Menu */}
               <AccordionItem value="edit-menu">
@@ -544,25 +549,27 @@ export function ManageMenuDialog({
                             <div key={cat.category} className="p-3 border rounded-md bg-background/50">
                                 <div className="flex justify-between items-center">
                                   <h3 className="font-bold text-lg">{cat.category}</h3>
-                                  <AlertDialog>
-                                    <AlertDialogTrigger asChild>
-                                      <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive">
-                                        <Trash2 className="h-4 w-4" />
-                                      </Button>
-                                    </AlertDialogTrigger>
-                                    <AlertDialogContent>
-                                      <AlertDialogHeader>
-                                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                                        <AlertDialogDescription>
-                                          This will permanently delete the entire category "{cat.category}" and all items within it. This action cannot be undone.
-                                        </AlertDialogDescription>
-                                      </AlertDialogHeader>
-                                      <AlertDialogFooter>
-                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                        <AlertDialogAction onClick={() => handleRemoveCategory(cat.category)}>Delete Category</AlertDialogAction>
-                                      </AlertDialogFooter>
-                                    </AlertDialogContent>
-                                  </AlertDialog>
+                                  {!startWithEdit && (
+                                    <AlertDialog>
+                                      <AlertDialogTrigger asChild>
+                                        <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive">
+                                          <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                      </AlertDialogTrigger>
+                                      <AlertDialogContent>
+                                        <AlertDialogHeader>
+                                          <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                          <AlertDialogDescription>
+                                            This will permanently delete the entire category "{cat.category}" and all items within it. This action cannot be undone.
+                                          </AlertDialogDescription>
+                                        </AlertDialogHeader>
+                                        <AlertDialogFooter>
+                                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                          <AlertDialogAction onClick={() => handleRemoveCategory(cat.category)}>Delete Category</AlertDialogAction>
+                                        </AlertDialogFooter>
+                                      </AlertDialogContent>
+                                    </AlertDialog>
+                                  )}
                                 </div>
                                 <div className="space-y-2 mt-2">
                                   {cat.subCategories.map(subCat => (
@@ -573,31 +580,35 @@ export function ManageMenuDialog({
                                                   <li key={item.name} className="flex justify-between items-center group p-1 rounded-md hover:bg-muted">
                                                       <span>{item.name} - <span className="font-mono">₹{item.price}</span></span>
                                                       <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setEditingItem({ categoryName: cat.category, subCategoryName: subCat.name, item })}>
-                                                            <Edit className="h-4 w-4" />
-                                                          </Button>
+                                                          {!startWithEdit && (
+                                                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setEditingItem({ categoryName: cat.category, subCategoryName: subCat.name, item })}>
+                                                              <Edit className="h-4 w-4" />
+                                                            </Button>
+                                                          )}
                                                           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setEditingRecipe(item)}>
                                                               <FilePlus className="h-4 w-4" />
                                                           </Button>
-                                                          <AlertDialog>
-                                                              <AlertDialogTrigger asChild>
-                                                                  <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive">
-                                                                      <Trash2 className="h-4 w-4" />
-                                                                  </Button>
-                                                              </AlertDialogTrigger>
-                                                              <AlertDialogContent>
-                                                                  <AlertDialogHeader>
-                                                                      <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                                                                      <AlertDialogDescription>
-                                                                          This will permanently delete the item "{item.name}". This action cannot be undone.
-                                                                      </AlertDialogDescription>
-                                                                  </AlertDialogHeader>
-                                                                  <AlertDialogFooter>
-                                                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                                                      <AlertDialogAction onClick={() => handleRemoveItem(cat.category, subCat.name, item.name)}>Delete</AlertDialogAction>
-                                                                  </AlertDialogFooter>
-                                                              </AlertDialogContent>
-                                                          </AlertDialog>
+                                                          {!startWithEdit && (
+                                                            <AlertDialog>
+                                                                <AlertDialogTrigger asChild>
+                                                                    <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive">
+                                                                        <Trash2 className="h-4 w-4" />
+                                                                    </Button>
+                                                                </AlertDialogTrigger>
+                                                                <AlertDialogContent>
+                                                                    <AlertDialogHeader>
+                                                                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                                                        <AlertDialogDescription>
+                                                                            This will permanently delete the item "{item.name}". This action cannot be undone.
+                                                                        </AlertDialogDescription>
+                                                                    </AlertDialogHeader>
+                                                                    <AlertDialogFooter>
+                                                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                                        <AlertDialogAction onClick={() => handleRemoveItem(cat.category, subCat.name, item.name)}>Delete</AlertDialogAction>
+                                                                    </AlertDialogFooter>
+                                                                </AlertDialogContent>
+                                                            </AlertDialog>
+                                                          )}
                                                       </div>
                                                   </li>
                                               ))}
