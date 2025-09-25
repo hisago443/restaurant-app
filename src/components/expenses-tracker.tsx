@@ -762,15 +762,19 @@ export default function ExpensesTracker({ expenses, customerCreditLimit, vendorC
                         <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={date} onSelect={setDate} initialFocus /></PopoverContent>
                     </Popover>
                 </div>
-                <div className="space-y-2">
-                    <Label htmlFor="vendor">Vendor</Label>
-                    <Select onValueChange={(value) => setVendorId(value === 'none' ? undefined : value)} value={vendorId || 'none'}>
-                      <SelectTrigger id="vendor"><SelectValue placeholder="None" /></SelectTrigger>
-                      <SelectContent>
-                          <SelectItem value="none">None</SelectItem>
-                          {vendors.map(v => <SelectItem key={v.id} value={v.id}>{v.name}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
+                <div className="space-y-2 lg:col-span-2 flex items-end gap-2">
+                    <div className="flex-grow space-y-2">
+                        <Label htmlFor="vendor">Vendor</Label>
+                        <Select onValueChange={(value) => setVendorId(value === 'none' ? undefined : value)} value={vendorId || 'none'}>
+                          <SelectTrigger id="vendor"><SelectValue placeholder="None" /></SelectTrigger>
+                          <SelectContent>
+                              <SelectItem value="none">None</SelectItem>
+                              {vendors.map(v => <SelectItem key={v.id} value={v.id}>{v.name}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                    </div>
+                    <Button variant="secondary" onClick={() => openAddVendorDialog(null)}><Building className="mr-2 h-4 w-4" /> Add</Button>
+                    <Button variant="secondary" onClick={() => setIsVendorManageDialogOpen(true)}><List className="mr-2 h-4 w-4" /> Show</Button>
                 </div>
                 <div className="space-y-2">
                     <Label>Vendor Category</Label>
@@ -788,8 +792,6 @@ export default function ExpensesTracker({ expenses, customerCreditLimit, vendorC
             <div className="flex justify-end gap-2 pt-4">
                 {editingExpense && <Button variant="outline" onClick={resetForm}><Repeat className="mr-2 h-4 w-4" />Cancel Edit</Button>}
                 <Button onClick={handleSaveExpense}><PlusCircle className="mr-2 h-4 w-4" /> {editingExpense ? 'Update Expense' : 'Save Expense'}</Button>
-                <Button variant="secondary" onClick={() => openAddVendorDialog(null)}><Building className="mr-2 h-4 w-4" /> Add Vendor</Button>
-                <Button variant="secondary" onClick={() => setIsVendorManageDialogOpen(true)}><List className="mr-2 h-4 w-4" /> Show Vendors</Button>
             </div>
           </CardContent>
       </Card>
@@ -857,8 +859,3 @@ export default function ExpensesTracker({ expenses, customerCreditLimit, vendorC
     </div>
   );
 }
-
-    
-
-    
-
