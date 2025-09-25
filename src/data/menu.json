@@ -461,7 +461,15 @@
         "price": 56552,
         "code": "",
         "history": [],
-        "recipe": []
+        "recipe": [],
+        "ingredients": []
+      },
+      {
+        "name": "veg cheese",
+        "price": 150,
+        "code": "",
+        "history": [],
+        "ingredients": []
       }
     ]
   },

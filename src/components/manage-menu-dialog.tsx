@@ -339,7 +339,6 @@ export function ManageMenuDialog({
     setNewItemPrice('');
     setSelectedCategoryForItem('');
     toast({ title: `Item "${newItemName}" added.` });
-    setEditingIngredients(newItem);
   };
 
   const handleEditItem = (oldName: string, newItem: MenuItem) => {
@@ -487,7 +486,7 @@ export function ManageMenuDialog({
                             placeholder="e.g., 150"
                           />
                         </div>
-                        <Button onClick={handleAddItem}><PlusCircle className="mr-2 h-4 w-4"/>Add Item &amp; Ingredients</Button>
+                        <Button onClick={handleAddItem}><PlusCircle className="mr-2 h-4 w-4"/>Add Item</Button>
                     </div>
                   </AccordionContent>
                 </AccordionItem>
@@ -605,3 +604,5 @@ export function ManageMenuDialog({
     </>
   );
 }
+
+    
