@@ -27,21 +27,16 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/t
 import { cn } from '@/lib/utils';
 import SetupWizard from './setup-wizard';
 import { ThemeToggle } from './theme-toggle';
-import menuData from '@/data/menu.json';
 
 const PENDING_ORDER_KEY = -1;
 
 type NavPosition = 'top' | 'left';
 
-interface LegacyMenuCategory {
-    category: string;
-    subCategories: {
-        name: string;
-        items: OrderItem[];
-    }[];
+interface MainLayoutProps {
+  initialMenu: MenuCategory[];
 }
 
-export default function MainLayout() {
+export default function MainLayout({ initialMenu }: MainLayoutProps) {
   const { toast } = useToast();
   const [currentDateTime, setCurrentDateTime] = useState<Date | null>(null);
   const [tables, setTables] = useState<Table[]>([]);
@@ -50,7 +45,7 @@ export default function MainLayout() {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
-  const [menu, setMenu] = useState<MenuCategory[]>([]);
+  const [menu, setMenu] = useState<MenuCategory[]>(initialMenu);
   const [activeOrder, setActiveOrder] = useState<Order | null>(null);
   const [currentOrderItems, setCurrentOrderItems] = useState<OrderItem[]>([]);
   const [activeTab, setActiveTab] = useState('pos');
@@ -64,24 +59,6 @@ export default function MainLayout() {
   const [kotPreference, setKotPreference] = useState<KOTPreference>({ type: 'single', categories: [] });
   const [showTableDetailsOnPOS, setShowTableDetailsOnPOS] = useState(false);
   const [showReservationTimeOnPOS, setShowReservationTimeOnPOS] = useState(false);
-
-  useEffect(() => {
-    const structuredMenu = (menuData as any[]).map(category => {
-      const items = (category.items || []).concat(
-        (category.subCategories || []).flatMap((sub: any) => sub.items || [])
-      );
-      
-      return {
-        category: category.category,
-        items: items.map((item: any) => ({
-          ...item,
-          history: item.history || [],
-          ingredients: item.ingredients || [],
-        })),
-      };
-    });
-    setMenu(structuredMenu);
-  }, []);
 
   useEffect(() => {
     try {
