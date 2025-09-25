@@ -43,6 +43,7 @@ import { PlusCircle, Trash2, Edit, History, FilePlus } from 'lucide-react';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { format } from 'date-fns';
 import { Separator } from './ui/separator';
+import { cn } from '@/lib/utils';
 
 interface EditRecipeDialogProps {
   isOpen: boolean;
@@ -456,10 +457,11 @@ export function ManageMenuDialog({
     }).filter(Boolean) as MenuCategory[];
   }, [editMenuSearch, menu]);
   
-  useEffect(() => {
-    if (isOpen && startWithEdit) {
+  const handleItemClick = (item: MenuItem) => {
+    if (startWithEdit) {
+      setEditingRecipe(item);
     }
-  }, [isOpen, startWithEdit, toast]);
+  };
 
   return (
     <>
@@ -607,7 +609,11 @@ export function ManageMenuDialog({
                                           <h4 className="font-semibold text-muted-foreground">{subCat.name}</h4>
                                           <ul className="mt-1 space-y-1">
                                               {subCat.items.map(item => (
-                                                  <li key={item.name} className="flex justify-between items-center group p-1 rounded-md hover:bg-muted">
+                                                  <li 
+                                                    key={item.name} 
+                                                    className={cn("flex justify-between items-center group p-1 rounded-md", startWithEdit && "cursor-pointer hover:bg-muted")}
+                                                    onClick={() => handleItemClick(item)}
+                                                  >
                                                       <span>{item.name} - <span className="font-mono">₹{item.price}</span></span>
                                                       <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
                                                           {!startWithEdit && (
