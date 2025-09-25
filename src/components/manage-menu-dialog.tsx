@@ -40,7 +40,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import type { MenuCategory, MenuItem, MenuItemHistory, IngredientItem, InventoryItem } from '@/lib/types';
 import { PlusCircle, Trash2, Edit, History, FilePlus, Upload, Camera, Loader2 } from 'lucide-react';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { RadioGroup, RadioGroupItem } from './ui/radio-group';
 import { format } from 'date-fns';
 import { Separator } from './ui/separator';
 import { cn } from '@/lib/utils';
@@ -477,7 +477,8 @@ export function ManageMenuDialog({
                   <AccordionTrigger className="text-lg font-semibold">Scan Menu from Image</AccordionTrigger>
                   <AccordionContent className="p-4 bg-muted/50 rounded-b-md">
                      <RadioGroup defaultValue="upload" className="flex items-center gap-4 mb-4">
-                        <Label htmlFor="scan-upload" className="flex items-center gap-2 p-2 border rounded-md cursor-pointer hover:bg-background has-[:checked]:bg-primary has-[:checked]:text-primary-foreground" onClick={() => fileInputRef.current?.click()}>
+                        <Label htmlFor="scan-upload" className="flex items-center gap-2 p-2 border rounded-md cursor-pointer hover:bg-background has-[:checked]:bg-primary has-[:checked]:text-primary-foreground">
+                            <RadioGroupItem value="upload" id="scan-radio-upload" className="sr-only"/>
                             <Upload className="h-4 w-4" /> Upload Image
                         </Label>
                         <Input
@@ -683,5 +684,3 @@ export function ManageMenuDialog({
     </>
   );
 }
-
-    
