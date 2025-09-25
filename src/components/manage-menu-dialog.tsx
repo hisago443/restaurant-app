@@ -46,6 +46,7 @@ import { Separator } from './ui/separator';
 import { cn } from '@/lib/utils';
 import { saveMenu } from '@/lib/menu-saver';
 import { extractMenuFromImage } from '@/ai/flows/extract-menu-from-image';
+import { ScrollArea } from './ui/scroll-area';
 
 interface EditRecipeDialogProps {
   isOpen: boolean;
@@ -265,7 +266,7 @@ interface ManageMenuDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   menu: MenuCategory[];
-  setMenu: React.Dispatch<React.SetStateAction<MenuCategory[]>>;
+  setMenu: (menu: MenuCategory[]) => void;
   inventory: InventoryItem[];
   startWithEdit?: boolean;
 }
@@ -281,7 +282,9 @@ export function ManageMenuDialog({
   const { toast } = useToast();
   const imageInputRef = useRef<HTMLInputElement>(null);
   
-  const [isScanning, setIsScanning] = useState(false);
+  const [scanStep, setScanStep] = useState<'idle' | 'scanning' | 'confirming'>('idle');
+  const [scannedMenu, setScannedMenu] = useState<MenuCategory[] | null>(null);
+
   const [newCategory, setNewCategory] = useState('');
   
   const [newItemName, setNewItemName] = useState('');
@@ -300,18 +303,14 @@ export function ManageMenuDialog({
         } else {
             setActiveAccordionItems([]);
         }
+        setScanStep('idle');
+        setScannedMenu(null);
     }
   }, [isOpen, startWithEdit]);
 
-  const updateAndSaveMenu = async (newMenu: MenuCategory[] | ((prev: MenuCategory[]) => MenuCategory[])) => {
-    let updatedMenu: MenuCategory[];
-    if (typeof newMenu === 'function') {
-      updatedMenu = newMenu(menu);
-    } else {
-      updatedMenu = newMenu;
-    }
-    setMenu(updatedMenu);
-    await saveMenu(updatedMenu);
+  const updateAndSaveMenu = async (newMenuData: MenuCategory[]) => {
+    setMenu(newMenuData);
+    await saveMenu(newMenuData);
   };
 
   const handleAddCategory = () => {
@@ -339,39 +338,28 @@ export function ManageMenuDialog({
     }
     
     let itemExists = false;
-    const newMenu = menu.map(cat => {
-      if (cat.category === selectedCategoryForItem) {
-        const subCategoryName = newItemType;
-        let subCategoryExists = cat.subCategories.some(sub => sub.name === subCategoryName);
+    let newMenu = [...menu];
 
-        let updatedSubCategories = [...cat.subCategories];
-        let targetSubCategoryIndex = updatedSubCategories.findIndex(sub => sub.name === subCategoryName);
+    const categoryIndex = newMenu.findIndex(cat => cat.category === selectedCategoryForItem);
+    if (categoryIndex === -1) return;
 
-        if (targetSubCategoryIndex === -1) {
-          updatedSubCategories.push({ name: subCategoryName, items: [] });
-          targetSubCategoryIndex = updatedSubCategories.length - 1;
-        }
-
-        if (updatedSubCategories[targetSubCategoryIndex].items.some(item => item.name.toLowerCase() === newItemName.toLowerCase())) {
-          itemExists = true;
-          return cat;
-        }
-
-        updatedSubCategories[targetSubCategoryIndex].items.push({ name: newItemName, price: parseFloat(newItemPrice), code: '', history: [], recipe: [] });
-        
-        return {
-          ...cat,
-          subCategories: updatedSubCategories,
-        };
-      }
-      return cat;
-    });
-
-    if (itemExists) {
-      toast({ variant: 'destructive', title: 'Item already exists in this sub-category' });
-      return;
+    let subCategoryIndex = newMenu[categoryIndex].subCategories.findIndex(sub => sub.name === newItemType);
+    if (subCategoryIndex === -1) {
+        newMenu[categoryIndex].subCategories.push({ name: newItemType, items: [] });
+        subCategoryIndex = newMenu[categoryIndex].subCategories.length - 1;
     }
 
+    if (newMenu[categoryIndex].subCategories[subCategoryIndex].items.some(item => item.name.toLowerCase() === newItemName.toLowerCase())) {
+        itemExists = true;
+    }
+
+    if (itemExists) {
+        toast({ variant: 'destructive', title: 'Item already exists in this sub-category' });
+        return;
+    }
+
+    newMenu[categoryIndex].subCategories[subCategoryIndex].items.push({ name: newItemName, price: parseFloat(newItemPrice), code: '', history: [], recipe: [] });
+    
     updateAndSaveMenu(newMenu);
     setNewItemName('');
     setNewItemPrice('');
@@ -418,7 +406,7 @@ export function ManageMenuDialog({
   };
   
   const handleRemoveItem = (categoryName: string, subCategoryName: string, itemName: string) => {
-    const newMenu = menu.map(cat => {
+    let newMenu = menu.map(cat => {
       if (cat.category === categoryName) {
         const newSubCategories = cat.subCategories.map(subCat => {
           if (subCat.name === subCategoryName) {
@@ -433,7 +421,9 @@ export function ManageMenuDialog({
       return cat;
     });
     
-    updateAndSaveMenu(newMenu.filter(cat => cat.subCategories.length > 0));
+    newMenu = newMenu.filter(cat => cat.subCategories.length > 0);
+    
+    updateAndSaveMenu(newMenu);
     toast({ title: `Item "${itemName}" removed.` });
   };
 
@@ -491,23 +481,24 @@ export function ManageMenuDialog({
     reader.readAsDataURL(file);
     reader.onload = async () => {
       const imageDataUri = reader.result as string;
-      setIsScanning(true);
+      setScanStep('scanning');
       toast({ title: 'Scanning Menu Image...', description: 'The AI is analyzing your menu. This may take a moment.' });
   
       try {
         const result = await extractMenuFromImage({ imageDataUri });
         if (result && result.menu) {
-          await updateAndSaveMenu(result.menu);
-          toast({ title: 'Menu Scanned Successfully!', description: 'Your menu has been updated from the image.' });
-          onOpenChange(false);
+          setScannedMenu(result.menu);
+          setScanStep('confirming');
+          toast.dismiss();
+          toast({ title: 'Scan Complete', description: 'Please review the extracted menu below.' });
         } else {
           throw new Error('AI did not return a valid menu structure.');
         }
       } catch (error) {
         console.error("Error scanning menu from image:", error);
+        setScanStep('idle');
         toast({ variant: 'destructive', title: 'Scan Failed', description: 'Could not extract menu from the image. Please try again with a clearer image.' });
       } finally {
-        setIsScanning(false);
         if (imageInputRef.current) {
           imageInputRef.current.value = '';
         }
@@ -515,225 +506,300 @@ export function ManageMenuDialog({
     };
   };
 
+  const handleConfirmScan = async () => {
+    if (scannedMenu) {
+      await updateAndSaveMenu(scannedMenu);
+      toast({ title: 'Menu Updated!', description: 'Your menu has been updated from the scanned image.' });
+      onOpenChange(false);
+    }
+  };
+
+  const handleCancelScan = () => {
+    setScannedMenu(null);
+    setScanStep('idle');
+  };
+
+  const renderContent = () => {
+    if (scanStep === 'scanning') {
+      return (
+        <div className="flex flex-col items-center justify-center h-80">
+          <Loader2 className="h-16 w-16 animate-spin text-primary" />
+          <p className="mt-4 text-lg font-semibold">Scanning your menu...</p>
+          <p className="text-muted-foreground">This may take a moment.</p>
+        </div>
+      );
+    }
+
+    if (scanStep === 'confirming' && scannedMenu) {
+      return (
+        <div>
+            <DialogHeader className="mb-4">
+                <DialogTitle>Review Scanned Menu</DialogTitle>
+                <DialogDescription>
+                    The AI has extracted the following menu from your image. Please review it for accuracy before saving.
+                </DialogDescription>
+            </DialogHeader>
+            <ScrollArea className="h-96 w-full rounded-md border p-4">
+                {scannedMenu.map(category => (
+                    <div key={category.category} className="mb-4">
+                        <h3 className="font-bold text-lg mb-2">{category.category}</h3>
+                        <div className="space-y-2">
+                        {category.subCategories.map(subCat => (
+                            <div key={subCat.name} className="pl-4">
+                                <h4 className="font-semibold text-muted-foreground">{subCat.name}</h4>
+                                <ul className="mt-1 space-y-1 list-disc pl-5">
+                                    {subCat.items.map(item => (
+                                        <li key={item.name} className="flex justify-between items-center">
+                                            <span>{item.name}</span>
+                                            <span className="font-mono">₹{item.price}</span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        ))}
+                        </div>
+                    </div>
+                ))}
+            </ScrollArea>
+             <DialogFooter className="mt-4">
+                <Button variant="outline" onClick={handleCancelScan}>Cancel</Button>
+                <Button onClick={handleConfirmScan}>Looks Good, Save</Button>
+            </DialogFooter>
+        </div>
+      );
+    }
+    
+    return (
+      <div className="max-h-[70vh] overflow-y-auto p-1">
+        <Accordion type="multiple" value={activeAccordionItems} onValueChange={setActiveAccordionItems} className="w-full space-y-4">
+          
+          {!startWithEdit && (
+            <>
+              {/* Add Category */}
+              <AccordionItem value="add-category">
+                <AccordionTrigger className="text-lg font-semibold">Add New Category</AccordionTrigger>
+                <AccordionContent className="p-4 bg-muted/50 rounded-b-md">
+                  <div className="flex items-end gap-2">
+                    <div className="flex-grow space-y-1">
+                      <Label htmlFor="new-category">Category Name</Label>
+                      <Input
+                        id="new-category"
+                        value={newCategory}
+                        onChange={e => setNewCategory(e.target.value)}
+                        placeholder="e.g., Desserts"
+                      />
+                    </div>
+                    <Button onClick={handleAddCategory}><PlusCircle className="mr-2 h-4 w-4"/> Add Category</Button>
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+              
+              {/* Add Item */}
+              <AccordionItem value="add-item">
+                <AccordionTrigger className="text-lg font-semibold">Add New Menu Item</AccordionTrigger>
+                <AccordionContent className="p-4 bg-muted/50 rounded-b-md space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <Label htmlFor="select-category">Category</Label>
+                        <Select value={selectedCategoryForItem} onValueChange={setSelectedCategoryForItem}>
+                          <SelectTrigger id="select-category">
+                            <SelectValue placeholder="Select Category" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {menu.map(cat => (
+                              <SelectItem key={cat.category} value={cat.category}>
+                                {cat.category}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-1">
+                        <Label>Item Type</Label>
+                        <RadioGroup defaultValue="Veg" value={newItemType} onValueChange={(value: 'Veg' | 'Non-Veg') => setNewItemType(value)} className="flex items-center space-x-4 pt-2">
+                          <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="Veg" id="veg-item" />
+                              <Label htmlFor="veg-item">Veg</Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="Non-Veg" id="non-veg-item" />
+                              <Label htmlFor="non-veg-item">Non-Veg</Label>
+                          </div>
+                        </RadioGroup>
+                      </div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                      <div className="space-y-1">
+                        <Label htmlFor="new-item-name">Item Name</Label>
+                        <Input
+                          id="new-item-name"
+                          value={newItemName}
+                          onChange={e => setNewItemName(e.target.value)}
+                          placeholder="e.g., Chocolate Lava Cake"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label htmlFor="new-item-price">Price</Label>
+                        <Input
+                          id="new-item-price"
+                          type="number"
+                          value={newItemPrice}
+                          onChange={e => setNewItemPrice(e.target.value)}
+                          placeholder="e.g., 150"
+                        />
+                      </div>
+                      <Button onClick={handleAddItem}><PlusCircle className="mr-2 h-4 w-4"/>Add Item</Button>
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            </>
+          )}
+
+          {/* Edit/Remove Menu */}
+          <AccordionItem value="edit-menu">
+            <AccordionTrigger className="text-lg font-semibold">
+              {startWithEdit ? "Edit Recipe" : "Edit Menu & Recipes"}
+            </AccordionTrigger>
+            <AccordionContent className="p-4 bg-muted/50 rounded-b-md space-y-4">
+                <Input
+                  placeholder="Search for an item or category to edit..."
+                  value={editMenuSearch}
+                  onChange={(e) => setEditMenuSearch(e.target.value)}
+                  className="mb-4"
+                />
+                <div className="space-y-3 max-h-80 overflow-y-auto">
+                    {filteredMenuForEditing.map(cat => (
+                        <div key={cat.category} className="p-3 border rounded-md bg-background/50">
+                            <div className="flex justify-between items-center">
+                              <h3 className="font-bold text-lg">{cat.category}</h3>
+                              {!startWithEdit && (
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive">
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        This will permanently delete the entire category "{cat.category}" and all items within it. This action cannot be undone.
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                      <AlertDialogAction onClick={() => handleRemoveCategory(cat.category)}>Delete Category</AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
+                              )}
+                            </div>
+                            <div className="space-y-2 mt-2">
+                              {cat.subCategories.map(subCat => (
+                                  <div key={subCat.name} className="pl-4">
+                                      <h4 className="font-semibold text-muted-foreground">{subCat.name}</h4>
+                                      <ul className="mt-1 space-y-1">
+                                          {subCat.items.map(item => (
+                                              <li 
+                                                key={item.name} 
+                                                className={cn("flex justify-between items-center group p-1 rounded-md", startWithEdit && "cursor-pointer hover:bg-muted")}
+                                                onClick={() => handleItemClick(item)}
+                                              >
+                                                  <span>{item.name} - <span className="font-mono">₹{item.price}</span></span>
+                                                  <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                                      {!startWithEdit && (
+                                                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setEditingItem({ categoryName: cat.category, subCategoryName: subCat.name, item })}>
+                                                          <Edit className="h-4 w-4" />
+                                                        </Button>
+                                                      )}
+                                                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setEditingRecipe(item)}>
+                                                          <FilePlus className="h-4 w-4" />
+                                                      </Button>
+                                                      {!startWithEdit && (
+                                                        <AlertDialog>
+                                                            <AlertDialogTrigger asChild>
+                                                                <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive">
+                                                                    <Trash2 className="h-4 w-4" />
+                                                                </Button>
+                                                            </AlertDialogTrigger>
+                                                            <AlertDialogContent>
+                                                                <AlertDialogHeader>
+                                                                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                                                    <AlertDialogDescription>
+                                                                        This will permanently delete the item "{item.name}". This action cannot be undone.
+                                                                    </AlertDialogDescription>
+                                                                </AlertDialogHeader>
+                                                                <AlertDialogFooter>
+                                                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                                    <AlertDialogAction onClick={() => handleRemoveItem(cat.category, subCat.name, item.name)}>Delete</AlertDialogAction>
+                                                                </AlertDialogFooter>
+                                                            </AlertDialogContent>
+                                                        </AlertDialog>
+                                                      )}
+                                                  </div>
+                                              </li>
+                                          ))}
+                                      </ul>
+                                  </div>
+                              ))}
+                            </div>
+                        </div>
+                    ))}
+                    {filteredMenuForEditing.length === 0 && (
+                        <p className="text-center text-muted-foreground">No items match your search.</p>
+                    )}
+                </div>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
+      </div>
+    );
+  };
+
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onOpenChange}>
         <DialogContent className="max-w-4xl">
-          <DialogHeader>
-            {startWithEdit ? (
-                <h2 className="sr-only">Edit Recipe</h2>
-            ) : (
-                <div className="flex justify-between items-center">
-                    <div>
-                        <DialogTitle>Manage Menu</DialogTitle>
-                        <DialogDescription>
-                            Add, edit, and organize your menu categories, items, and recipes.
-                        </DialogDescription>
-                    </div>
-                     <div className="flex items-center gap-2">
-                        <Button variant="outline" onClick={handleImageUploadClick} disabled={isScanning}>
-                          {isScanning ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Camera className="mr-2 h-4 w-4" />}
-                          Scan from Image
-                        </Button>
-                         <Input 
-                            type="file" 
-                            ref={imageInputRef} 
-                            onChange={handleImageChange} 
-                            className="hidden" 
-                            accept="image/*" 
-                        />
-                    </div>
-                </div>
-            )}
-          </DialogHeader>
-          <div className="max-h-[70vh] overflow-y-auto p-1">
-            <Accordion type="multiple" value={activeAccordionItems} onValueChange={setActiveAccordionItems} className="w-full space-y-4">
-              
-              {!startWithEdit && (
-                <>
-                  {/* Add Category */}
-                  <AccordionItem value="add-category">
-                    <AccordionTrigger className="text-lg font-semibold">Add New Category</AccordionTrigger>
-                    <AccordionContent className="p-4 bg-muted/50 rounded-b-md">
-                      <div className="flex items-end gap-2">
-                        <div className="flex-grow space-y-1">
-                          <Label htmlFor="new-category">Category Name</Label>
-                          <Input
-                            id="new-category"
-                            value={newCategory}
-                            onChange={e => setNewCategory(e.target.value)}
-                            placeholder="e.g., Desserts"
-                          />
+          {scanStep === 'idle' && (
+            <DialogHeader>
+                {startWithEdit ? (
+                    <h2 className="sr-only">Edit Recipe</h2>
+                ) : (
+                    <div className="flex justify-between items-center">
+                        <div>
+                            <DialogTitle>Manage Menu</DialogTitle>
+                            <DialogDescription>
+                                Add, edit, and organize your menu categories, items, and recipes.
+                            </DialogDescription>
                         </div>
-                        <Button onClick={handleAddCategory}><PlusCircle className="mr-2 h-4 w-4"/> Add Category</Button>
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
-                  
-                  {/* Add Item */}
-                  <AccordionItem value="add-item">
-                    <AccordionTrigger className="text-lg font-semibold">Add New Menu Item</AccordionTrigger>
-                    <AccordionContent className="p-4 bg-muted/50 rounded-b-md space-y-4">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div className="space-y-1">
-                            <Label htmlFor="select-category">Category</Label>
-                            <Select value={selectedCategoryForItem} onValueChange={setSelectedCategoryForItem}>
-                              <SelectTrigger id="select-category">
-                                <SelectValue placeholder="Select Category" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {menu.map(cat => (
-                                  <SelectItem key={cat.category} value={cat.category}>
-                                    {cat.category}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          <div className="space-y-1">
-                            <Label>Item Type</Label>
-                            <RadioGroup defaultValue="Veg" value={newItemType} onValueChange={(value: 'Veg' | 'Non-Veg') => setNewItemType(value)} className="flex items-center space-x-4 pt-2">
-                              <div className="flex items-center space-x-2">
-                                  <RadioGroupItem value="Veg" id="veg-item" />
-                                  <Label htmlFor="veg-item">Veg</Label>
-                              </div>
-                              <div className="flex items-center space-x-2">
-                                  <RadioGroupItem value="Non-Veg" id="non-veg-item" />
-                                  <Label htmlFor="non-veg-item">Non-Veg</Label>
-                              </div>
-                            </RadioGroup>
-                          </div>
-                      </div>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
-                          <div className="space-y-1">
-                            <Label htmlFor="new-item-name">Item Name</Label>
-                            <Input
-                              id="new-item-name"
-                              value={newItemName}
-                              onChange={e => setNewItemName(e.target.value)}
-                              placeholder="e.g., Chocolate Lava Cake"
+                         <div className="flex items-center gap-2">
+                            <Button variant="outline" onClick={handleImageUploadClick}>
+                               <Camera className="mr-2 h-4 w-4" />
+                               Scan from Image
+                            </Button>
+                             <Input 
+                                type="file" 
+                                ref={imageInputRef} 
+                                onChange={handleImageChange} 
+                                className="hidden" 
+                                accept="image/*" 
                             />
-                          </div>
-                          <div className="space-y-1">
-                            <Label htmlFor="new-item-price">Price</Label>
-                            <Input
-                              id="new-item-price"
-                              type="number"
-                              value={newItemPrice}
-                              onChange={e => setNewItemPrice(e.target.value)}
-                              placeholder="e.g., 150"
-                            />
-                          </div>
-                          <Button onClick={handleAddItem}><PlusCircle className="mr-2 h-4 w-4"/>Add Item</Button>
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
-                </>
-              )}
-
-              {/* Edit/Remove Menu */}
-              <AccordionItem value="edit-menu">
-                <AccordionTrigger className="text-lg font-semibold">
-                  {startWithEdit ? "Edit Recipe" : "Edit Menu & Recipes"}
-                </AccordionTrigger>
-                <AccordionContent className="p-4 bg-muted/50 rounded-b-md space-y-4">
-                    <Input
-                      placeholder="Search for an item or category to edit..."
-                      value={editMenuSearch}
-                      onChange={(e) => setEditMenuSearch(e.target.value)}
-                      className="mb-4"
-                    />
-                    <div className="space-y-3 max-h-80 overflow-y-auto">
-                        {filteredMenuForEditing.map(cat => (
-                            <div key={cat.category} className="p-3 border rounded-md bg-background/50">
-                                <div className="flex justify-between items-center">
-                                  <h3 className="font-bold text-lg">{cat.category}</h3>
-                                  {!startWithEdit && (
-                                    <AlertDialog>
-                                      <AlertDialogTrigger asChild>
-                                        <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive">
-                                          <Trash2 className="h-4 w-4" />
-                                        </Button>
-                                      </AlertDialogTrigger>
-                                      <AlertDialogContent>
-                                        <AlertDialogHeader>
-                                          <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                                          <AlertDialogDescription>
-                                            This will permanently delete the entire category "{cat.category}" and all items within it. This action cannot be undone.
-                                          </AlertDialogDescription>
-                                        </AlertDialogHeader>
-                                        <AlertDialogFooter>
-                                          <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                          <AlertDialogAction onClick={() => handleRemoveCategory(cat.category)}>Delete Category</AlertDialogAction>
-                                        </AlertDialogFooter>
-                                      </AlertDialogContent>
-                                    </AlertDialog>
-                                  )}
-                                </div>
-                                <div className="space-y-2 mt-2">
-                                  {cat.subCategories.map(subCat => (
-                                      <div key={subCat.name} className="pl-4">
-                                          <h4 className="font-semibold text-muted-foreground">{subCat.name}</h4>
-                                          <ul className="mt-1 space-y-1">
-                                              {subCat.items.map(item => (
-                                                  <li 
-                                                    key={item.name} 
-                                                    className={cn("flex justify-between items-center group p-1 rounded-md", startWithEdit && "cursor-pointer hover:bg-muted")}
-                                                    onClick={() => handleItemClick(item)}
-                                                  >
-                                                      <span>{item.name} - <span className="font-mono">₹{item.price}</span></span>
-                                                      <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                                          {!startWithEdit && (
-                                                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setEditingItem({ categoryName: cat.category, subCategoryName: subCat.name, item })}>
-                                                              <Edit className="h-4 w-4" />
-                                                            </Button>
-                                                          )}
-                                                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setEditingRecipe(item)}>
-                                                              <FilePlus className="h-4 w-4" />
-                                                          </Button>
-                                                          {!startWithEdit && (
-                                                            <AlertDialog>
-                                                                <AlertDialogTrigger asChild>
-                                                                    <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive">
-                                                                        <Trash2 className="h-4 w-4" />
-                                                                    </Button>
-                                                                </AlertDialogTrigger>
-                                                                <AlertDialogContent>
-                                                                    <AlertDialogHeader>
-                                                                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                                                                        <AlertDialogDescription>
-                                                                            This will permanently delete the item "{item.name}". This action cannot be undone.
-                                                                        </AlertDialogDescription>
-                                                                    </AlertDialogHeader>
-                                                                    <AlertDialogFooter>
-                                                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                                                        <AlertDialogAction onClick={() => handleRemoveItem(cat.category, subCat.name, item.name)}>Delete</AlertDialogAction>
-                                                                    </AlertDialogFooter>
-                                                                </AlertDialogContent>
-                                                            </AlertDialog>
-                                                          )}
-                                                      </div>
-                                                  </li>
-                                              ))}
-                                          </ul>
-                                      </div>
-                                  ))}
-                                </div>
-                            </div>
-                        ))}
-                        {filteredMenuForEditing.length === 0 && (
-                            <p className="text-center text-muted-foreground">No items match your search.</p>
-                        )}
+                        </div>
                     </div>
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
-              Close
-            </Button>
-          </DialogFooter>
+                )}
+            </DialogHeader>
+          )}
+
+          {renderContent()}
+
+          {scanStep === 'idle' && (
+            <DialogFooter>
+                <Button variant="outline" onClick={() => onOpenChange(false)}>
+                Close
+                </Button>
+            </DialogFooter>
+          )}
+
         </DialogContent>
       </Dialog>
       {editingItem && (
@@ -756,3 +822,5 @@ export function ManageMenuDialog({
     </>
   );
 }
+
+    
