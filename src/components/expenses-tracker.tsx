@@ -478,6 +478,7 @@ export default function ExpensesTracker({ expenses, customerCreditLimit, vendorC
   const [isVendorAddDialogOpen, setIsVendorAddDialogOpen] = useState(false);
   const [isVendorManageDialogOpen, setIsVendorManageDialogOpen] = useState(false);
   const [editingVendor, setEditingVendor] = useState<Vendor | null>(null);
+  const [expenseFilter, setExpenseFilter] = useState<'all' | 'today' | 'month'>('all');
 
   // Form state for Expenses
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
@@ -500,6 +501,7 @@ export default function ExpensesTracker({ expenses, customerCreditLimit, vendorC
           id: doc.id,
           name: data.name,
           type: data.type,
+          mobile: data.mobile || undefined,
           transactions: (data.transactions || []).map((tx: any) => ({...tx, date: tx.date.toDate()})),
         } as PendingBill;
       });
@@ -518,6 +520,18 @@ export default function ExpensesTracker({ expenses, customerCreditLimit, vendorC
     };
   }, []);
 
+  const filteredExpenses = useMemo(() => {
+    const now = new Date();
+    switch (expenseFilter) {
+        case 'today':
+            return expenses.filter(e => isSameDay(e.date, now));
+        case 'month':
+            return expenses.filter(e => isSameMonth(e.date, now) && isSameYear(e.date, now));
+        case 'all':
+        default:
+            return expenses;
+    }
+  }, [expenses, expenseFilter]);
 
   const resetForm = () => {
     setEditingExpense(null);
@@ -813,7 +827,11 @@ export default function ExpensesTracker({ expenses, customerCreditLimit, vendorC
       <Card>
         <CardHeader>
           <CardTitle>Expense History</CardTitle>
-          <CardDescription>A log of all recorded business expenses.</CardDescription>
+          <CardDescription>
+            {expenseFilter === 'all' && "A log of all recorded business expenses."}
+            {expenseFilter === 'today' && "A log of expenses recorded today."}
+            {expenseFilter === 'month' && "A log of expenses recorded this month."}
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="max-h-[60vh] overflow-y-auto mb-6">
@@ -829,8 +847,8 @@ export default function ExpensesTracker({ expenses, customerCreditLimit, vendorC
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                {expenses.length > 0 ? (
-                    expenses.map((expense, index) => {
+                {filteredExpenses.length > 0 ? (
+                    filteredExpenses.map((expense, index) => {
                       const vendor = getVendorDetails(expense.vendorId);
                       return (
                         <TableRow key={expense.id} className={cn(index % 2 === 0 ? 'bg-muted/50' : 'bg-background')}>
@@ -844,21 +862,21 @@ export default function ExpensesTracker({ expenses, customerCreditLimit, vendorC
                       )
                     })
                 ) : (
-                    <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground h-24">No expenses recorded yet.</TableCell></TableRow>
+                    <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground h-24">No expenses recorded for this period.</TableCell></TableRow>
                 )}
                 </TableBody>
             </Table>
           </div>
            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Card className="bg-red-100 dark:bg-red-900/30 border-red-200 dark:border-red-800">
+              <Card className="bg-red-100 dark:bg-red-900/30 border-red-200 dark:border-red-800 cursor-pointer hover:shadow-lg transition-shadow" onClick={() => setExpenseFilter('today')}>
                   <CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-red-800 dark:text-red-200">Today's Expenses</CardTitle></CardHeader>
                   <CardContent><p className="text-2xl font-bold text-red-900 dark:text-red-100">Rs. {dailyExpenses.toFixed(2)}</p></CardContent>
               </Card>
-              <Card className="bg-orange-100 dark:bg-orange-900/30 border-orange-200 dark:border-orange-800">
+              <Card className="bg-orange-100 dark:bg-orange-900/30 border-orange-200 dark:border-orange-800 cursor-pointer hover:shadow-lg transition-shadow" onClick={() => setExpenseFilter('month')}>
                   <CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-orange-800 dark:text-orange-200">This Month's Expenses</CardTitle></CardHeader>
                   <CardContent><p className="text-2xl font-bold text-orange-900 dark:text-orange-100">Rs. {monthlyExpenses.toFixed(2)}</p></CardContent>
               </Card>
-              <Card className="bg-yellow-100 dark:bg-yellow-900/30 border-yellow-200 dark:border-yellow-800">
+              <Card className="bg-yellow-100 dark:bg-yellow-900/30 border-yellow-200 dark:border-yellow-800 cursor-pointer hover:shadow-lg transition-shadow" onClick={() => setExpenseFilter('all')}>
                   <CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-yellow-800 dark:text-yellow-200">Overall Expenses</CardTitle></CardHeader>
                   <CardContent><p className="text-2xl font-bold text-yellow-900 dark:text-yellow-100">Rs. {totalExpenses.toFixed(2)}</p></CardContent>
               </Card>
