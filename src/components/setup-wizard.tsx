@@ -18,6 +18,8 @@ import { CalendarIcon, PlusCircle, Trash2, ArrowLeft, ArrowRight } from 'lucide-
 import { cn } from '@/lib/utils';
 import { Textarea } from './ui/textarea';
 import { RadioGroup, RadioGroupItem } from './ui/radio-group';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from './ui/alert-dialog';
 
 interface SetupWizardProps {
   onComplete: () => void;
@@ -49,6 +51,7 @@ const colors = ['bg-blue-500', 'bg-green-500', 'bg-yellow-500', 'bg-purple-500',
 export default function SetupWizard({ onComplete }: SetupWizardProps) {
   const { toast } = useToast();
   const [currentStep, setCurrentStep] = useState(1);
+  const [isSkipConfirmOpen, setIsSkipConfirmOpen] = useState(false);
 
   // Form State
   const [venueName, setVenueName] = useState('');
@@ -111,7 +114,7 @@ export default function SetupWizard({ onComplete }: SetupWizardProps) {
   };
   
   const handleSkip = () => {
-    onComplete();
+    setIsSkipConfirmOpen(true);
   };
 
   const nextStep = () => setCurrentStep(prev => Math.min(prev + 1, 4));
@@ -380,10 +383,28 @@ export default function SetupWizard({ onComplete }: SetupWizardProps) {
                 )}
             </div>
             <div className="flex justify-center w-full mt-4">
-                <Button variant="link" onClick={handleSkip}>Skip for now</Button>
+              <AlertDialog open={isSkipConfirmOpen} onOpenChange={setIsSkipConfirmOpen}>
+                <AlertDialogTrigger asChild>
+                  <Button variant="link" onClick={handleSkip}>Skip for now</Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      If you skip the setup, the app will use default placeholder data. You can always rerun the setup from the admin panel later.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={onComplete}>Confirm & Skip</AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </div>
         </CardFooter>
       </Card>
     </div>
   );
 }
+
+    
