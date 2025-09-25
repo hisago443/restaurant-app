@@ -118,6 +118,8 @@ export default function InventoryManagement({ inventory }: InventoryManagementPr
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [seededIngredients, setSeededIngredients] = useState<InventoryItem[]>([]);
+  const [isSeedConfirmationDialogOpen, setIsSeedConfirmationDialogOpen] = useState(false);
 
   const filteredInventory = useMemo(() => {
     if (!searchTerm) return inventory;
@@ -212,10 +214,8 @@ export default function InventoryManagement({ inventory }: InventoryManagementPr
       }
       
       await batch.commit();
-      toast({
-        title: "Default Ingredients Loaded",
-        description: "The base ingredients for your recipes have been added to the inventory.",
-      });
+      setSeededIngredients(defaultIngredients);
+      setIsSeedConfirmationDialogOpen(true);
     } catch (error) {
       console.error("Error seeding ingredients:", error);
       toast({
@@ -366,6 +366,42 @@ export default function InventoryManagement({ inventory }: InventoryManagementPr
       onSave={handleSaveItem}
       existingItem={editingItem}
     />
+    
+    <Dialog open={isSeedConfirmationDialogOpen} onOpenChange={setIsSeedConfirmationDialogOpen}>
+        <DialogContent className="max-w-2xl">
+            <DialogHeader>
+                <DialogTitle>Default Ingredients Loaded</DialogTitle>
+                <DialogDescription>
+                    The following ingredients have been added or updated in your inventory.
+                </DialogDescription>
+            </DialogHeader>
+            <div className="max-h-[60vh] overflow-y-auto p-1">
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>ID</TableHead>
+                            <TableHead>Name</TableHead>
+                            <TableHead>Category</TableHead>
+                            <TableHead className="text-right">Stock / Capacity</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {seededIngredients.map(item => (
+                            <TableRow key={item.id}>
+                                <TableCell className="font-mono">{item.id}</TableCell>
+                                <TableCell>{item.name}</TableCell>
+                                <TableCell>{item.category}</TableCell>
+                                <TableCell className="text-right">{item.stock} / {item.capacity} {item.unit}</TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            </div>
+            <DialogFooter>
+                <Button onClick={() => setIsSeedConfirmationDialogOpen(false)}>Close</Button>
+            </DialogFooter>
+        </DialogContent>
+    </Dialog>
     </div>
   );
 }
