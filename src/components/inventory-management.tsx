@@ -135,8 +135,10 @@ export default function InventoryManagement({ inventory, menu, setMenu }: Invent
   
   const filteredInventory = useMemo(() => {
     if (!searchTerm) return inventory;
+    const lowercasedTerm = searchTerm.toLowerCase();
     return inventory.filter(item => 
-      item.name.toLowerCase().includes(searchTerm.toLowerCase())
+      item.name.toLowerCase().includes(lowercasedTerm) ||
+      item.id.toString().includes(lowercasedTerm)
     );
   }, [inventory, searchTerm]);
 
@@ -344,6 +346,7 @@ export default function InventoryManagement({ inventory, menu, setMenu }: Invent
 }
 
     
+
 
 
 
