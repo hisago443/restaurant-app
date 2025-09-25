@@ -241,7 +241,7 @@ export default function InventoryManagement({ inventory, menu, setMenu }: Invent
               {filteredInventory.map((item) => (
                 <TableRow key={item.id}>
                   <TableCell className="font-medium">
-                      <div>{item.name} <span className="text-xs text-muted-foreground font-mono">({item.id})</span></div>
+                      <div className="uppercase">{item.name} <span className="text-xs text-muted-foreground font-mono normal-case">({item.id})</span></div>
                       <div className="text-xs text-muted-foreground">{item.category}</div>
                   </TableCell>
                   <TableCell>
@@ -344,5 +344,6 @@ export default function InventoryManagement({ inventory, menu, setMenu }: Invent
 }
 
     
+
 
 
