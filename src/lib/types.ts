@@ -7,7 +7,7 @@ export interface MenuItemHistory {
   changedAt: Date;
 }
 
-export interface RecipeItem {
+export interface IngredientItem {
   inventoryItemId: string; // Corresponds to the ID of an InventoryItem
   quantity: number; // Amount of the ingredient used
   unit: 'g' | 'ml' | 'pcs' | 'kg' | 'ltr';
@@ -18,13 +18,8 @@ export interface MenuItem {
   price: number;
   code: string;
   history?: MenuItemHistory[];
-  category?: string; // Added to easily identify item's main category
-  recipe?: RecipeItem[]; // Recipe for this menu item
-}
-
-export interface MenuSubCategory {
-  name: string;
-  items: MenuItem[];
+  category?: string;
+  ingredients?: IngredientItem[];
 }
 
 export interface MenuCategory {
@@ -179,7 +174,7 @@ export const MenuItemSchema = z.object({
   name: z.string().describe('The name of the menu item.'),
   price: z.number().describe('The price of the menu item.'),
   code: z.string().optional().describe('A short code for the item, if any.'),
-  recipe: z.array(z.any()).optional().default([]),
+  ingredients: z.array(z.any()).optional().default([]),
   history: z.array(z.any()).optional().default([]),
 });
 

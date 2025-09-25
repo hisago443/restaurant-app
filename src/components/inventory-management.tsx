@@ -226,7 +226,7 @@ export default function InventoryManagement({ inventory, menu, setMenu }: Invent
               <PlusCircle className="mr-2 h-4 w-4" /> Add Item
             </Button>
              <Button variant="secondary" onClick={() => setIsMenuManagerOpen(true)}>
-              <FilePlus className="mr-2 h-4 w-4" /> Edit Recipe
+              <FilePlus className="mr-2 h-4 w-4" /> Edit Ingredients
             </Button>
           </div>
         </div>

@@ -1154,8 +1154,8 @@ const processKOTs = useCallback((kotGroupsToProcess: { title: string; items: Ord
 
     orderItems.forEach(orderItem => {
         const fullMenuItem = allMenuItems.find(mi => mi.name === orderItem.name);
-        if (fullMenuItem?.recipe) {
-            fullMenuItem.recipe.forEach(ingredient => {
+        if (fullMenuItem?.ingredients) {
+            fullMenuItem.ingredients.forEach(ingredient => {
                 const quantityToDeduct = ingredient.unit === 'g' || ingredient.unit === 'ml' ? ingredient.quantity / 1000 : ingredient.quantity;
                 const inventoryItem = inventory.find(i => i.id === ingredient.inventoryItemId);
                 if (inventoryItem && (inventoryItem.unit === 'kg' || inventoryItem.unit === 'ltr')) {

@@ -56,12 +56,12 @@ const extractMenuFromImageFlow = ai.defineFlow(
     if (!output) {
       throw new Error("The AI failed to generate a valid menu structure.");
     }
-    // Ensure every item has an empty recipe and history array
+    // Ensure every item has an empty ingredients and history array
     const menuWithDefaults = output.menu.map(category => ({
         ...category,
         items: category.items.map(item => ({
             ...item,
-            recipe: item.recipe || [],
+            ingredients: item.ingredients || [],
             history: item.history || [],
         }))
     }));

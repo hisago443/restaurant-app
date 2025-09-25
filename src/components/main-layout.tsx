@@ -66,7 +66,6 @@ export default function MainLayout() {
   const [showReservationTimeOnPOS, setShowReservationTimeOnPOS] = useState(false);
 
   useEffect(() => {
-    // This logic handles both the old format (with subCategories) and the new flat format.
     const structuredMenu = (menuData as any[]).map(category => {
       const items = (category.items || []).concat(
         (category.subCategories || []).flatMap((sub: any) => sub.items || [])
@@ -77,7 +76,7 @@ export default function MainLayout() {
         items: items.map((item: any) => ({
           ...item,
           history: item.history || [],
-          recipe: item.recipe || [],
+          ingredients: item.ingredients || [],
         })),
       };
     });
@@ -672,5 +671,3 @@ export default function MainLayout() {
     </div>
   );
 }
-
-    
