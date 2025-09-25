@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useState, useMemo, useEffect, useRef } from 'react';
@@ -453,7 +454,7 @@ export function ManageMenuDialog({
             </DialogHeader>
 
             <div className="max-h-[70vh] overflow-y-auto p-1">
-              <Accordion type="multiple" defaultValue={['add-category', 'add-item', 'edit-menu']} className="w-full space-y-4">
+              <Accordion type="multiple" defaultValue={['edit-menu']} className="w-full space-y-4">
                 
                 {/* Add Category */}
                 <AccordionItem value="add-category">
@@ -638,3 +639,4 @@ export function ManageMenuDialog({
     
 
     
+

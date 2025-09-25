@@ -509,6 +509,19 @@
         "code": "25",
         "history": [],
         "ingredients": []
+      },
+      {
+        "name": "CHEESE CAKE",
+        "price": 15000,
+        "code": "131",
+        "history": [],
+        "ingredients": [
+          {
+            "inventoryItemId": "2",
+            "quantity": 1000,
+            "unit": "g"
+          }
+        ]
       }
     ]
   },
