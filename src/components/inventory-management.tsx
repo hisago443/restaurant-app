@@ -3,7 +3,7 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import { db } from '@/lib/firebase';
-import { collection, doc, addDoc, updateDoc, deleteDoc, onSnapshot, writeBatch, getDocs } from 'firebase/firestore';
+import { collection, doc, addDoc, updateDoc, deleteDoc, onSnapshot, writeBatch, getDocs, setDoc } from 'firebase/firestore';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -137,10 +137,14 @@ export default function InventoryManagement({ inventory }: InventoryManagementPr
       }
     } else {
       try {
-        const newItemId = data.name.toLowerCase().replace(/\s+/g, '-');
-        await setDoc(doc(db, "inventory", newItemId), data);
-        toast({ title: "Item added successfully", description: `ID: ${newItemId}` });
+        const inventoryCollection = await getDocs(collection(db, "inventory"));
+        const existingIds = inventoryCollection.docs.map(doc => parseInt(doc.id, 10)).filter(id => !isNaN(id));
+        const newId = existingIds.length > 0 ? Math.max(...existingIds) + 1 : 1;
+
+        await setDoc(doc(db, "inventory", String(newId)), data);
+        toast({ title: "Item added successfully", description: `ID: ${newId}` });
       } catch (error) {
+        console.error("Error adding item:", error)
         toast({ variant: "destructive", title: "Error adding item" });
       }
     }
@@ -148,16 +152,18 @@ export default function InventoryManagement({ inventory }: InventoryManagementPr
   
   const handleSeedIngredients = async () => {
     const defaultIngredients = [
-        { id: 'pizza-base', name: 'Pizza Base (Medium)', category: 'Bakery', stock: 100, capacity: 200, unit: 'units' },
-        { id: 'pizza-base-large', name: 'Pizza Base (Large)', category: 'Bakery', stock: 50, capacity: 100, unit: 'units' },
-        { id: 'tomato-sauce', name: 'Tomato Sauce', category: 'Sauces', stock: 10, capacity: 20, unit: 'kg' },
-        { id: 'pesto-sauce', name: 'Pesto Sauce', category: 'Sauces', stock: 5, capacity: 10, unit: 'kg' },
-        { id: 'white-sauce', name: 'White Sauce', category: 'Sauces', stock: 5, capacity: 10, unit: 'kg' },
-        { id: 'cheese', name: 'Cheese (Amul)', category: 'Dairy', stock: 20, capacity: 50, unit: 'kg' },
-        { id: 'mixed-veggies', name: 'Mixed Veggies', category: 'Produce', stock: 5, capacity: 10, unit: 'kg' },
-        { id: 'paneer', name: 'Paneer', category: 'Dairy', stock: 10, capacity: 20, unit: 'kg' },
-        { id: 'chicken', name: 'Chicken', category: 'Meat', stock: 10, capacity: 20, unit: 'kg' },
-        { id: 'pasta', name: 'Pasta', category: 'Dry Goods', stock: 15, capacity: 30, unit: 'kg' },
+        { id: '1', name: 'Pizza Base (Medium)', category: 'Bakery', stock: 100, capacity: 200, unit: 'units' },
+        { id: '2', name: 'Pizza Base (Large)', category: 'Bakery', stock: 50, capacity: 100, unit: 'units' },
+        { id: '3', name: 'Tomato Sauce', category: 'Sauces', stock: 10, capacity: 20, unit: 'kg' },
+        { id: '4', name: 'Pesto Sauce', category: 'Sauces', stock: 5, capacity: 10, unit: 'kg' },
+        { id: '5', name: 'White Sauce', category: 'Sauces', stock: 5, capacity: 10, unit: 'kg' },
+        { id: '6', name: 'Cheese (Amul)', category: 'Dairy', stock: 20, capacity: 50, unit: 'kg' },
+        { id: '7', name: 'Mixed Veggies', category: 'Produce', stock: 5, capacity: 10, unit: 'kg' },
+        { id: '8', name: 'Paneer', category: 'Dairy', stock: 10, capacity: 20, unit: 'kg' },
+        { id: '9', name: 'Chicken', category: 'Meat', stock: 10, capacity: 20, unit: 'kg' },
+        { id: '10', name: 'Pasta', category: 'Dry Goods', stock: 15, capacity: 30, unit: 'kg' },
+        { id: '11', name: 'Coffee Beans', stock: 10, capacity: 20, unit: 'kg', category: 'Beverages' },
+        { id: '12', name: 'Milk', stock: 25, capacity: 50, unit: 'liters', category: 'Dairy' },
     ];
     
     try {
