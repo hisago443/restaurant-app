@@ -174,6 +174,26 @@ export interface KOTPreference {
 }
 
 
+// Schemas for AI structured output
+export const MenuItemSchema = z.object({
+  name: z.string().describe('The name of the menu item.'),
+  price: z.number().describe('The price of the menu item.'),
+  code: z.string().optional().describe('A short code for the item, if any.'),
+  recipe: z.array(z.any()).optional().default([]),
+  history: z.array(z.any()).optional().default([]),
+});
+
+export const MenuSubCategorySchema = z.object({
+  name: z.string().describe('The name of the sub-category (e.g., "Veg", "Non-Veg", "Hot", "Cold").'),
+  items: z.array(MenuItemSchema),
+});
+
+export const MenuCategorySchema = z.object({
+  category: z.string().describe('The main category name (e.g., "Pizzas", "Beverages").'),
+  subCategories: z.array(MenuSubCategorySchema),
+});
+
+
 // Schemas for report generation
 export const BillSchema = z.object({
   id: z.string(),

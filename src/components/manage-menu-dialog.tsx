@@ -39,12 +39,13 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useToast } from '@/hooks/use-toast';
 import type { MenuCategory, MenuItem, MenuItemHistory, RecipeItem, InventoryItem } from '@/lib/types';
-import { PlusCircle, Trash2, Edit, History, FilePlus, Upload } from 'lucide-react';
+import { PlusCircle, Trash2, Edit, History, FilePlus, Upload, Camera, Loader2 } from 'lucide-react';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { format } from 'date-fns';
 import { Separator } from './ui/separator';
 import { cn } from '@/lib/utils';
 import { saveMenu } from '@/lib/menu-saver';
+import { extractMenuFromImage } from '@/ai/flows/extract-menu-from-image';
 
 interface EditRecipeDialogProps {
   isOpen: boolean;
@@ -279,7 +280,9 @@ export function ManageMenuDialog({
 }: ManageMenuDialogProps) {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
   
+  const [isScanning, setIsScanning] = useState(false);
   const [newCategory, setNewCategory] = useState('');
   
   const [newItemName, setNewItemName] = useState('');
@@ -291,8 +294,6 @@ export function ManageMenuDialog({
   const [editingRecipe, setEditingRecipe] = useState<MenuItem | null>(null);
   const [activeAccordionItems, setActiveAccordionItems] = useState<string[]>([]);
   
-  const [isToastRendered, setIsToastRendered] = useState(false);
-
   useEffect(() => {
     if (isOpen) {
         if (startWithEdit) {
@@ -302,14 +303,6 @@ export function ManageMenuDialog({
         }
     }
   }, [isOpen, startWithEdit]);
-
-  useEffect(() => {
-    if (menu.length > 0 && !isToastRendered) {
-      // This is a workaround for the hydration error
-      // The toast was being called on first render.
-      // setIsToastRendered(true);
-    }
-  }, [menu, isToastRendered]);
 
   const updateAndSaveMenu = async (newMenu: MenuCategory[] | ((prev: MenuCategory[]) => MenuCategory[])) => {
     let updatedMenu: MenuCategory[];
@@ -509,7 +502,6 @@ export function ManageMenuDialog({
         }
         const newMenu = JSON.parse(text);
         
-        // Basic validation
         if (!Array.isArray(newMenu) || !newMenu.every(cat => cat.category && cat.subCategories)) {
            throw new Error('Invalid menu format.');
         }
@@ -521,7 +513,6 @@ export function ManageMenuDialog({
         console.error("Error parsing or saving uploaded menu:", error);
         toast({ variant: 'destructive', title: 'Upload Failed', description: 'The uploaded file has an invalid format.' });
       } finally {
-        // Reset file input
         if (fileInputRef.current) {
             fileInputRef.current.value = '';
         }
@@ -530,6 +521,41 @@ export function ManageMenuDialog({
     reader.readAsText(file);
   };
 
+  const handleImageUploadClick = () => {
+    imageInputRef.current?.click();
+  };
+  
+  const handleImageChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+  
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = async () => {
+      const imageDataUri = reader.result as string;
+      setIsScanning(true);
+      toast({ title: 'Scanning Menu Image...', description: 'The AI is analyzing your menu. This may take a moment.' });
+  
+      try {
+        const result = await extractMenuFromImage({ imageDataUri });
+        if (result && result.menu) {
+          await updateAndSaveMenu(result.menu);
+          toast({ title: 'Menu Scanned Successfully!', description: 'Your menu has been updated from the image.' });
+          onOpenChange(false);
+        } else {
+          throw new Error('AI did not return a valid menu structure.');
+        }
+      } catch (error) {
+        console.error("Error scanning menu from image:", error);
+        toast({ variant: 'destructive', title: 'Scan Failed', description: 'Could not extract menu from the image. Please try again with a clearer image.' });
+      } finally {
+        setIsScanning(false);
+        if (imageInputRef.current) {
+          imageInputRef.current.value = '';
+        }
+      }
+    };
+  };
 
   return (
     <>
@@ -537,7 +563,7 @@ export function ManageMenuDialog({
         <DialogContent className="max-w-4xl">
           <DialogHeader>
             {startWithEdit ? (
-                <DialogTitle className="sr-only">Edit Recipe</DialogTitle>
+                <h2 className="sr-only">Edit Recipe</h2>
             ) : (
                 <div className="flex justify-between items-center">
                     <div>
@@ -546,9 +572,13 @@ export function ManageMenuDialog({
                             Add, edit, and organize your menu categories, items, and recipes.
                         </DialogDescription>
                     </div>
-                     <div>
-                        <Button variant="outline" onClick={handleFileUploadClick}>
-                          <Upload className="mr-2 h-4 w-4" /> Upload Menu
+                     <div className="flex items-center gap-2">
+                        <Button variant="outline" onClick={handleImageUploadClick} disabled={isScanning}>
+                          {isScanning ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Camera className="mr-2 h-4 w-4" />}
+                          Scan from Image
+                        </Button>
+                        <Button variant="outline" onClick={handleFileUploadClick} disabled={isScanning}>
+                          <Upload className="mr-2 h-4 w-4" /> Upload JSON
                         </Button>
                         <Input 
                             type="file" 
@@ -556,6 +586,13 @@ export function ManageMenuDialog({
                             onChange={handleFileChange} 
                             className="hidden" 
                             accept=".json" 
+                        />
+                         <Input 
+                            type="file" 
+                            ref={imageInputRef} 
+                            onChange={handleImageChange} 
+                            className="hidden" 
+                            accept="image/*" 
                         />
                     </div>
                 </div>
