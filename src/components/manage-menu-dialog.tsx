@@ -47,6 +47,8 @@ import { cn } from '@/lib/utils';
 import { saveMenu } from '@/lib/menu-saver';
 import { ScrollArea } from './ui/scroll-area';
 import { scanMenu, type ScanMenuOutput } from '@/ai/flows/scan-menu-flow';
+import { Alert, AlertTitle, AlertDescription } from './ui/alert';
+
 
 interface EditIngredientsDialogProps {
   isOpen: boolean;
@@ -302,49 +304,103 @@ export function ManageMenuDialog({
   const [isScanning, setIsScanning] = useState(false);
   const [scannedMenu, setScannedMenu] = useState<ScanMenuOutput | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isCameraViewOpen, setIsCameraViewOpen] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
+
 
   const updateAndSaveMenu = async (newMenuData: MenuCategory[]) => {
     setMenu(newMenuData);
     await saveMenu(newMenuData);
+  };
+
+  useEffect(() => {
+    let stream: MediaStream | null = null;
+    const getCameraPermission = async () => {
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        setHasCameraPermission(true);
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+        }
+      } catch (error) {
+        console.error('Error accessing camera:', error);
+        setHasCameraPermission(false);
+        toast({
+          variant: 'destructive',
+          title: 'Camera Access Denied',
+          description: 'Please enable camera permissions in your browser settings.',
+        });
+      }
+    };
+
+    if (isCameraViewOpen) {
+      getCameraPermission();
+    }
+
+    return () => {
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+      }
+    };
+  }, [isCameraViewOpen, toast]);
+
+  const processDataUri = async (dataUri: string) => {
+    setIsScanning(true);
+    setScannedMenu(null);
+    toast({
+      title: 'Scanning Menu...',
+      description: 'The AI is analyzing your menu. This might take a moment.',
+    });
+    try {
+      const result = await scanMenu({ photoDataUri: dataUri });
+      if (result && result.menu) {
+        setScannedMenu(result);
+        toast({
+          title: 'Scan Complete!',
+          description: 'Review the scanned items below and add them to your menu.',
+        });
+      } else {
+        throw new Error("AI could not process the menu image.");
+      }
+    } catch (error) {
+      console.error("Menu scanning failed:", error);
+      toast({
+        variant: 'destructive',
+        title: 'Scan Failed',
+        description: 'Could not read the menu from the image. Please try again.',
+      });
+    } finally {
+      setIsScanning(false);
+    }
   };
   
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    setIsScanning(true);
-    setScannedMenu(null);
-    toast({
-        title: 'Scanning Menu...',
-        description: 'The AI is analyzing your menu. This might take a moment.',
-    });
-
     const reader = new FileReader();
     reader.onload = async (e) => {
         const dataUri = e.target?.result as string;
-        try {
-            const result = await scanMenu({ photoDataUri: dataUri });
-            if (result && result.menu) {
-                setScannedMenu(result);
-                toast({
-                    title: 'Scan Complete!',
-                    description: 'Review the scanned items below and add them to your menu.',
-                });
-            } else {
-                throw new Error("AI could not process the menu image.");
-            }
-        } catch (error) {
-            console.error("Menu scanning failed:", error);
-            toast({
-                variant: 'destructive',
-                title: 'Scan Failed',
-                description: 'Could not read the menu from the image. Please try again with a clearer picture.',
-            });
-        } finally {
-            setIsScanning(false);
-        }
+        await processDataUri(dataUri);
     };
     reader.readAsDataURL(file);
+    // Reset file input to allow re-uploading the same file
+    if(event.target) event.target.value = '';
+  };
+
+  const handleCapture = () => {
+    if (!videoRef.current) return;
+    const canvas = document.createElement('canvas');
+    canvas.width = videoRef.current.videoWidth;
+    canvas.height = videoRef.current.videoHeight;
+    const context = canvas.getContext('2d');
+    if (context) {
+      context.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+      const dataUri = canvas.toDataURL('image/jpeg');
+      setIsCameraViewOpen(false);
+      processDataUri(dataUri);
+    }
   };
 
 
@@ -551,7 +607,9 @@ export function ManageMenuDialog({
                           className="sr-only"
                           onChange={handleFileChange}
                         />
-                        {/* Camera functionality can be added here if needed */}
+                        <Button variant="outline" onClick={() => setIsCameraViewOpen(true)}>
+                          <Camera className="mr-2 h-4 w-4" /> Open Camera
+                        </Button>
                     </div>
                     <div className="flex justify-center items-center min-h-[12rem] w-full border-2 border-dashed rounded-lg bg-background relative p-4">
                         {isScanning ? (
@@ -769,6 +827,39 @@ export function ManageMenuDialog({
             onSave={handleSaveIngredients}
         />
       )}
+      <Dialog open={isCameraViewOpen} onOpenChange={setIsCameraViewOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Scan with Camera</DialogTitle>
+            <DialogDescription>
+              Position the menu clearly within the frame and capture.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <video ref={videoRef} className="w-full aspect-video rounded-md bg-black" autoPlay muted playsInline />
+            {hasCameraPermission === false && (
+              <Alert variant="destructive" className="mt-4">
+                <AlertTitle>Camera Access Denied</AlertTitle>
+                <AlertDescription>
+                  Please enable camera permissions in your browser settings to use this feature.
+                </AlertDescription>
+              </Alert>
+            )}
+             {hasCameraPermission === null && (
+              <div className="flex items-center justify-center pt-8">
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                <p className="ml-2">Requesting camera access...</p>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsCameraViewOpen(false)}>Cancel</Button>
+            <Button onClick={handleCapture} disabled={!hasCameraPermission}>
+              <Camera className="mr-2 h-4 w-4" /> Capture
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
