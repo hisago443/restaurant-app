@@ -72,7 +72,7 @@ function AddOrEditItemDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{existingItem ? 'Edit' : 'Add'} Inventory Item</DialogTitle>
@@ -188,6 +188,44 @@ export default function InventoryManagement({ inventory }: InventoryManagementPr
     return "bg-primary";
   };
 
+  const handleSeedIngredients = async () => {
+    try {
+      const batch = writeBatch(db);
+      const defaultIngredients = [
+        { id: '1', name: 'Pizza Base (Medium)', category: 'Bakery', stock: 50, capacity: 100, unit: 'units' },
+        { id: '2', name: 'Pizza Base (Large)', category: 'Bakery', stock: 50, capacity: 100, unit: 'units' },
+        { id: '3', name: 'Tomato Sauce', category: 'Sauces', stock: 10, capacity: 20, unit: 'kg' },
+        { id: '4', name: 'Pesto Sauce', category: 'Sauces', stock: 5, capacity: 10, unit: 'kg' },
+        { id: '5', name: 'White Sauce', category: 'Sauces', stock: 5, capacity: 10, unit: 'kg' },
+        { id: '6', name: 'Cheese', category: 'Dairy', stock: 20, capacity: 40, unit: 'kg' },
+        { id: '7', name: 'Vegetables (Assorted)', category: 'Produce', stock: 15, capacity: 30, unit: 'kg' },
+        { id: '8', name: 'Paneer', category: 'Dairy', stock: 10, capacity: 20, unit: 'kg' },
+        { id: '9', name: 'Chicken', category: 'Meat', stock: 15, capacity: 30, unit: 'kg' },
+        { id: '10', name: 'Pasta', category: 'Pantry', stock: 20, capacity: 50, unit: 'kg' },
+        { id: '11', name: 'Coffee Beans', category: 'Beverages', stock: 10, capacity: 20, unit: 'kg' },
+        { id: '12', name: 'Milk', category: 'Dairy', stock: 25, capacity: 50, unit: 'liters' },
+      ];
+
+      for (const item of defaultIngredients) {
+        const docRef = doc(db, "inventory", item.id);
+        batch.set(docRef, item);
+      }
+      
+      await batch.commit();
+      toast({
+        title: "Default Ingredients Loaded",
+        description: "The base ingredients for your recipes have been added to the inventory.",
+      });
+    } catch (error) {
+      console.error("Error seeding ingredients:", error);
+      toast({
+        variant: "destructive",
+        title: "Seeding Failed",
+        description: "There was an error loading the default ingredients.",
+      });
+    }
+  };
+
   return (
     <div className="p-4">
     <Card className="bg-muted/30">
@@ -209,6 +247,9 @@ export default function InventoryManagement({ inventory }: InventoryManagementPr
             </div>
             <Button onClick={() => handleOpenDialog(null)}>
               <PlusCircle className="mr-2 h-4 w-4" /> Add Item
+            </Button>
+            <Button variant="outline" onClick={handleSeedIngredients}>
+              <Server className="mr-2 h-4 w-4" /> Load Default Ingredients
             </Button>
           </div>
         </div>
