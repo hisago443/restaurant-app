@@ -25,6 +25,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { Badge } from './ui/badge';
+import { Input } from './ui/input';
 
 interface BillHistoryProps {
   bills: Bill[];
@@ -145,13 +146,29 @@ export default function BillHistory({ bills, onClearAll }: BillHistoryProps) {
                 {date ? format(date, "PPP") : <span>Filter by date...</span>}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-0">
+            <PopoverContent className="w-auto p-0" align="start">
               <Calendar
                 mode="single"
                 selected={date}
                 onSelect={handleDateSelect}
                 initialFocus
               />
+              <div className="p-4 border-t">
+                  <Label htmlFor="date-input">Or type a date (DD-MM-YYYY)</Label>
+                  <Input 
+                      id="date-input"
+                      placeholder="DD-MM-YYYY"
+                      onBlur={(e) => {
+                          const [day, month, year] = e.target.value.split(/[-/]/);
+                          if(day && month && year) {
+                              const newDate = new Date(Number(year), Number(month) - 1, Number(day));
+                              if (!isNaN(newDate.getTime())) {
+                                  handleDateSelect(newDate);
+                              }
+                          }
+                      }}
+                  />
+              </div>
             </PopoverContent>
           </Popover>
           {date && (
