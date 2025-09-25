@@ -515,12 +515,12 @@ export default function MainLayout({ initialMenu }: MainLayoutProps) {
                 <Soup /> <span className={cn(navPosition === 'left' && 'w-32 text-left')}>Kitchen &amp; Inventory</span>
               </TabsTrigger>
               <Separator orientation={navPosition === 'top' ? 'vertical' : 'horizontal'} className={cn(navPosition === 'top' ? "h-6 mx-1" : "w-full my-1")} />
-              <TabsTrigger value="expenses" className="px-4 py-2 text-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md flex items-center gap-2">
-                <Receipt /> <span className={cn(navPosition === 'left' && 'w-32 text-left')}>Expenses</span>
+              <TabsTrigger value="customers" className="px-4 py-2 text-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md flex items-center gap-2">
+                <Users2 /> <span className={cn(navPosition === 'left' && 'w-32 text-left')}>Customers</span>
               </TabsTrigger>
               <Separator orientation={navPosition === 'top' ? 'vertical' : 'horizontal'} className={cn(navPosition === 'top' ? "h-6 mx-1" : "w-full my-1")} />
-               <TabsTrigger value="customers" className="px-4 py-2 text-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md flex items-center gap-2">
-                <Users2 /> <span className={cn(navPosition === 'left' && 'w-32 text-left')}>Customers</span>
+              <TabsTrigger value="expenses" className="px-4 py-2 text-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md flex items-center gap-2">
+                <Receipt /> <span className={cn(navPosition === 'left' && 'w-32 text-left')}>Expenses</span>
               </TabsTrigger>
               <Separator orientation={navPosition === 'top' ? 'vertical' : 'horizontal'} className={cn(navPosition === 'top' ? "h-6 mx-1" : "w-full my-1")} />
               <TabsTrigger value="staff" className="px-4 py-2 text-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md flex items-center gap-2">
