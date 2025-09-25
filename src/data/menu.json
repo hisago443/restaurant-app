@@ -1,4 +1,3 @@
-
 [
   {
     "category": "Pizza's",
@@ -6,23 +5,283 @@
       {
         "name": "Veg",
         "items": [
-          { "name": "Margherita Pizza (Medium)", "price": 299, "code": "1", "recipe": [{ "inventoryItemId": "1", "quantity": 1 }, { "inventoryItemId": "13", "quantity": 100 }, { "inventoryItemId": "14", "quantity": 150 }] },
-          { "name": "Margherita Pizza (Large)", "price": 399, "code": "2", "recipe": [{ "inventoryItemId": "2", "quantity": 1 }, { "inventoryItemId": "13", "quantity": 150 }, { "inventoryItemId": "14", "quantity": 200 }] },
-          { "name": "Vegie Supreme Pizza (Medium)", "price": 319, "code": "3", "recipe": [{ "inventoryItemId": "1", "quantity": 1 }, { "inventoryItemId": "13", "quantity": 100 }, { "inventoryItemId": "14", "quantity": 150 }, { "inventoryItemId": "7", "quantity": 100 }] },
-          { "name": "Vegie Supreme Pizza (Large)", "price": 419, "code": "4", "recipe": [{ "inventoryItemId": "2", "quantity": 1 }, { "inventoryItemId": "13", "quantity": 150 }, { "inventoryItemId": "14", "quantity": 200 }, { "inventoryItemId": "7", "quantity": 150 }] },
-          { "name": "Loaded Paneer Pizza (Medium)", "price": 379, "code": "5", "recipe": [{ "inventoryItemId": "1", "quantity": 1 }, { "inventoryItemId": "13", "quantity": 100 }, { "inventoryItemId": "14", "quantity": 150 }, { "inventoryItemId": "8", "quantity": 100 }] },
-          { "name": "Loaded Paneer Pizza (Large)", "price": 479, "code": "6", "recipe": [{ "inventoryItemId": "2", "quantity": 1 }, { "inventoryItemId": "13", "quantity": 150 }, { "inventoryItemId": "14", "quantity": 200 }, { "inventoryItemId": "8", "quantity": 150 }] },
-          { "name": "Pesto Pizza Veg (Medium)", "price": 349, "code": "7", "recipe": [{ "inventoryItemId": "1", "quantity": 1 }, { "inventoryItemId": "15", "quantity": 100 }, { "inventoryItemId": "14", "quantity": 150 }] },
-          { "name": "Pesto Pizza Veg (Large)", "price": 449, "code": "8", "recipe": [{ "inventoryItemId": "2", "quantity": 1 }, { "inventoryItemId": "15", "quantity": 150 }, { "inventoryItemId": "14", "quantity": 200 }] }
+          {
+            "name": "Margherita Pizza (Medium)",
+            "price": 299,
+            "code": "1",
+            "recipe": [
+              {
+                "inventoryItemId": "1",
+                "quantity": 1
+              },
+              {
+                "inventoryItemId": "13",
+                "quantity": 100
+              },
+              {
+                "inventoryItemId": "14",
+                "quantity": 150
+              }
+            ],
+            "history": []
+          },
+          {
+            "name": "Margherita Pizza (Large)",
+            "price": 399,
+            "code": "2",
+            "recipe": [
+              {
+                "inventoryItemId": "2",
+                "quantity": 1
+              },
+              {
+                "inventoryItemId": "13",
+                "quantity": 150
+              },
+              {
+                "inventoryItemId": "14",
+                "quantity": 200
+              }
+            ],
+            "history": []
+          },
+          {
+            "name": "Vegie Supreme Pizza (Medium)",
+            "price": 319,
+            "code": "3",
+            "recipe": [
+              {
+                "inventoryItemId": "1",
+                "quantity": 1
+              },
+              {
+                "inventoryItemId": "13",
+                "quantity": 100
+              },
+              {
+                "inventoryItemId": "14",
+                "quantity": 150
+              },
+              {
+                "inventoryItemId": "7",
+                "quantity": 100
+              }
+            ],
+            "history": []
+          },
+          {
+            "name": "Vegie Supreme Pizza (Large)",
+            "price": 419,
+            "code": "4",
+            "recipe": [
+              {
+                "inventoryItemId": "2",
+                "quantity": 1
+              },
+              {
+                "inventoryItemId": "13",
+                "quantity": 150
+              },
+              {
+                "inventoryItemId": "14",
+                "quantity": 200
+              },
+              {
+                "inventoryItemId": "7",
+                "quantity": 150
+              }
+            ],
+            "history": []
+          },
+          {
+            "name": "Loaded Paneer Pizza (Medium)",
+            "price": 379,
+            "code": "5",
+            "recipe": [
+              {
+                "inventoryItemId": "1",
+                "quantity": 1
+              },
+              {
+                "inventoryItemId": "13",
+                "quantity": 100
+              },
+              {
+                "inventoryItemId": "14",
+                "quantity": 150
+              },
+              {
+                "inventoryItemId": "8",
+                "quantity": 100
+              }
+            ],
+            "history": []
+          },
+          {
+            "name": "Loaded Paneer Pizza (Large)",
+            "price": 479,
+            "code": "6",
+            "recipe": [
+              {
+                "inventoryItemId": "2",
+                "quantity": 1
+              },
+              {
+                "inventoryItemId": "13",
+                "quantity": 150
+              },
+              {
+                "inventoryItemId": "14",
+                "quantity": 200
+              },
+              {
+                "inventoryItemId": "8",
+                "quantity": 150
+              }
+            ],
+            "history": []
+          },
+          {
+            "name": "Pesto Pizza Veg (Medium)",
+            "price": 349,
+            "code": "7",
+            "recipe": [
+              {
+                "inventoryItemId": "1",
+                "quantity": 1
+              },
+              {
+                "inventoryItemId": "15",
+                "quantity": 100
+              },
+              {
+                "inventoryItemId": "14",
+                "quantity": 150
+              }
+            ],
+            "history": []
+          },
+          {
+            "name": "Pesto Pizza Veg (Large)",
+            "price": 449,
+            "code": "8",
+            "recipe": [
+              {
+                "inventoryItemId": "2",
+                "quantity": 1
+              },
+              {
+                "inventoryItemId": "15",
+                "quantity": 150
+              },
+              {
+                "inventoryItemId": "14",
+                "quantity": 200
+              }
+            ],
+            "history": []
+          }
         ]
       },
       {
         "name": "Non-Veg",
         "items": [
-          { "name": "Loaded Chicken Pizza (Medium)", "price": 389, "code": "9", "recipe": [{ "inventoryItemId": "1", "quantity": 1 }, { "inventoryItemId": "13", "quantity": 100 }, { "inventoryItemId": "14", "quantity": 150 }, { "inventoryItemId": "9", "quantity": 100 }] },
-          { "name": "Loaded Chicken Pizza (Large)", "price": 489, "code": "10", "recipe": [{ "inventoryItemId": "2", "quantity": 1 }, { "inventoryItemId": "13", "quantity": 150 }, { "inventoryItemId": "14", "quantity": 200 }, { "inventoryItemId": "9", "quantity": 150 }] },
-          { "name": "Pesto Pizza Chicken (Medium)", "price": 399, "code": "11", "recipe": [{ "inventoryItemId": "1", "quantity": 1 }, { "inventoryItemId": "15", "quantity": 100 }, { "inventoryItemId": "14", "quantity": 150 }, { "inventoryItemId": "9", "quantity": 100 }] },
-          { "name": "Pesto Pizza Chicken (Large)", "price": 499, "code": "12", "recipe": [{ "inventoryItemId": "2", "quantity": 1 }, { "inventoryItemId": "15", "quantity": 150 }, { "inventoryItemId": "14", "quantity": 200 }, { "inventoryItemId": "9", "quantity": 150 }] }
+          {
+            "name": "Loaded Chicken Pizza (Medium)",
+            "price": 389,
+            "code": "9",
+            "recipe": [
+              {
+                "inventoryItemId": "1",
+                "quantity": 1
+              },
+              {
+                "inventoryItemId": "13",
+                "quantity": 100
+              },
+              {
+                "inventoryItemId": "14",
+                "quantity": 150
+              },
+              {
+                "inventoryItemId": "9",
+                "quantity": 100
+              }
+            ],
+            "history": []
+          },
+          {
+            "name": "Loaded Chicken Pizza (Large)",
+            "price": 489,
+            "code": "10",
+            "recipe": [
+              {
+                "inventoryItemId": "2",
+                "quantity": 1
+              },
+              {
+                "inventoryItemId": "13",
+                "quantity": 150
+              },
+              {
+                "inventoryItemId": "14",
+                "quantity": 200
+              },
+              {
+                "inventoryItemId": "9",
+                "quantity": 150
+              }
+            ],
+            "history": []
+          },
+          {
+            "name": "Pesto Pizza Chicken (Medium)",
+            "price": 399,
+            "code": "11",
+            "recipe": [
+              {
+                "inventoryItemId": "1",
+                "quantity": 1
+              },
+              {
+                "inventoryItemId": "15",
+                "quantity": 100
+              },
+              {
+                "inventoryItemId": "14",
+                "quantity": 150
+              },
+              {
+                "inventoryItemId": "9",
+                "quantity": 100
+              }
+            ],
+            "history": []
+          },
+          {
+            "name": "Pesto Pizza Chicken (Large)",
+            "price": 499,
+            "code": "12",
+            "recipe": [
+              {
+                "inventoryItemId": "2",
+                "quantity": 1
+              },
+              {
+                "inventoryItemId": "15",
+                "quantity": 150
+              },
+              {
+                "inventoryItemId": "14",
+                "quantity": 200
+              },
+              {
+                "inventoryItemId": "9",
+                "quantity": 150
+              }
+            ],
+            "history": []
+          }
         ]
       }
     ]
@@ -33,17 +292,127 @@
       {
         "name": "Veg",
         "items": [
-          { "name": "Alfredo Pasta (Veg)", "price": 229, "code": "13", "recipe": [{ "inventoryItemId": "10", "quantity": 150 }, { "inventoryItemId": "16", "quantity": 200 }] },
-          { "name": "Arabiatta Pasta (Veg)", "price": 229, "code": "14", "recipe": [{ "inventoryItemId": "10", "quantity": 150 }, { "inventoryItemId": "13", "quantity": 200 }] },
-          { "name": "Preme Rose Pasta (Veg)", "price": 229, "code": "15", "recipe": [{ "inventoryItemId": "10", "quantity": 150 }, { "inventoryItemId": "16", "quantity": 100 }, { "inventoryItemId": "13", "quantity": 100 }] }
+          {
+            "name": "Alfredo Pasta (Veg)",
+            "price": 229,
+            "code": "13",
+            "recipe": [
+              {
+                "inventoryItemId": "10",
+                "quantity": 150
+              },
+              {
+                "inventoryItemId": "16",
+                "quantity": 200
+              }
+            ],
+            "history": []
+          },
+          {
+            "name": "Arabiatta Pasta (Veg)",
+            "price": 229,
+            "code": "14",
+            "recipe": [
+              {
+                "inventoryItemId": "10",
+                "quantity": 150
+              },
+              {
+                "inventoryItemId": "13",
+                "quantity": 200
+              }
+            ],
+            "history": []
+          },
+          {
+            "name": "Preme Rose Pasta (Veg)",
+            "price": 229,
+            "code": "15",
+            "recipe": [
+              {
+                "inventoryItemId": "10",
+                "quantity": 150
+              },
+              {
+                "inventoryItemId": "16",
+                "quantity": 100
+              },
+              {
+                "inventoryItemId": "13",
+                "quantity": 100
+              }
+            ],
+            "history": []
+          }
         ]
       },
       {
         "name": "Non-Veg",
         "items": [
-          { "name": "Alfredo Pasta (Non-Veg)", "price": 329, "code": "16", "recipe": [{ "inventoryItemId": "10", "quantity": 150 }, { "inventoryItemId": "16", "quantity": 200 }, { "inventoryItemId": "9", "quantity": 100 }] },
-          { "name": "Arabiatta Pasta (Non-Veg)", "price": 329, "code": "17", "recipe": [{ "inventoryItemId": "10", "quantity": 150 }, { "inventoryItemId": "13", "quantity": 200 }, { "inventoryItemId": "9", "quantity": 100 }] },
-          { "name": "Preme Rose Pasta (Non-Veg)", "price": 329, "code": "18", "recipe": [{ "inventoryItemId": "10", "quantity": 150 }, { "inventoryItemId": "16", "quantity": 100 }, { "inventoryItemId": "13", "quantity": 100 }, { "inventoryItemId": "9", "quantity": 100 }] }
+          {
+            "name": "Alfredo Pasta (Non-Veg)",
+            "price": 329,
+            "code": "16",
+            "recipe": [
+              {
+                "inventoryItemId": "10",
+                "quantity": 150
+              },
+              {
+                "inventoryItemId": "16",
+                "quantity": 200
+              },
+              {
+                "inventoryItemId": "9",
+                "quantity": 100
+              }
+            ],
+            "history": []
+          },
+          {
+            "name": "Arabiatta Pasta (Non-Veg)",
+            "price": 329,
+            "code": "17",
+            "recipe": [
+              {
+                "inventoryItemId": "10",
+                "quantity": 150
+              },
+              {
+                "inventoryItemId": "13",
+                "quantity": 200
+              },
+              {
+                "inventoryItemId": "9",
+                "quantity": 100
+              }
+            ],
+            "history": []
+          },
+          {
+            "name": "Preme Rose Pasta (Non-Veg)",
+            "price": 329,
+            "code": "18",
+            "recipe": [
+              {
+                "inventoryItemId": "10",
+                "quantity": 150
+              },
+              {
+                "inventoryItemId": "16",
+                "quantity": 100
+              },
+              {
+                "inventoryItemId": "13",
+                "quantity": 100
+              },
+              {
+                "inventoryItemId": "9",
+                "quantity": 100
+              }
+            ],
+            "history": []
+          }
         ]
       }
     ]
@@ -54,18 +423,60 @@
       {
         "name": "Veg",
         "items": [
-          { "name": "Bombay Sandwich", "price": 139, "code": "19" },
-          { "name": "All Veg Sub", "price": 149, "code": "20" },
-          { "name": "Veg Grilled Cheese", "price": 179, "code": "21" },
-          { "name": "Tangy Paneer Salsa", "price": 189, "code": "22" }
+          {
+            "name": "Bombay Sandwich",
+            "price": 139,
+            "code": "19",
+            "history": [],
+            "recipe": []
+          },
+          {
+            "name": "All Veg Sub",
+            "price": 149,
+            "code": "20",
+            "history": [],
+            "recipe": []
+          },
+          {
+            "name": "Veg Grilled Cheese",
+            "price": 179,
+            "code": "21",
+            "history": [],
+            "recipe": []
+          },
+          {
+            "name": "Tangy Paneer Salsa",
+            "price": 189,
+            "code": "22",
+            "history": [],
+            "recipe": []
+          }
         ]
       },
       {
         "name": "Non-Veg",
         "items": [
-          { "name": "Egg Masala", "price": 199, "code": "23" },
-          { "name": "Masala Chicken", "price": 229, "code": "24" },
-          { "name": "Mayo Chicken", "price": 239, "code": "25" }
+          {
+            "name": "Egg Masala",
+            "price": 199,
+            "code": "23",
+            "history": [],
+            "recipe": []
+          },
+          {
+            "name": "Masala Chicken",
+            "price": 229,
+            "code": "24",
+            "history": [],
+            "recipe": []
+          },
+          {
+            "name": "Mayo Chicken",
+            "price": 239,
+            "code": "25",
+            "history": [],
+            "recipe": []
+          }
         ]
       }
     ]
@@ -76,18 +487,60 @@
       {
         "name": "Veg",
         "items": [
-          { "name": "Plain Garlic Bread", "price": 149, "code": "26" },
-          { "name": "Cheese Garlic Bread", "price": 209, "code": "27" },
-          { "name": "Stuffed Garlic Bread", "price": 229, "code": "28" },
-          { "name": "Corn & Cheese Bruschetta", "price": 209, "code": "29" },
-          { "name": "Creamy Mushroom Bruschetta", "price": 229, "code": "30" }
+          {
+            "name": "Plain Garlic Bread",
+            "price": 149,
+            "code": "26",
+            "history": [],
+            "recipe": []
+          },
+          {
+            "name": "Cheese Garlic Bread",
+            "price": 209,
+            "code": "27",
+            "history": [],
+            "recipe": []
+          },
+          {
+            "name": "Stuffed Garlic Bread",
+            "price": 229,
+            "code": "28",
+            "history": [],
+            "recipe": []
+          },
+          {
+            "name": "Corn & Cheese Bruschetta",
+            "price": 209,
+            "code": "29",
+            "history": [],
+            "recipe": []
+          },
+          {
+            "name": "Creamy Mushroom Bruschetta",
+            "price": 229,
+            "code": "30",
+            "history": [],
+            "recipe": []
+          }
         ]
       },
       {
         "name": "Non-Veg",
         "items": [
-          { "name": "Creamy Chicken Bruschetta", "price": 259, "code": "31" },
-          { "name": "Chicken Bruschetta", "price": 249, "code": "32" }
+          {
+            "name": "Creamy Chicken Bruschetta",
+            "price": 259,
+            "code": "31",
+            "history": [],
+            "recipe": []
+          },
+          {
+            "name": "Chicken Bruschetta",
+            "price": 249,
+            "code": "32",
+            "history": [],
+            "recipe": []
+          }
         ]
       }
     ]
@@ -98,16 +551,46 @@
       {
         "name": "Veg",
         "items": [
-          { "name": "Veggie Burger", "price": 169, "code": "33" },
-          { "name": "Paneer Burger", "price": 189, "code": "34" },
-          { "name": "Tawa Paneer Burger", "price": 179, "code": "35" }
+          {
+            "name": "Veggie Burger",
+            "price": 169,
+            "code": "33",
+            "history": [],
+            "recipe": []
+          },
+          {
+            "name": "Paneer Burger",
+            "price": 189,
+            "code": "34",
+            "history": [],
+            "recipe": []
+          },
+          {
+            "name": "Tawa Paneer Burger",
+            "price": 179,
+            "code": "35",
+            "history": [],
+            "recipe": []
+          }
         ]
       },
       {
         "name": "Non-Veg",
         "items": [
-          { "name": "Chicken Burger", "price": 199, "code": "36" },
-          { "name": "Tawa Chicken Burger", "price": 209, "code": "37" }
+          {
+            "name": "Chicken Burger",
+            "price": 199,
+            "code": "36",
+            "history": [],
+            "recipe": []
+          },
+          {
+            "name": "Tawa Chicken Burger",
+            "price": 209,
+            "code": "37",
+            "history": [],
+            "recipe": []
+          }
         ]
       }
     ]
@@ -118,36 +601,186 @@
       {
         "name": "Veg",
         "items": [
-          { "name": "Cornflakes", "price": 119, "code": "38" },
-          { "name": "Chocos", "price": 119, "code": "39" },
-          { "name": "Poha", "price": 139, "code": "40" },
-          { "name": "Lemon Rice", "price": 149, "code": "41" },
-          { "name": "Porridge", "price": 179, "code": "42" },
-          { "name": "Butter Toast", "price": 99, "code": "43" },
-          { "name": "Jam Toast", "price": 119, "code": "44" },
-          { "name": "French Toast", "price": 129, "code": "45" },
-          { "name": "Chilly Cheese Toast", "price": 149, "code": "46" },
-          { "name": "Peanut Butter Toast", "price": 169, "code": "47" },
-          { "name": "Banana Nutella Toast", "price": 179, "code": "48" },
-          { "name": "Aloo Parantha", "price": 49, "code": "49" },
-          { "name": "Gobhi Parantha", "price": 59, "code": "50" },
-          { "name": "Paneer Parantha", "price": 69, "code": "51" },
-          { "name": "Mix Parantha", "price": 79, "code": "52" },
-          { "name": "Amul Butter", "price": 20, "code": "53" },
-          { "name": "Curd", "price": 30, "code": "54" }
+          {
+            "name": "Cornflakes",
+            "price": 119,
+            "code": "38",
+            "history": [],
+            "recipe": []
+          },
+          {
+            "name": "Chocos",
+            "price": 119,
+            "code": "39",
+            "history": [],
+            "recipe": []
+          },
+          {
+            "name": "Poha",
+            "price": 139,
+            "code": "40",
+            "history": [],
+            "recipe": []
+          },
+          {
+            "name": "Lemon Rice",
+            "price": 149,
+            "code": "41",
+            "history": [],
+            "recipe": []
+          },
+          {
+            "name": "Porridge",
+            "price": 179,
+            "code": "42",
+            "history": [],
+            "recipe": []
+          },
+          {
+            "name": "Butter Toast",
+            "price": 99,
+            "code": "43",
+            "history": [],
+            "recipe": []
+          },
+          {
+            "name": "Jam Toast",
+            "price": 119,
+            "code": "44",
+            "history": [],
+            "recipe": []
+          },
+          {
+            "name": "French Toast",
+            "price": 129,
+            "code": "45",
+            "history": [],
+            "recipe": []
+          },
+          {
+            "name": "Chilly Cheese Toast",
+            "price": 149,
+            "code": "46",
+            "history": [],
+            "recipe": []
+          },
+          {
+            "name": "Peanut Butter Toast",
+            "price": 169,
+            "code": "47",
+            "history": [],
+            "recipe": []
+          },
+          {
+            "name": "Banana Nutella Toast",
+            "price": 179,
+            "code": "48",
+            "history": [],
+            "recipe": []
+          },
+          {
+            "name": "Aloo Parantha",
+            "price": 49,
+            "code": "49",
+            "history": [],
+            "recipe": []
+          },
+          {
+            "name": "Gobhi Parantha",
+            "price": 59,
+            "code": "50",
+            "history": [],
+            "recipe": []
+          },
+          {
+            "name": "Paneer Parantha",
+            "price": 69,
+            "code": "51",
+            "history": [],
+            "recipe": []
+          },
+          {
+            "name": "Mix Parantha",
+            "price": 79,
+            "code": "52",
+            "history": [],
+            "recipe": []
+          },
+          {
+            "name": "Amul Butter",
+            "price": 20,
+            "code": "53",
+            "history": [],
+            "recipe": []
+          },
+          {
+            "name": "Curd",
+            "price": 30,
+            "code": "54",
+            "history": [],
+            "recipe": []
+          }
         ]
       },
       {
         "name": "Non-Veg",
         "items": [
-          { "name": "Plain Omelette", "price": 129, "code": "55" },
-          { "name": "Scrambled Egg", "price": 129, "code": "56" },
-          { "name": "Sunny Side Up", "price": 139, "code": "57" },
-          { "name": "Tomato Basil Omelette", "price": 139, "code": "58" },
-          { "name": "Mushroom Omelette", "price": 149, "code": "59" },
-          { "name": "Cheese Omelette", "price": 159, "code": "60" },
-          { "name": "Cheese & Corn Omelette", "price": 169, "code": "61" },
-          { "name": "Egg Parantha", "price": 89, "code": "62" }
+          {
+            "name": "Plain Omelette",
+            "price": 129,
+            "code": "55",
+            "history": [],
+            "recipe": []
+          },
+          {
+            "name": "Scrambled Egg",
+            "price": 129,
+            "code": "56",
+            "history": [],
+            "recipe": []
+          },
+          {
+            "name": "Sunny Side Up",
+            "price": 139,
+            "code": "57",
+            "history": [],
+            "recipe": []
+          },
+          {
+            "name": "Tomato Basil Omelette",
+            "price": 139,
+            "code": "58",
+            "history": [],
+            "recipe": []
+          },
+          {
+            "name": "Mushroom Omelette",
+            "price": 149,
+            "code": "59",
+            "history": [],
+            "recipe": []
+          },
+          {
+            "name": "Cheese Omelette",
+            "price": 159,
+            "code": "60",
+            "history": [],
+            "recipe": []
+          },
+          {
+            "name": "Cheese & Corn Omelette",
+            "price": 169,
+            "code": "61",
+            "history": [],
+            "recipe": []
+          },
+          {
+            "name": "Egg Parantha",
+            "price": 89,
+            "code": "62",
+            "history": [],
+            "recipe": []
+          }
         ]
       }
     ]
@@ -158,52 +791,341 @@
       {
         "name": "Hot",
         "items": [
-          { "name": "Lemon Tea", "price": 39, "code": "63" },
-          { "name": "Milk Tea", "price": 39, "code": "64" },
-          { "name": "Masala Tea", "price": 49, "code": "65" },
-          { "name": "Green Tea", "price": 59, "code": "66" },
-          { "name": "Rose Tea", "price": 59, "code": "67" },
-          { "name": "Ginger Lemon Honey", "price": 69, "code": "68" },
-          { "name": "Black Coffee", "price": 79, "code": "69", "recipe": [{ "inventoryItemId": "11", "quantity": 20 }] },
-          { "name": "Milk Coffee (hot)", "price": 89, "code": "70", "recipe": [{ "inventoryItemId": "11", "quantity": 20 }, { "inventoryItemId": "12", "quantity": 200 }] },
-          { "name": "Cafe Latte", "price": 129, "code": "71", "recipe": [{ "inventoryItemId": "11", "quantity": 20 }, { "inventoryItemId": "12", "quantity": 250 }] },
-          { "name": "Cappuccino Coffee", "price": 129, "code": "72", "recipe": [{ "inventoryItemId": "11", "quantity": 20 }, { "inventoryItemId": "12", "quantity": 250 }] },
-          { "name": "Hazelnut Coffee", "price": 139, "code": "73" },
-          { "name": "Caramel Coffee", "price": 139, "code": "74" },
-          { "name": "Plain Milk", "price": 79, "code": "75", "recipe": [{ "inventoryItemId": "12", "quantity": 250 }] },
-          { "name": "Bournvita Milk", "price": 99, "code": "76" },
-          { "name": "Hot Chocolate With Marshmallow", "price": 149, "code": "77" }
+          {
+            "name": "Lemon Tea",
+            "price": 39,
+            "code": "63",
+            "history": [],
+            "recipe": []
+          },
+          {
+            "name": "Milk Tea",
+            "price": 39,
+            "code": "64",
+            "history": [],
+            "recipe": [
+              {
+                "inventoryItemId": "1",
+                "quantity": 200,
+                "unit": "ml"
+              }
+            ]
+          },
+          {
+            "name": "Masala Tea",
+            "price": 49,
+            "code": "65",
+            "history": [],
+            "recipe": []
+          },
+          {
+            "name": "Green Tea",
+            "price": 59,
+            "code": "66",
+            "history": [],
+            "recipe": []
+          },
+          {
+            "name": "Rose Tea",
+            "price": 59,
+            "code": "67",
+            "history": [],
+            "recipe": []
+          },
+          {
+            "name": "Ginger Lemon Honey",
+            "price": 69,
+            "code": "68",
+            "history": [],
+            "recipe": []
+          },
+          {
+            "name": "Black Coffee",
+            "price": 79,
+            "code": "69",
+            "recipe": [
+              {
+                "inventoryItemId": "11",
+                "quantity": 20
+              }
+            ],
+            "history": []
+          },
+          {
+            "name": "Milk Coffee (hot)",
+            "price": 89,
+            "code": "70",
+            "recipe": [
+              {
+                "inventoryItemId": "11",
+                "quantity": 20
+              },
+              {
+                "inventoryItemId": "12",
+                "quantity": 200
+              }
+            ],
+            "history": []
+          },
+          {
+            "name": "Cafe Latte",
+            "price": 129,
+            "code": "71",
+            "recipe": [
+              {
+                "inventoryItemId": "11",
+                "quantity": 20
+              },
+              {
+                "inventoryItemId": "12",
+                "quantity": 250
+              }
+            ],
+            "history": []
+          },
+          {
+            "name": "Cappuccino Coffee",
+            "price": 129,
+            "code": "72",
+            "recipe": [
+              {
+                "inventoryItemId": "11",
+                "quantity": 20
+              },
+              {
+                "inventoryItemId": "12",
+                "quantity": 250
+              }
+            ],
+            "history": []
+          },
+          {
+            "name": "Hazelnut Coffee",
+            "price": 139,
+            "code": "73",
+            "history": [],
+            "recipe": []
+          },
+          {
+            "name": "Caramel Coffee",
+            "price": 139,
+            "code": "74",
+            "history": [],
+            "recipe": []
+          },
+          {
+            "name": "Plain Milk",
+            "price": 79,
+            "code": "75",
+            "recipe": [
+              {
+                "inventoryItemId": "12",
+                "quantity": 250
+              }
+            ],
+            "history": []
+          },
+          {
+            "name": "Bournvita Milk",
+            "price": 99,
+            "code": "76",
+            "history": [],
+            "recipe": []
+          },
+          {
+            "name": "Hot Chocolate With Marshmallow",
+            "price": 149,
+            "code": "77",
+            "history": [],
+            "recipe": []
+          }
         ]
       },
       {
         "name": "Cold",
         "items": [
-          { "name": "Cold Coffee", "price": 129, "code": "78" },
-          { "name": "Iced Hazelnut Coffee", "price": 159, "code": "79" },
-          { "name": "Creamy Iced Vanilla Coffee", "price": 169, "code": "80" },
-          { "name": "Banana Milkshake", "price": 119, "code": "81" },
-          { "name": "Vanilla Milkshake", "price": 149, "code": "82" },
-          { "name": "Chocolate Milkshake", "price": 160, "code": "83" },
-          { "name": "Oreo Milkshake", "price": 179, "code": "84" },
-          { "name": "Peanut Butter Milkshake", "price": 179, "code": "85" },
-          { "name": "Papaya Milkshake", "price": 179, "code": "86" },
-          { "name": "Nutella Milkshake", "price": 189, "code": "87" },
-          { "name": "Lemonade", "price": 69, "code": "88" },
-          { "name": "Fresh Lime Soda", "price": 89, "code": "89" },
-          { "name": "Lassi", "price": 89, "code": "90" },
-          { "name": "Lemon Mint Ice Tea", "price": 139, "code": "91" },
-          { "name": "Peach Ice Tea", "price": 149, "code": "92" },
-          { "name": "Orange Juice", "price": 149, "code": "93" },
-          { "name": "Watermelon Juice", "price": 149, "code": "94" },
-          { "name": "Banana Flax Smoothie", "price": 179, "code": "95" },
-          { "name": "Stress Buster Smoothie", "price": 199, "code": "96" },
-          { "name": "The Energizer (Detox)", "price": 169, "code": "97" },
-          { "name": "ABC (Detox)", "price": 179, "code": "98" },
-          { "name": "The Refresher (Detox)", "price": 189, "code": "99" },
-          { "name": "Water", "price": 20, "code": "100" },
-          { "name": "Soda", "price": 30, "code": "101" },
-          { "name": "Coke", "price": 40, "code": "102" },
-          { "name": "Sprite", "price": 40, "code": "103" }
+          {
+            "name": "Cold Coffee",
+            "price": 129,
+            "code": "78",
+            "history": [],
+            "recipe": []
+          },
+          {
+            "name": "Iced Hazelnut Coffee",
+            "price": 159,
+            "code": "79",
+            "history": [],
+            "recipe": []
+          },
+          {
+            "name": "Creamy Iced Vanilla Coffee",
+            "price": 169,
+            "code": "80",
+            "history": [],
+            "recipe": []
+          },
+          {
+            "name": "Banana Milkshake",
+            "price": 119,
+            "code": "81",
+            "history": [],
+            "recipe": []
+          },
+          {
+            "name": "Vanilla Milkshake",
+            "price": 149,
+            "code": "82",
+            "history": [],
+            "recipe": []
+          },
+          {
+            "name": "Chocolate Milkshake",
+            "price": 160,
+            "code": "83",
+            "history": [],
+            "recipe": []
+          },
+          {
+            "name": "Oreo Milkshake",
+            "price": 179,
+            "code": "84",
+            "history": [],
+            "recipe": []
+          },
+          {
+            "name": "Peanut Butter Milkshake",
+            "price": 179,
+            "code": "85",
+            "history": [],
+            "recipe": []
+          },
+          {
+            "name": "Papaya Milkshake",
+            "price": 179,
+            "code": "86",
+            "history": [],
+            "recipe": []
+          },
+          {
+            "name": "Nutella Milkshake",
+            "price": 189,
+            "code": "87",
+            "history": [],
+            "recipe": []
+          },
+          {
+            "name": "Lemonade",
+            "price": 69,
+            "code": "88",
+            "history": [],
+            "recipe": []
+          },
+          {
+            "name": "Fresh Lime Soda",
+            "price": 89,
+            "code": "89",
+            "history": [],
+            "recipe": []
+          },
+          {
+            "name": "Lassi",
+            "price": 89,
+            "code": "90",
+            "history": [],
+            "recipe": []
+          },
+          {
+            "name": "Lemon Mint Ice Tea",
+            "price": 139,
+            "code": "91",
+            "history": [],
+            "recipe": []
+          },
+          {
+            "name": "Peach Ice Tea",
+            "price": 149,
+            "code": "92",
+            "history": [],
+            "recipe": []
+          },
+          {
+            "name": "Orange Juice",
+            "price": 149,
+            "code": "93",
+            "history": [],
+            "recipe": []
+          },
+          {
+            "name": "Watermelon Juice",
+            "price": 149,
+            "code": "94",
+            "history": [],
+            "recipe": []
+          },
+          {
+            "name": "Banana Flax Smoothie",
+            "price": 179,
+            "code": "95",
+            "history": [],
+            "recipe": []
+          },
+          {
+            "name": "Stress Buster Smoothie",
+            "price": 199,
+            "code": "96",
+            "history": [],
+            "recipe": []
+          },
+          {
+            "name": "The Energizer (Detox)",
+            "price": 169,
+            "code": "97",
+            "history": [],
+            "recipe": []
+          },
+          {
+            "name": "ABC (Detox)",
+            "price": 179,
+            "code": "98",
+            "history": [],
+            "recipe": []
+          },
+          {
+            "name": "The Refresher (Detox)",
+            "price": 189,
+            "code": "99",
+            "history": [],
+            "recipe": []
+          },
+          {
+            "name": "Water",
+            "price": 20,
+            "code": "100",
+            "history": [],
+            "recipe": []
+          },
+          {
+            "name": "Soda",
+            "price": 30,
+            "code": "101",
+            "history": [],
+            "recipe": []
+          },
+          {
+            "name": "Coke",
+            "price": 40,
+            "code": "102",
+            "history": [],
+            "recipe": []
+          },
+          {
+            "name": "Sprite",
+            "price": 40,
+            "code": "103",
+            "history": [],
+            "recipe": []
+          }
         ]
       }
     ]
@@ -214,50 +1136,198 @@
       {
         "name": "Chinese - Veg",
         "items": [
-          { "name": "Veg Noodles", "price": 179, "code": "104" },
-          { "name": "Chilly Garlic Noodles", "price": 189, "code": "105" },
-          { "name": "Hakka Noodles", "price": 199, "code": "106" },
-          { "name": "Veg Fried Rice", "price": 189, "code": "107" },
-          { "name": "Schezwan Fried Rice", "price": 209, "code": "108" },
-          { "name": "Veg Manchurian", "price": 189, "code": "109" }
+          {
+            "name": "Veg Noodles",
+            "price": 179,
+            "code": "104",
+            "history": [],
+            "recipe": []
+          },
+          {
+            "name": "Chilly Garlic Noodles",
+            "price": 189,
+            "code": "105",
+            "history": [],
+            "recipe": []
+          },
+          {
+            "name": "Hakka Noodles",
+            "price": 199,
+            "code": "106",
+            "history": [],
+            "recipe": []
+          },
+          {
+            "name": "Veg Fried Rice",
+            "price": 189,
+            "code": "107",
+            "history": [],
+            "recipe": []
+          },
+          {
+            "name": "Schezwan Fried Rice",
+            "price": 209,
+            "code": "108",
+            "history": [],
+            "recipe": []
+          },
+          {
+            "name": "Veg Manchurian",
+            "price": 189,
+            "code": "109",
+            "history": [],
+            "recipe": []
+          }
         ]
       },
       {
         "name": "Chinese - Non-Veg",
         "items": [
-          { "name": "Egg Fried Rice", "price": 219, "code": "110" },
-          { "name": "Chicken Fried Rice", "price": 239, "code": "111" },
-          { "name": "Chicken Manchurian", "price": 229, "code": "112" }
+          {
+            "name": "Egg Fried Rice",
+            "price": 219,
+            "code": "110",
+            "history": [],
+            "recipe": []
+          },
+          {
+            "name": "Chicken Fried Rice",
+            "price": 239,
+            "code": "111",
+            "history": [],
+            "recipe": []
+          },
+          {
+            "name": "Chicken Manchurian",
+            "price": 229,
+            "code": "112",
+            "history": [],
+            "recipe": []
+          }
         ]
       },
       {
         "name": "Maggi",
         "items": [
-          { "name": "Plain Maggi", "price": 49, "code": "113" },
-          { "name": "Butter Maggi", "price": 79, "code": "114" },
-          { "name": "Vegetable Maggi", "price": 79, "code": "115" }
+          {
+            "name": "Plain Maggi",
+            "price": 49,
+            "code": "113",
+            "history": [],
+            "recipe": []
+          },
+          {
+            "name": "Butter Maggi",
+            "price": 79,
+            "code": "114",
+            "history": [],
+            "recipe": []
+          },
+          {
+            "name": "Vegetable Maggi",
+            "price": 79,
+            "code": "115",
+            "history": [],
+            "recipe": []
+          }
         ]
       },
       {
         "name": "Snacks",
         "items": [
-          { "name": "French Fries", "price": 139, "code": "116" },
-          { "name": "Peri Peri Fries", "price": 149, "code": "117" },
-          { "name": "Cheese Fries", "price": 159, "code": "118" },
-          { "name": "Peanut Masala", "price": 129, "code": "119" },
-          { "name": "Nachos With Salsa", "price": 179, "code": "120" },
-          { "name": "Cheese Nachos With Salsa", "price": 199, "code": "121" },
-          { "name": "Honey Chilly Potato", "price": 189, "code": "122" },
-          { "name": "Chilly Mushroom", "price": 199, "code": "123" },
-          { "name": "Chilly Paneer", "price": 239, "code": "124" },
-          { "name": "Chilly Chicken", "price": 269, "code": "125" },
-          { "name": "Lemon Chicken", "price": 289, "code": "126" },
-          { "name": "Crispy Fried Chicken", "price": 289, "code": "127" },
-          { "name": "Chicken Pakoda", "price": 189, "code": "128" }
+          {
+            "name": "French Fries",
+            "price": 139,
+            "code": "116",
+            "history": [],
+            "recipe": []
+          },
+          {
+            "name": "Peri Peri Fries",
+            "price": 149,
+            "code": "117",
+            "history": [],
+            "recipe": []
+          },
+          {
+            "name": "Cheese Fries",
+            "price": 159,
+            "code": "118",
+            "history": [],
+            "recipe": []
+          },
+          {
+            "name": "Peanut Masala",
+            "price": 129,
+            "code": "119",
+            "history": [],
+            "recipe": []
+          },
+          {
+            "name": "Nachos With Salsa",
+            "price": 179,
+            "code": "120",
+            "history": [],
+            "recipe": []
+          },
+          {
+            "name": "Cheese Nachos With Salsa",
+            "price": 199,
+            "code": "121",
+            "history": [],
+            "recipe": []
+          },
+          {
+            "name": "Honey Chilly Potato",
+            "price": 189,
+            "code": "122",
+            "history": [],
+            "recipe": []
+          },
+          {
+            "name": "Chilly Mushroom",
+            "price": 199,
+            "code": "123",
+            "history": [],
+            "recipe": []
+          },
+          {
+            "name": "Chilly Paneer",
+            "price": 239,
+            "code": "124",
+            "history": [],
+            "recipe": []
+          },
+          {
+            "name": "Chilly Chicken",
+            "price": 269,
+            "code": "125",
+            "history": [],
+            "recipe": []
+          },
+          {
+            "name": "Lemon Chicken",
+            "price": 289,
+            "code": "126",
+            "history": [],
+            "recipe": []
+          },
+          {
+            "name": "Crispy Fried Chicken",
+            "price": 289,
+            "code": "127",
+            "history": [],
+            "recipe": []
+          },
+          {
+            "name": "Chicken Pakoda",
+            "price": 189,
+            "code": "128",
+            "history": [],
+            "recipe": []
+          }
         ]
       }
     ]
   }
 ]
-
-    

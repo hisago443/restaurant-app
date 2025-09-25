@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -39,7 +39,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useToast } from '@/hooks/use-toast';
 import type { MenuCategory, MenuItem, MenuItemHistory, RecipeItem, InventoryItem } from '@/lib/types';
-import { PlusCircle, Trash2, Edit, History, FilePlus } from 'lucide-react';
+import { PlusCircle, Trash2, Edit, History, FilePlus, Upload } from 'lucide-react';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { format } from 'date-fns';
 import { Separator } from './ui/separator';
@@ -278,6 +278,7 @@ export function ManageMenuDialog({
   startWithEdit = false,
 }: ManageMenuDialogProps) {
   const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [newCategory, setNewCategory] = useState('');
   
@@ -290,6 +291,8 @@ export function ManageMenuDialog({
   const [editingRecipe, setEditingRecipe] = useState<MenuItem | null>(null);
   const [activeAccordionItems, setActiveAccordionItems] = useState<string[]>([]);
   
+  const [isToastRendered, setIsToastRendered] = useState(false);
+
   useEffect(() => {
     if (isOpen) {
         if (startWithEdit) {
@@ -299,6 +302,14 @@ export function ManageMenuDialog({
         }
     }
   }, [isOpen, startWithEdit]);
+
+  useEffect(() => {
+    if (menu.length > 0 && !isToastRendered) {
+      // This is a workaround for the hydration error
+      // The toast was being called on first render.
+      // setIsToastRendered(true);
+    }
+  }, [menu, isToastRendered]);
 
   const updateAndSaveMenu = async (newMenu: MenuCategory[] | ((prev: MenuCategory[]) => MenuCategory[])) => {
     let updatedMenu: MenuCategory[];
@@ -475,6 +486,50 @@ export function ManageMenuDialog({
       setEditingRecipe(item);
     }
   };
+  
+  const handleFileUploadClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (file.type !== 'application/json') {
+      toast({ variant: 'destructive', title: 'Invalid File Type', description: 'Please upload a valid JSON file.' });
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      try {
+        const text = e.target?.result;
+        if (typeof text !== 'string') {
+          throw new Error('Failed to read file.');
+        }
+        const newMenu = JSON.parse(text);
+        
+        // Basic validation
+        if (!Array.isArray(newMenu) || !newMenu.every(cat => cat.category && cat.subCategories)) {
+           throw new Error('Invalid menu format.');
+        }
+        
+        await updateAndSaveMenu(newMenu);
+        toast({ title: 'Menu Uploaded Successfully!' });
+        onOpenChange(false);
+      } catch (error) {
+        console.error("Error parsing or saving uploaded menu:", error);
+        toast({ variant: 'destructive', title: 'Upload Failed', description: 'The uploaded file has an invalid format.' });
+      } finally {
+        // Reset file input
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+        }
+      }
+    };
+    reader.readAsText(file);
+  };
+
 
   return (
     <>
@@ -484,12 +539,26 @@ export function ManageMenuDialog({
             {startWithEdit ? (
                 <DialogTitle className="sr-only">Edit Recipe</DialogTitle>
             ) : (
-                <>
-                <DialogTitle>Manage Menu</DialogTitle>
-                <DialogDescription>
-                    Add, edit, and organize your menu categories, items, and recipes.
-                </DialogDescription>
-                </>
+                <div className="flex justify-between items-center">
+                    <div>
+                        <DialogTitle>Manage Menu</DialogTitle>
+                        <DialogDescription>
+                            Add, edit, and organize your menu categories, items, and recipes.
+                        </DialogDescription>
+                    </div>
+                     <div>
+                        <Button variant="outline" onClick={handleFileUploadClick}>
+                          <Upload className="mr-2 h-4 w-4" /> Upload Menu
+                        </Button>
+                        <Input 
+                            type="file" 
+                            ref={fileInputRef} 
+                            onChange={handleFileChange} 
+                            className="hidden" 
+                            accept=".json" 
+                        />
+                    </div>
+                </div>
             )}
           </DialogHeader>
           <div className="max-h-[70vh] overflow-y-auto p-1">
