@@ -72,7 +72,7 @@ function AddOrEditItemDialog({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{existingItem ? 'Edit' : 'Add'} Inventory Item</DialogTitle>
