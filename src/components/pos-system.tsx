@@ -4,7 +4,7 @@
 
 import * as React from 'react';
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { addDoc, collection, doc, getDocs, setDoc, updateDoc } from 'firebase/firestore';
+import { addDoc, collection, doc, getDocs, setDoc, updateDoc, writeBatch, query, where, getDoc, increment } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -1142,7 +1142,7 @@ const processKOTs = useCallback((kotGroupsToProcess: { title: string; items: Ord
     setIsPaymentDialogOpen(true);
   };
   
-  const handlePaymentSuccess = () => {
+  const handlePaymentSuccess = async () => {
     const finalReceipt = receiptPreview || getLocalReceipt();
   
     if (!finalReceipt && orderItems.length > 0) {
@@ -1162,6 +1162,29 @@ const processKOTs = useCallback((kotGroupsToProcess: { title: string; items: Ord
       customerDetails: customerDetails,
     };
     addBill(billPayload);
+
+    // Update inventory
+    const batch = writeBatch(db);
+    const inventoryUpdates = new Map<string, number>();
+
+    orderItems.forEach(item => {
+        if (item.recipe) {
+            item.recipe.forEach(ingredient => {
+                const currentQuantity = inventoryUpdates.get(ingredient.inventoryItemId) || 0;
+                inventoryUpdates.set(ingredient.inventoryItemId, currentQuantity + (ingredient.quantity * item.quantity));
+            });
+        }
+    });
+
+    for (const [itemId, quantityToDecrement] of inventoryUpdates.entries()) {
+        const itemRef = doc(db, 'inventory', itemId);
+        batch.update(itemRef, { stock: increment(-quantityToDecrement) });
+    }
+
+    await batch.commit().catch(err => {
+        console.error("Error updating inventory:", err);
+        toast({ variant: 'destructive', title: 'Inventory Update Failed' });
+    });
   
     if (selectedTableId) {
       updateTableStatus([selectedTableId], 'Cleaning');
@@ -1424,7 +1447,7 @@ const processKOTs = useCallback((kotGroupsToProcess: { title: string; items: Ord
     let isDisabled = false;
 
     if (categoryStatus === 'out' || itemStatus === 'out') {
-        finalItemBg = 'bg-red-300 dark:bg-red-900/70 text-white dark:text-red-200';
+        finalItemBg = 'bg-red-300 dark:bg-red-900/70 text-red-900 dark:text-red-200';
         isDisabled = true;
     } else if (categoryStatus === 'low' || itemStatus === 'low') {
         finalItemBg = itemStatusColors.low.light;
@@ -1918,6 +1941,7 @@ const processKOTs = useCallback((kotGroupsToProcess: { title: string; items: Ord
     </div>
   );
 }
+
 
 
 

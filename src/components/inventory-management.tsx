@@ -3,7 +3,7 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import { db } from '@/lib/firebase';
-import { collection, doc, addDoc, updateDoc, deleteDoc, onSnapshot } from 'firebase/firestore';
+import { collection, doc, addDoc, updateDoc, deleteDoc, onSnapshot, writeBatch, getDocs } from 'firebase/firestore';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -79,6 +79,10 @@ function AddOrEditItemDialog({
           <DialogDescription>Manage your stock items.</DialogDescription>
         </DialogHeader>
         <div className="grid grid-cols-2 gap-4 py-4">
+          <div className="space-y-2 col-span-2">
+            <Label htmlFor="item-id">Item ID (Cannot be changed)</Label>
+            <Input id="item-id" value={existingItem?.id || 'Will be auto-generated'} disabled />
+          </div>
           <div className="space-y-2">
             <Label htmlFor="item-name">Item Name</Label>
             <Input id="item-name" value={name} onChange={e => setName(e.target.value)} placeholder="e.g., Coffee Beans" />
@@ -133,13 +137,50 @@ export default function InventoryManagement({ inventory }: InventoryManagementPr
       }
     } else {
       try {
-        await addDoc(collection(db, "inventory"), data);
-        toast({ title: "Item added successfully" });
+        const newItemId = data.name.toLowerCase().replace(/\s+/g, '-');
+        await setDoc(doc(db, "inventory", newItemId), data);
+        toast({ title: "Item added successfully", description: `ID: ${newItemId}` });
       } catch (error) {
         toast({ variant: "destructive", title: "Error adding item" });
       }
     }
   };
+  
+  const handleSeedIngredients = async () => {
+    const defaultIngredients = [
+        { id: 'pizza-base', name: 'Pizza Base (Medium)', category: 'Bakery', stock: 100, capacity: 200, unit: 'units' },
+        { id: 'pizza-base-large', name: 'Pizza Base (Large)', category: 'Bakery', stock: 50, capacity: 100, unit: 'units' },
+        { id: 'tomato-sauce', name: 'Tomato Sauce', category: 'Sauces', stock: 10, capacity: 20, unit: 'kg' },
+        { id: 'pesto-sauce', name: 'Pesto Sauce', category: 'Sauces', stock: 5, capacity: 10, unit: 'kg' },
+        { id: 'white-sauce', name: 'White Sauce', category: 'Sauces', stock: 5, capacity: 10, unit: 'kg' },
+        { id: 'cheese', name: 'Cheese (Amul)', category: 'Dairy', stock: 20, capacity: 50, unit: 'kg' },
+        { id: 'mixed-veggies', name: 'Mixed Veggies', category: 'Produce', stock: 5, capacity: 10, unit: 'kg' },
+        { id: 'paneer', name: 'Paneer', category: 'Dairy', stock: 10, capacity: 20, unit: 'kg' },
+        { id: 'chicken', name: 'Chicken', category: 'Meat', stock: 10, capacity: 20, unit: 'kg' },
+        { id: 'pasta', name: 'Pasta', category: 'Dry Goods', stock: 15, capacity: 30, unit: 'kg' },
+    ];
+    
+    try {
+        const batch = writeBatch(db);
+        const inventoryCollection = collection(db, "inventory");
+        const snapshot = await getDocs(inventoryCollection);
+        const existingIds = new Set(snapshot.docs.map(doc => doc.id));
+        
+        defaultIngredients.forEach(item => {
+            if (!existingIds.has(item.id)) {
+                const docRef = doc(db, "inventory", item.id);
+                batch.set(docRef, item);
+            }
+        });
+        
+        await batch.commit();
+        toast({ title: "Default ingredients seeded!", description: "Added common ingredients to your inventory." });
+
+    } catch (error) {
+        console.error("Error seeding ingredients:", error);
+        toast({ variant: 'destructive', title: "Seeding failed", description: "Could not add default ingredients." });
+    }
+};
 
   const handleDeleteItem = async (itemId: string) => {
     try {
@@ -201,6 +242,7 @@ export default function InventoryManagement({ inventory }: InventoryManagementPr
             <Button onClick={() => handleOpenDialog(null)}>
               <PlusCircle className="mr-2 h-4 w-4" /> Add Item
             </Button>
+             <Button onClick={handleSeedIngredients} variant="secondary">Seed Ingredients</Button>
           </div>
         </div>
       </CardHeader>
@@ -218,7 +260,7 @@ export default function InventoryManagement({ inventory }: InventoryManagementPr
               {filteredInventory.map((item) => (
                 <TableRow key={item.id}>
                   <TableCell className="font-medium">
-                      <div>{item.name}</div>
+                      <div>{item.name} <span className="text-xs text-muted-foreground font-mono">({item.id})</span></div>
                       <div className="text-xs text-muted-foreground">{item.category}</div>
                   </TableCell>
                   <TableCell>
@@ -250,6 +292,14 @@ export default function InventoryManagement({ inventory }: InventoryManagementPr
                   </TableCell>
                   <TableCell className="text-right">
                     <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleOpenDialog(item)}>
+                                    <Edit className="h-4 w-4" />
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent><p>Edit Item</p></TooltipContent>
+                        </Tooltip>
                       <Tooltip>
                           <TooltipTrigger asChild>
                               <Button variant="ghost" className="h-8" onClick={() => handleStockChange(item.id, item.capacity / 2)}>

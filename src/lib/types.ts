@@ -8,12 +8,18 @@ export interface MenuItemHistory {
   changedAt: Date;
 }
 
+export interface RecipeItem {
+  inventoryItemId: string; // Corresponds to the ID of an InventoryItem
+  quantity: number; // Amount of the ingredient used
+}
+
 export interface MenuItem {
   name: string;
   price: number;
   code: string;
   history?: MenuItemHistory[];
   category?: string; // Added to easily identify item's main category
+  recipe?: RecipeItem[]; // Recipe for this menu item
 }
 
 export interface MenuSubCategory {
