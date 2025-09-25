@@ -450,7 +450,7 @@ export function ManageMenuDialog({
             </DialogDescription>
           </DialogHeader>
           <div className="max-h-[70vh] overflow-y-auto p-1">
-            <Accordion type="multiple" defaultValue={startWithEdit ? ['edit-menu'] : ['add-category', 'add-item', 'edit-menu']} className="w-full space-y-4">
+            <Accordion type="multiple" defaultValue={startWithEdit ? ['edit-menu'] : []} className="w-full space-y-4">
               {/* Add Category */}
               <AccordionItem value="add-category">
                 <AccordionTrigger className="text-lg font-semibold">Add New Category</AccordionTrigger>
@@ -642,3 +642,5 @@ export function ManageMenuDialog({
     </>
   );
 }
+
+    
