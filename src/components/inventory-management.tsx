@@ -132,7 +132,6 @@ export default function InventoryManagement({ inventory, menu, setMenu }: Invent
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [isMenuManagerOpen, setIsMenuManagerOpen] = useState(false);
   
   const filteredInventory = useMemo(() => {
     if (!searchTerm) return inventory;
@@ -224,9 +223,6 @@ export default function InventoryManagement({ inventory, menu, setMenu }: Invent
             </div>
             <Button onClick={() => handleOpenDialog(null)}>
               <PlusCircle className="mr-2 h-4 w-4" /> Add Item
-            </Button>
-             <Button variant="secondary" onClick={() => setIsMenuManagerOpen(true)}>
-              <FilePlus className="mr-2 h-4 w-4" /> Edit Ingredients
             </Button>
           </div>
         </div>
@@ -343,15 +339,6 @@ export default function InventoryManagement({ inventory, menu, setMenu }: Invent
       onSave={handleSaveItem}
       existingItem={editingItem}
     />
-    
-      <ManageMenuDialog
-        isOpen={isMenuManagerOpen}
-        onOpenChange={setIsMenuManagerOpen}
-        menu={menu}
-        setMenu={setMenu}
-        inventory={inventory}
-        startWithEdit={true}
-      />
     </div>
   );
 }
