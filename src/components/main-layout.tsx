@@ -33,6 +33,14 @@ const PENDING_ORDER_KEY = -1;
 
 type NavPosition = 'top' | 'left';
 
+interface LegacyMenuCategory {
+    category: string;
+    subCategories: {
+        name: string;
+        items: OrderItem[];
+    }[];
+}
+
 export default function MainLayout() {
   const { toast } = useToast();
   const [currentDateTime, setCurrentDateTime] = useState<Date | null>(null);
@@ -58,10 +66,21 @@ export default function MainLayout() {
   const [showReservationTimeOnPOS, setShowReservationTimeOnPOS] = useState(false);
 
   useEffect(() => {
-    const structuredMenu = (menuData as MenuCategory[]).map(category => ({
-        ...category,
-        items: category.items.map(item => ({...item, history: item.history || [], recipe: item.recipe || []}))
-    }));
+    // This logic handles both the old format (with subCategories) and the new flat format.
+    const structuredMenu = (menuData as any[]).map(category => {
+      const items = (category.items || []).concat(
+        (category.subCategories || []).flatMap((sub: any) => sub.items || [])
+      );
+      
+      return {
+        category: category.category,
+        items: items.map((item: any) => ({
+          ...item,
+          history: item.history || [],
+          recipe: item.recipe || [],
+        })),
+      };
+    });
     setMenu(structuredMenu);
   }, []);
 
