@@ -11,13 +11,14 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { PlusCircle, Edit, Search, User, Phone, Mail, MapPin } from 'lucide-react';
-import type { Bill, Customer, PendingBill } from '@/lib/types';
+import { PlusCircle, Edit, Search, User, Phone, Mail, MapPin, Bookmark } from 'lucide-react';
+import type { Bill, Customer, PendingBill, Table as TableType } from '@/lib/types';
 import { format } from 'date-fns';
 import { Textarea } from './ui/textarea';
 
 interface CustomerManagementProps {
   billHistory: Bill[];
+  tables: TableType[];
 }
 
 function AddOrEditCustomerDialog({
@@ -96,7 +97,56 @@ function AddOrEditCustomerDialog({
   );
 }
 
-export default function CustomerManagement({ billHistory }: CustomerManagementProps) {
+function ReservationHistoryDialog({
+  isOpen,
+  onOpenChange,
+  customer,
+  reservations,
+}: {
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
+  customer: Customer;
+  reservations: TableType[];
+}) {
+  return (
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Reservation History for {customer.name}</DialogTitle>
+          <DialogDescription>A log of all past and current table reservations.</DialogDescription>
+        </DialogHeader>
+        <div className="max-h-80 overflow-y-auto py-4">
+          {reservations.length > 0 ? (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Table</TableHead>
+                  <TableHead>Time</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {reservations.map((table) => (
+                  <TableRow key={table.id}>
+                    <TableCell>Table {table.id}</TableCell>
+                    <TableCell>{table.reservationDetails?.time}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          ) : (
+            <p className="text-center text-muted-foreground pt-8">No reservation history found for this customer.</p>
+          )}
+        </div>
+        <DialogFooter>
+          <Button onClick={() => onOpenChange(false)}>Close</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+
+export default function CustomerManagement({ billHistory, tables }: CustomerManagementProps) {
   const { toast } = useToast();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [pendingBills, setPendingBills] = useState<PendingBill[]>([]);
@@ -104,8 +154,9 @@ export default function CustomerManagement({ billHistory }: CustomerManagementPr
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortField, setSortField] = useState<keyof Customer>('lastSeen');
+  const [sortField, setSortField] = useState<keyof Customer | 'reservations'>('lastSeen');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+  const [viewingReservationsFor, setViewingReservationsFor] = useState<Customer | null>(null);
 
   useEffect(() => {
     const unsubPending = onSnapshot(collection(db, 'pendingBills'), (snapshot) => {
@@ -197,6 +248,19 @@ export default function CustomerManagement({ billHistory }: CustomerManagementPr
     return Array.from(customerMap.values());
   }, [billHistory, pendingBills, dedicatedCustomers]);
 
+  const customerReservations = useMemo(() => {
+    const reservationMap = new Map<string, TableType[]>();
+    tables.forEach(table => {
+      if (table.status === 'Reserved' && table.reservationDetails?.mobile) {
+        const mobile = table.reservationDetails.mobile;
+        const customerReservations = reservationMap.get(mobile) || [];
+        customerReservations.push(table);
+        reservationMap.set(mobile, customerReservations);
+      }
+    });
+    return reservationMap;
+  }, [tables]);
+
 
   const sortedAndFilteredCustomers = useMemo(() => {
     let filtered = customers;
@@ -210,16 +274,23 @@ export default function CustomerManagement({ billHistory }: CustomerManagementPr
 
     return filtered.sort((a, b) => {
       let comparison = 0;
-      if (a[sortField] > b[sortField]) {
-        comparison = 1;
-      } else if (a[sortField] < b[sortField]) {
-        comparison = -1;
+      if (sortField === 'reservations') {
+        const aReservations = customerReservations.get(a.phone)?.length || 0;
+        const bReservations = customerReservations.get(b.phone)?.length || 0;
+        if (aReservations > bReservations) comparison = 1;
+        else if (aReservations < bReservations) comparison = -1;
+      } else if (sortField) {
+        if (a[sortField] > b[sortField]) {
+            comparison = 1;
+        } else if (a[sortField] < b[sortField]) {
+            comparison = -1;
+        }
       }
       return sortDirection === 'asc' ? comparison : -comparison;
     });
-  }, [customers, searchTerm, sortField, sortDirection]);
+  }, [customers, searchTerm, sortField, sortDirection, customerReservations]);
 
-  const handleSort = (field: keyof Customer) => {
+  const handleSort = (field: keyof Customer | 'reservations') => {
     if (sortField === field) {
       setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
     } else {
@@ -296,11 +367,14 @@ export default function CustomerManagement({ billHistory }: CustomerManagementPr
                   <TableHead onClick={() => handleSort('totalVisits')} className="cursor-pointer">Total Visits</TableHead>
                   <TableHead onClick={() => handleSort('totalSpent')} className="cursor-pointer">Total Spent</TableHead>
                   <TableHead onClick={() => handleSort('lastSeen')} className="cursor-pointer">Last Visit</TableHead>
+                  <TableHead onClick={() => handleSort('reservations')} className="cursor-pointer">Reservations</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {sortedAndFilteredCustomers.map(customer => (
+                {sortedAndFilteredCustomers.map(customer => {
+                  const reservations = customerReservations.get(customer.phone) || [];
+                  return (
                   <TableRow key={customer.id}>
                     <TableCell>
                       <div className="font-medium">{customer.name}</div>
@@ -309,13 +383,24 @@ export default function CustomerManagement({ billHistory }: CustomerManagementPr
                     <TableCell className="text-center font-semibold">{customer.totalVisits}</TableCell>
                     <TableCell className="font-mono font-semibold">Rs. {customer.totalSpent.toFixed(2)}</TableCell>
                     <TableCell>{format(customer.lastSeen, 'PPP')}</TableCell>
+                    <TableCell>
+                      <Button
+                        variant="link"
+                        disabled={reservations.length === 0}
+                        onClick={() => setViewingReservationsFor(customer)}
+                        className="flex items-center gap-2"
+                      >
+                        <Bookmark className="h-4 w-4" />
+                        {reservations.length}
+                      </Button>
+                    </TableCell>
                     <TableCell className="text-right">
                       <Button variant="ghost" size="icon" onClick={() => openDialog(customer)}>
                         <Edit className="h-4 w-4" />
                       </Button>
                     </TableCell>
                   </TableRow>
-                ))}
+                )})}
               </TableBody>
             </Table>
           </div>
@@ -328,8 +413,14 @@ export default function CustomerManagement({ billHistory }: CustomerManagementPr
         onSave={handleSaveCustomer}
         existingCustomer={editingCustomer}
       />
+      {viewingReservationsFor && (
+        <ReservationHistoryDialog
+          isOpen={!!viewingReservationsFor}
+          onOpenChange={(open) => !open && setViewingReservationsFor(null)}
+          customer={viewingReservationsFor}
+          reservations={customerReservations.get(viewingReservationsFor.phone) || []}
+        />
+      )}
     </div>
   );
 }
-
-    

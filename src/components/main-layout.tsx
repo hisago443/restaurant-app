@@ -611,18 +611,18 @@ export default function MainLayout({ initialMenu }: MainLayoutProps) {
               </div>
             </TabsContent>
              <TabsContent value="customers" className="m-0 p-0">
-              <CustomerManagement billHistory={billHistory} />
-            </TabsContent>
-            <TabsContent value="staff" className="m-0 p-0">
-              <StaffManagement 
-                employees={employees} 
-              />
+              <CustomerManagement billHistory={billHistory} tables={tables} />
             </TabsContent>
             <TabsContent value="expenses" className="m-0 p-0">
               <ExpensesTracker 
                 expenses={expenses} 
                 customerCreditLimit={customerCreditLimit}
                 vendorCreditLimit={vendorCreditLimit}
+              />
+            </TabsContent>
+            <TabsContent value="staff" className="m-0 p-0">
+              <StaffManagement 
+                employees={employees} 
               />
             </TabsContent>
             <TabsContent value="admin" className="m-0 p-0">
