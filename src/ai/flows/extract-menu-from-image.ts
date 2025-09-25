@@ -64,8 +64,8 @@ const extractMenuFromImageFlow = ai.defineFlow(
             ...sub,
             items: sub.items.map(item => ({
                 ...item,
-                recipe: [],
-                history: [],
+                recipe: item.recipe || [],
+                history: item.history || [],
             }))
         }))
     }));
