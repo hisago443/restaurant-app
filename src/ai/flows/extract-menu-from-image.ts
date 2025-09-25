@@ -22,7 +22,7 @@ const ExtractMenuInputSchema = z.object({
 export type ExtractMenuInput = z.infer<typeof ExtractMenuInputSchema>;
 
 const ExtractMenuOutputSchema = z.object({
-  menu: z.array(MenuCategorySchema).describe("The extracted menu, structured into categories and sub-categories."),
+  menu: z.array(MenuCategorySchema).describe("The extracted menu, structured into categories and items."),
 });
 export type ExtractMenuOutput = z.infer<typeof ExtractMenuOutputSchema>;
 
@@ -34,13 +34,12 @@ const prompt = ai.definePrompt({
   name: 'extractMenuFromImagePrompt',
   input: { schema: ExtractMenuInputSchema },
   output: { schema: ExtractMenuOutputSchema },
-  prompt: `You are an expert menu digitizer. Analyze the provided menu image and extract all categories, sub-categories, items, and prices.
+  prompt: `You are an expert menu digitizer. Analyze the provided menu image and extract all categories, items, and prices.
   
 - Identify main sections of the menu as 'categories'.
-- Within each category, look for sections like 'Veg' or 'Non-Veg', or 'Hot' and 'Cold'. These should become 'subCategories'. If no such distinction exists, create a default 'General' sub-category.
 - Extract each menu 'item' with its 'name' and 'price'. The price must be a number.
 - Assign a 'code' for each item, starting from "1" and incrementing for each item across the entire menu.
-- Your final output must be a valid JSON object that strictly follows the provided output schema.
+- Your final output must be a valid JSON object that strictly follows the provided output schema. Do not create sub-categories.
 
 Image of the menu to process:
 {{media url=imageDataUri}}`,
@@ -60,13 +59,10 @@ const extractMenuFromImageFlow = ai.defineFlow(
     // Ensure every item has an empty recipe and history array
     const menuWithDefaults = output.menu.map(category => ({
         ...category,
-        subCategories: category.subCategories.map(sub => ({
-            ...sub,
-            items: sub.items.map(item => ({
-                ...item,
-                recipe: item.recipe || [],
-                history: item.history || [],
-            }))
+        items: category.items.map(item => ({
+            ...item,
+            recipe: item.recipe || [],
+            history: item.history || [],
         }))
     }));
 

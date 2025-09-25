@@ -30,7 +30,6 @@ import { CalendarIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Separator } from './ui/separator';
 import StaffManagement from './staff-management';
-import menuData from '@/data/menu.json';
 import { RadioGroup, RadioGroupItem } from './ui/radio-group';
 import { Checkbox } from './ui/checkbox';
 
@@ -49,6 +48,7 @@ interface AdminDashboardProps {
   onRerunSetup: () => void;
   kotPreference: KOTPreference;
   setKotPreference: (preference: KOTPreference) => void;
+  menu: MenuCategory[];
 }
 
 export default function AdminDashboard({ 
@@ -63,6 +63,7 @@ export default function AdminDashboard({
     onRerunSetup,
     kotPreference,
     setKotPreference,
+    menu,
 }: AdminDashboardProps) {
   const { toast } = useToast();
   const [isReportLoading, setIsReportLoading] = useState(false);
@@ -76,7 +77,7 @@ export default function AdminDashboard({
   const [isEditEmployeeDialogOpen, setIsEditEmployeeDialogOpen] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
 
-  const menuCategories = useMemo(() => (menuData as MenuCategory[]).map(cat => cat.category), []);
+  const menuCategories = useMemo(() => menu.map(cat => cat.category), [menu]);
 
   useEffect(() => {
     const unsubVendors = onSnapshot(collection(db, "vendors"), (snapshot) => {
@@ -426,7 +427,7 @@ export default function AdminDashboard({
                             <DialogHeader>
                                 <DialogTitle>Inventory Management</DialogTitle>
                             </DialogHeader>
-                            <InventoryManagement inventory={inventory} />
+                            <InventoryManagement inventory={inventory} menu={menu} setMenu={() => {}} />
                         </DialogContent>
                     </Dialog>
                     <Button variant="outline" size="lg" className="h-20 text-base flex-col gap-2" onClick={handleExportCSV}>

@@ -9,7 +9,7 @@ import { isSameDay } from 'date-fns';
 import { collection, onSnapshot, doc, setDoc, getDocs, writeBatch, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
-import type { Table, TableStatus, Order, Bill, Employee, OrderItem, Expense, InventoryItem, KOTPreference, OrderType } from '@/lib/types';
+import type { Table, TableStatus, Order, Bill, Employee, OrderItem, Expense, InventoryItem, KOTPreference, OrderType, MenuCategory } from '@/lib/types';
 import { Logo } from "./icons";
 import PosSystem from './pos-system';
 import TableManagement from './table-management';
@@ -27,6 +27,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/t
 import { cn } from '@/lib/utils';
 import SetupWizard from './setup-wizard';
 import { ThemeToggle } from './theme-toggle';
+import menuData from '@/data/menu.json';
 
 const PENDING_ORDER_KEY = -1;
 
@@ -41,6 +42,7 @@ export default function MainLayout() {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
+  const [menu, setMenu] = useState<MenuCategory[]>([]);
   const [activeOrder, setActiveOrder] = useState<Order | null>(null);
   const [currentOrderItems, setCurrentOrderItems] = useState<OrderItem[]>([]);
   const [activeTab, setActiveTab] = useState('pos');
@@ -54,6 +56,14 @@ export default function MainLayout() {
   const [kotPreference, setKotPreference] = useState<KOTPreference>({ type: 'single', categories: [] });
   const [showTableDetailsOnPOS, setShowTableDetailsOnPOS] = useState(false);
   const [showReservationTimeOnPOS, setShowReservationTimeOnPOS] = useState(false);
+
+  useEffect(() => {
+    const structuredMenu = (menuData as MenuCategory[]).map(category => ({
+        ...category,
+        items: category.items.map(item => ({...item, history: item.history || [], recipe: item.recipe || []}))
+    }));
+    setMenu(structuredMenu);
+  }, []);
 
   useEffect(() => {
     try {
@@ -564,6 +574,8 @@ export default function MainLayout() {
                   showTableDetailsOnPOS={showTableDetailsOnPOS}
                   showReservationTimeOnPOS={showReservationTimeOnPOS}
                   inventory={inventory}
+                  menu={menu}
+                  setMenu={setMenu}
                 />
             </TabsContent>
             <TabsContent value="tables" className="m-0 p-0">
@@ -600,7 +612,7 @@ export default function MainLayout() {
                   </div>
                    <Separator orientation="vertical" />
                   <div className="h-full">
-                      <InventoryManagement inventory={inventory} />
+                      <InventoryManagement inventory={inventory} menu={menu} setMenu={setMenu} />
                   </div>
               </div>
             </TabsContent>
@@ -632,6 +644,7 @@ export default function MainLayout() {
                 onRerunSetup={() => setShowSetupWizard(true)}
                 kotPreference={kotPreference}
                 setKotPreference={handleKotPreferenceChange}
+                menu={menu}
               />
             </TabsContent>
           </main>

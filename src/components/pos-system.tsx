@@ -25,7 +25,6 @@ import { AddItemDialog } from './add-item-dialog';
 import { ManageMenuDialog } from './manage-menu-dialog';
 
 import type { MenuCategory, MenuItem, OrderItem, Table, Order, Bill, TableStatus, KOTPreference, OrderType, CustomerDetails, InventoryItem } from '@/lib/types';
-import menuData from '@/data/menu.json';
 import { generateReceipt, type GenerateReceiptInput } from '@/ai/flows/dynamic-receipt-discount-reasoning';
 import { PaymentDialog } from './payment-dialog';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog';
@@ -121,6 +120,8 @@ interface PosSystemProps {
   showTableDetailsOnPOS: boolean;
   showReservationTimeOnPOS: boolean;
   inventory: InventoryItem[];
+  menu: MenuCategory[];
+  setMenu: (menu: MenuCategory[]) => void;
 }
 
 const ItemTypes = {
@@ -586,9 +587,10 @@ export default function PosSystem({
     showTableDetailsOnPOS,
     showReservationTimeOnPOS,
     inventory,
+    menu,
+    setMenu,
 }: PosSystemProps) {
   const [searchTerm, setSearchTerm] = useState('');
-  const [menu, setMenu] = useState<MenuCategory[]>([]);
   const [easyMode, setEasyMode] = useState(false);
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
   const [receiptPreview, setReceiptPreview] = useState('');
@@ -760,20 +762,8 @@ export default function PosSystem({
     setSelectedOrderType('Home-Delivery');
   }
 
-  useEffect(() => {
-    const structuredMenu = (menuData as MenuCategory[]).map(category => ({
-        ...category,
-        subCategories: category.subCategories.map(sub => ({
-            ...sub,
-            items: sub.items.map(item => ({...item, history: item.history || [], recipe: item.recipe || []}))
-        }))
-    }));
-    setMenu(structuredMenu);
-  }, []);
-  
-
   const allMenuItems: MenuItem[] = useMemo(() => 
-    menu.flatMap(cat => cat.subCategories.flatMap(sub => sub.items)),
+    menu.flatMap(cat => cat.items),
     [menu]
   );
   
@@ -784,22 +774,16 @@ export default function PosSystem({
         const lowercasedTerm = searchTerm.toLowerCase();
         menuToFilter = menuToFilter.map(category => ({
             ...category,
-            subCategories: category.subCategories.map(subCategory => ({
-                ...subCategory,
-                items: subCategory.items.filter(item => item.name.toLowerCase().includes(lowercasedTerm) || item.code.toLowerCase().includes(lowercasedTerm))
-            })).filter(subCategory => subCategory.items.length > 0)
-        })).filter(category => category.subCategories.length > 0);
+            items: category.items.filter(item => item.name.toLowerCase().includes(lowercasedTerm) || item.code.toLowerCase().includes(lowercasedTerm))
+        })).filter(category => category.items.length > 0);
     }
 
-    if (vegFilter !== 'All') {
-        menuToFilter = menuToFilter.map(category => ({
-            ...category,
-            subCategories: category.subCategories.filter(subCategory => subCategory.name === vegFilter)
-        })).filter(category => category.subCategories.length > 0);
-    }
+    // This part is tricky without sub-categories for Veg/Non-Veg
+    // Assuming you have a way to determine this on the item itself if needed
+    // For now, removing the veg/non-veg filter logic as sub-categories are gone
 
     return menuToFilter;
-  }, [searchTerm, vegFilter, menu]);
+  }, [searchTerm, menu]);
 
   useEffect(() => {
     if (searchTerm && viewMode === 'accordion') {
@@ -830,7 +814,7 @@ export default function PosSystem({
       console.error("Could not parse 'categoryColors' from localStorage", e);
       setCategoryColors(initialColors);
     }
-  }, []);
+  }, [setCategoryColors]);
 
   useEffect(() => {
     if (Object.keys(categoryColors).length > 0) {
@@ -911,7 +895,7 @@ export default function PosSystem({
         } else {
             const itemWithCategory = {
                 ...item,
-                category: menu.find(c => c.subCategories.some(sc => sc.items.some(i => i.name === item.name)))?.category
+                category: menu.find(c => c.items.some(i => i.name === item.name))?.category
             };
             return [...prevItems, { ...itemWithCategory, quantity }];
         }
@@ -1446,9 +1430,7 @@ const processKOTs = useCallback((kotGroupsToProcess: { title: string; items: Ord
 };
 
 
-  const renderMenuItem = (item: MenuItem, subCategoryName: string, categoryName: string) => {
-    const isNonVeg = subCategoryName.toLowerCase().includes('non-veg');
-    
+  const renderMenuItem = (item: MenuItem, categoryName: string) => {
     const itemStatus = menuItemStatus[item.name];
     const categoryStatus = menuCategoryStatus[categoryName];
     
@@ -1479,10 +1461,7 @@ const processKOTs = useCallback((kotGroupsToProcess: { title: string; items: Ord
         <CardContent className={cn("p-3 flex flex-col justify-between flex-grow")}>
           <div>
             <div className="flex justify-between items-start mb-1">
-              <div className="flex items-center gap-2">
-                  <span className={cn('h-3 w-3 rounded-full border border-black/30', isNonVeg ? 'bg-red-500' : 'bg-green-500')}></span>
-                  <span className="font-semibold pr-2">{item.name}</span>
-              </div>
+              <span className="font-semibold pr-2">{item.name}</span>
               <span className="font-mono text-right whitespace-nowrap">₹{item.price.toFixed(2)}</span>
             </div>
           </div>
@@ -1601,18 +1580,10 @@ const processKOTs = useCallback((kotGroupsToProcess: { title: string; items: Ord
               </TabsList>
             </div>
             {filteredMenu.map(category => {
-              const status = menuCategoryStatus[category.category];
               return (
               <TabsContent key={category.category} value={category.category} className={cn("m-0 rounded-lg p-2 min-h-[200px] bg-background")}>
-                <div className="space-y-4">
-                  {category.subCategories.map((subCategory) => (
-                    <div key={subCategory.name}>
-                      <h3 className="text-md font-semibold mb-2 text-muted-foreground pl-2">{subCategory.name}</h3>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-                        {subCategory.items.map((item) => renderMenuItem(item, subCategory.name, category.category))}
-                      </div>
-                    </div>
-                  ))}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                  {category.items.map((item) => renderMenuItem(item, category.category))}
                 </div>
               </TabsContent>
             )})}
@@ -1658,14 +1629,9 @@ const processKOTs = useCallback((kotGroupsToProcess: { title: string; items: Ord
                         </div>
                     </AccordionTrigger>
                     <AccordionContent className={cn("p-2 space-y-2", "bg-background")}>
-                        {category.subCategories.map(subCategory => (
-                            <div key={subCategory.name}>
-                                <h3 className="text-md font-semibold mb-2 text-muted-foreground pl-2">{subCategory.name}</h3>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-                                    {subCategory.items.map(item => renderMenuItem(item, subCategory.name, category.category))}
-                                </div>
-                            </div>
-                        ))}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                            {category.items.map(item => renderMenuItem(item, category.category))}
+                        </div>
                     </AccordionContent>
                 </AccordionItem>
             )})}

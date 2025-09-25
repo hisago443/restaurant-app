@@ -15,16 +15,16 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Label } from '@/components/ui/label';
 import { PlusCircle, Edit, Trash2, Plus, Minus, Server, Search, FilePlus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import type { InventoryItem } from '@/lib/types';
+import type { InventoryItem, MenuCategory } from '@/lib/types';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { ManageMenuDialog } from './manage-menu-dialog';
-import menuData from '@/data/menu.json';
-import type { MenuCategory } from '@/lib/types';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface InventoryManagementProps {
   inventory: InventoryItem[];
+  menu: MenuCategory[];
+  setMenu: (menu: MenuCategory[]) => void;
 }
 
 function AddOrEditItemDialog({
@@ -127,25 +127,13 @@ function AddOrEditItemDialog({
   );
 }
 
-export default function InventoryManagement({ inventory }: InventoryManagementProps) {
+export default function InventoryManagement({ inventory, menu, setMenu }: InventoryManagementProps) {
   const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [isMenuManagerOpen, setIsMenuManagerOpen] = useState(false);
-  const [menu, setMenu] = useState<MenuCategory[]>([]);
   
-  useEffect(() => {
-    const structuredMenu = (menuData as MenuCategory[]).map(category => ({
-        ...category,
-        subCategories: category.subCategories.map(sub => ({
-            ...sub,
-            items: sub.items.map(item => ({...item, history: item.history || [], recipe: item.recipe || []}))
-        }))
-    }));
-    setMenu(structuredMenu);
-  }, []);
-
   const filteredInventory = useMemo(() => {
     if (!searchTerm) return inventory;
     return inventory.filter(item => 
