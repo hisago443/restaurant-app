@@ -455,6 +455,19 @@
           }
         ],
         "history": []
+      },
+      {
+        "name": "CFXVBCVB",
+        "price": 45325,
+        "code": "132",
+        "history": [],
+        "ingredients": [
+          {
+            "inventoryItemId": "2",
+            "quantity": 200,
+            "unit": "g"
+          }
+        ]
       }
     ]
   },

@@ -1291,7 +1291,9 @@ const processKOTs = useCallback((kotGroupsToProcess: { title: string; items: Ord
   const lowStockItems = useMemo(() => {
     const items = new Set<MenuItem>();
     allMenuItems.forEach(item => {
-      if (menuItemStatus[item.name] === 'low' || menuCategoryStatus[item.category!] === 'low') {
+      const itemIsLow = menuItemStatus[item.name] === 'low';
+      const categoryIsLow = item.category ? menuCategoryStatus[item.category] === 'low' : false;
+      if (itemIsLow || categoryIsLow) {
         items.add(item);
       }
     });
@@ -1301,7 +1303,9 @@ const processKOTs = useCallback((kotGroupsToProcess: { title: string; items: Ord
   const outOfStockItems = useMemo(() => {
     const items = new Set<MenuItem>();
     allMenuItems.forEach(item => {
-      if (menuItemStatus[item.name] === 'out' || menuCategoryStatus[item.category!] === 'out') {
+      const itemIsOut = menuItemStatus[item.name] === 'out';
+      const categoryIsOut = item.category ? menuCategoryStatus[item.category] === 'out' : false;
+      if (itemIsOut || categoryIsOut) {
         items.add(item);
       }
     });
@@ -1549,8 +1553,9 @@ const processKOTs = useCallback((kotGroupsToProcess: { title: string; items: Ord
 
   const renderMenuContent = () => {
     if (viewMode === 'grid') {
+        const tabsKey = searchTerm ? 'search-results' : 'all-items';
         return (
-          <Tabs defaultValue={filteredMenu.length > 0 ? filteredMenu[0].category : undefined} className="w-full">
+          <Tabs defaultValue={filteredMenu.length > 0 ? filteredMenu[0].category : undefined} key={tabsKey} className="w-full">
             <div className="flex justify-center">
               <TabsList className="mb-4 flex-wrap h-auto bg-transparent border-b rounded-none p-0">
                 {filteredMenu.map(category => {
