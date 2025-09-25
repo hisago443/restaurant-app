@@ -47,7 +47,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { PlusCircle, Edit, Trash2, CalendarIcon, Building, Repeat, List, ChevronsUpDown, Check, AlertTriangle, HandCoins, Landmark, Settings, ChevronDown } from 'lucide-react';
 import { Calendar } from "@/components/ui/calendar";
 import { format, isSameDay, isSameMonth, isSameYear, startOfDay, isAfter } from 'date-fns';
-import type { Expense, Vendor, PendingBill, PendingBillTransaction } from '@/lib/types';
+import type { Expense, Vendor, PendingBill, PendingBillTransaction, Customer } from '@/lib/types';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
@@ -474,6 +474,7 @@ export default function ExpensesTracker({ expenses, customerCreditLimit, vendorC
   const { toast } = useToast();
   const [vendors, setVendors] = useState<Vendor[]>([]);
   const [pendingBills, setPendingBills] = useState<PendingBill[]>([]);
+  const [customers, setCustomers] = useState<Customer[]>([]);
   const [isVendorAddDialogOpen, setIsVendorAddDialogOpen] = useState(false);
   const [isVendorManageDialogOpen, setIsVendorManageDialogOpen] = useState(false);
   const [editingVendor, setEditingVendor] = useState<Vendor | null>(null);
@@ -504,10 +505,16 @@ export default function ExpensesTracker({ expenses, customerCreditLimit, vendorC
       });
       setPendingBills(bills);
     });
+    
+    const unsubCustomers = onSnapshot(collection(db, 'customers'), (snapshot) => {
+        const custs = snapshot.docs.map(doc => doc.data() as Customer);
+        setCustomers(custs);
+    });
 
     return () => {
         unsubVendors();
         unsubPendingBills();
+        unsubCustomers();
     };
   }, []);
 
@@ -727,6 +734,7 @@ export default function ExpensesTracker({ expenses, customerCreditLimit, vendorC
           onClearAll={(billId) => handleClearAllPendingBillsForPerson(billId)}
           onSettleTransaction={(billId, txId, amount) => handleSettleTransaction(billId, txId, amount)}
           totalLimit={customerCreditLimit}
+          allNames={customers.map(c => c.name)}
         />
         <PendingBillsCard
           title="To Pay to Vendors"
@@ -751,8 +759,8 @@ export default function ExpensesTracker({ expenses, customerCreditLimit, vendorC
                 <CardDescription>Record a new business expense.</CardDescription>
               </div>
               <div className="flex gap-2">
-                  <Button onClick={() => openAddVendorDialog(null)}><Building className="mr-2 h-4 w-4" /> Add Vendor</Button>
-                  <Button variant="secondary" onClick={() => setIsVendorManageDialogOpen(true)}><List className="mr-2 h-4 w-4" /> Manage Vendors</Button>
+                  <Button onClick={() => openAddVendorDialog(null)} variant="default"><Building className="mr-2 h-4 w-4" /> Add Vendor</Button>
+                  <Button variant="default" onClick={() => setIsVendorManageDialogOpen(true)}><List className="mr-2 h-4 w-4" /> Manage Vendors</Button>
               </div>
             </div>
           </CardHeader>

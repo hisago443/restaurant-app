@@ -100,6 +100,7 @@ export default function CustomerManagement({ billHistory }: CustomerManagementPr
   const { toast } = useToast();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [pendingBills, setPendingBills] = useState<PendingBill[]>([]);
+  const [dedicatedCustomers, setDedicatedCustomers] = useState<Customer[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -107,7 +108,7 @@ export default function CustomerManagement({ billHistory }: CustomerManagementPr
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
 
   useEffect(() => {
-    const unsub = onSnapshot(collection(db, 'pendingBills'), (snapshot) => {
+    const unsubPending = onSnapshot(collection(db, 'pendingBills'), (snapshot) => {
       const bills = snapshot.docs.map(doc => {
         const data = doc.data();
         return {
@@ -118,13 +119,35 @@ export default function CustomerManagement({ billHistory }: CustomerManagementPr
       });
       setPendingBills(bills.filter(b => b.type === 'customer'));
     });
-    return () => unsub();
+    
+    const unsubCustomers = onSnapshot(collection(db, 'customers'), (snapshot) => {
+        const custs = snapshot.docs.map(doc => {
+            const data = doc.data();
+            return {
+                ...data,
+                id: doc.id,
+                firstSeen: data.firstSeen.toDate(),
+                lastSeen: data.lastSeen.toDate(),
+            } as Customer;
+        });
+        setDedicatedCustomers(custs);
+    });
+
+    return () => {
+      unsubPending();
+      unsubCustomers();
+    };
   }, []);
 
   const aggregatedCustomers = useMemo(() => {
     const customerMap = new Map<string, Customer>();
 
-    // Process bills
+    // 1. Add dedicated customers first
+    dedicatedCustomers.forEach(cust => {
+        customerMap.set(cust.id, { ...cust });
+    });
+
+    // 2. Process bills and update or add customers
     billHistory.forEach(bill => {
       if (!bill.customerDetails || !bill.customerDetails.phone) return;
 
@@ -152,7 +175,7 @@ export default function CustomerManagement({ billHistory }: CustomerManagementPr
       }
     });
 
-    // Process pending bills for customers not in bills
+    // 3. Process pending bills for customers not in bills or dedicated list yet
     pendingBills.forEach(pBill => {
       if (pBill.mobile && !customerMap.has(pBill.mobile)) {
         const firstTxDate = pBill.transactions.length > 0 ? pBill.transactions[0].date : new Date();
@@ -164,7 +187,7 @@ export default function CustomerManagement({ billHistory }: CustomerManagementPr
           address: '',
           firstSeen: firstTxDate,
           lastSeen: firstTxDate,
-          totalVisits: 1, 
+          totalVisits: 1, // At least one interaction
           totalSpent: 0,
         });
       }
@@ -172,7 +195,7 @@ export default function CustomerManagement({ billHistory }: CustomerManagementPr
     
     setCustomers(Array.from(customerMap.values()));
     return Array.from(customerMap.values());
-  }, [billHistory, pendingBills]);
+  }, [billHistory, pendingBills, dedicatedCustomers]);
 
 
   const sortedAndFilteredCustomers = useMemo(() => {
@@ -205,10 +228,33 @@ export default function CustomerManagement({ billHistory }: CustomerManagementPr
     }
   };
 
-  const handleSaveCustomer = async (customer: Omit<Customer, 'id'| 'firstSeen' | 'lastSeen' | 'totalVisits' | 'totalSpent'> & {id?: string}) => {
-    // This is a placeholder for saving to a dedicated `customers` collection in the future.
-    // For now, we are aggregating from bills, so direct editing is not implemented.
-    toast({ title: 'Feature in Development', description: 'Customer profiles are currently aggregated from bills and cannot be edited directly yet.' });
+  const handleSaveCustomer = async (customerData: Omit<Customer, 'id'| 'firstSeen' | 'lastSeen' | 'totalVisits' | 'totalSpent'> & {id?: string}) => {
+    const { id, phone, ...data } = customerData;
+    const customerId = id || phone; // Use phone as ID if new
+
+    if (!customerId) {
+        toast({ variant: 'destructive', title: 'Phone number is required.' });
+        return;
+    }
+    
+    const customerRef = doc(db, 'customers', customerId);
+
+    try {
+        await setDoc(customerRef, {
+            ...data,
+            id: customerId,
+            phone: customerId,
+            firstSeen: new Date(),
+            lastSeen: new Date(),
+            totalVisits: 0,
+            totalSpent: 0,
+        }, { merge: true }); // Use merge to avoid overwriting visit data if it exists
+
+        toast({ title: 'Customer Saved', description: `${data.name} has been saved.` });
+    } catch (error) {
+        console.error("Error saving customer:", error);
+        toast({ variant: 'destructive', title: 'Save Failed', description: 'Could not save customer details.' });
+    }
   };
   
   const openDialog = (customer: Customer | null) => {
