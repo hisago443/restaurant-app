@@ -774,7 +774,7 @@ export default function ExpensesTracker({ expenses, customerCreditLimit, vendorC
               </div>
               <div className="flex gap-2">
                   <Button onClick={() => openAddVendorDialog(null)} variant="default"><Building className="mr-2 h-4 w-4" /> Add Vendor</Button>
-                  <Button variant="default" onClick={() => setIsVendorManageDialogOpen(true)}><List className="mr-2 h-4 w-4" /> Manage Vendors</Button>
+                  <Button variant="default" onClick={() => setIsVendorManageDialogOpen(true)}><List className="mr-2 h-4 w-4" /> Vendors List</Button>
               </div>
             </div>
           </CardHeader>
