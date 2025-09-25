@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import { useState, useMemo, useEffect, useRef } from 'react';
@@ -172,7 +171,7 @@ function EditIngredientsDialog({ isOpen, onOpenChange, menuItem, inventory, onSa
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Skip for Now</Button>
           <Button onClick={handleSaveIngredients}>Save Ingredients</Button>
         </DialogFooter>
       </DialogContent>
@@ -616,9 +615,6 @@ export function ManageMenuDialog({
     </>
   );
 }
-
-    
-
     
 
     
