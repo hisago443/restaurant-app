@@ -451,7 +451,11 @@ export function ManageMenuDialog({
     <>
       <Dialog open={isOpen} onOpenChange={onOpenChange}>
         <DialogContent className="max-w-4xl">
-          {!startWithEdit && (
+          {startWithEdit ? (
+            <DialogHeader>
+              <DialogTitle className="sr-only">Edit Recipe</DialogTitle>
+            </DialogHeader>
+          ) : (
             <DialogHeader>
               <DialogTitle>Manage Menu</DialogTitle>
               <DialogDescription>
@@ -665,5 +669,3 @@ export function ManageMenuDialog({
     </>
   );
 }
-
-    
