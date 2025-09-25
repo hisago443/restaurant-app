@@ -763,7 +763,7 @@ export default function PosSystem({
   }
 
   const allMenuItems: MenuItem[] = useMemo(() => 
-    menu.flatMap(cat => cat.items),
+    menu.flatMap(cat => cat.items.map(item => ({...item, category: cat.category}))),
     [menu]
   );
   
@@ -1288,8 +1288,25 @@ const processKOTs = useCallback((kotGroupsToProcess: { title: string; items: Ord
     }, 100);
   };
 
-  const lowStockItems = useMemo(() => allMenuItems.filter(item => menuItemStatus[item.name] === 'low'), [allMenuItems, menuItemStatus]);
-  const outOfStockItems = useMemo(() => allMenuItems.filter(item => menuItemStatus[item.name] === 'out'), [allMenuItems, menuItemStatus]);
+  const lowStockItems = useMemo(() => {
+    const items = new Set<MenuItem>();
+    allMenuItems.forEach(item => {
+      if (menuItemStatus[item.name] === 'low' || menuCategoryStatus[item.category!] === 'low') {
+        items.add(item);
+      }
+    });
+    return Array.from(items);
+  }, [allMenuItems, menuItemStatus, menuCategoryStatus]);
+
+  const outOfStockItems = useMemo(() => {
+    const items = new Set<MenuItem>();
+    allMenuItems.forEach(item => {
+      if (menuItemStatus[item.name] === 'out' || menuCategoryStatus[item.category!] === 'out') {
+        items.add(item);
+      }
+    });
+    return Array.from(items);
+  }, [allMenuItems, menuItemStatus, menuCategoryStatus]);
   
   const handleKeyDown = (e: KeyboardEvent) => {
     if (document.querySelector('[role="dialog"], [role="alertdialog"]')) return;
