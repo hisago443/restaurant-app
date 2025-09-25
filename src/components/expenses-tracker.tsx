@@ -745,12 +745,20 @@ export default function ExpensesTracker({ expenses, customerCreditLimit, vendorC
 
       <Card>
           <CardHeader>
-              <CardTitle>Add New Expense</CardTitle>
-              <CardDescription>Record a new business expense.</CardDescription>
+            <div className="flex justify-between items-start">
+              <div>
+                <CardTitle>Add New Expense</CardTitle>
+                <CardDescription>Record a new business expense.</CardDescription>
+              </div>
+              <div className="flex gap-2">
+                  <Button variant="secondary" onClick={() => openAddVendorDialog(null)}><Building className="mr-2 h-4 w-4" /> Add Vendor</Button>
+                  <Button variant="secondary" onClick={() => setIsVendorManageDialogOpen(true)}><List className="mr-2 h-4 w-4" /> Manage Vendors</Button>
+              </div>
+            </div>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
-                <div className="space-y-2 lg:col-span-1">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+                <div className="space-y-2">
                     <Label>Date</Label>
                     <Popover>
                         <PopoverTrigger asChild>
@@ -762,19 +770,15 @@ export default function ExpensesTracker({ expenses, customerCreditLimit, vendorC
                         <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={date} onSelect={setDate} initialFocus /></PopoverContent>
                     </Popover>
                 </div>
-                <div className="space-y-2 lg:col-span-2 flex items-end gap-2">
-                    <div className="flex-grow space-y-2">
-                        <Label htmlFor="vendor">Vendor</Label>
-                        <Select onValueChange={(value) => setVendorId(value === 'none' ? undefined : value)} value={vendorId || 'none'}>
-                          <SelectTrigger id="vendor"><SelectValue placeholder="None" /></SelectTrigger>
-                          <SelectContent>
-                              <SelectItem value="none">None</SelectItem>
-                              {vendors.map(v => <SelectItem key={v.id} value={v.id}>{v.name}</SelectItem>)}
-                          </SelectContent>
-                        </Select>
-                    </div>
-                    <Button variant="secondary" onClick={() => openAddVendorDialog(null)}><Building className="mr-2 h-4 w-4" /> Add</Button>
-                    <Button variant="secondary" onClick={() => setIsVendorManageDialogOpen(true)}><List className="mr-2 h-4 w-4" /> Show</Button>
+                <div className="space-y-2">
+                    <Label htmlFor="vendor">Vendor</Label>
+                    <Select onValueChange={(value) => setVendorId(value === 'none' ? undefined : value)} value={vendorId || 'none'}>
+                      <SelectTrigger id="vendor"><SelectValue placeholder="None" /></SelectTrigger>
+                      <SelectContent>
+                          <SelectItem value="none">None</SelectItem>
+                          {vendors.map(v => <SelectItem key={v.id} value={v.id}>{v.name}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
                 </div>
                 <div className="space-y-2">
                     <Label>Vendor Category</Label>
