@@ -174,8 +174,8 @@ export const MenuItemSchema = z.object({
   name: z.string().describe('The name of the menu item.'),
   price: z.number().describe('The price of the menu item.'),
   code: z.string().optional().describe('A short code for the item, if any.'),
-  ingredients: z.array(z.object({})).optional().default([]).describe("An array of ingredient objects, which can be empty."),
-  history: z.array(z.object({})).optional().default([]).describe("An array of history objects, which can be empty."),
+  ingredients: z.array(z.any()).optional().default([]).describe("An array of ingredient objects, which can be empty."),
+  history: z.array(z.any()).optional().default([]).describe("An array of history objects, which can be empty."),
 });
 
 export const MenuCategorySchema = z.object({
