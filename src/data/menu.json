@@ -8,18 +8,13 @@
         "code": "1",
         "ingredients": [
           {
-            "inventoryItemId": "1",
-            "quantity": 1,
-            "unit": "pcs"
-          },
-          {
             "inventoryItemId": "13",
             "quantity": 100,
             "unit": "g"
           },
           {
-            "inventoryItemId": "14",
-            "quantity": 150,
+            "inventoryItemId": "2",
+            "quantity": 100,
             "unit": "g"
           }
         ],
@@ -828,7 +823,13 @@
         "name": "Milk Tea",
         "price": 39,
         "code": "64",
-        "history": [],
+        "history": [
+          {
+            "name": "Milk Tea",
+            "price": 39,
+            "changedAt": "2025-10-30T10:46:40.210Z"
+          }
+        ],
         "ingredients": [
           {
             "inventoryItemId": "1",

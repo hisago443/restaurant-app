@@ -1,14 +1,19 @@
 
 'use server';
 /**
- * @fileOverview A flow to send an email receipt to a customer.
+ * @fileOverview A flow to send an email receipt to a customer using Resend.
  *
- * - sendEmailReceipt - A function that would send the email. NOTE: This is a placeholder and does not actually send an email.
+ * - sendEmailReceipt - A function that sends the email.
  * - SendEmailReceiptInput - The input type for the sendEmailReceipt function.
  */
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
+import { Resend } from 'resend';
+
+// Initialize Resend with the API key from environment variables.
+// Ensure your RESEND_API_KEY is set in your .env file.
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 const SendEmailReceiptInputSchema = z.object({
   customerEmail: z.string().email().describe('The email address of the customer.'),
@@ -33,29 +38,33 @@ const sendEmailReceiptFlow = ai.defineFlow(
     }),
   },
   async (input) => {
-    console.log(`Simulating sending email to ${input.customerEmail}`);
-    console.log(`Subject: ${input.subject || `Your receipt for ₹${input.totalAmount.toFixed(2)}`}`);
-    console.log(`Body: \n${input.receiptContent}`);
+    // Check if the API key is available.
+    if (!process.env.RESEND_API_KEY) {
+      console.error("Resend API key is not configured. Email will not be sent.");
+      // Return a failure but don't block the user's flow.
+      return { success: false, message: 'Email service is not configured on the server.' };
+    }
 
-    // In a real implementation, you would integrate with an email service
-    // like SendGrid, Resend, or AWS SES here.
-    // For example (using a hypothetical email service):
-    //
-    // const emailService = new EmailService(process.env.EMAIL_API_KEY);
-    // try {
-    //   await emailService.send({
-    //     to: input.customerEmail,
-    //     from: 'noreply@upandabove.com',
-    //     subject: input.subject || `Your receipt for ₹${input.totalAmount.toFixed(2)}`,
-    //     body: input.receiptContent,
-    //   });
-    //   return { success: true, message: 'Email sent successfully.' };
-    // } catch (error) {
-    //   console.error("Failed to send email:", error);
-    //   return { success: false, message: 'Failed to send email.' };
-    // }
-    
-    // For now, we'll just simulate a successful response.
-    return { success: true, message: 'Email sending simulated successfully.' };
+    try {
+      await resend.emails.send({
+        // IMPORTANT: The 'from' address must be a verified domain in your Resend account.
+        // For testing, Resend allows using 'onboarding@resend.dev'.
+        from: 'Up & Above <onboarding@resend.dev>',
+        to: input.customerEmail,
+        subject: input.subject || `Your receipt for ₹${input.totalAmount.toFixed(2)}`,
+        // Using 'text' for plain text emails. For HTML, use the 'html' property.
+        text: input.receiptContent,
+      });
+
+      return { success: true, message: 'Email sent successfully.' };
+    } catch (error) {
+      console.error("Failed to send email via Resend:", error);
+      // Determine the error message to return
+      let errorMessage = 'Failed to send email.';
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+      return { success: false, message: errorMessage };
+    }
   }
 );
