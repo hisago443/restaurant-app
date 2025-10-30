@@ -1131,7 +1131,7 @@ const processKOTs = useCallback((kotGroupsToProcess: { title: string; items: Ord
   const handlePaymentSuccess = async () => {
     const finalReceipt = receiptPreview || getLocalReceipt();
   
-    if (!finalReceipt && orderItems.length > 0) {
+    if (!finalReceipt && orderItems.length === 0) {
         toast({ variant: "destructive", title: "Billing Error", description: "Could not generate the final bill. Please try again." });
         return;
     }
@@ -1154,20 +1154,27 @@ const processKOTs = useCallback((kotGroupsToProcess: { title: string; items: Ord
     const inventoryUpdates = new Map<string, number>();
 
     orderItems.forEach(orderItem => {
-        const fullMenuItem = allMenuItems.find(mi => mi.name === orderItem.name);
-        if (fullMenuItem?.ingredients) {
-            fullMenuItem.ingredients.forEach(ingredient => {
-                const quantityToDeduct = ingredient.unit === 'g' || ingredient.unit === 'ml' ? ingredient.quantity / 1000 : ingredient.quantity;
-                const inventoryItem = inventory.find(i => i.id === ingredient.inventoryItemId);
-                if (inventoryItem && (inventoryItem.unit === 'kg' || inventoryItem.unit === 'ltr')) {
-                    const currentQuantity = inventoryUpdates.get(ingredient.inventoryItemId) || 0;
-                    inventoryUpdates.set(ingredient.inventoryItemId, currentQuantity + (quantityToDeduct * orderItem.quantity));
-                } else {
-                     const currentQuantity = inventoryUpdates.get(ingredient.inventoryItemId) || 0;
-                     inventoryUpdates.set(ingredient.inventoryItemId, currentQuantity + (ingredient.quantity * orderItem.quantity));
-                }
-            });
-        }
+      const fullMenuItem = allMenuItems.find(mi => mi.name === orderItem.name);
+      if (fullMenuItem?.ingredients) {
+        fullMenuItem.ingredients.forEach(ingredient => {
+          const inventoryItem = inventory.find(i => i.id === ingredient.inventoryItemId);
+          if (!inventoryItem) return;
+
+          let quantityToDeduct = ingredient.quantity * orderItem.quantity;
+          
+          // Unit conversion: recipe units to inventory units
+          // g -> kg, ml -> ltr
+          if (inventoryItem.unit === 'kg' && ingredient.unit === 'g') {
+            quantityToDeduct /= 1000;
+          } else if (inventoryItem.unit === 'ltr' && ingredient.unit === 'ml') {
+            quantityToDeduct /= 1000;
+          }
+          // Assuming pcs, kg, ltr units match directly if not converted.
+
+          const currentDeduction = inventoryUpdates.get(ingredient.inventoryItemId) || 0;
+          inventoryUpdates.set(ingredient.inventoryItemId, currentDeduction + quantityToDeduct);
+        });
+      }
     });
 
     for (const [itemId, quantityToDecrement] of inventoryUpdates.entries()) {
@@ -1175,10 +1182,12 @@ const processKOTs = useCallback((kotGroupsToProcess: { title: string; items: Ord
         batch.update(itemRef, { stock: increment(-quantityToDecrement) });
     }
 
-    await batch.commit().catch(err => {
-        console.error("Error updating inventory:", err);
-        toast({ variant: 'destructive', title: 'Inventory Update Failed' });
-    });
+    if (inventoryUpdates.size > 0) {
+        await batch.commit().catch(err => {
+            console.error("Error updating inventory:", err);
+            toast({ variant: 'destructive', title: 'Inventory Update Failed' });
+        });
+    }
   
     if (selectedTableId) {
       updateTableStatus([selectedTableId], 'Cleaning');
@@ -1556,11 +1565,14 @@ const processKOTs = useCallback((kotGroupsToProcess: { title: string; items: Ord
 
   const renderMenuContent = () => {
     const tabsKey = searchTerm ? `search-${searchTerm}` : 'all-items';
-    const activeTab = (filteredMenu.length > 0 && !filteredMenu.find(c => c.category === viewMode)) ? filteredMenu[0].category : viewMode;
+    const activeTab = viewMode === 'grid' && filteredMenu.length > 0
+    ? (filteredMenu.find(c => c.category === activeAccordionItems[0]) ? activeAccordionItems[0] : filteredMenu[0].category)
+    : (filteredMenu.length > 0 ? filteredMenu[0].category : undefined);
+
 
     if (viewMode === 'grid') {
       return (
-        <Tabs defaultValue={filteredMenu.length > 0 ? filteredMenu[0].category : undefined} key={tabsKey} className="w-full">
+        <Tabs defaultValue={activeTab} key={tabsKey} className="w-full">
           <div className="flex justify-center">
             <TabsList className="mb-4 flex-wrap h-auto bg-transparent border-b rounded-none p-0">
               {filteredMenu.map(category => {
