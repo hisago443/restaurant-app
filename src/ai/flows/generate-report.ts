@@ -10,7 +10,7 @@ import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 import { sendEmailReceipt } from './send-email-receipt';
 import { GenerateReportInputSchema, GenerateReportOutputSchema, type GenerateReportInput, type GenerateReportOutput, type Bill, type Employee, type Expense, type PendingBill, type Attendance, type Advance, type Table, type InventoryItem, type Customer } from '@/lib/types';
-import { getFirestore } from 'firebase/firestore';
+import { getFirestore, getDoc, doc } from 'firebase/firestore';
 import { collection, getDocs } from 'firebase/firestore';
 import { app } from '@/lib/firebase';
 
@@ -23,9 +23,17 @@ const db = getFirestore(app);
 export async function generateAndSendReport(
   input: {
     reportType: 'daily' | 'monthly' | 'yearly';
-    recipientEmail: string;
   }
 ): Promise<GenerateReportOutput> {
+  // Fetch recipient email from settings
+  const settingsDoc = await getDoc(doc(db, "settings", "venue"));
+  const settingsData = settingsDoc.data();
+  const recipientEmail = settingsData?.email || settingsData?.venueEmail;
+
+  if (!recipientEmail) {
+    throw new Error("Recipient email not found in settings. Please complete the setup wizard.");
+  }
+
   // Fetch all necessary data from Firestore
   const billsSnapshot = await getDocs(collection(db, "bills"));
   const billHistory: Bill[] = billsSnapshot.docs.map(doc => {
@@ -108,6 +116,7 @@ export async function generateAndSendReport(
 
   const serializableInput: GenerateReportInput = {
     ...input,
+    recipientEmail,
     billHistory: billHistory.map(bill => ({
       ...bill,
       id: bill.id,

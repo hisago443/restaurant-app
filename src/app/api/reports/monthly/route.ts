@@ -6,7 +6,6 @@ export async function GET() {
   try {
     const result = await generateAndSendReport({
       reportType: 'monthly',
-      recipientEmail: 'upandabove.bir@gmail.com',
     });
 
     if (result.success) {
