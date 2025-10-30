@@ -1,6 +1,6 @@
 
 import { initializeApp, getApp, getApps, type FirebaseApp } from 'firebase/app';
-import { getFirestore, type Firestore, initializeFirestore, persistentLocalCache, memoryLocalCache } from 'firebase/firestore';
+import { getFirestore, type Firestore } from 'firebase/firestore';
 
 const firebaseConfig = {
   projectId: "up-above-assistant",
@@ -15,11 +15,6 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app: FirebaseApp = getApps().length ? getApp() : initializeApp(firebaseConfig);
-
-// Separate db instances for client and server
-const db: Firestore = typeof window !== 'undefined' 
-  ? initializeFirestore(app, { localCache: persistentLocalCache({ tabManager: 'PRIMARY' }) })
-  : getFirestore(app);
-
+const db: Firestore = getFirestore(app);
 
 export { app, db };
