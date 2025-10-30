@@ -9,9 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import SalesReport from './sales-report';
-import ActivityLog from './activity-log';
 import InventoryManagement from './inventory-management';
-import SystemSettings from './system-settings';
 import BillHistory from './bill-history';
 import type { Bill, Employee, OrderItem, Expense, Vendor, InventoryItem, KOTPreference, MenuCategory } from '@/lib/types';
 import { generateAndSendReport } from '@/ai/flows/generate-report';
@@ -646,3 +644,4 @@ function EmployeeDialog({ open, onOpenChange, employee, onSave }: { open: boolea
     
 
     
+
