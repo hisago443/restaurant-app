@@ -1,13 +1,5 @@
 
 import type {NextConfig} from 'next';
-import withPWAInit from "@ducanh2912/next-pwa";
-
-const withPWA = withPWAInit({
-  dest: "public",
-  // Disabling in development is causing issues with bubblewrap.
-  // The manifest and service worker will still be available from the public dir.
-  disable: process.env.NODE_ENV === 'development',
-});
 
 const nextConfig: NextConfig = {
   /* config options here */
@@ -35,4 +27,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default withPWA(nextConfig);
+export default nextConfig;
