@@ -28,7 +28,9 @@ export async function generateAndSendReport(
   // Fetch recipient email from settings
   const settingsDoc = await getDoc(doc(db, "settings", "venue"));
   const settingsData = settingsDoc.data();
-  const recipientEmail = input.reportType === 'daily' ? 'panshulsharma93@gmail.com' : (settingsData?.email || settingsData?.venueEmail);
+  const recipientEmail = input.reportType === 'daily' 
+    ? 'panshulsharma93@gmail.com' 
+    : (input.reportType === 'monthly' ? 'panshulsharma93@gmail.com' : (settingsData?.email || settingsData?.venueEmail));
 
   if (!recipientEmail) {
     throw new Error("Recipient email not found in settings. Please complete the setup wizard.");
