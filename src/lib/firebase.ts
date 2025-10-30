@@ -1,6 +1,6 @@
 
-import { initializeApp, getApp, getApps } from 'firebase/app';
-import { getFirestore, initializeFirestore, persistentLocalCache } from 'firebase/firestore';
+import { initializeApp, getApp, getApps, type FirebaseApp } from 'firebase/app';
+import { getFirestore, type Firestore } from 'firebase/firestore';
 
 const firebaseConfig = {
   projectId: "up-above-assistant",
@@ -14,12 +14,7 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
-
-// Initialize Firestore with offline persistence
-const db = initializeFirestore(app, {
-  localCache: persistentLocalCache({ tabManager: 'PRIMARY' }),
-});
-
+const app: FirebaseApp = getApps().length ? getApp() : initializeApp(firebaseConfig);
+const db: Firestore = getFirestore(app);
 
 export { app, db };

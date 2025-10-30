@@ -10,8 +10,11 @@ import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 import { sendEmailReceipt } from './send-email-receipt';
 import { GenerateReportInputSchema, GenerateReportOutputSchema, type GenerateReportInput, type GenerateReportOutput, type Bill, type Employee, type Expense, type PendingBill, type Attendance, type Advance, type Table, type InventoryItem, type Customer } from '@/lib/types';
-import { db } from '@/lib/firebase';
+import { getFirestore } from 'firebase/firestore';
 import { collection, getDocs } from 'firebase/firestore';
+
+// Use getFirestore() for server-side
+const db = getFirestore();
 
 
 // We have to create a wrapper because the frontend cannot pass complex types like `Date`
