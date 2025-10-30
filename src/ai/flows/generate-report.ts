@@ -23,17 +23,16 @@ const db = getFirestore(app);
 export async function generateAndSendReport(
   input: {
     reportType: 'daily' | 'monthly' | 'yearly';
+    recipientEmail?: string;
   }
 ): Promise<GenerateReportOutput> {
   // Fetch recipient email from settings
   const settingsDoc = await getDoc(doc(db, "settings", "venue"));
   const settingsData = settingsDoc.data();
-  const recipientEmail = input.reportType === 'daily' 
-    ? 'panshulsharma93@gmail.com' 
-    : (input.reportType === 'monthly' ? 'panshulsharma93@gmail.com' : (settingsData?.email || settingsData?.venueEmail));
+  const recipientEmail = input.recipientEmail || settingsData?.email || settingsData?.venueEmail;
 
   if (!recipientEmail) {
-    throw new Error("Recipient email not found in settings. Please complete the setup wizard.");
+    throw new Error("Recipient email not found. Please provide one or complete the setup wizard.");
   }
 
   // Fetch all necessary data from Firestore
@@ -117,7 +116,7 @@ export async function generateAndSendReport(
 
 
   const serializableInput: GenerateReportInput = {
-    ...input,
+    reportType: input.reportType,
     recipientEmail,
     billHistory: billHistory.map(bill => ({
       ...bill,
