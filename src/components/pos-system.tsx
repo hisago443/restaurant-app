@@ -1237,11 +1237,11 @@ const processKOTs = useCallback((kotGroupsToProcess: { title: string; items: Ord
   
     const tableRef = doc(db, 'tables', String(tableToReserve));
     try {
-      await updateDoc(tableRef, {
+      await setDoc(tableRef, {
         status: 'Reserved',
         reservationDetails: reservationDetails,
-      });
-      updateTableStatus([tableToReserve], 'Reserved');
+      }, { merge: true });
+      updateTableStatus([tableToReserve], 'Reserved', reservationDetails);
       toast({ title: `Table ${tableToReserve} reserved for ${reservationDetails.name || 'guest'}` });
     } catch (e) {
        try {
@@ -1250,7 +1250,7 @@ const processKOTs = useCallback((kotGroupsToProcess: { title: string; items: Ord
             status: 'Reserved',
             reservationDetails: reservationDetails,
         });
-        updateTableStatus([tableToReserve], 'Reserved');
+        updateTableStatus([tableToReserve], 'Reserved', reservationDetails);
         toast({ title: `Table ${tableToReserve} reserved for ${reservationDetails.name || 'guest'}` });
        } catch (error) {
          console.error("Error reserving table:", error);

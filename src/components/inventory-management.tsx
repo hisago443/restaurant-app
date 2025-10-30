@@ -2,7 +2,7 @@
 
 "use client"
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { db } from '@/lib/firebase';
 import { collection, doc, addDoc, updateDoc, deleteDoc, onSnapshot, writeBatch, getDocs, setDoc } from 'firebase/firestore';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -146,7 +146,7 @@ export default function InventoryManagement({ inventory, menu, setMenu }: Invent
     const { id, ...data } = itemData;
     if (id) {
       try {
-        await updateDoc(doc(db, "inventory", id), data);
+        await setDoc(doc(db, "inventory", id), data, { merge: true });
         toast({ title: "Item updated successfully" });
       } catch (error) {
         toast({ variant: "destructive", title: "Error updating item" });
@@ -187,7 +187,7 @@ export default function InventoryManagement({ inventory, menu, setMenu }: Invent
     const stock = Math.max(0, Math.min(item.capacity, newStock));
 
     try {
-        await updateDoc(doc(db, "inventory", id), { stock });
+        await setDoc(doc(db, "inventory", id), { stock }, { merge: true });
     } catch (e) {
         toast({ variant: 'destructive', title: 'Error updating stock' });
     }
