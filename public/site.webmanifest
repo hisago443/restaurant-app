@@ -1,19 +1,19 @@
 {
-  "name": "Up & Above POS",
-  "short_name": "POS",
+  "name": "Up & Above Assistant",
+  "short_name": "Up & Above",
+  "description": "A POS and restaurant management system.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#E59245",
-  "description": "A Point-of-Sale system for Up & Above Cafe.",
+  "theme_color": "#ff6f00",
   "icons": [
     {
-      "src": "/icons/icon-192x192.png",
+      "src": "/icon-192x192.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "/icons/icon-512x512.png",
+      "src": "/icon-512x512.png",
       "sizes": "512x512",
       "type": "image/png"
     }
