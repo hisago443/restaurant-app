@@ -1,6 +1,6 @@
 
 import { initializeApp, getApp, getApps, type FirebaseApp } from 'firebase/app';
-import { getFirestore, initializeFirestore, persistentLocalCache, memoryLocalCache, type Firestore } from 'firebase/firestore';
+import { getFirestore, initializeFirestore, memoryLocalCache, type Firestore } from 'firebase/firestore';
 
 const firebaseConfig = {
   projectId: "up-above-assistant",
@@ -16,11 +16,10 @@ const firebaseConfig = {
 // Initialize Firebase App
 const app: FirebaseApp = getApps().length ? getApp() : initializeApp(firebaseConfig);
 
-// Initialize Firestore with appropriate caching for client/server
+// Initialize Firestore. 
+// Using memoryLocalCache is a safe fallback that works in all environments (client/server).
 const db: Firestore = initializeFirestore(app, {
-  localCache: typeof window === 'undefined'
-    ? memoryLocalCache()
-    : persistentLocalCache({ tabManager: 'primary' })
+  localCache: memoryLocalCache()
 });
 
 
