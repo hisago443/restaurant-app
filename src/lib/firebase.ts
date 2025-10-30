@@ -1,6 +1,6 @@
 
 import { initializeApp, getApp, getApps, type FirebaseApp } from 'firebase/app';
-import { getFirestore, type Firestore } from 'firebase/firestore';
+import { getFirestore, initializeFirestore, persistentLocalCache, memoryLocalCache, type Firestore } from 'firebase/firestore';
 
 const firebaseConfig = {
   projectId: "up-above-assistant",
@@ -13,8 +13,15 @@ const firebaseConfig = {
   messagingSenderId: "89751477177"
 };
 
-// Initialize Firebase
+// Initialize Firebase App
 const app: FirebaseApp = getApps().length ? getApp() : initializeApp(firebaseConfig);
-const db: Firestore = getFirestore(app);
+
+// Initialize Firestore with appropriate caching for client/server
+const db: Firestore = initializeFirestore(app, {
+  localCache: typeof window === 'undefined'
+    ? memoryLocalCache()
+    : persistentLocalCache({ tabManager: 'primary' })
+});
+
 
 export { app, db };
