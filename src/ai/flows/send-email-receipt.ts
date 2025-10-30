@@ -46,10 +46,13 @@ const sendEmailReceiptFlow = ai.defineFlow(
     }
 
     try {
+      // IMPORTANT: The 'from' address MUST be a verified domain in your Resend account.
+      // For testing and new accounts, Resend allows using 'onboarding@resend.dev'.
+      // To use your own domain, you must verify it in the Resend dashboard.
+      const fromAddress = 'Up & Above Assistant <onboarding@resend.dev>';
+      
       await resend.emails.send({
-        // IMPORTANT: The 'from' address must be a verified domain in your Resend account.
-        // For testing, Resend allows using 'onboarding@resend.dev'.
-        from: 'Up & Above <onboarding@resend.dev>',
+        from: fromAddress,
         to: input.customerEmail,
         subject: input.subject || `Your receipt for ₹${input.totalAmount.toFixed(2)}`,
         // Using 'text' for plain text emails. For HTML, use the 'html' property.
