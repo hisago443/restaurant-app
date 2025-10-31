@@ -22,14 +22,34 @@ export async function generateAndSendReport(
     recipientEmail?: string;
   }
 ): Promise<GenerateReportOutput> {
-  // Fetch recipient email from settings
-  const settingsDoc = await getDoc(doc(db, "settings", "venue"));
-  const settingsData = settingsDoc.data();
-  const recipientEmail = input.recipientEmail || settingsData?.email || settingsData?.venueEmail;
+  const recipientEmails: string[] = [];
 
-  if (!recipientEmail) {
-    throw new Error("Recipient email not found. Please provide one or complete the setup wizard.");
+  // 1. Fetch venue email from settings/venue
+  const venueSettingsDoc = await getDoc(doc(db, "settings", "venue"));
+  const venueSettingsData = venueSettingsDoc.data();
+  const venueEmail = input.recipientEmail || venueSettingsData?.email || venueSettingsData?.venueEmail;
+  if (venueEmail) {
+    recipientEmails.push(venueEmail);
   }
+
+  // 2. Fetch owner emails from settings/owners
+  const ownersSettingsDoc = await getDoc(doc(db, "settings", "owners"));
+  const ownersSettingsData = ownersSettingsDoc.data();
+  if (ownersSettingsData && Array.isArray(ownersSettingsData.list)) {
+      ownersSettingsData.list.forEach((owner: any) => {
+          if (owner.email) {
+              recipientEmails.push(owner.email);
+          }
+      });
+  }
+
+  // 3. Create a unique list of emails
+  const uniqueRecipientEmails = [...new Set(recipientEmails)];
+
+  if (uniqueRecipientEmails.length === 0) {
+    throw new Error("No recipient emails found. Please complete the setup wizard to add a venue or owner email.");
+  }
+
 
   // Fetch all necessary data from Firestore
   const billsSnapshot = await getDocs(collection(db, "bills"));
@@ -113,7 +133,7 @@ export async function generateAndSendReport(
 
   const serializableInput: GenerateReportInput = {
     reportType: input.reportType,
-    recipientEmail,
+    recipientEmail: uniqueRecipientEmails.join(', '), // For display in prompt
     billHistory: billHistory.map(bill => ({
       ...bill,
       id: bill.id,
@@ -140,7 +160,7 @@ export async function generateAndSendReport(
         lastSeen: c.lastSeen.toISOString(),
     })),
   };
-  return generateReportFlow(serializableInput);
+  return generateAndSendReportFlow(serializableInput, uniqueRecipientEmails);
 }
 
 
@@ -221,7 +241,11 @@ const generateReportFlow = ai.defineFlow(
     inputSchema: GenerateReportInputSchema,
     outputSchema: GenerateReportOutputSchema,
   },
-  async (input) => {
+  async (input, recipientEmails) => {
+    if (!Array.isArray(recipientEmails) || recipientEmails.length === 0) {
+      throw new Error("Recipient emails are missing or in the wrong format.");
+    }
+    
     try {
       const { output } = await generateReportPrompt(input);
 
@@ -229,20 +253,27 @@ const generateReportFlow = ai.defineFlow(
         throw new Error('Failed to generate the report content.');
       }
       
-      const emailResult = await sendEmailReceipt({
-          customerEmail: input.recipientEmail,
-          receiptContent: output.reportContent,
-          totalAmount: output.totalRevenue,
-          subject: output.reportTitle,
-      });
+      const emailPromises = recipientEmails.map(email => 
+        sendEmailReceipt({
+            customerEmail: email,
+            receiptContent: output.reportContent,
+            totalAmount: output.totalRevenue,
+            subject: output.reportTitle,
+        })
+      );
 
-      if (!emailResult.success) {
-        throw new Error(emailResult.message || 'An unknown error occurred while sending the email.');
+      const emailResults = await Promise.all(emailPromises);
+      
+      const failedEmails = emailResults.filter(r => !r.success);
+
+      if (failedEmails.length > 0) {
+        const failedAddresses = recipientEmails.filter((_, index) => !emailResults[index].success);
+        throw new Error(`Failed to send report to the following addresses: ${failedAddresses.join(', ')}`);
       }
 
       return {
         success: true,
-        message: 'Report generated and sent successfully.',
+        message: 'Report generated and sent to all recipients successfully.',
       };
     } catch (error: any) {
       console.error("Error in generateReportFlow:", error);
@@ -253,3 +284,5 @@ const generateReportFlow = ai.defineFlow(
     }
   }
 );
+
+    
