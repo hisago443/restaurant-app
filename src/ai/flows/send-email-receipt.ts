@@ -1,19 +1,16 @@
 
 'use server';
 /**
- * @fileOverview A flow to send an email receipt to a customer using Resend.
+ * @fileOverview A flow to send an email receipt to a customer using the Gmail API.
  *
  * - sendEmailReceipt - A function that sends the email.
  * - SendEmailReceiptInput - The input type for the sendEmailReceipt function.
  */
 
-import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
-import { Resend } from 'resend';
-
-// Initialize Resend with the API key from environment variables.
-// Ensure your RESEND_API_KEY is set in your .env file.
-const resend = new Resend(process.env.RESEND_API_KEY);
+import { ai } from '@/ai/genkit';
+import { z } from 'genkit';
+import { google } from 'googleapis';
+import { OAuth2Client } from 'google-auth-library';
 
 const SendEmailReceiptInputSchema = z.object({
   customerEmail: z.string().email().describe('The email address of the customer.'),
@@ -38,31 +35,64 @@ const sendEmailReceiptFlow = ai.defineFlow(
     }),
   },
   async (input) => {
-    // Check if the API key is available.
-    if (!process.env.RESEND_API_KEY) {
-      console.error("Resend API key is not configured. Email will not be sent.");
-      // Return a failure but don't block the user's flow.
-      return { success: false, message: 'Email service is not configured on the server.' };
+    const { GMAIL_CLIENT_ID, GMAIL_CLIENT_SECRET, GMAIL_REFRESH_TOKEN, GMAIL_USER } = process.env;
+
+    if (!GMAIL_CLIENT_ID || !GMAIL_CLIENT_SECRET || !GMAIL_REFRESH_TOKEN || !GMAIL_USER) {
+      const errorMessage = "Gmail API credentials are not configured in the .env file. Email will not be sent.";
+      console.error(errorMessage);
+      return { success: false, message: errorMessage };
     }
 
+    const oauth2Client: OAuth2Client = new google.auth.OAuth2(
+      GMAIL_CLIENT_ID,
+      GMAIL_CLIENT_SECRET,
+      "https://developers.google.com/oauthplayground" // This redirect URI is for the playground
+    );
+
+    oauth2Client.setCredentials({
+      refresh_token: GMAIL_REFRESH_TOKEN,
+    });
+
     try {
-      // IMPORTANT: The 'from' address MUST be a verified domain in your Resend account.
-      // For testing and new accounts, Resend allows using 'onboarding@resend.dev'.
-      // To use your own domain, you must verify it in the Resend dashboard.
-      const fromAddress = 'Up & Above Assistant <onboarding@resend.dev>';
-      
-      await resend.emails.send({
-        from: fromAddress,
-        to: input.customerEmail,
-        subject: input.subject || `Your receipt for ₹${input.totalAmount.toFixed(2)}`,
-        // Using 'text' for plain text emails. For HTML, use the 'html' property.
-        text: input.receiptContent,
+      // Refresh the access token
+      const { token } = await oauth2Client.getAccessToken();
+      if (!token) {
+        throw new Error('Failed to retrieve access token.');
+      }
+      oauth2Client.setCredentials({ access_token: token });
+
+      const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
+
+      const subject = input.subject || `Your receipt for ₹${input.totalAmount.toFixed(2)}`;
+      const utf8Subject = `=?utf-8?B?${Buffer.from(subject).toString('base64')}?=`;
+      const messageParts = [
+        `From: Up & Above Assistant <${GMAIL_USER}>`,
+        `To: ${input.customerEmail}`,
+        'Content-Type: text/plain; charset=utf-8',
+        'MIME-Version: 1.0',
+        `Subject: ${utf8Subject}`,
+        '',
+        input.receiptContent,
+      ];
+      const message = messageParts.join('\n');
+
+      // The body needs to be base64url encoded.
+      const encodedMessage = Buffer.from(message)
+        .toString('base64')
+        .replace(/\+/g, '-')
+        .replace(/\//g, '_')
+        .replace(/=+$/, '');
+
+      await gmail.users.messages.send({
+        userId: 'me',
+        requestBody: {
+          raw: encodedMessage,
+        },
       });
 
-      return { success: true, message: 'Email sent successfully.' };
+      return { success: true, message: 'Email sent successfully via Gmail.' };
     } catch (error) {
-      console.error("Failed to send email via Resend:", error);
-      // Determine the error message to return
+      console.error("Failed to send email via Gmail:", error);
       let errorMessage = 'Failed to send email.';
       if (error instanceof Error) {
         errorMessage = error.message;
