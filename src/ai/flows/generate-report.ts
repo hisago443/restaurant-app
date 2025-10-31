@@ -276,7 +276,7 @@ export async function generateAndSendReport(
       ...pb,
       transactions: pb.transactions.map(tx => ({...tx, date: tx.date.toISOString()}))
     })),
-    attendance: attendance.map(a => ({...a, date: a.toISOString()})),
+    attendance: attendance.map(a => ({...a, date: a.date.toISOString()})),
     advances: advances.map(adv => ({...adv, date: adv.date.toISOString()})),
     tables,
     inventory,
