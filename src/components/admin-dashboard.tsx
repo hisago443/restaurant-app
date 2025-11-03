@@ -81,8 +81,14 @@ export default function AdminDashboard({
     const unsubVendors = onSnapshot(collection(db, "vendors"), (snapshot) => {
         const data = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as Vendor));
         setVendors(data);
+        console.log("Vendors data fetched:", data);
+    }, (error) => {
+        console.error("Error fetching vendors:", error);
     });
-    return () => unsubVendors();
+    return () => {
+        console.log("Unsubscribing from vendors snapshot");
+        unsubVendors();
+    }
   }, []);
 
   const todaysBills = useMemo(() => billHistory.filter(bill => format(bill.timestamp, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd')), [billHistory]);
@@ -195,6 +201,7 @@ export default function AdminDashboard({
       const newId = generateNewEmployeeId();
       const employeeRef = doc(db, "employees", newId);
       await setDoc(employeeRef, {...employee, id: newId});
+      console.log("Employee added:", {...employee, id: newId});
       toast({ title: 'Employee Added', description: `${employee.name} saved with ID ${newId}.` });
     } catch (error) {
       console.error("Error adding employee: ", error);
@@ -219,6 +226,7 @@ export default function AdminDashboard({
         salary: employee.salary,
         color: employee.color,
       }, { merge: true });
+      console.log("Employee updated:", employee);
       toast({ title: 'Employee Updated', description: 'Employee information has been updated.' });
     } catch (error) {
       console.error("Error updating employee: ", error);

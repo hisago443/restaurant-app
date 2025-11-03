@@ -1803,20 +1803,20 @@ const processKOTs = useCallback((kotGroupsToProcess: { title: string; items: Ord
               customerDetails={customerDetails}
               getNewItems={getNewItems}
           >
-           <div className="flex items-center gap-2 flex-wrap">
-                <Label className="font-semibold text-sm shrink-0 whitespace-nowrap">Order For:</Label>
-                <div className="flex-grow grid grid-cols-3 gap-2">
-                    <Button variant={selectedOrderType === 'Dine-In' ? 'default' : 'outline'} className="h-12 text-base" onClick={() => handleSetOrderType('Dine-In')}>
-                        <Users2 className="mr-2 h-5 w-5"/>Dine-In
-                    </Button>
-                    <Button variant={selectedOrderType === 'Take-Away' ? 'default' : 'outline'} className="h-12 text-base" onClick={() => handleSetOrderType('Take-Away')}>
-                        <ShoppingBasket className="mr-2 h-5 w-5"/>Take Away
-                    </Button>
-                    <Button variant={selectedOrderType === 'Home-Delivery' ? 'default' : 'outline'} className="h-12 text-base" onClick={() => handleSetOrderType('Home-Delivery')}>
-                        <Bike className="mr-2 h-5 w-5"/>Delivery
-                    </Button>
-                </div>
-            </div>
+           <div className="flex items-center gap-4 flex-wrap">
+              <Label className="font-semibold text-sm shrink-0 whitespace-nowrap">Order For:</Label>
+              <div className="flex flex-1 gap-2">
+                  <Button variant={selectedOrderType === 'Dine-In' ? 'default' : 'outline'} className="h-12 text-base flex-1" onClick={() => handleSetOrderType('Dine-In')}>
+                      <Users2 className="mr-2 h-5 w-5"/>Dine-In
+                  </Button>
+                  <Button variant={selectedOrderType === 'Take-Away' ? 'default' : 'outline'} className="h-12 text-base flex-1" onClick={() => handleSetOrderType('Take-Away')}>
+                      <ShoppingBasket className="mr-2 h-5 w-5"/>Take Away
+                  </Button>
+                  <Button variant={selectedOrderType === 'Home-Delivery' ? 'default' : 'outline'} className="h-12 text-base flex-1" onClick={() => handleSetOrderType('Home-Delivery')}>
+                      <Bike className="mr-2 h-5 w-5"/>Delivery
+                  </Button>
+              </div>
+          </div>
 
             {selectedOrderType === 'Dine-In' && (
               <div className="grid grid-cols-[repeat(auto-fit,minmax(80px,1fr))] gap-2">
