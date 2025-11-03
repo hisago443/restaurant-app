@@ -1803,16 +1803,16 @@ const processKOTs = useCallback((kotGroupsToProcess: { title: string; items: Ord
               customerDetails={customerDetails}
               getNewItems={getNewItems}
           >
-           <div className="flex items-center gap-4 flex-wrap">
+           <div className="flex gap-4 flex-wrap items-center">
               <Label className="font-semibold text-sm shrink-0 whitespace-nowrap">Order For:</Label>
-              <div className="flex flex-1 gap-2">
-                  <Button variant={selectedOrderType === 'Dine-In' ? 'default' : 'outline'} className="h-12 text-base flex-1" onClick={() => handleSetOrderType('Dine-In')}>
+              <div className="flex flex-wrap flex-1 gap-2 min-w-[200px]">
+                  <Button variant={selectedOrderType === 'Dine-In' ? 'default' : 'outline'} className="h-12 text-base flex-1 min-w-[120px]" onClick={() => handleSetOrderType('Dine-In')}>
                       <Users2 className="mr-2 h-5 w-5"/>Dine-In
                   </Button>
-                  <Button variant={selectedOrderType === 'Take-Away' ? 'default' : 'outline'} className="h-12 text-base flex-1" onClick={() => handleSetOrderType('Take-Away')}>
+                  <Button variant={selectedOrderType === 'Take-Away' ? 'default' : 'outline'} className="h-12 text-base flex-1 min-w-[120px]" onClick={() => handleSetOrderType('Take-Away')}>
                       <ShoppingBasket className="mr-2 h-5 w-5"/>Take Away
                   </Button>
-                  <Button variant={selectedOrderType === 'Home-Delivery' ? 'default' : 'outline'} className="h-12 text-base flex-1" onClick={() => handleSetOrderType('Home-Delivery')}>
+                  <Button variant={selectedOrderType === 'Home-Delivery' ? 'default' : 'outline'} className="h-12 text-base flex-1 min-w-[120px]" onClick={() => handleSetOrderType('Home-Delivery')}>
                       <Bike className="mr-2 h-5 w-5"/>Delivery
                   </Button>
               </div>
@@ -1955,3 +1955,4 @@ const processKOTs = useCallback((kotGroupsToProcess: { title: string; items: Ord
     </div>
   );
 }
+
