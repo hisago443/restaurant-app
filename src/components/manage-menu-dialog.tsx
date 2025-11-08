@@ -112,10 +112,10 @@ function EditIngredientsDialog({ isOpen, onOpenChange, menuItem, inventory, onSa
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>Edit Ingredients for "{menuItem.name}"</DialogTitle>
-          <DialogDescription className="italic text-primary">
+          <DialogDescription className="italic text-primary hidden sm:block">
             Defining ingredients helps you track inventory and know the status of your stock.
           </DialogDescription>
         </DialogHeader>
@@ -576,12 +576,12 @@ export function ManageMenuDialog({
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-4xl">
+        <DialogContent className="sm:max-w-4xl">
             <DialogHeader>
                 <div className="flex justify-between items-center">
                     <div>
                         <DialogTitle>Manage Menu</DialogTitle>
-                        <DialogDescription>
+                        <DialogDescription className="hidden sm:block">
                             Add, edit, and organize your menu categories, items, and ingredients.
                         </DialogDescription>
                     </div>
@@ -675,10 +675,10 @@ export function ManageMenuDialog({
                 <AccordionItem value="add-item">
                   <AccordionTrigger className="text-lg font-semibold">Add New Menu Item</AccordionTrigger>
                   <AccordionContent className="p-4 bg-muted/50 rounded-b-md space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="space-y-1">
                           <Label htmlFor="select-category">Category</Label>
-                          <Select value={selectedCategoryForItem} onValueChange={setSelectedCategoryForItem}>
+                          <Select value={selectedCategoryForItem} onValueChange={setSelectedCategoryForItem} >
                             <SelectTrigger id="select-category">
                               <SelectValue placeholder="Select Category" />
                             </SelectTrigger>

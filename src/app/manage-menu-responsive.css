@@ -1,0 +1,55 @@
+
+@media (max-width: 640px) {
+  .sm\:max-w-4xl {
+    max-width: 100%;
+  }
+
+  .manage-menu-dialog .grid-cols-1 {
+    grid-template-columns: 1fr;
+  }
+
+  .manage-menu-dialog .sm\:grid-cols-2 {
+    grid-template-columns: 1fr;
+  }
+
+  .manage-menu-dialog .md\:grid-cols-3 {
+    grid-template-columns: 1fr;
+  }
+
+  .manage-menu-dialog .flex.items-end {
+    flex-direction: column;
+    align-items: stretch;
+    flex-wrap: wrap;
+  }
+
+  .manage-menu-dialog .flex.items-end > .flex-grow {
+    width: 100%;
+  }
+
+  .manage-menu-dialog .flex.items-end > .space-y-1,
+  .manage-menu-dialog .flex.items-end > .flex-grow > .space-y-1 {
+    margin-bottom: 0.5rem;
+  }
+  
+  .sm\:max-h-\[70vh\] {
+    max-height: 50vh;
+  }
+
+  .manage-menu-dialog .flex.items-end > button {
+    width: 100%;
+    margin-top: 0.5rem;
+  }
+  
+  .manage-menu-dialog .opacity-0.group-hover\:opacity-100 {
+    opacity: 1;
+  }
+
+  .manage-menu-dialog .flex.justify-between.items-center.group {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .manage-menu-dialog .flex.justify-between.items-center.group > div {
+    margin-top: 0.5rem;
+  }
+}

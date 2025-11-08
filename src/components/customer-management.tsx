@@ -361,14 +361,14 @@ export default function CustomerManagement({ billHistory, tables }: CustomerMana
         <CardContent>
           <div className="max-h-[calc(100vh-20rem)] overflow-y-auto">
             <Table>
-              <TableHeader>
+              <TableHeader className="hidden sm:table-header-group">
                 <TableRow>
-                  <TableHead onClick={() => handleSort('name')} className="cursor-pointer">Customer</TableHead>
-                  <TableHead onClick={() => handleSort('totalVisits')} className="cursor-pointer">Total Visits</TableHead>
-                  <TableHead onClick={() => handleSort('totalSpent')} className="cursor-pointer">Total Spent</TableHead>
-                  <TableHead onClick={() => handleSort('lastSeen')} className="cursor-pointer">Last Visit</TableHead>
-                  <TableHead onClick={() => handleSort('reservations')} className="cursor-pointer">Reservations</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead onClick={() => handleSort('name')} className="cursor-pointer hidden sm:block">Customer</TableHead>
+                  <TableHead onClick={() => handleSort('totalVisits')} className="cursor-pointer hidden sm:block">Total Visits</TableHead>
+                  <TableHead onClick={() => handleSort('totalSpent')} className="cursor-pointer hidden sm:block">Total Spent</TableHead>
+                  <TableHead onClick={() => handleSort('lastSeen')} className="cursor-pointer hidden sm:block">Last Visit</TableHead>
+                  <TableHead onClick={() => handleSort('reservations')} className="cursor-pointer hidden sm:block">Reservations</TableHead>
+                  <TableHead className="text-right hidden sm:block">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

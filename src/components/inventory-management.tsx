@@ -263,7 +263,7 @@ export default function InventoryManagement({ inventory, menu, setMenu }: Invent
                             value={item.stock}
                             onChange={(e) => handleStockChange(item.id, e.target.value === '' ? 0 : parseInt(e.target.value, 10))}
                             onBlur={(e) => { if (e.target.value === '') { handleStockChange(item.id, 0); } }}
-                            className="w-20 h-10 text-center text-base font-bold"
+                            className="sm:w-20 w-16 h-10 text-center text-base font-bold"
                         />
                         <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => handleStockChange(item.id, item.stock + 1)}>
                             <Plus className="h-4 w-4" />

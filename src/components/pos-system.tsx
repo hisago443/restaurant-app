@@ -357,7 +357,7 @@ function OrderPanel({
             <div className="p-4 border-t space-y-4 bg-muted/30">
                 <div>
                     <Label className="font-semibold mb-2 block">Discount</Label>
-                    <RadioGroup value={discount.toString()} onValueChange={(val) => setDiscount(Number(val))} className="flex items-center flex-wrap gap-2">
+                    <RadioGroup value={discount.toString()} onValueChange={(val) => setDiscount(Number(val))} className="flex items-center flex-wrap gap-2" style={{ flexWrap: 'wrap' }}>
                         {[0, 5, 10, 15, 20].map(d => (
                             <div key={d} className="flex items-center space-x-2">
                                 <RadioGroupItem value={d.toString()} id={`d-${d}`} />
@@ -1754,7 +1754,7 @@ const processKOTs = useCallback((kotGroupsToProcess: { title: string; items: Ord
                               </Label>
                           </RadioGroup>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2" style={{ flexWrap: 'wrap' }}>
                           <Button variant="outline" size="sm" onClick={() => setIsItemStatusDialogOpen(true)}>
                               <BarChart className="mr-2 h-4 w-4" /> Item Status
                           </Button>
@@ -1805,7 +1805,7 @@ const processKOTs = useCallback((kotGroupsToProcess: { title: string; items: Ord
           >
            <div className="flex gap-4 flex-wrap items-center">
               <Label className="font-semibold text-sm shrink-0 whitespace-nowrap">Order For:</Label>
-              <div className="flex flex-wrap flex-1 gap-2 min-w-[200px]">
+              <div className="flex flex-wrap flex-1 gap-2 min-w-[200px]" style={{ flexWrap: 'wrap' }}>
                   <Button variant={selectedOrderType === 'Dine-In' ? 'default' : 'outline'} className="h-12 text-base flex-1 min-w-[120px]" onClick={() => handleSetOrderType('Dine-In')}>
                       <Users2 className="mr-2 h-5 w-5"/>Dine-In
                   </Button>
@@ -1831,6 +1831,7 @@ const processKOTs = useCallback((kotGroupsToProcess: { title: string; items: Ord
                               'absolute inset-0 flex flex-col items-center justify-center text-center transition-colors rounded-md p-1 h-full',
                               isSelected && 'ring-4 ring-offset-2 ring-black'
                           )}
+                          style={{ flexWrap: 'wrap' }}
                           >
                               {hasPendingItems && (
                                   <div className="absolute top-1 left-1 bg-amber-400 p-1 rounded-full text-black">

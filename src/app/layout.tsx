@@ -1,7 +1,6 @@
-
-"use client";
-
 import './globals.css';
+import './responsive.css';
+import './manage-menu-responsive.css';
 import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from "next-themes";
 

@@ -1,0 +1,6 @@
+{
+  "firebase_hosting": {
+    "deploymentHostingUrl": "https://up-above-assistant.web.app"
+  },
+  "cloud_run_deploy": {}
+}

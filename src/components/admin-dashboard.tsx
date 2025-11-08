@@ -338,7 +338,7 @@ export default function AdminDashboard({
                           <span>View Bills</span>
                         </Button>
                       </DialogTrigger>
-                      <DialogContent className="max-w-5xl">
+                      <DialogContent className="sm:max-w-5xl">
                         <DialogHeader>
                           <DialogTitle>Bill History</DialogTitle>
                           <DialogDescription>A log of all completed transactions.</DialogDescription>
@@ -355,7 +355,7 @@ export default function AdminDashboard({
                                 <span>Manage Staff</span>
                             </Button>
                         </DialogTrigger>
-                        <DialogContent className="max-w-4xl">
+                        <DialogContent className="sm:max-w-4xl overflow-x-auto">
                             <DialogHeader>
                                 <DialogTitle>Staff Management</DialogTitle>
                                 <DialogDescription>Add, edit, or remove staff members.</DialogDescription>
@@ -429,7 +429,7 @@ export default function AdminDashboard({
                                 <span>Inventory</span>
                             </Button>
                         </DialogTrigger>
-                        <DialogContent className="max-w-5xl">
+                        <DialogContent className="sm:max-w-5xl">
                             <DialogHeader>
                                 <DialogTitle>Inventory Management</DialogTitle>
                             </DialogHeader>

@@ -55,12 +55,12 @@ export function AddItemDialog({ isOpen, onOpenChange, item, onConfirm }: AddItem
             Price: <span className="font-bold text-foreground">₹{item.price.toFixed(2)}</span>
           </DialogDescription>
         </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="quantity" className="text-right">
+        <div className="gap-4 py-4">
+          <div className="grid sm:grid-cols-4 grid-cols-1 items-center gap-4">
+            <Label htmlFor="quantity" className="sm:text-right">
               Quantity
             </Label>
-            <div className="col-span-3 flex items-center gap-2">
+            <div className="sm:col-span-3 flex items-center gap-2">
                 <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => handleQuantityChange(-1)}><Minus className="h-4 w-4" /></Button>
                 <Input
                 id="quantity"
@@ -76,7 +76,7 @@ export function AddItemDialog({ isOpen, onOpenChange, item, onConfirm }: AddItem
                   }
                 }}
                 onFocus={(e) => e.target.select()}
-                className="w-16 text-center"
+                className="sm:w-20 w-16 text-center"
                 />
                 <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => handleQuantityChange(1)}><Plus className="h-4 w-4" /></Button>
             </div>

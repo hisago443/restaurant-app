@@ -428,16 +428,16 @@ export default function StaffManagement({ employees: initialEmployees }: StaffMa
                                   <Button variant="ghost" size="icon" onClick={() => openAdvanceDialog(null, employee)} disabled={isDateLocked}>
                                       <Banknote className="h-5 w-5 text-primary" />
                                   </Button>
-                                  <div className="flex items-center gap-1">
+                                  <div className="flex items-center gap-1 flex-wrap">
                                       {(Object.keys(attendanceStatusConfig) as AttendanceStatus[]).map(status => {
                                           const isSelected = attendanceRecord?.status === status;
                                           const config = attendanceStatusConfig[status];
                                           return (
-                                              <Button 
+                                              <Button
                                                   key={status}
                                                   variant={isSelected ? 'default' : 'outline'}
                                                   onClick={() => handleMarkAttendance(employee.id, status)}
-                                                  className={cn("h-10 w-24", isSelected && config.className)}
+                                                  className={cn("h-10 flex-grow min-w-[80px]", isSelected && config.className)}
                                                   disabled={isDateLocked}
                                               >
                                                   <config.icon className="mr-2 h-4 w-4"/>

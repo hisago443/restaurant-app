@@ -165,7 +165,7 @@ export default function BillHistory({ bills, onClearAll }: BillHistoryProps) {
               <Button
                 variant={"outline"}
                 className={cn(
-                  "w-[280px] justify-start text-left font-normal",
+                  "sm:w-[280px] w-full justify-start text-left font-normal",
                   !date && "text-muted-foreground"
                 )}
               >
@@ -222,28 +222,28 @@ export default function BillHistory({ bills, onClearAll }: BillHistoryProps) {
       </div>
       <ScrollArea className="h-[60vh]">
         <Table>
-          <TableHeader>
+          <TableHeader className="hidden sm:table-header-group">
             <TableRow>
-              <TableHead>Bill ID</TableHead>
-              <TableHead>Order Details</TableHead>
-              <TableHead>Date & Time</TableHead>
-              <TableHead className="text-right">Amount</TableHead>
-              <TableHead className="text-center">Actions</TableHead>
+              <TableHead className="hidden sm:block">Bill ID</TableHead>
+              <TableHead className="hidden sm:block">Order Details</TableHead>
+              <TableHead className="hidden sm:block">Date & Time</TableHead>
+              <TableHead className="text-right hidden sm:block">Amount</TableHead>
+              <TableHead className="text-center hidden sm:block">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filteredBills.length > 0 ? (
               filteredBills.map((bill) => (
                 <TableRow key={bill.id}>
-                  <TableCell className="font-medium">{bill.id}</TableCell>
-                  <TableCell>{getBillTitle(bill)}</TableCell>
-                  <TableCell>
+                  <TableCell className="font-medium hidden sm:block">{bill.id}</TableCell>
+                  <TableCell className="hidden sm:block">{getBillTitle(bill)}</TableCell>
+                  <TableCell className="hidden sm:block">
                     {format(bill.timestamp, 'PPP p')}
                   </TableCell>
-                  <TableCell className="text-right font-mono">
+                  <TableCell className="text-right font-mono hidden sm:block">
                     ₹{bill.total.toFixed(2)}
                   </TableCell>
-                  <TableCell className="text-center space-x-1">
+                  <TableCell className="text-center space-x-1 hidden sm:block">
                     <Button
                       variant="ghost"
                       size="icon"
@@ -279,6 +279,51 @@ export default function BillHistory({ bills, onClearAll }: BillHistoryProps) {
                             </AlertDialogFooter>
                         </AlertDialogContent>
                     </AlertDialog>
+                  </TableCell>
+                  <TableCell className="sm:hidden">
+                   <div className="flex flex-col">
+                     <span className="font-medium">Bill #{bill.id}</span>
+                     <span>{getBillTitle(bill)}</span>
+                     <span>{format(bill.timestamp, 'PPP p')}</span>
+                     <span className="text-right font-mono">₹{bill.total.toFixed(2)}</span>
+                     <div className="flex justify-around">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => setSelectedBill(bill)}
+                          title="View Bill"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                         <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handlePrintBill(bill)}
+                          title="Print Bill"
+                        >
+                          <Printer className="h-4 w-4" />
+                        </Button>
+                        <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                                <Button variant="ghost" size="icon" className="text-destructive" title="Delete Bill">
+                                    <Trash2 className="h-4 w-4" />
+                                </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                                <AlertDialogHeader>
+                                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                        This will permanently delete bill #{bill.id}. This action cannot be undone.
+                                    </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction onClick={() => handleDeleteBill(bill.id)}>Delete</AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
+                     </div>
+                   </div>
                   </TableCell>
                 </TableRow>
               ))

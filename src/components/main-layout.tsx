@@ -450,10 +450,6 @@ export default function MainLayout({ initialMenu }: MainLayoutProps) {
     setActiveTab('pos');
   };
   
-  const toggleNavPosition = () => {
-    setNavPosition(pos => pos === 'top' ? 'left' : 'top');
-  }
-
   const handleSetupComplete = () => {
     try {
       localStorage.setItem('setupComplete', 'true');
@@ -474,61 +470,49 @@ export default function MainLayout({ initialMenu }: MainLayoutProps) {
 
   return (
     <div className="flex flex-col h-screen bg-background">
-      <header className="flex items-center justify-between h-16 px-6 border-b shrink-0">
+      <header className="flex items-center justify-between h-16 px-4 sm:px-6 border-b shrink-0">
         <div className="flex items-center gap-2 font-semibold">
           <Logo className="h-6 w-6" />
-          <span className="text-lg">{venueName}</span>
+          <span className="text-lg hidden sm:inline-block">{venueName}</span>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 sm:gap-4">
           <ThemeToggle />
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon" onClick={toggleNavPosition} className='rounded-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground flex items-center gap-2'>
-                      {navPosition === 'top' ? <PanelLeft className="h-5 w-5" /> : <PanelTop className="h-5 w-5" />}
-                  </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Change Nav Position</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-          <div className="text-sm text-foreground text-center font-semibold bg-muted p-2 rounded-lg shadow-inner">
+          <div className="text-sm text-foreground text-center font-semibold bg-muted p-2 rounded-lg shadow-inner hidden sm:block">
             <div>{formattedDate}</div>
             <div>{formattedTime}</div>
           </div>
         </div>
       </header>
-       <DndProvider backend={HTML5Backend}>
-        <Tabs value={activeTab} onValueChange={handleTabChange} orientation={navPosition === 'left' ? 'vertical' : 'horizontal'} className={cn("h-full", navPosition === 'top' ? 'flex flex-col' : 'flex')}>
-          <div className={cn("flex justify-center border-b kitchen-tabs", navPosition === 'left' && "flex-col justify-start items-start border-b-0 border-r")}>
-             <TabsList className={cn("m-2 p-0 h-auto bg-transparent", navPosition === 'left' && "flex-col items-start w-auto")}>
-              <TabsTrigger value="pos" className="px-4 py-2 text-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md flex items-center gap-2">
-                  <Utensils /> <span className={cn(navPosition === 'left' && 'w-32 text-left')}>Main</span>
+      <DndProvider backend={HTML5Backend}>
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="flex flex-col flex-grow">
+          <div className="overflow-x-auto">
+            <TabsList className="m-2 p-0 h-auto bg-transparent">
+              <TabsTrigger value="pos" className="px-3 py-2 text-sm sm:text-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md flex items-center gap-2">
+                  <Utensils /> <span className="hidden sm:inline-block">Main</span>
               </TabsTrigger>
-              <Separator orientation={navPosition === 'top' ? 'vertical' : 'horizontal'} className={cn(navPosition === 'top' ? "h-6 mx-1" : "w-full my-1")} />
-              <TabsTrigger value="tables" className="px-4 py-2 text-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md flex items-center gap-2">
-                <LayoutGrid /> <span className={cn(navPosition === 'left' && 'w-32 text-left')}>Tables</span>
+              <Separator orientation="vertical" className="h-6 mx-1" />
+              <TabsTrigger value="tables" className="px-3 py-2 text-sm sm:text-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md flex items-center gap-2">
+                <LayoutGrid /> <span className="hidden sm:inline-block">Tables</span>
               </TabsTrigger>
-              <Separator orientation={navPosition === 'top' ? 'vertical' : 'horizontal'} className={cn(navPosition === 'top' ? "h-6 mx-1" : "w-full my-1")} />
-              <TabsTrigger value="kitchen" className="px-4 py-2 text-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md flex items-center gap-2">
-                <Soup /> <span className={cn(navPosition === 'left' && 'w-32 text-left')}>Kitchen &amp; Inventory</span>
+              <Separator orientation="vertical" className="h-6 mx-1" />
+              <TabsTrigger value="kitchen" className="px-3 py-2 text-sm sm:text-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md flex items-center gap-2">
+                <Soup /> <span className="hidden sm:inline-block">Kitchen & Inventory</span>
               </TabsTrigger>
-              <Separator orientation={navPosition === 'top' ? 'vertical' : 'horizontal'} className={cn(navPosition === 'top' ? "h-6 mx-1" : "w-full my-1")} />
-              <TabsTrigger value="customers" className="px-4 py-2 text-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md flex items-center gap-2">
-                <Users2 /> <span className={cn(navPosition === 'left' && 'w-32 text-left')}>Customers</span>
+              <Separator orientation="vertical" className="h-6 mx-1" />
+              <TabsTrigger value="customers" className="px-3 py-2 text-sm sm:text-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md flex items-center gap-2">
+                <Users2 /> <span className="hidden sm:inline-block">Customers</span>
               </TabsTrigger>
-              <Separator orientation={navPosition === 'top' ? 'vertical' : 'horizontal'} className={cn(navPosition === 'top' ? "h-6 mx-1" : "w-full my-1")} />
-              <TabsTrigger value="expenses" className="px-4 py-2 text-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md flex items-center gap-2">
-                <Receipt /> <span className={cn(navPosition === 'left' && 'w-32 text-left')}>Expenses</span>
+              <Separator orientation="vertical" className="h-6 mx-1" />
+              <TabsTrigger value="expenses" className="px-3 py-2 text-sm sm:text-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md flex items-center gap-2">
+                <Receipt /> <span className="hidden sm:inline-block">Expenses</span>
               </TabsTrigger>
-              <Separator orientation={navPosition === 'top' ? 'vertical' : 'horizontal'} className={cn(navPosition === 'top' ? "h-6 mx-1" : "w-full my-1")} />
-              <TabsTrigger value="staff" className="px-4 py-2 text-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md flex items-center gap-2">
-                <Users /> <span className={cn(navPosition === 'left' && 'w-32 text-left')}>Staff</span>
+              <Separator orientation="vertical" className="h-6 mx-1" />
+              <TabsTrigger value="staff" className="px-3 py-2 text-sm sm:text-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md flex items-center gap-2">
+                <Users /> <span className="hidden sm:inline-block">Staff</span>
               </TabsTrigger>
-              <Separator orientation={navPosition === 'top' ? 'vertical' : 'horizontal'} className={cn(navPosition === 'top' ? "h-6 mx-1" : "w-full my-1")} />
-              <TabsTrigger value="admin" className="px-4 py-2 text-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md flex items-center gap-2">
-                <Shield /> <span className={cn(navPosition === 'left' && 'w-32 text-left')}>Admin</span>
+              <Separator orientation="vertical" className="h-6 mx-1" />
+              <TabsTrigger value="admin" className="px-3 py-2 text-sm sm:text-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md flex items-center gap-2">
+                <Shield /> <span className="hidden sm:inline-block">Admin</span>
               </TabsTrigger>
             </TabsList>
           </div>
@@ -600,11 +584,11 @@ export default function MainLayout({ initialMenu }: MainLayoutProps) {
               />
             </TabsContent>
             <TabsContent value="kitchen" className="m-0 p-0 h-full">
-              <div className="grid grid-cols-[1fr_auto_1fr] h-full">
+              <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] h-full">
                   <div className="h-full">
                       <KitchenOrders orders={orders} setOrders={setOrders} />
                   </div>
-                   <Separator orientation="vertical" />
+                   <Separator orientation="vertical" className="hidden md:block" />
                   <div className="h-full">
                       <InventoryManagement inventory={inventory} menu={menu} setMenu={setMenu} />
                   </div>
